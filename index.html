@@ -60,6 +60,102 @@
   --r: 10px;
 }
 
+/* ── TEMA: CLARO ── */
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --bg2: #f1f5f9;
+  --bg3: #e2e8f0;
+  --card: #ffffff;
+  --card2: #f8fafc;
+  --border: #cbd5e1;
+  --border2: #94a3b8;
+  --blue: #2563eb;
+  --blue2: #1d4ed8;
+  --blue-dim: #dbeafe;
+  --amber: #d97706;
+  --amber2: #b45309;
+  --amber-dim: #fef3c7;
+  --green: #059669;
+  --green-dim: #d1fae5;
+  --red: #dc2626;
+  --red-dim: #fee2e2;
+  --text: #0f172a;
+  --text2: #334155;
+  --text3: #64748b;
+}
+
+/* ── TEMA: COCKPIT (verde noche aviación) ── */
+[data-theme="cockpit"] {
+  --bg: #040d06;
+  --bg2: #071209;
+  --bg3: #0a1f0e;
+  --card: #081510;
+  --card2: #0d2018;
+  --border: #14381f;
+  --border2: #1e5530;
+  --blue: #00c96e;
+  --blue2: #34d399;
+  --blue-dim: #052e14;
+  --amber: #fbbf24;
+  --amber2: #f59e0b;
+  --amber-dim: #3d2e00;
+  --green: #00c96e;
+  --green-dim: #052e14;
+  --red: #f87171;
+  --red-dim: #2d1010;
+  --text: #dcfce7;
+  --text2: #86efac;
+  --text3: #4ade80;
+}
+
+/* ── TEMA: BINTER (verde y blanco corporativo) ── */
+[data-theme="binter"] {
+  --bg: #f0f7f2;
+  --bg2: #e6f2ea;
+  --bg3: #d4eadb;
+  --card: #ffffff;
+  --card2: #f0f7f2;
+  --border: #a8d5b5;
+  --border2: #6db88a;
+  --blue: #1a7a3c;
+  --blue2: #0d5a2a;
+  --blue-dim: #d4eadb;
+  --amber: #d97706;
+  --amber2: #b45309;
+  --amber-dim: #fef3c7;
+  --green: #1a7a3c;
+  --green-dim: #d4eadb;
+  --red: #dc2626;
+  --red-dim: #fee2e2;
+  --text: #0a2e14;
+  --text2: #1a5c2e;
+  --text3: #4a8c5c;
+}
+
+/* ── TEMA: STAR WARS (Imperio Galáctico) ── */
+[data-theme="starwars"] {
+  --bg: #0a0000;
+  --bg2: #130000;
+  --bg3: #1c0000;
+  --card: #150000;
+  --card2: #1f0505;
+  --border: #3a0a0a;
+  --border2: #5c1010;
+  --blue: #e63535;
+  --blue2: #ff6b6b;
+  --blue-dim: #2d0808;
+  --amber: #ffd700;
+  --amber2: #ffe34d;
+  --amber-dim: #2d2500;
+  --green: #ff6b6b;
+  --green-dim: #2d0808;
+  --red: #ff6b6b;
+  --red-dim: #2d0808;
+  --text: #f5e6e6;
+  --text2: #c9a0a0;
+  --text3: #8b5c5c;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
@@ -520,6 +616,14 @@ input[type=number] { -moz-appearance: textfield; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
+/* ── THEME CARDS ── */
+.theme-card { border-radius: 10px; padding: 12px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.theme-card:active { transform: scale(.97); }
+.theme-card.active-theme { box-shadow: 0 0 0 3px var(--blue2) !important; }
+.theme-preview { margin-bottom: 8px; padding: 8px; border-radius: 6px; background: rgba(0,0,0,0.1); }
+.theme-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; font-family: var(--sans); }
+.theme-desc { font-size: 11px; font-family: var(--mono); }
+
 /* ── UTILITIES ── */
 .mt-8 { margin-top: 8px; }
 .mt-12 { margin-top: 12px; }
@@ -586,12 +690,11 @@ input[type=number] { -moz-appearance: textfield; }
 
 <!-- ══════════ WELCOME ══════════ -->
 <div id="welcome-screen" style="display:none">
-  <div class="welcome-img">
-    <img id="welcome-img" src="" alt="Embraer E195-E2 Binter" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
-    <div id="welcome-plane-fallback" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;background:var(--bg3)">✈</div>
+  <div class="welcome-img" style="background:var(--bg3);display:flex;align-items:center;justify-content:center">
+    <div id="welcome-epaulettes" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"></div>
   </div>
   <div class="welcome-greeting">Hola, <strong id="welcome-name">Piloto</strong></div>
-  <div class="welcome-sub">BINTER CANARIAS // GRUPO IV</div>
+  <div class="welcome-sub" id="welcome-role-sub">BINTER CANARIAS // GRUPO IV</div>
   <button class="btn-continue" onclick="enterApp()">Continuar →</button>
 </div>
 
@@ -609,6 +712,7 @@ input[type=number] { -moz-appearance: textfield; }
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
     <button class="tab" onclick="showTab('perfil')"><span class="tab-icon">👤</span>Perfil</button>
+    <button class="tab" onclick="showTab('config')"><span class="tab-icon">⚙️</span>Config</button>
   </div>
 
   <main>
@@ -1127,6 +1231,91 @@ input[type=number] { -moz-appearance: textfield; }
       </div>
     </div><!-- /page-perfil -->
 
+    <!-- ── TAB: CONFIGURACIÓN ── -->
+    <div class="page" id="page-config">
+
+      <div class="card">
+        <div class="card-title"><div class="section-dot amber"></div>Tema de color</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+
+          <!-- Oscuro -->
+          <div class="theme-card" id="theme-dark" onclick="setTheme('dark')" style="background:#0a0e1a;border:2px solid #1e2d4a">
+            <div class="theme-preview">
+              <div style="background:#111827;height:18px;border-radius:4px;margin-bottom:4px"></div>
+              <div style="background:#3b82f6;height:8px;border-radius:3px;width:60%;margin-bottom:3px"></div>
+              <div style="background:#1e2d4a;height:6px;border-radius:3px;width:80%"></div>
+            </div>
+            <div class="theme-name" style="color:#e2e8f0">🌙 Oscuro</div>
+            <div class="theme-desc" style="color:#64748b">Por defecto</div>
+          </div>
+
+          <!-- Claro -->
+          <div class="theme-card" id="theme-light" onclick="setTheme('light')" style="background:#f8fafc;border:2px solid #cbd5e1">
+            <div class="theme-preview">
+              <div style="background:#ffffff;height:18px;border-radius:4px;margin-bottom:4px;border:1px solid #e2e8f0"></div>
+              <div style="background:#2563eb;height:8px;border-radius:3px;width:60%;margin-bottom:3px"></div>
+              <div style="background:#cbd5e1;height:6px;border-radius:3px;width:80%"></div>
+            </div>
+            <div class="theme-name" style="color:#0f172a">☀️ Claro</div>
+            <div class="theme-desc" style="color:#64748b">Fondo blanco</div>
+          </div>
+
+          <!-- Cockpit -->
+          <div class="theme-card" id="theme-cockpit" onclick="setTheme('cockpit')" style="background:#040d06;border:2px solid #14381f">
+            <div class="theme-preview">
+              <div style="background:#081510;height:18px;border-radius:4px;margin-bottom:4px"></div>
+              <div style="background:#00c96e;height:8px;border-radius:3px;width:60%;margin-bottom:3px"></div>
+              <div style="background:#1e5530;height:6px;border-radius:3px;width:80%"></div>
+            </div>
+            <div class="theme-name" style="color:#dcfce7">🛩️ Cockpit</div>
+            <div class="theme-desc" style="color:#4ade80">Verde aviación</div>
+          </div>
+
+          <!-- Binter -->
+          <div class="theme-card" id="theme-binter" onclick="setTheme('binter')" style="background:#f0f7f2;border:2px solid #a8d5b5">
+            <div class="theme-preview">
+              <div style="background:#ffffff;height:18px;border-radius:4px;margin-bottom:4px;border:1px solid #a8d5b5"></div>
+              <div style="background:#1a7a3c;height:8px;border-radius:3px;width:60%;margin-bottom:3px"></div>
+              <div style="background:#a8d5b5;height:6px;border-radius:3px;width:80%"></div>
+            </div>
+            <div class="theme-name" style="color:#0a2e14">✈️ Binter</div>
+            <div class="theme-desc" style="color:#4a8c5c">Verde corporativo</div>
+          </div>
+
+          <!-- Star Wars -->
+          <div class="theme-card" id="theme-starwars" onclick="setTheme('starwars')" style="background:#0a0000;border:2px solid #3a0a0a;grid-column:1/-1">
+            <div class="theme-preview" style="display:flex;gap:6px;align-items:center">
+              <div style="background:#150000;height:18px;border-radius:4px;flex:1"></div>
+              <div style="background:#e63535;height:8px;border-radius:3px;width:40%"></div>
+              <div style="background:#ffd700;height:8px;border-radius:3px;width:20%"></div>
+            </div>
+            <div class="theme-name" style="color:#f5e6e6">⚔️ Imperio</div>
+            <div class="theme-desc" style="color:#8b5c5c">Dark side of the Force</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="section-dot"></div>Cuenta</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">
+          Usuario activo: <span id="cfg-user" style="font-family:var(--mono);color:var(--blue2)"></span>
+        </div>
+        <button class="btn-secondary" onclick="doLogout()">Cerrar sesión</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><div class="section-dot"></div>Acerca de</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7">
+          <div style="font-family:var(--mono);color:var(--text);font-size:13px;margin-bottom:4px">PilotPay v1.0</div>
+          Calculadora de nómina para pilotos Binter Canarias<br>
+          Convenio Colectivo BCSA 2026 · BOE 18/03/2026<br>
+          <span style="color:var(--text3)">IRPF 2026 · Madrid y Canarias</span>
+        </div>
+      </div>
+
+    </div><!-- /page-config -->
+
   </main>
 </div><!-- /app -->
 
@@ -1245,19 +1434,6 @@ window.addEventListener('DOMContentLoaded', () => {
 document.getElementById('login-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('login-pass').focus(); });
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
-function showWelcome() {
-  document.getElementById('login-screen').style.display = 'none';
-  const ws = document.getElementById('welcome-screen');
-  ws.style.display = 'flex';
-  document.getElementById('welcome-name').textContent = USERS[currentUser].name;
-  // Embraer inline SVG/image fallback
-  const img = document.getElementById('welcome-img');
-  const fallback = document.getElementById('welcome-plane-fallback');
-  img.style.display = 'none'; fallback.style.display = 'flex';
-  // Try to load Embraer image from web (best effort)
-  img.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Binter_Canarias_E195.jpg/640px-Binter_Canarias_E195.jpg';
-  img.onload = () => { img.style.display = 'block'; fallback.style.display = 'none'; };
-}
 
 function enterApp() {
   document.getElementById('welcome-screen').style.display = 'none';
@@ -1285,6 +1461,7 @@ function initApp() {
   document.getElementById('irpf').value = profileData.irpf || u.irpf;
   currentNivel = profileData.nivel || u.nivel;
   highlightNivel();
+  loadTheme();
   onBaseChange();
   recalc();
   initPerfil();
@@ -1308,16 +1485,115 @@ function checkApiKeyCard() {
   document.getElementById('apikey-card').style.display = hasKey ? 'none' : 'block';
 }
 
+function renderConfig() {
+  document.getElementById('cfg-user').textContent = currentUser || '—';
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active-theme'));
+  const card = document.getElementById('theme-' + currentTheme);
+  if (card) card.classList.add('active-theme');
+}
+
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const idx = ['calcular','nomina','comparar','simulador','perfil'].indexOf(name);
+  const idx = ['calcular','nomina','comparar','simulador','perfil','config'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
   if (name === 'nomina') renderNomina();
   if (name === 'perfil') renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar') checkApiKeyCard();
+  if (name === 'config') renderConfig();
+}
+
+// ── THEMES ──
+const THEMES = {
+  dark:     { label: '🌙 Oscuro',   desc: 'Por defecto' },
+  light:    { label: '☀️ Claro',    desc: 'Fondo blanco' },
+  cockpit:  { label: '🛩️ Cockpit',  desc: 'Verde aviación' },
+  binter:   { label: '✈️ Binter',   desc: 'Verde corporativo' },
+  starwars: { label: '⚔️ Imperio',  desc: 'Dark side of the Force' },
+};
+let currentTheme = 'dark';
+
+function setTheme(theme) {
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? '' : theme);
+  document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active-theme'));
+  const card = document.getElementById('theme-' + theme);
+  if (card) card.classList.add('active-theme');
+  if (currentUser) {
+    profileData.theme = theme;
+    saveUserData(currentUser);
+  }
+  try { localStorage.setItem('pilotpay_theme_' + (currentUser||''), theme); } catch(e) {}
+}
+
+function loadTheme() {
+  const saved = profileData.theme
+    || (function(){ try { return localStorage.getItem('pilotpay_theme_' + (currentUser||'')); } catch(e){ return null; } })()
+    || 'dark';
+  setTheme(saved);
+}
+
+function buildEpaulettes(funcion, nivel) {
+  const isCMD = funcion === 'CMD';
+  const stripes = isCMD ? 4 : 3;
+  const goldColor = '#f59e0b';
+  const goldLight = '#fbbf24';
+  const bg = '#0f1a35';
+  const border = '#1e3a5f';
+
+  let stripesHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const filled = i < stripes;
+    stripesHTML += `<rect x="10" y="${22 + i * 22}" width="80" height="13" rx="3"
+      fill="${filled ? goldColor : border}"
+      opacity="${filled ? '1' : '0.25'}"/>`;
+    if (filled) {
+      stripesHTML += `<rect x="10" y="${22 + i * 22}" width="80" height="4" rx="2" fill="${goldLight}" opacity="0.5"/>`;
+    }
+  }
+
+  const starHTML = isCMD
+    ? `<text x="50" y="122" text-anchor="middle" font-size="22" fill="${goldColor}" filter="url(#gs)">★</text>`
+    : '';
+
+  const labelHTML = `<text x="50" y="145" text-anchor="middle"
+    font-family="Arial" font-size="11" font-weight="700" letter-spacing="2"
+    fill="#60a5fa" opacity="0.9">${isCMD ? 'COMANDANTE' : 'COPILOTO'}</text>
+    <text x="50" y="158" text-anchor="middle"
+    font-family="Arial" font-size="10" font-weight="400"
+    fill="#94a3b8" opacity="0.7">NIVEL ${nivel}</text>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 165" width="160">
+    <defs>
+      <filter id="gs"><feGaussianBlur stdDeviation="1.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect x="0" y="0" width="100" height="130" rx="12"
+      fill="${bg}" stroke="${border}" stroke-width="1.5"/>
+    ${stripesHTML}
+    ${starHTML}
+    ${labelHTML}
+  </svg>`;
+}
+
+function showWelcome() {
+  document.getElementById('login-screen').style.display = 'none';
+  const ws = document.getElementById('welcome-screen');
+  ws.style.display = 'flex';
+  document.getElementById('welcome-name').textContent = USERS[currentUser].name;
+
+  const u = USERS[currentUser];
+  const funcion = profileData.funcion || u.funcion || 'CMD';
+  const nivel = profileData.nivel || u.nivel || 3;
+  const isCMD = funcion === 'CMD';
+
+  // Render epaulettes
+  document.getElementById('welcome-epaulettes').innerHTML = buildEpaulettes(funcion, nivel);
+  document.getElementById('welcome-role-sub').textContent =
+    `${isCMD ? 'COMANDANTE' : 'COPILOTO'} · NIVEL ${nivel} · BINTER CANARIAS`;
 }
 
 function onBaseChange() {
