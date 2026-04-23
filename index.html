@@ -1462,16 +1462,30 @@ function recalc() {
   const ppImporte = ppActivo ? (parseFloat(document.getElementById('pp-amount').value) || 29.74) : 0;
 
   // PAGAS EXTRA
-  // Prorrateada (toggle OFF): son INFORMATIVAS en el pie, NO se suman al devengado dinerario
-  //   → aparecen en "Prorrata Pagas" del pie de nómina
-  // Paga completa (toggle ON): se suman como devengo solo en julio/diciembre
+  // PAGAS EXTRA — lógica correcta:
+  // Prorrateada (toggle OFF): Extra1 + Extra2 se cobran cada mes (359,55 + 359,55 = 719,10€/mes)
+  //   → aparecen como dos líneas de devengo en la nómina mensual
+  // Paga completa (toggle ON): no se cobra nada en meses normales
+  //   → en julio se cobra Extra1 completa (= importe salario base)
+  //   → en diciembre se cobra Extra2 completa (= importe salario base)
   const isPagaCompleta = document.getElementById('toggle-extra').checked;
   const mesActual = document.getElementById('mes-nomina').value;
-  const isJulDic = mesActual === 'Julio' || mesActual === 'Diciembre';
-  // Solo se devengan en nómina si es paga completa Y es julio/diciembre
-  const extras_devengados = isPagaCompleta && isJulDic ? (extra1 + extra2) : 0;
-  const prorrata_pie = !isPagaCompleta ? (extra1 + extra2) : 0; // dato pie nómina
-  const extras_label = isPagaCompleta && isJulDic ? 'Paga Extra (completa)' : '';
+  const isJulio = mesActual === 'Julio';
+  const isDiciembre = mesActual === 'Diciembre';
+
+  let extra1_dev = 0, extra2_dev = 0, extras_label = '';
+  if (!isPagaCompleta) {
+    // Prorrateada: ambas extras se cobran todos los meses
+    extra1_dev = extra1;
+    extra2_dev = extra2;
+    extras_label = 'prorr';
+  } else {
+    // Paga completa: solo en julio (Extra1) y diciembre (Extra2)
+    // El importe de la paga extra completa = salario base del nivel
+    if (isJulio)     { extra1_dev = sb; extras_label = 'julio'; }
+    if (isDiciembre) { extra2_dev = sb; extras_label = 'dic'; }
+  }
+  const extras_devengados = extra1_dev + extra2_dev;
 
   // Dietas — cantidades de cada tipo
   const nMantNac = parseFloat(document.getElementById('d-mant-nac').value) || 0;
@@ -1560,7 +1574,7 @@ function recalc() {
   const liquidoReal = Math.round((devEfectivo - ss_total - retencionIRPF - irpf_especie - segLic_ded) * 100) / 100;
 
   calcResult = {
-    sb, plus_tr, extra1, extra2, extras_devengados, extras_label, prorrata_pie,
+    sb, plus_tr, extra1, extra2, extra1_dev, extra2_dev, extras_devengados, extras_label,
     hv1, hv2, hv3, hv4, hv1_imp, hv2_imp, hv3_imp, hv4_imp,
     hv_t1_rate, hv_t2_rate, hv_t3_rate, hv_t4_rate,
     hvTotal, im, fr, lv1, lv2, lv3, dpo, compMad, ppImporte,
@@ -1605,7 +1619,14 @@ function renderNomina() {
   addH('DEVENGOS');
   addR(1, r.sb, 'Salario Base', r.sb);
   addR(1, r.plus_tr, 'Plus De Transporte', r.plus_tr);
-  if (r.extras_devengados > 0) addR(1, r.extras_devengados, r.extras_label, r.extras_devengados);
+  if (r.extras_label === 'prorr') {
+    addR(1, r.extra1_dev, 'Paga Extra 1 (prorrateada)', r.extra1_dev);
+    addR(1, r.extra2_dev, 'Paga Extra 2 (prorrateada)', r.extra2_dev);
+  } else if (r.extras_label === 'julio') {
+    addR(1, r.extra1_dev, 'Paga Extra 1 — Julio', r.extra1_dev);
+  } else if (r.extras_label === 'dic') {
+    addR(1, r.extra2_dev, 'Paga Extra 2 — Diciembre', r.extra2_dev);
+  }
   if (r.hv1 > 0) addR(r.hv1, r.hv_t1_rate, 'Hora Vuelo T1', r.hv1_imp);
   if (r.hv2 > 0) addR(r.hv2, r.hv_t2_rate, 'Hora Vuelo T2', r.hv2_imp);
   if (r.hv3 > 0) addR(r.hv3, r.hv_t3_rate, 'Hora Vuelo T3', r.hv3_imp);
@@ -1703,7 +1724,7 @@ function renderNomina() {
       <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:3px">
         <span>REM. TOTAL</span><span>${fmt(r.dev_salarial + r.totalDietas)} €</span>
       </div>
-      ${r.prorrata_pie > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:3px"><span>PRORRATA PAGAS</span><span>${fmt(r.prorrata_pie)} €</span></div>` : ''}
+      ${r.extras_label === 'prorr' ? `<div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:3px"><span>PRORRATA PAGAS</span><span>${fmt(r.extra1_dev + r.extra2_dev)} €</span></div>` : ''}
       <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:3px">
         <span>BASE COTIZACIÓN</span><span>${fmt(r.baseSS)} €</span>
       </div>
