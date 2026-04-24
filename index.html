@@ -1242,6 +1242,28 @@ input[type=number] { -moz-appearance: textfield; }
           <div id="nivel-progress-info"></div>
         </div>
 
+        <!-- DATOS PERSONALES EDITABLES -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot"></div>Mis datos personales</div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Nombre</span>
+              <input class="field-input" id="prf-nombre-edit" type="text" placeholder="Nombre" onchange="saveProfile()">
+            </div>
+            <div class="field">
+              <span class="field-label">Apellidos</span>
+              <input class="field-input" id="prf-apellidos-edit" type="text" placeholder="Apellidos" onchange="saveProfile()">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <span class="field-label">Alias (nombre en el saludo)</span>
+            <input class="field-input" id="prf-alias" type="text" placeholder="Opcional — si está vacío usa el nombre de pila" onchange="saveProfile()">
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">
+            Para cambiar base o cargo usa la sección "Solicitar cambio" abajo.
+          </div>
+        </div>
+
         <!-- VARIABLES PERSONALES (para simulador IRPF) -->
         <div class="card">
           <div class="card-title"><div class="section-dot amber"></div>Variables personales — IRPF</div>
@@ -1469,12 +1491,22 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="row">
           <div class="field">
             <span class="field-label">Nombre</span>
-            <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre Apellidos">
+            <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre">
           </div>
+          <div class="field">
+            <span class="field-label">Apellidos</span>
+            <input class="field-input" id="adm-apellidos" type="text" placeholder="Apellidos">
+          </div>
+        </div>
+        <div class="row">
           <div class="field">
             <span class="field-label">Código</span>
             <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
               oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="field">
+            <span class="field-label">Alias (saludo)</span>
+            <input class="field-input" id="adm-alias-new" type="text" placeholder="Opcional">
           </div>
         </div>
         <div class="row">
@@ -1509,7 +1541,7 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div>
         <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla de alta</button>
-        <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario</button>
+        <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario en Firebase</button>
       </div>
 
       <!-- GESTIÓN DE PERMISOS -->
@@ -1571,25 +1603,76 @@ const SEG_MEDICO = 20.16;
 const SEG_LIC = 93.0;
 const SEG_VIDA_ESPECIE = 43.33;
 
-// ── USERS ──
-const USERS = {
-  'ESH': { pass: '7800', name: 'Eloy', funcion:'CMD', nivel:3, base:'1.2', irpf:34.15, ss:6.47, ingreso:'2024-07-01' },
-  'FLZ': { pass: '7472', name: 'Francisco', funcion:'CMD', nivel:3, base:'1.2', irpf:33.75, ss:6.47, ingreso:'2022-03-15' },
+// ── FIREBASE CONFIG ──
+const FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
+const FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
+
+// Firebase REST helpers
+async function fbGet(path) {
+  try {
+    const r = await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`);
+    return r.ok ? await r.json() : null;
+  } catch(e) { return null; }
+}
+async function fbSet(path, data) {
+  try {
+    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+  } catch(e) {}
+}
+async function fbUpdate(path, data) {
+  try {
+    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+      method: 'PATCH', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+  } catch(e) {}
+}
+
+// ── USERS — runtime cache (loaded from Firebase) ──
+let USERS = {};
+
+// Default users to migrate on first run
+const DEFAULT_USERS = {
+  'ESH': { pass: '7800', name: 'Eloy', apellidos: 'Infante Seco de Herrera', alias: '',
+           funcion:'CMD', nivel:3, base:'1.2', irpf:34.15, ingreso:'2024-07-01', admin: true },
+  'FLZ': { pass: '7472', name: 'Francisco', apellidos: 'Lopez Zafra', alias: '',
+           funcion:'CMD', nivel:3, base:'1.2', irpf:33.75, ingreso:'2022-03-15', admin: false },
 };
 
-let currentUser = null;
-let currentNivel = 3;
-let pagasMode = 'prorr'; // 'prorr' | 'comp'
-let pagaEste = false;    // para modo comp: ¿es mes de paga?
-let segmedActivo = true;
-let seglicActivo = false;
-let ppActivo = false;
-let calcResult = null;
-let nomDataCached = null; // cached parsed PDF data for comparativa
-let profileData = {};
-let totalHVManual = false;
+// Load all users from Firebase, migrate defaults if first run
+async function loadUsersFromFirebase() {
+  let fbUsers = await fbGet('pilotpay/usuarios');
+  if (!fbUsers) {
+    // First run — migrate default users
+    await fbSet('pilotpay/usuarios', DEFAULT_USERS);
+    fbUsers = DEFAULT_USERS;
+  }
+  USERS = fbUsers;
+}
 
-// ── PERSISTENCE (localStorage) ──
+// ── PERSISTENCE — hybrid: Firebase for profile, localStorage for private calc data ──
+async function saveUserProfile(user, data) {
+  // Save non-sensitive profile to Firebase
+  const profileFields = {
+    name: data.name, apellidos: data.apellidos, alias: data.alias,
+    funcion: data.funcion, nivel: data.nivel, base: data.base,
+    irpf: data.irpf, nif: data.nif, nss: data.nss,
+    ingreso: data.ingreso, theme: data.theme,
+    estadoCivil: data.estadoCivil, hijos: data.hijos,
+    discapacidad: data.discapacidad, residencia: data.residencia,
+    brutoAcum: data.brutoAcum, irpfAcum: data.irpfAcum,
+    mesAcum: data.mesAcum, acumFecha: data.acumFecha, acumTipo: data.acumTipo,
+  };
+  await fbUpdate(`pilotpay/usuarios/${user}`, profileFields);
+  // Also update runtime cache
+  USERS[user] = { ...USERS[user], ...profileFields };
+  // Save simulator/calc prefs locally (private)
+  saveUserData(user);
+}
+
 function saveUserData(user) {
   try {
     localStorage.setItem(`pilotpay_${user}`, JSON.stringify(profileData));
@@ -1614,19 +1697,33 @@ function toggleApiKeyInfo() {
 }
 
 // ── LOGIN ──
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('login-user').value.trim().toUpperCase();
   const p = document.getElementById('login-pass').value.trim();
   const apiKey = document.getElementById('login-apikey').value.trim();
   const card = document.getElementById('login-card');
+  const errEl = document.getElementById('login-err');
+  const btn = card.querySelector('.btn-primary');
+
+  btn.textContent = 'Verificando...';
+  btn.disabled = true;
+
+  // Load users from Firebase if not loaded
+  if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
+
+  btn.textContent = 'Entrar';
+  btn.disabled = false;
+
   if (USERS[u] && USERS[u].pass === p) {
     currentUser = u;
     profileData = { ...USERS[u] };
     if (apiKey) saveApiKey(apiKey);
-    loadUserData(u); // load saved profile/simulator data
+    loadUserData(u);
+    // Merge Firebase profile into profileData
+    profileData = { ...profileData, ...USERS[u] };
     showWelcome();
   } else {
-    document.getElementById('login-err').style.display = 'block';
+    errEl.style.display = 'block';
     card.classList.add('login-shake');
     setTimeout(() => card.classList.remove('login-shake'), 400);
     document.getElementById('login-pass').value = '';
@@ -1634,10 +1731,24 @@ function doLogin() {
 }
 
 // Pre-fill API key if saved
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   const saved = loadApiKey();
   if (saved) document.getElementById('login-apikey').value = saved;
+  // Pre-load users in background for faster login
+  if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
 });
+
+let currentUser = null;
+let currentNivel = 3;
+let pagasMode = 'prorr';
+let pagaEste = false;
+let segmedActivo = true;
+let seglicActivo = false;
+let ppActivo = false;
+let calcResult = null;
+let nomDataCached = null;
+let profileData = {};
+let totalHVManual = false;
 document.getElementById('login-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('login-pass').focus(); });
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
@@ -1839,10 +1950,16 @@ function renderAdmin() {
         </div>
         ${isAdmin ? `<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:var(--mono)">
           ★ Administrador — acceso total a todas las opciones
-        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
           <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
             Acceso: ${userPerms.funciones.join(', ')} · ${userPerms.bases.map(b => BASES_OPTIONS.find(o=>o.val===b)?.label||b).join(', ')}
           </div>
+          <button onclick="editarUsuario('${code}')"
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+            background:var(--blue-dim);border:1px solid var(--blue);
+            color:var(--blue2);border-radius:5px;cursor:pointer">
+            ✏️ Editar
+          </button>
         </div>`}
       </div>`;
   }).join('');
@@ -1878,13 +1995,15 @@ function togglePerm(userCode, type, val, checked) {
   renderAdmin();
 }
 
-function crearUsuarioLocal() {
-  const nombre = document.getElementById('adm-nombre').value.trim();
-  const codigo = document.getElementById('adm-codigo').value.trim().toUpperCase();
-  const pass   = document.getElementById('adm-pass').value.trim();
-  const funcion= document.getElementById('adm-funcion').value;
-  const base   = document.getElementById('adm-base').value;
-  const nivel  = parseInt(document.getElementById('adm-nivel').value);
+async function crearUsuarioLocal() {
+  const nombre   = document.getElementById('adm-nombre').value.trim();
+  const codigo   = document.getElementById('adm-codigo').value.trim().toUpperCase();
+  const pass     = document.getElementById('adm-pass').value.trim();
+  const funcion  = document.getElementById('adm-funcion').value;
+  const base     = document.getElementById('adm-base').value;
+  const nivel    = parseInt(document.getElementById('adm-nivel').value);
+  const apellidos= document.getElementById('adm-apellidos')?.value.trim() || '';
+  const alias    = document.getElementById('adm-alias-new')?.value.trim() || '';
 
   if (!nombre || !codigo || !pass) {
     alert('Rellena nombre, código y contraseña'); return;
@@ -1893,28 +2012,29 @@ function crearUsuarioLocal() {
     alert(`El código ${codigo} ya existe`); return;
   }
 
-  // Add to USERS
-  USERS[codigo] = { pass, name: nombre, funcion, nivel, base, irpf: 30.00, ss: 6.47, ingreso: null };
+  const newUser = {
+    pass, name: nombre, apellidos, alias,
+    funcion, nivel, base, irpf: 30.00, ingreso: null, admin: false
+  };
+
+  // Save to Firebase
+  await fbSet(`pilotpay/usuarios/${codigo}`, newUser);
+  USERS[codigo] = newUser;
 
   // Set default perms
   const perms = loadAdminPerms();
-  perms[codigo] = { funciones: [funcion], bases: [base] };
+  perms[codigo] = { funciones: [funcion], bases: [getBaseCode(base)] };
   saveAdminPerms(perms);
-
-  // Save users list to localStorage
-  try {
-    const usersList = JSON.parse(localStorage.getItem('pilotpay_users') || '{}');
-    usersList[codigo] = USERS[codigo];
-    localStorage.setItem('pilotpay_users', JSON.stringify(usersList));
-  } catch(e) {}
+  await fbSet(`pilotpay/permisos/${codigo}`, perms[codigo]);
 
   // Clear form
   document.getElementById('adm-nombre').value = '';
   document.getElementById('adm-codigo').value = '';
   document.getElementById('adm-pass').value = '';
+  if (document.getElementById('adm-apellidos')) document.getElementById('adm-apellidos').value = '';
 
   renderAdmin();
-  alert(`✓ Usuario ${codigo} creado correctamente`);
+  alert(`✓ Usuario ${codigo} creado en Firebase`);
 }
 
 function generarAltaUsuario() {
@@ -1962,12 +2082,8 @@ function getBaseFactor(baseCode) {
   return baseCode === 'MAD' ? '1.2' : '1';
 }
 function loadAdminCreatedUsers() {
-  try {
-    const usersList = JSON.parse(localStorage.getItem('pilotpay_users') || '{}');
-    Object.entries(usersList).forEach(([code, data]) => {
-      if (!USERS[code]) USERS[code] = data;
-    });
-  } catch(e) {}
+  // Users are already loaded from Firebase in loadUsersFromFirebase()
+  // This function is kept for compatibility but is now a no-op
 }
 
 // Apply permissions to calculadora selectors
@@ -2004,6 +2120,88 @@ function applyUserPerms() {
     });
     baseEl.onchange = () => onBaseChange();
   }
+}
+
+function editarUsuario(code) {
+  const u = USERS[code] || {};
+  // Show modal with edit form
+  document.getElementById('day-modal-content').innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeDayModal()">✕</button>
+    <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">
+      Editar perfil — ${code}
+    </div>
+    <div class="row">
+      <div class="field">
+        <span class="field-label">Nombre</span>
+        <input class="field-input" id="edit-nombre" value="${u.name||''}">
+      </div>
+      <div class="field">
+        <span class="field-label">Apellidos</span>
+        <input class="field-input" id="edit-apellidos" value="${u.apellidos||''}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <span class="field-label">Alias (saludo)</span>
+        <input class="field-input" id="edit-alias" value="${u.alias||''}" placeholder="Opcional">
+      </div>
+      <div class="field">
+        <span class="field-label">Contraseña</span>
+        <input class="field-input" id="edit-pass" value="${u.pass||''}" type="text">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <span class="field-label">Función</span>
+        <select class="field-input" id="edit-funcion">
+          <option value="CMD" ${u.funcion==='CMD'?'selected':''}>Comandante</option>
+          <option value="COP" ${u.funcion==='COP'?'selected':''}>Copiloto</option>
+        </select>
+      </div>
+      <div class="field">
+        <span class="field-label">Nivel</span>
+        <select class="field-input" id="edit-nivel">
+          ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${u.nivel==n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <span class="field-label">Base</span>
+      <select class="field-input" id="edit-base">
+        <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Gran Canaria</option>
+        <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Tenerife</option>
+        <option value="1.2" ${parseFloat(u.base||1)>1?'selected':''}>Madrid</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
+  `;
+  document.getElementById('day-modal').classList.add('open');
+}
+
+async function guardarEdicionUsuario(code) {
+  const updates = {
+    name:      document.getElementById('edit-nombre').value.trim(),
+    apellidos: document.getElementById('edit-apellidos').value.trim(),
+    alias:     document.getElementById('edit-alias').value.trim(),
+    pass:      document.getElementById('edit-pass').value.trim(),
+    funcion:   document.getElementById('edit-funcion').value,
+    nivel:     parseInt(document.getElementById('edit-nivel').value),
+    base:      document.getElementById('edit-base').value,
+  };
+
+  if (!updates.name || !updates.pass) {
+    alert('Nombre y contraseña son obligatorios'); return;
+  }
+
+  // Update Firebase
+  await fbUpdate(`pilotpay/usuarios/${code}`, updates);
+  // Update runtime cache
+  USERS[code] = { ...USERS[code], ...updates };
+
+  closeDayModal();
+  renderAdmin();
+  alert(`✓ Perfil de ${code} actualizado`);
 }
 
 // ── END ADMIN PANEL ──
@@ -2116,10 +2314,12 @@ function showWelcome() {
   const funcion = profileData.funcion || u.funcion || 'CMD';
   const nivel   = profileData.nivel || u.nivel || 3;
   const isCMD   = funcion === 'CMD';
-  const nombre  = u.name || 'Piloto';
+  // Use alias if set, otherwise first name
+  const alias   = profileData.alias || u.alias || '';
+  const nombre  = alias || (profileData.name || u.name || 'Piloto').split(' ')[0];
   const baseLabel = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
 
-  document.getElementById('welcome-name').textContent = nombre.split(' ')[0];
+  document.getElementById('welcome-name').textContent = nombre;
 
   // Role line: Cargo · Nivel · Base + Binter Canarias + Admin badge
   const roleEl = document.getElementById('welcome-role-sub');
@@ -3100,13 +3300,23 @@ function renderPerfil() {
     ? profileData.ingreso_display
     : (u.ingreso ? formatDate(u.ingreso) : '—');
   const ingresoDate = u.ingreso ? new Date(u.ingreso) : null;
+  const nombreCompleto = `${profileData.name || u.name || ''} ${profileData.apellidos || u.apellidos || ''}`.trim();
+  const aliasDisplay = profileData.alias || u.alias || '';
 
-  document.getElementById('prf-nombre').textContent = profileData.fullName || `${u.name || ''} — ${currentUser}`;
+  document.getElementById('prf-nombre').textContent = nombreCompleto || `${u.name || ''} — ${currentUser}`;
   document.getElementById('prf-role').textContent =
     `${u.funcion === 'CMD' ? 'COMANDANTE' : 'COPILOTO'} · NIVEL ${currentNivel} · ${parseFloat(u.base||1)>1?'BASE MADRID':'BASE CANARIAS'}`;
   document.getElementById('prf-ingreso').textContent = ingreso;
   document.getElementById('prf-nif').textContent = profileData.nif || '—';
   document.getElementById('prf-nss').textContent = profileData.nss || '—';
+
+  // Populate editable fields
+  const nombreEditEl = document.getElementById('prf-nombre-edit');
+  if (nombreEditEl) nombreEditEl.value = profileData.name || u.name || '';
+  const apellidosEl = document.getElementById('prf-apellidos-edit');
+  if (apellidosEl) apellidosEl.value = profileData.apellidos || u.apellidos || '';
+  const aliasEl = document.getElementById('prf-alias');
+  if (aliasEl) aliasEl.value = aliasDisplay;
 
   // Antigüedad
   if (ingresoDate) {
@@ -3206,16 +3416,25 @@ function saveProfile() {
   profileData.residencia    = document.getElementById('prf-residencia').value;
   const nuevoBruto = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
   const nuevoIRPF  = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
-  // If values changed manually, mark as manual update
   if (nuevoBruto !== profileData.brutoAcum || nuevoIRPF !== profileData.irpfAcum) {
     const ahora = new Date();
     profileData.acumFecha = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
     profileData.acumTipo = 'manual';
   }
-  profileData.brutoAcum     = nuevoBruto;
-  profileData.irpfAcum      = nuevoIRPF;
-  profileData.mesAcum       = document.getElementById('prf-mes-acum').value;
-  if (currentUser) saveUserData(currentUser);
+  profileData.brutoAcum = nuevoBruto;
+  profileData.irpfAcum  = nuevoIRPF;
+  profileData.mesAcum   = document.getElementById('prf-mes-acum').value;
+  // User-editable fields
+  const aliasEl = document.getElementById('prf-alias');
+  if (aliasEl) profileData.alias = aliasEl.value.trim();
+  const nombreEl = document.getElementById('prf-nombre-edit');
+  if (nombreEl) profileData.name = nombreEl.value.trim();
+  const apellidosEl = document.getElementById('prf-apellidos-edit');
+  if (apellidosEl) profileData.apellidos = apellidosEl.value.trim();
+  if (currentUser) {
+    saveUserData(currentUser);
+    saveUserProfile(currentUser, profileData); // sync to Firebase
+  }
 }
 
 function generarEmailSolicitud() {
