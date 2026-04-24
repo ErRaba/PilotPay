@@ -156,7 +156,73 @@
   --text3: #8b5c5c;
 }
 
+/* ── TEMA: EMBRAER ECAM ── */
+[data-theme="ecam"] {
+  --bg: #000000;
+  --bg2: #050505;
+  --bg3: #0a0a0a;
+  --card: #0d0d0d;
+  --card2: #111111;
+  --border: #1a1a1a;
+  --border2: #252525;
+  /* ECAM accent = cyan información */
+  --blue: #00d4ff;
+  --blue2: #40e8ff;
+  --blue-dim: #001f2a;
+  /* amber = caution */
+  --amber: #ff8c00;
+  --amber2: #ffaa33;
+  --amber-dim: #1f1000;
+  /* green = acción manual */
+  --green: #00e000;
+  --green-dim: #001a00;
+  /* red = warning */
+  --red: #ff3333;
+  --red-dim: #1f0000;
+  --text: #ffffff;
+  --text2: #cccccc;
+  --text3: #777777;
+  /* ECAM semantic extras */
+  --ecam-green:   #00e000;
+  --ecam-magenta: #ff00ff;
+  --ecam-cyan:    #00d4ff;
+  --ecam-white:   #ffffff;
+  --ecam-amber:   #ff8c00;
+  --ecam-red:     #ff3333;
+}
+
+/* ECAM semantic colors — active in ecam theme */
+[data-theme="ecam"] .field-input {
+  color: var(--ecam-green);
+  border-color: #1a3a1a;
+}
+[data-theme="ecam"] .field-input:focus { border-color: var(--ecam-green); }
+[data-theme="ecam"] .result-val        { color: var(--ecam-cyan); }
+[data-theme="ecam"] .result-val.big    { color: var(--ecam-white); }
+[data-theme="ecam"] .result-val.blue   { color: var(--ecam-cyan); }
+[data-theme="ecam"] .result-val.amber  { color: var(--ecam-amber); }
+[data-theme="ecam"] .result-val.red    { color: var(--ecam-red); }
+[data-theme="ecam"] .nomina-amount     { color: var(--ecam-white); }
+[data-theme="ecam"] .nomina-concept    { color: var(--ecam-cyan); }
+[data-theme="ecam"] .nomina-row.deduccion .nomina-amount { color: var(--ecam-amber); }
+[data-theme="ecam"] .nomina-row.total-row .nomina-amount { color: var(--ecam-white); font-size:18px; }
+[data-theme="ecam"] .nomina-row.subtotal .nomina-amount  { color: var(--ecam-cyan); }
+[data-theme="ecam"] .sum-val           { color: var(--ecam-cyan); }
+[data-theme="ecam"] .tramo-input       { color: var(--ecam-green); }
+[data-theme="ecam"] .tramo-rate        { color: var(--ecam-cyan); }
+[data-theme="ecam"] .alert.warning .alert-title { color: var(--ecam-amber); }
+[data-theme="ecam"] .alert.success .alert-title { color: var(--ecam-green); }
+[data-theme="ecam"] body { font-family: 'Space Mono', monospace; }
+[data-theme="ecam"] .card { border-color: #1a2a1a; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html {
+  color-scheme: dark;
+}
+[data-theme="light"], [data-theme="binter"] {
+  color-scheme: light;
+}
 
 body {
   font-family: var(--sans);
@@ -164,6 +230,11 @@ body {
   color: var(--text);
   min-height: 100dvh;
   overflow-x: hidden;
+}
+
+/* Ensure all pages inherit background */
+.page, main, #app {
+  background: var(--bg);
 }
 
 /* ── LAYOUT ── */
@@ -290,20 +361,20 @@ main { flex: 1; overflow-y: auto; }
   padding: 32px; text-align: center;
 }
 .welcome-img {
-  width: 100%; max-width: 380px;
+  width: 100%; max-width: 280px;
   border-radius: 16px;
   margin-bottom: 24px;
   border: 1px solid var(--border);
-  object-fit: cover; height: 200px;
   background: var(--bg3);
-  overflow: hidden;
+  padding: 20px;
+  display: flex; align-items: center; justify-content: center;
 }
 .welcome-greeting {
   font-size: 26px; font-weight: 300;
   color: var(--text2); margin-bottom: 4px;
 }
 .welcome-greeting strong { color: var(--text); font-weight: 600; }
-.welcome-sub { color: var(--text3); font-size: 13px; margin-bottom: 32px; font-family: var(--mono); }
+.welcome-sub { color: var(--text3); font-size: 12px; margin-bottom: 32px; font-family: var(--mono); line-height: 1.8; }
 .btn-continue {
   padding: 14px 40px;
   background: var(--blue); color: white;
@@ -351,6 +422,24 @@ main { flex: 1; overflow-y: auto; }
 }
 .field-input:focus { border-color: var(--blue); }
 select.field-input { cursor: pointer; }
+/* Fix iOS Safari white background on selects */
+select.field-input,
+select.field-input option {
+  background-color: var(--bg3);
+  color: var(--text);
+}
+/* Force dark appearance on all form controls in iOS */
+input, select, textarea {
+  color-scheme: dark;
+}
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea,
+[data-theme="binter"] input,
+[data-theme="binter"] select,
+[data-theme="binter"] textarea {
+  color-scheme: light;
+}
 
 /* ── TOGGLE GROUP ── */
 .toggle-group { display: flex; gap: 4px; }
@@ -499,6 +588,7 @@ select.field-input { cursor: pointer; }
   cursor: pointer;
   transition: border-color .2s, background .2s;
   margin-bottom: 12px;
+  background: var(--bg3);
 }
 .upload-zone:hover, .upload-zone.drag {
   border-color: var(--blue);
@@ -690,11 +780,11 @@ input[type=number] { -moz-appearance: textfield; }
 
 <!-- ══════════ WELCOME ══════════ -->
 <div id="welcome-screen" style="display:none">
-  <div class="welcome-img" style="background:var(--bg3);display:flex;align-items:center;justify-content:center">
-    <div id="welcome-epaulettes" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"></div>
+  <div class="welcome-img">
+    <div id="welcome-epaulettes"></div>
   </div>
   <div class="welcome-greeting">Hola, <strong id="welcome-name">Piloto</strong></div>
-  <div class="welcome-sub" id="welcome-role-sub">BINTER CANARIAS // GRUPO IV</div>
+  <div class="welcome-sub" id="welcome-role-sub">BINTER CANARIAS</div>
   <button class="btn-continue" onclick="enterApp()">Continuar →</button>
 </div>
 
@@ -713,6 +803,7 @@ input[type=number] { -moz-appearance: textfield; }
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
     <button class="tab" onclick="showTab('perfil')"><span class="tab-icon">👤</span>Perfil</button>
     <button class="tab" onclick="showTab('config')"><span class="tab-icon">⚙️</span>Config</button>
+    <button class="tab" id="tab-admin" style="display:none" onclick="showTab('admin')"><span class="tab-icon">🛡</span>Admin</button>
   </div>
 
   <main>
@@ -935,6 +1026,8 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
 
+      <button class="btn-secondary" style="margin-bottom:8px;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear variables</button>
+
       <!-- RESUMEN RÁPIDO -->
       <div class="summary-bar" id="summary-bar">
         <div class="sum-item">
@@ -956,6 +1049,8 @@ input[type=number] { -moz-appearance: textfield; }
       </div>
 
       <button class="btn-secondary" onclick="showTab('nomina')">Ver nómina completa →</button>
+      <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="acumularSimulador()">📊 Acumular al simulador IRPF</button>
+      <div id="acum-status" style="font-size:11px;color:var(--text3);font-family:var(--mono);text-align:center;margin-top:-4px;margin-bottom:8px"></div>
 
     </div><!-- /page-calcular -->
 
@@ -993,6 +1088,12 @@ input[type=number] { -moz-appearance: textfield; }
         <div id="comp-loading" class="loading-block" style="display:none">
           <div class="spinner"></div>
           <div id="comp-loading-text">Analizando PDF...</div>
+        </div>
+        <div id="comp-action-btns" style="display:none;margin-bottom:12px">
+          <div class="row">
+            <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2)" onclick="actualizarComparativa()">🔄 Actualizar comparativa</button>
+            <button class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="resetComparativa()">🗑 Reset PDF</button>
+          </div>
         </div>
         <div id="comp-output"></div>
       </div>
@@ -1211,6 +1312,7 @@ input[type=number] { -moz-appearance: textfield; }
               </select>
             </div>
           </div>
+          <div id="acum-fecha-display" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:-4px;margin-bottom:8px"></div>
           <div class="alert info" style="margin-bottom:0;margin-top:4px">
             <div class="alert-icon">🔮</div>
             <div class="alert-content">
@@ -1226,6 +1328,28 @@ input[type=number] { -moz-appearance: textfield; }
             <div class="alert-title">¿Perfil incompleto?</div>
             <div class="alert-text">Sube una nómina en Comparativa para que la app rellene automáticamente tu NIF, Nº SS, fecha de ingreso y datos fiscales.</div>
           </div>
+        </div>
+
+        <!-- SOLICITAR CAMBIO -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot amber"></div>Solicitar cambio de datos</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">
+            Para cambiar tu base o cargo (CMD/COP) es necesario solicitarlo al administrador.
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Tipo de solicitud</span>
+              <select class="field-input" id="solicitud-tipo">
+                <option value="base">Cambio de base</option>
+                <option value="cargo">Cambio de cargo</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">Nuevo valor</span>
+              <input class="field-input" id="solicitud-valor" type="text" placeholder="Ej: Tenerife / COP">
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="generarEmailSolicitud()">✉️ Generar email de solicitud</button>
         </div>
 
       </div>
@@ -1293,6 +1417,19 @@ input[type=number] { -moz-appearance: textfield; }
             <div class="theme-desc" style="color:#8b5c5c">Dark side of the Force</div>
           </div>
 
+          <!-- ECAM Embraer -->
+          <div class="theme-card" id="theme-ecam" onclick="setTheme('ecam')" style="background:#000000;border:2px solid #1a2a1a;grid-column:1/-1">
+            <div class="theme-preview" style="display:flex;gap:6px;align-items:center">
+              <div style="background:#0d0d0d;height:18px;border-radius:4px;flex:1"></div>
+              <div style="background:#00e000;height:8px;border-radius:3px;width:25%"></div>
+              <div style="background:#ff00ff;height:8px;border-radius:3px;width:20%"></div>
+              <div style="background:#00d4ff;height:8px;border-radius:3px;width:25%"></div>
+              <div style="background:#ffffff;height:8px;border-radius:3px;width:15%"></div>
+            </div>
+            <div class="theme-name" style="color:#00d4ff">🖥️ Embraer ECAM</div>
+            <div class="theme-desc" style="color:#00e000">Verde·Magenta·Cyan·Blanco</div>
+          </div>
+
         </div>
       </div>
 
@@ -1315,6 +1452,75 @@ input[type=number] { -moz-appearance: textfield; }
       </div>
 
     </div><!-- /page-config -->
+
+    <!-- ── TAB: ADMIN ── -->
+    <div class="page" id="page-admin">
+
+      <div class="card" style="border-color:var(--amber);background:var(--amber-dim)">
+        <div class="card-title"><div class="section-dot amber"></div>Panel de Administrador</div>
+        <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">
+          Solo visible para ESH · Binter Canarias Base MAD
+        </div>
+      </div>
+
+      <!-- ALTA NUEVO USUARIO -->
+      <div class="card">
+        <div class="card-title"><div class="section-dot"></div>Alta nuevo usuario</div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Nombre</span>
+            <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre Apellidos">
+          </div>
+          <div class="field">
+            <span class="field-label">Código</span>
+            <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
+              oninput="this.value=this.value.toUpperCase()">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Contraseña</span>
+            <input class="field-input" id="adm-pass" type="text" placeholder="1234">
+          </div>
+          <div class="field">
+            <span class="field-label">Función</span>
+            <select class="field-input" id="adm-funcion">
+              <option value="CMD">Comandante</option>
+              <option value="COP">Copiloto</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Base</span>
+            <select class="field-input" id="adm-base">
+              <option value="1">Gran Canaria</option>
+              <option value="1">Tenerife</option>
+              <option value="1.2" selected>Madrid</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="field-label">Nivel</span>
+            <select class="field-input" id="adm-nivel">
+              <option value="1">1</option><option value="2">2</option>
+              <option value="3" selected>3</option><option value="4">4</option>
+              <option value="5">5</option><option value="6">6</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla de alta</button>
+        <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario</button>
+      </div>
+
+      <!-- GESTIÓN DE PERMISOS -->
+      <div class="card">
+        <div class="card-title"><div class="section-dot amber"></div>Gestión de permisos</div>
+        <div id="admin-users-list">
+          <div class="loading-block"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+    </div><!-- /page-admin -->
 
   </main>
 </div><!-- /app -->
@@ -1379,6 +1585,7 @@ let segmedActivo = true;
 let seglicActivo = false;
 let ppActivo = false;
 let calcResult = null;
+let nomDataCached = null; // cached parsed PDF data for comparativa
 let profileData = {};
 let totalHVManual = false;
 
@@ -1454,18 +1661,57 @@ function doLogout() {
 // ── INIT APP ──
 function initApp() {
   const u = USERS[currentUser];
+  const isAdmin = currentUser === ADMIN_CODE;
+  const baseLabel = parseFloat(profileData.base || u.base) > 1 ? 'MAD' : 'CAN';
   document.getElementById('user-pill').textContent = currentUser + ' ↩';
-  document.getElementById('header-badge').textContent = `CMD · NVL${u.nivel} · MAD`;
-  document.getElementById('funcion').value = u.funcion;
-  document.getElementById('base').value = u.base;
+  document.getElementById('header-badge').textContent =
+    `${u.funcion} · NVL${profileData.nivel || u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
+
+  // Set funcion and base from profile
+  const funcEl = document.getElementById('funcion');
+  const baseEl = document.getElementById('base');
+  funcEl.value = profileData.funcion || u.funcion;
+  baseEl.value = profileData.base || u.base;
+
+  // Admin has full access — no locking
+  if (isAdmin) {
+    funcEl.style.opacity = '1';
+    funcEl.style.pointerEvents = 'auto';
+    baseEl.style.opacity = '1';
+    baseEl.style.pointerEvents = 'auto';
+    funcEl.onchange = () => recalc();
+    baseEl.onchange = () => onBaseChange();
+  } else {
+    // Lock selectors for regular users
+    funcEl.style.opacity = '0.6';
+    funcEl.style.pointerEvents = 'none';
+    baseEl.style.opacity = '0.6';
+    baseEl.style.pointerEvents = 'none';
+  }
+
   document.getElementById('irpf').value = profileData.irpf || u.irpf;
   currentNivel = profileData.nivel || u.nivel;
   highlightNivel();
+
+  // Load admin-created users
+  loadAdminCreatedUsers();
+
+  // Show admin tab only for ESH
+  const adminTab = document.getElementById('tab-admin');
+  if (currentUser === 'ESH') {
+    adminTab.style.display = 'inline-flex';
+  } else {
+    adminTab.style.display = 'none';
+  }
+
   loadTheme();
   onBaseChange();
   recalc();
   initPerfil();
   loadSimulatorData();
+  setCurrentMonth();
+  // Apply permissions after UI is ready
+  setTimeout(applyUserPerms, 150);
 }
 
 // ── TABS ──
@@ -1485,6 +1731,283 @@ function checkApiKeyCard() {
   document.getElementById('apikey-card').style.display = hasKey ? 'none' : 'block';
 }
 
+// ══════════════════════════════════════
+// ADMIN PANEL — solo ESH
+// ══════════════════════════════════════
+
+const ADMIN_CODE = 'ESH';
+const BASES_OPTIONS = [
+  { val: 'GC',  label: 'Gran Canaria', factor: '1'   },
+  { val: 'TFN', label: 'Tenerife',     factor: '1'   },
+  { val: 'MAD', label: 'Madrid',       factor: '1.2' },
+];
+
+// Load/save admin permissions from localStorage
+function loadAdminPerms() {
+  try {
+    const d = localStorage.getItem('pilotpay_admin_perms');
+    return d ? JSON.parse(d) : {};
+  } catch(e) { return {}; }
+}
+
+function saveAdminPerms(perms) {
+  try { localStorage.setItem('pilotpay_admin_perms', JSON.stringify(perms)); } catch(e) {}
+}
+
+function getUserPerms(userCode) {
+  const perms = loadAdminPerms();
+  const u = USERS[userCode];
+  if (!u) return { funciones: [], bases: [] };
+  // Default: only their own funcion and base
+  return perms[userCode] || {
+    funciones: [u.funcion],
+    bases: [u.base]
+  };
+}
+
+function renderAdmin() {
+  const el = document.getElementById('admin-users-list');
+  const perms = loadAdminPerms();
+
+  // Include ALL users including ESH
+  const allUsers = Object.entries(USERS);
+
+  if (!allUsers.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Sin usuarios registrados</div>`;
+    return;
+  }
+
+  el.innerHTML = allUsers.map(([code, u]) => {
+    const isAdmin = code === ADMIN_CODE;
+    // Admin always has all perms
+    const userPerms = isAdmin
+      ? { funciones: ['CMD', 'COP'], bases: ['GC', 'TFN', 'MAD'] }
+      : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
+
+    const funcChecks = [
+      { val: 'CMD', label: 'Comandante' },
+      { val: 'COP', label: 'Copiloto' },
+    ].map(f => `
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+        <input type="checkbox"
+          ${isAdmin ? 'checked disabled' : ''}
+          ${!isAdmin ? `class="adm-perm-check" data-user="${code}" data-type="funcion" data-val="${f.val}"
+          ${userPerms.funciones.includes(f.val) ? 'checked' : ''}
+          onchange="togglePerm('${code}','funcion','${f.val}',this.checked)"` : ''}
+          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--amber)">
+        <span style="font-size:12px;color:var(--text2)">${f.label}</span>
+      </label>`).join('');
+
+    const baseChecks = BASES_OPTIONS.map(b => `
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+        <input type="checkbox"
+          ${isAdmin ? 'checked disabled' : ''}
+          ${!isAdmin ? `class="adm-perm-check" data-user="${code}" data-type="base" data-val="${b.val}"
+          ${userPerms.bases.includes(b.val) ? 'checked' : ''}
+          onchange="togglePerm('${code}','base','${b.val}',this.checked)"` : ''}
+          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--amber)">
+        <span style="font-size:12px;color:var(--text2)">${b.label}</span>
+      </label>`).join('');
+
+    return `
+      <div style="border:1px solid ${isAdmin ? 'var(--amber)' : 'var(--border)'};border-radius:var(--r);
+        padding:14px;margin-bottom:10px;background:${isAdmin ? 'var(--amber-dim)' : 'var(--bg3)'}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="width:36px;height:36px;border-radius:50%;
+            background:${isAdmin ? 'var(--amber-dim)' : 'var(--blue-dim)'};
+            border:1px solid ${isAdmin ? 'var(--amber)' : 'var(--blue)'};
+            display:flex;align-items:center;justify-content:center;
+            font-family:var(--mono);font-size:12px;font-weight:700;
+            color:${isAdmin ? 'var(--amber2)' : 'var(--blue2)'}">${code}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name}${isAdmin ? ' ★' : ''}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
+              ${u.funcion} · NVL${u.nivel} · ${parseFloat(u.base)>1?'Madrid':'Canarias'}
+              ${isAdmin ? ' · ADMINISTRADOR' : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:10px;letter-spacing:2px;color:var(--amber);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">Cargo</div>
+            ${funcChecks}
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:2px;color:var(--amber);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">Base</div>
+            ${baseChecks}
+          </div>
+        </div>
+        ${isAdmin ? `<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:var(--mono)">
+          ★ Administrador — acceso total a todas las opciones
+        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
+            Acceso: ${userPerms.funciones.join(', ')} · ${userPerms.bases.map(b => BASES_OPTIONS.find(o=>o.val===b)?.label||b).join(', ')}
+          </div>
+        </div>`}
+      </div>`;
+  }).join('');
+}
+
+function togglePerm(userCode, type, val, checked) {
+  const perms = loadAdminPerms();
+  const u = USERS[userCode];
+  if (!perms[userCode]) {
+    perms[userCode] = {
+      funciones: [u.funcion],
+      bases: [u.base]
+    };
+  }
+  const arr = type === 'funcion' ? perms[userCode].funciones : perms[userCode].bases;
+  if (checked && !arr.includes(val)) arr.push(val);
+  if (!checked) {
+    const idx = arr.indexOf(val);
+    if (idx > -1) arr.splice(idx, 1);
+    // Ensure at least one option remains checked
+    if (arr.length === 0) {
+      arr.push(val); // re-check if trying to uncheck last one
+      // Re-check the checkbox
+      setTimeout(() => {
+        document.querySelectorAll(`.adm-perm-check[data-user="${userCode}"][data-type="${type}"][data-val="${val}"]`)
+          .forEach(cb => cb.checked = true);
+      }, 0);
+      return;
+    }
+  }
+  saveAdminPerms(perms);
+  // Re-render summary line
+  renderAdmin();
+}
+
+function crearUsuarioLocal() {
+  const nombre = document.getElementById('adm-nombre').value.trim();
+  const codigo = document.getElementById('adm-codigo').value.trim().toUpperCase();
+  const pass   = document.getElementById('adm-pass').value.trim();
+  const funcion= document.getElementById('adm-funcion').value;
+  const base   = document.getElementById('adm-base').value;
+  const nivel  = parseInt(document.getElementById('adm-nivel').value);
+
+  if (!nombre || !codigo || !pass) {
+    alert('Rellena nombre, código y contraseña'); return;
+  }
+  if (USERS[codigo]) {
+    alert(`El código ${codigo} ya existe`); return;
+  }
+
+  // Add to USERS
+  USERS[codigo] = { pass, name: nombre, funcion, nivel, base, irpf: 30.00, ss: 6.47, ingreso: null };
+
+  // Set default perms
+  const perms = loadAdminPerms();
+  perms[codigo] = { funciones: [funcion], bases: [base] };
+  saveAdminPerms(perms);
+
+  // Save users list to localStorage
+  try {
+    const usersList = JSON.parse(localStorage.getItem('pilotpay_users') || '{}');
+    usersList[codigo] = USERS[codigo];
+    localStorage.setItem('pilotpay_users', JSON.stringify(usersList));
+  } catch(e) {}
+
+  // Clear form
+  document.getElementById('adm-nombre').value = '';
+  document.getElementById('adm-codigo').value = '';
+  document.getElementById('adm-pass').value = '';
+
+  renderAdmin();
+  alert(`✓ Usuario ${codigo} creado correctamente`);
+}
+
+function generarAltaUsuario() {
+  const nombre = document.getElementById('adm-nombre').value.trim();
+  const codigo = document.getElementById('adm-codigo').value.trim().toUpperCase();
+  const pass   = document.getElementById('adm-pass').value.trim();
+  const funcion= document.getElementById('adm-funcion').value;
+  const base   = document.getElementById('adm-base').value;
+  const baseLabel = parseFloat(base) > 1 ? 'Madrid' : 'Canarias';
+
+  if (!nombre || !codigo || !pass) {
+    alert('Rellena nombre, código y contraseña para generar la plantilla'); return;
+  }
+
+  const asunto = `PilotPay — Acceso a la aplicación`;
+  const cuerpo = `Hola ${nombre.split(' ')[0]},
+
+Te doy acceso a PilotPay, la app de cálculo y previsión de nóminas para pilotos de Binter Canarias.
+
+Accede desde: https://erraba.github.io/pilotpay
+
+Tus credenciales:
+• Usuario: ${codigo}
+• Contraseña: ${pass}
+
+Tu perfil configurado:
+• Función: ${funcion === 'CMD' ? 'Comandante' : 'Copiloto'}
+• Base: ${baseLabel}
+
+Si necesitas cambiar algún dato de tu perfil, desde la sección Perfil puedes solicitar modificaciones.
+
+Un saludo,
+Eloy (ESH)`;
+
+  window.location.href = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+}
+
+// Helper: convert base factor to code
+function getBaseCode(baseFactor) {
+  return parseFloat(baseFactor) > 1 ? 'MAD' : 'GC'; // default Canarias to GC
+}
+
+// Helper: convert base code to factor for calculations
+function getBaseFactor(baseCode) {
+  return baseCode === 'MAD' ? '1.2' : '1';
+}
+function loadAdminCreatedUsers() {
+  try {
+    const usersList = JSON.parse(localStorage.getItem('pilotpay_users') || '{}');
+    Object.entries(usersList).forEach(([code, data]) => {
+      if (!USERS[code]) USERS[code] = data;
+    });
+  } catch(e) {}
+}
+
+// Apply permissions to calculadora selectors
+function applyUserPerms() {
+  if (currentUser === ADMIN_CODE) return; // admin sees everything
+  const perms = getUserPerms(currentUser);
+  const u = USERS[currentUser];
+
+  const funcEl = document.getElementById('funcion');
+  const baseEl = document.getElementById('base');
+
+  // If user has only one funcion and one base → lock (already done in initApp)
+  // If user has multiple → unlock but limit options
+  const funciones = perms.funciones || [u.funcion];
+  const bases     = perms.bases || [u.base];
+
+  if (funciones.length > 1) {
+    funcEl.style.opacity = '1';
+    funcEl.style.pointerEvents = 'auto';
+    // Remove options not in perms
+    Array.from(funcEl.options).forEach(opt => {
+      opt.disabled = !funciones.includes(opt.value);
+      opt.style.display = !funciones.includes(opt.value) ? 'none' : '';
+    });
+    funcEl.onchange = () => recalc();
+  }
+
+  if (bases.length > 1) {
+    baseEl.style.opacity = '1';
+    baseEl.style.pointerEvents = 'auto';
+    Array.from(baseEl.options).forEach(opt => {
+      opt.disabled = !bases.includes(opt.value);
+      opt.style.display = !bases.includes(opt.value) ? 'none' : '';
+    });
+    baseEl.onchange = () => onBaseChange();
+  }
+}
+
+// ── END ADMIN PANEL ──
+
 function renderConfig() {
   document.getElementById('cfg-user').textContent = currentUser || '—';
   document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active-theme'));
@@ -1495,25 +2018,29 @@ function renderConfig() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const idx = ['calcular','nomina','comparar','simulador','perfil','config'].indexOf(name);
-  document.querySelectorAll('.tab')[idx].classList.add('active');
+  const tabs = ['calcular','nomina','comparar','simulador','perfil','config','admin'];
+  const idx = tabs.indexOf(name);
+  const tabEls = document.querySelectorAll('.tab');
+  if (tabEls[idx]) tabEls[idx].classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
-  if (name === 'nomina') renderNomina();
-  if (name === 'perfil') renderPerfil();
+  if (name === 'nomina')   renderNomina();
+  if (name === 'perfil')   renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar') checkApiKeyCard();
-  if (name === 'config') renderConfig();
+  if (name === 'config')   renderConfig();
+  if (name === 'admin')    renderAdmin();
 }
 
 // ── THEMES ──
 const THEMES = {
-  dark:     { label: '🌙 Oscuro',   desc: 'Por defecto' },
-  light:    { label: '☀️ Claro',    desc: 'Fondo blanco' },
-  cockpit:  { label: '🛩️ Cockpit',  desc: 'Verde aviación' },
-  binter:   { label: '✈️ Binter',   desc: 'Verde corporativo' },
-  starwars: { label: '⚔️ Imperio',  desc: 'Dark side of the Force' },
+  dark:     { label: '🌙 Oscuro',      desc: 'Por defecto' },
+  light:    { label: '☀️ Claro',       desc: 'Fondo blanco' },
+  cockpit:  { label: '🛩️ Cockpit',     desc: 'Verde aviación' },
+  binter:   { label: '✈️ Binter',      desc: 'Verde corporativo' },
+  starwars: { label: '⚔️ Imperio',     desc: 'Dark side of the Force' },
+  ecam:     { label: '🖥️ ECAM',        desc: 'Embraer E195-E2' },
 };
-let currentTheme = 'dark';
+let currentTheme = 'ecam';
 
 function setTheme(theme) {
   currentTheme = theme;
@@ -1525,13 +2052,13 @@ function setTheme(theme) {
     profileData.theme = theme;
     saveUserData(currentUser);
   }
-  try { localStorage.setItem('pilotpay_theme_' + (currentUser||''), theme); } catch(e) {}
+  try { localStorage.setItem('pilotpay_theme_' + (currentUser||'_default'), theme); } catch(e) {}
 }
 
 function loadTheme() {
   const saved = profileData.theme
-    || (function(){ try { return localStorage.getItem('pilotpay_theme_' + (currentUser||'')); } catch(e){ return null; } })()
-    || 'dark';
+    || (function(){ try { return localStorage.getItem('pilotpay_theme_' + (currentUser||'_default')); } catch(e){ return null; } })()
+    || 'ecam';
   setTheme(saved);
 }
 
@@ -1583,17 +2110,26 @@ function showWelcome() {
   document.getElementById('login-screen').style.display = 'none';
   const ws = document.getElementById('welcome-screen');
   ws.style.display = 'flex';
-  document.getElementById('welcome-name').textContent = USERS[currentUser].name;
 
   const u = USERS[currentUser];
+  const isAdmin = currentUser === ADMIN_CODE;
   const funcion = profileData.funcion || u.funcion || 'CMD';
-  const nivel = profileData.nivel || u.nivel || 3;
-  const isCMD = funcion === 'CMD';
+  const nivel   = profileData.nivel || u.nivel || 3;
+  const isCMD   = funcion === 'CMD';
+  const nombre  = u.name || 'Piloto';
+  const baseLabel = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
 
-  // Render epaulettes
-  document.getElementById('welcome-epaulettes').innerHTML = buildEpaulettes(funcion, nivel);
-  document.getElementById('welcome-role-sub').textContent =
-    `${isCMD ? 'COMANDANTE' : 'COPILOTO'} · NIVEL ${nivel} · BINTER CANARIAS`;
+  document.getElementById('welcome-name').textContent = nombre.split(' ')[0];
+
+  // Role line: Cargo · Nivel · Base + Binter Canarias + Admin badge
+  const roleEl = document.getElementById('welcome-role-sub');
+  roleEl.innerHTML =
+    `${isCMD ? 'COMANDANTE' : 'COPILOTO'} · NIVEL ${nivel} · ${baseLabel.toUpperCase()}<br>
+     <span style="font-size:10px;letter-spacing:3px;opacity:0.6">BINTER CANARIAS</span>` +
+    (isAdmin ? `<br><span style="font-size:10px;color:var(--amber2);letter-spacing:2px">★ ADMINISTRADOR</span>` : '');
+
+  // Smaller epaulettes — 110px to avoid clipping on small screens
+  document.getElementById('welcome-epaulettes').innerHTML = buildEpaulettes(funcion, nivel, 110);
 }
 
 function onBaseChange() {
@@ -1615,6 +2151,81 @@ function onBaseChange() {
 }
 
 // ── NIVEL ──
+function setCurrentMonth() {
+  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const currentMonth = months[new Date().getMonth()];
+  document.getElementById('mes-nomina').value = currentMonth;
+}
+
+function resetCalculadora() {
+  // Clear variable fields only — keep profile settings
+  document.getElementById('hv-total').value = '';
+  document.getElementById('hv1').value = '';
+  document.getElementById('hv2').value = '';
+  document.getElementById('hv3').value = '';
+  document.getElementById('hv4').value = '';
+  document.getElementById('imaginarias').value = '';
+  document.getElementById('francos').value = '';
+  document.getElementById('lv1').value = '';
+  document.getElementById('lv2').value = '';
+  document.getElementById('lv3').value = '';
+  document.getElementById('d-mant-nac').value = '';
+  document.getElementById('d-nac-sp').value = '';
+  document.getElementById('d-nac-cp').value = '';
+  document.getElementById('d-int-sp').value = '';
+  document.getElementById('d-int-cp').value = '';
+  document.getElementById('dest-nac').value = '';
+  document.getElementById('dest-int').value = '';
+  document.getElementById('dpo').value = '';
+  document.getElementById('comp-mad').value = '';
+  // Reset toggles
+  toggleSegmed(true);
+  toggleSegLic(false);
+  if (ppActivo) togglePP(false);
+  // Reset pagas to prorrateada
+  if (document.getElementById('toggle-extra').checked) {
+    document.getElementById('toggle-extra').checked = false;
+    toggleExtra();
+  }
+  setCurrentMonth();
+  recalc();
+}
+
+function acumularSimulador() {
+  if (!calcResult) { recalc(); }
+  const r = calcResult;
+  const brutoAcum = parseFloat(document.getElementById('prf-bruto-acum')?.value) || 0;
+  const irpfAcum  = parseFloat(document.getElementById('prf-irpf-acum')?.value) || 0;
+  const mesAcum   = document.getElementById('prf-mes-acum')?.value;
+  const statusEl  = document.getElementById('acum-status');
+
+  if (!mesAcum) {
+    statusEl.textContent = '⚠️ Ve al Perfil y completa el mes actual antes de acumular';
+    statusEl.style.color = 'var(--amber)'; return;
+  }
+  const nuevoBruto = Math.round((brutoAcum + r.baseIRPF) * 100) / 100;
+  const nuevoIRPF  = Math.round((irpfAcum + r.retencionIRPF) * 100) / 100;
+  const ahora = new Date();
+  const fechaStr = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
+  profileData.brutoAcum = nuevoBruto;
+  profileData.irpfAcum  = nuevoIRPF;
+  profileData.acumFecha = fechaStr;
+  profileData.acumTipo  = 'auto';
+  if (document.getElementById('prf-bruto-acum')) {
+    document.getElementById('prf-bruto-acum').value = nuevoBruto;
+    document.getElementById('prf-irpf-acum').value  = nuevoIRPF;
+  }
+  if (document.getElementById('sim-bruto-acum')) {
+    document.getElementById('sim-bruto-acum').value = nuevoBruto;
+    document.getElementById('sim-irpf-acum').value  = nuevoIRPF;
+  }
+  if (currentUser) saveUserData(currentUser);
+  const fmt = v => v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  statusEl.textContent = `✓ ${fechaStr} · Base IRPF acum: ${fmt(nuevoBruto)}€ · IRPF ret: ${fmt(nuevoIRPF)}€`;
+  statusEl.style.color = 'var(--green)';
+}
+
 function setNivel(n) {
   currentNivel = n;
   highlightNivel();
@@ -2269,6 +2880,10 @@ async function processNomina(file) {
     if (nomData.irpf_pct) profileData.irpf = nomData.irpf_pct;
     if (currentUser) saveUserData(currentUser);
 
+    nomDataCached = nomData;
+    document.getElementById('comparativa-result').style.display = 'block';
+    document.getElementById('comp-action-btns').style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
     renderComparativa(nomData);
 
   } catch(err) {
@@ -2283,6 +2898,31 @@ async function processNomina(file) {
       </div>
     `;
   }
+}
+
+function actualizarComparativa() {
+  if (!nomDataCached) {
+    alert('No hay ninguna nómina cargada. Sube primero un PDF.');
+    return;
+  }
+  recalc(); // recalculate with current inputs
+  renderComparativa(nomDataCached);
+}
+
+function resetComparativa() {
+  nomDataCached = null;
+  document.getElementById('comparativa-result').style.display = 'none';
+  document.getElementById('comp-action-btns').style.display = 'none';
+  document.getElementById('comp-output').innerHTML = '';
+  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('upload-zone').innerHTML = `
+    <div class="upload-icon">📂</div>
+    <div class="upload-text">Toca para subir nómina PDF</div>
+    <div class="upload-sub">Nómina Binter · formato PDF</div>
+  `;
+  // Reset file input
+  const fi = document.getElementById('file-input');
+  if (fi) fi.value = '';
 }
 
 function renderComparativa(nomData) {
@@ -2544,6 +3184,19 @@ function renderPerfil() {
   if (profileData.brutoAcum)    document.getElementById('prf-bruto-acum').value     = profileData.brutoAcum;
   if (profileData.irpfAcum)     document.getElementById('prf-irpf-acum').value      = profileData.irpfAcum;
   if (profileData.mesAcum)      document.getElementById('prf-mes-acum').value       = profileData.mesAcum;
+
+  // Show accumulation date
+  const acumEl = document.getElementById('acum-fecha-display');
+  if (acumEl) {
+    if (profileData.acumFecha) {
+      const tipoLabel = profileData.acumTipo === 'manual' ? 'Actualización manual' : 'Actualizado';
+      acumEl.textContent = `${tipoLabel}: ${profileData.acumFecha}`;
+      acumEl.style.color = profileData.acumTipo === 'manual' ? 'var(--amber)' : 'var(--green)';
+    } else {
+      acumEl.textContent = 'Sin acumulados todavía — usa el botón en Calcular';
+      acumEl.style.color = 'var(--text3)';
+    }
+  }
 }
 
 function saveProfile() {
@@ -2551,10 +3204,57 @@ function saveProfile() {
   profileData.hijos         = document.getElementById('prf-hijos').value;
   profileData.discapacidad  = document.getElementById('prf-discapacidad').value;
   profileData.residencia    = document.getElementById('prf-residencia').value;
-  profileData.brutoAcum     = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
-  profileData.irpfAcum      = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
+  const nuevoBruto = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
+  const nuevoIRPF  = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
+  // If values changed manually, mark as manual update
+  if (nuevoBruto !== profileData.brutoAcum || nuevoIRPF !== profileData.irpfAcum) {
+    const ahora = new Date();
+    profileData.acumFecha = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
+    profileData.acumTipo = 'manual';
+  }
+  profileData.brutoAcum     = nuevoBruto;
+  profileData.irpfAcum      = nuevoIRPF;
   profileData.mesAcum       = document.getElementById('prf-mes-acum').value;
   if (currentUser) saveUserData(currentUser);
+}
+
+function generarEmailSolicitud() {
+  const tipo  = document.getElementById('solicitud-tipo').value;
+  const valor = document.getElementById('solicitud-valor').value.trim();
+  const u = USERS[currentUser] || {};
+  const nombre = profileData.fullName || u.name || currentUser;
+  const tipoLabel = tipo === 'base' ? 'cambio de base' : 'cambio de cargo';
+  const campoActual = tipo === 'base'
+    ? (parseFloat(u.base||1) > 1 ? 'Madrid' : 'Canarias')
+    : (u.funcion || 'CMD');
+
+  if (!valor) {
+    alert('Indica el nuevo valor (ej: Tenerife o COP)'); return;
+  }
+
+  const asunto = `PilotPay — Solicitud de ${tipoLabel} · ${nombre}`;
+  const cuerpo = `Estimado administrador,
+
+Por medio del presente correo solicito formalmente un ${tipoLabel} en la aplicación PilotPay.
+
+Datos del tripulante:
+• Nombre: ${nombre}
+• Código: ${currentUser}
+• Función actual: ${u.funcion || '—'}
+• Base actual: ${campoActual}
+
+Solicitud:
+• Tipo de cambio: ${tipoLabel}
+• Valor actual: ${campoActual}
+• Nuevo valor solicitado: ${valor}
+
+Quedo a tu disposición para cualquier aclaración.
+
+Atentamente,
+${nombre}`;
+
+  const mailtoUrl = `mailto:eloy.infante@bintercanarias.com?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+  window.location.href = mailtoUrl;
 }
 
 function updateProfileFromInput() {
