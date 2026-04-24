@@ -706,7 +706,35 @@ input[type=number] { -moz-appearance: textfield; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-/* ── THEME CARDS ── */
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(8,12,20,0.85);
+  backdrop-filter: blur(6px);
+  display: none; align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  width: 100%; max-width: 480px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  max-height: 85vh; overflow-y: auto;
+  position: relative;
+}
+.modal-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: var(--border2); margin: 0 auto 16px;
+}
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text2); border-radius: 50%;
+  width: 28px; height: 28px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 1;
+}
 .theme-card { border-radius: 10px; padding: 12px; cursor: pointer; transition: transform .15s, box-shadow .15s; }
 .theme-card:active { transform: scale(.97); }
 .theme-card.active-theme { box-shadow: 0 0 0 3px var(--blue2) !important; }
@@ -873,6 +901,30 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- HORAS DE VUELO -->
       <div class="card">
         <div class="card-title"><div class="section-dot amber"></div>Horas de Vuelo</div>
+
+        <!-- VACACIONES -->
+        <div class="flex-between" style="align-items:center;padding:4px 0;margin-bottom:10px">
+          <div>
+            <span class="field-label" style="margin-bottom:2px;display:block">Vacaciones este mes</span>
+            <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
+          </div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+        <div id="vac-field" style="display:none;margin-bottom:10px">
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Días de vacaciones</span>
+              <input class="field-input" id="vac-dias" type="number" placeholder="ej: 6" min="1" max="31"
+                oninput="onVacDiasChange()">
+              <div id="vac-info" style="font-family:var(--mono);font-size:10px;
+                color:var(--text3);margin-top:5px;letter-spacing:0.5px"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="row" style="margin-bottom:8px">
           <div class="field">
             <span class="field-label">Total HV (distribuye automático)</span>
@@ -881,22 +933,22 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
         <div class="tramo-grid">
           <div class="tramo-cell">
-            <div class="tramo-label">T1 · h60–70</div>
+            <div class="tramo-label" id="label-t1">T1 · h61–70</div>
             <input class="tramo-input" id="hv1" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
             <div class="tramo-rate" id="rate-t1">—</div>
           </div>
           <div class="tramo-cell">
-            <div class="tramo-label">T2 · h70–80</div>
+            <div class="tramo-label" id="label-t2">T2 · h71–80</div>
             <input class="tramo-input" id="hv2" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
             <div class="tramo-rate" id="rate-t2">—</div>
           </div>
           <div class="tramo-cell">
-            <div class="tramo-label">T3 · h80–90</div>
+            <div class="tramo-label" id="label-t3">T3 · h81–90</div>
             <input class="tramo-input" id="hv3" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
             <div class="tramo-rate" id="rate-t3">—</div>
           </div>
           <div class="tramo-cell">
-            <div class="tramo-label">T4 · &gt;90h</div>
+            <div class="tramo-label" id="label-t4">T4 · &gt;90h</div>
             <input class="tramo-input" id="hv4" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
             <div class="tramo-rate" id="rate-t4">—</div>
           </div>
@@ -2122,14 +2174,20 @@ function applyUserPerms() {
   }
 }
 
+function closeDayModal(e) {
+  if (!e || e.target === document.getElementById('day-modal')) {
+    document.getElementById('day-modal').classList.remove('open');
+    document.getElementById('day-modal-content').innerHTML = '';
+  }
+}
+
 function editarUsuario(code) {
   const u = USERS[code] || {};
-  // Show modal with edit form
+  const isAdmin = code === ADMIN_CODE;
+
   document.getElementById('day-modal-content').innerHTML = `
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeDayModal()">✕</button>
     <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">
-      Editar perfil — ${code}
+      ✏️ Editar perfil — <span style="color:var(--blue2)">${code}</span>
     </div>
     <div class="row">
       <div class="field">
@@ -2166,17 +2224,71 @@ function editarUsuario(code) {
         </select>
       </div>
     </div>
-    <div class="field" style="margin-bottom:12px">
+    <div class="field" style="margin-bottom:14px">
       <span class="field-label">Base</span>
       <select class="field-input" id="edit-base">
         <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Gran Canaria</option>
-        <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Tenerife</option>
+        <option value="1" >Tenerife</option>
         <option value="1.2" ${parseFloat(u.base||1)>1?'selected':''}>Madrid</option>
       </select>
     </div>
-    <button class="btn-primary" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
+    <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
+    ${!isAdmin ? `
+    <button onclick="confirmarEliminarUsuario('${code}')"
+      style="width:100%;padding:10px;background:var(--red-dim);border:1px solid var(--red);
+      color:var(--red);border-radius:var(--r);font-family:var(--mono);font-size:12px;
+      letter-spacing:1px;text-transform:uppercase;cursor:pointer">
+      🗑 Eliminar perfil
+    </button>` : `<div style="font-size:11px;color:var(--amber);font-family:var(--mono);text-align:center">
+      El perfil de administrador no se puede eliminar
+    </div>`}
   `;
   document.getElementById('day-modal').classList.add('open');
+}
+
+async function confirmarEliminarUsuario(code) {
+  const u = USERS[code] || {};
+  const nombre = `${u.name||''} ${u.apellidos||''}`.trim() || code;
+  document.getElementById('day-modal-content').innerHTML = `
+    <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:12px;color:var(--red)">
+      🗑 Eliminar perfil
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
+      ¿Estás seguro de que quieres eliminar el perfil de<br>
+      <strong style="color:var(--text)">${nombre} (${code})</strong>?<br>
+      <span style="color:var(--text3);font-size:11px">Esta acción no se puede deshacer.</span>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeDayModal()"
+        style="flex:1;padding:11px;background:var(--bg3);border:1px solid var(--border);
+        color:var(--text2);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">
+        Cancelar
+      </button>
+      <button onclick="eliminarUsuario('${code}')"
+        style="flex:1;padding:11px;background:var(--red-dim);border:1px solid var(--red);
+        color:var(--red);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">
+        Sí, eliminar
+      </button>
+    </div>
+  `;
+}
+
+async function eliminarUsuario(code) {
+  try {
+    // Delete from Firebase
+    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
+    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
+    // Remove from runtime cache
+    delete USERS[code];
+    // Remove from admin perms
+    const perms = loadAdminPerms();
+    delete perms[code];
+    saveAdminPerms(perms);
+    closeDayModal();
+    renderAdmin();
+  } catch(e) {
+    alert('Error al eliminar: ' + e.message);
+  }
 }
 
 async function guardarEdicionUsuario(code) {
@@ -2388,6 +2500,12 @@ function resetCalculadora() {
     document.getElementById('toggle-extra').checked = false;
     toggleExtra();
   }
+  // Reset vacaciones
+  if (document.getElementById('toggle-vac').checked) {
+    document.getElementById('toggle-vac').checked = false;
+    toggleVacaciones();
+  }
+  document.getElementById('vac-dias').value = '';
   setCurrentMonth();
   recalc();
 }
@@ -2482,20 +2600,82 @@ function updateRates() {
 }
 
 // ── HV DISTRIBUCIÓN ──
+// ── VACACIONES ──
+function getDiasMes() {
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesNombre = document.getElementById('mes-nomina')?.value || 'Enero';
+  const mesIdx = meses.indexOf(mesNombre);
+  const year = new Date().getFullYear();
+  return new Date(year, mesIdx + 1, 0).getDate(); // last day of month
+}
+
+function getVacParams() {
+  const conVac = document.getElementById('toggle-vac')?.checked;
+  if (!conVac) return { horasBase: 60, anchoTramo: 10 };
+  const diasVac = parseInt(document.getElementById('vac-dias')?.value) || 0;
+  if (diasVac <= 0) return { horasBase: 60, anchoTramo: 10 };
+  const diasMes = getDiasMes();
+  const diasEfectivos = diasMes - diasVac;
+  const factor = diasEfectivos / diasMes;
+  const horasBase  = Math.round(60 * factor);
+  const anchoTramo = Math.round(10 * factor);
+  return { horasBase, anchoTramo, diasVac, diasMes, diasEfectivos, factor };
+}
+
+function toggleVacaciones() {
+  const on = document.getElementById('toggle-vac').checked;
+  document.getElementById('vac-field').style.display = on ? 'block' : 'none';
+  document.getElementById('vac-hint').textContent = on ? 'Con vacaciones' : 'Sin vacaciones';
+  if (!on) {
+    document.getElementById('vac-dias').value = '';
+    updateTramoLabels({ horasBase: 60, anchoTramo: 10 });
+  }
+  distribuirHV();
+}
+
+function onVacDiasChange() {
+  const p = getVacParams();
+  updateTramoLabels(p);
+  updateVacInfo(p);
+  distribuirHV();
+}
+
+function updateVacInfo(p) {
+  const el = document.getElementById('vac-info');
+  if (!el || !p.diasVac) { if(el) el.textContent=''; return; }
+  el.textContent =
+    `${p.diasEfectivos}/${p.diasMes} días efectivos · base ${p.horasBase}h · tramos de ${p.anchoTramo}h`;
+}
+
+function updateTramoLabels(p) {
+  const b = p.horasBase;
+  const a = p.anchoTramo;
+  document.getElementById('label-t1').textContent = `T1 · h${b+1}–${b+a}`;
+  document.getElementById('label-t2').textContent = `T2 · h${b+a+1}–${b+a*2}`;
+  document.getElementById('label-t3').textContent = `T3 · h${b+a*2+1}–${b+a*3}`;
+  document.getElementById('label-t4').textContent = `T4 · >h${b+a*3}`;
+}
+
 function distribuirHV() {
-  totalHVManual = false;
   const total = parseFloat(document.getElementById('hv-total').value) || 0;
-  const exceso = Math.max(0, total - 60);
-  const t1 = Math.round(Math.min(exceso, 10) * 100) / 100;
-  const t2 = Math.round(Math.min(Math.max(exceso-10,0), 10) * 100) / 100;
-  const t3 = Math.round(Math.min(Math.max(exceso-20,0), 10) * 100) / 100;
-  const t4 = Math.round(Math.max(exceso-30, 0) * 100) / 100;
+  const p = getVacParams();
+  updateTramoLabels(p);
+  if (p.diasVac) updateVacInfo(p);
+
+  const exceso = Math.max(0, total - p.horasBase);
+  const a = p.anchoTramo;
+  const t1 = Math.round(Math.min(exceso, a) * 100) / 100;
+  const t2 = Math.round(Math.min(Math.max(exceso - a, 0), a) * 100) / 100;
+  const t3 = Math.round(Math.min(Math.max(exceso - a*2, 0), a) * 100) / 100;
+  const t4 = Math.round(Math.max(exceso - a*3, 0) * 100) / 100;
   document.getElementById('hv1').value = t1 > 0 ? t1 : '';
   document.getElementById('hv2').value = t2 > 0 ? t2 : '';
   document.getElementById('hv3').value = t3 > 0 ? t3 : '';
   document.getElementById('hv4').value = t4 > 0 ? t4 : '';
   recalc();
 }
+
 function clearTotal() {
   document.getElementById('hv-total').value = '';
   recalc();
@@ -3782,5 +3962,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Nothing needed — recalc on login
 });
 </script>
+<!-- ══ MODAL GLOBAL ══ -->
+<div class="modal-overlay" id="day-modal" onclick="closeDayModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeDayModal()">✕</button>
+    <div id="day-modal-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
