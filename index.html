@@ -3364,33 +3364,38 @@ function recalc() {
   const baseIRPF = Math.round((totalDevengado - totalDietasEx) * 100) / 100;
   const retencionIRPF = Math.round(baseIRPF * irpf_pct / 100 * 100) / 100;
 
-  // BASE SS según normativa SS 2026:
-  // BCC = SB + complementos salariales + prorrata pagas extra + retribuciones especie
-  // BCP = BCC + horas extraordinarias (HV en pilotos)
-  // Las dietas NO se incluyen. Tope máximo 2026 = 5.101,20€/mes
+  // BASE SS:
+  // La base de cotización SIEMPRE incluye la prorrata mensual de pagas extra,
+  // aunque el trabajador cobre en 14 pagas.
+  // En esta app, extra1 y extra2 ya son importes mensuales prorrateados,
+  // por tanto NO se dividen entre 12 y NO dependen del toggle de paga completa.
   const BASE_SS_TOPE = 5101.20;
-  const prorrata_extras_ss = !isPagaCompleta ? Math.round((extra1 + extra2) / 12 * 100) / 100 : 0;
-  // Complementos salariales fijos: plus transporte, DPO mensual, complemento MAD
-  // Retribuciones especie: seguro médico, seguro vida
-  // HV = horas extraordinarias de pilotos → van a BCP
+  const prorrata_extras_ss = Math.round((extra1 + extra2) * 100) / 100;
+
   const baseSS_teorica = Math.round((
-    sb +              // salario base
-    plus_tr +         // complemento salarial fijo
-    dpo +             // complemento salarial (DPO)
-    compMad +         // complemento base Madrid
-    prorrata_extras_ss + // prorrata pagas extra
-    hvTotal +         // horas extraordinarias (BCP)
-    segMed_dev +      // retribución especie
-    SEG_VIDA_ESPECIE  // retribución especie
+    sb +                  // salario base
+    plus_tr +             // plus transporte / complemento fijo según nómina Binter
+    dpo +                 // otros conceptos / DPO
+    compMad +             // complemento de base
+    prorrata_extras_ss +  // prorrata mensual de pagas extra SIEMPRE
+    hvTotal +             // horas de vuelo
+    totalDietasSuj +      // dieta manutención sujeta
+    segMed_dev +          // retribución especie, si procede
+    SEG_VIDA_ESPECIE      // seguro vida especie
   ) * 100) / 100;
+
   const baseSS = Math.min(baseSS_teorica, BASE_SS_TOPE);
   const ss_cc  = Math.round(baseSS * 0.0470 * 100) / 100;
   const ss_mei = Math.round(baseSS * 0.0015 * 100) / 100;
   const ss_dfp = Math.round(baseSS * 0.0165 * 100) / 100;
-  // Cotización adicional solidaridad
-  const ss_sol_t1 = Math.round(baseSS * 0.10 * 0.0019 * 100) / 100;
-  const ss_sol_t2 = Math.round(baseSS * 0.40 * 0.0021 * 100) / 100;
-  const ss_sol_t3 = Math.round(baseSS * 0.2557 * 0.0024 * 100) / 100;
+
+  // Cotización adicional de solidaridad:
+  // solo debe aplicarse sobre retribuciones que superen la base máxima,
+  // nunca sobre toda la base SS. Si no se supera el tope, es 0.
+  const exceso_solidaridad = Math.max(0, baseSS_teorica - BASE_SS_TOPE);
+  const ss_sol_t1 = Math.round(exceso_solidaridad * 0.10 * 0.0019 * 100) / 100;
+  const ss_sol_t2 = Math.round(exceso_solidaridad * 0.40 * 0.0021 * 100) / 100;
+  const ss_sol_t3 = Math.round(exceso_solidaridad * 0.2557 * 0.0024 * 100) / 100;
   const ss_solidaridad = Math.round((ss_sol_t1 + ss_sol_t2 + ss_sol_t3) * 100) / 100;
   const ss_total = Math.round((ss_cc + ss_mei + ss_dfp + ss_solidaridad) * 100) / 100;
 
