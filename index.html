@@ -488,6 +488,191 @@
 [data-theme="emb2"] #sim-resultado .result-val { color: #35E6E6; }
 [data-theme="emb2"] #sim-resultado .result-val.blue { color: #FF4FD8; }
 
+/* ── TEMA: BINTER CABINA — TCP (uniformidad azul · verde lima · turquesa) ── */
+[data-theme="tcp"] {
+  /* Fondos — azul profundo tipo uniforme */
+  --bg:         #0D1B3E;
+  --bg2:        #122245;
+  --bg3:        #172A52;
+  --card:       #1A3060;
+  --card2:      #1F3870;
+  --border:     #2D4D85;
+  --border2:    #3A5E9A;
+  /* Semántica funcional */
+  --blue:       #35C9C9;   /* turquesa = info / datos / inputs */
+  --blue2:      #35C9C9;
+  --blue-dim:   #0D2B2B;
+  --amber:      #FFC247;   /* ámbar = advertencia / desviación */
+  --amber2:     #FFC247;
+  --amber-dim:  #2A1E00;
+  --green:      #8CE000;   /* verde lima = correcto / acción / OK */
+  --green-dim:  #142200;
+  --red:        #FF4D4D;   /* rojo = error */
+  --red-dim:    #280D0D;
+  --text:       #F4F7FB;   /* blanco suave = texto principal */
+  --text2:      #B8C6D8;   /* gris azulado = texto secundario */
+  --text3:      #6A85A8;
+  /* Alias internos para semántica clara */
+  --tcp-green:  #8CE000;
+  --tcp-cyan:   #35C9C9;
+  --tcp-amber:  #FFC247;
+  --tcp-red:    #FF4D4D;
+  --tcp-white:  #F4F7FB;
+  --tcp-stripe: #8CE000;   /* franja verde lima del uniforme */
+}
+
+/* Tipografía — legible y profesional, no técnica */
+[data-theme="tcp"] body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0D1B3E;
+}
+
+/* Cards — panel azul medio, borde suave */
+[data-theme="tcp"] .card {
+  background: #1A3060;
+  border-color: #2D4D85;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+[data-theme="tcp"] .card-title {
+  color: #B8C6D8;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+/* Dot de sección — usa verde lima */
+[data-theme="tcp"] .section-dot       { background: #8CE000; }
+[data-theme="tcp"] .section-dot.amber { background: #FFC247; }
+[data-theme="tcp"] .section-dot.green { background: #8CE000; }
+[data-theme="tcp"] .section-dot.red   { background: #FF4D4D; }
+[data-theme="tcp"] .section-dot.blue  { background: #35C9C9; }
+
+/* Header */
+[data-theme="tcp"] header {
+  background: #0D1B3E;
+  border-bottom: 2px solid #8CE000;  /* franja verde lima como el uniforme */
+}
+[data-theme="tcp"] .logo { color: #F4F7FB; }
+[data-theme="tcp"] .logo span { color: #8CE000; }
+[data-theme="tcp"] .header-base { background: #122245; border-color: #2D4D85; }
+[data-theme="tcp"] .user-pill {
+  background: #122245;
+  border-color: #2D4D85;
+  color: #B8C6D8;
+}
+
+/* Tabs */
+[data-theme="tcp"] .tabs { background: #0D1B3E; border-bottom: 1px solid #2D4D85; }
+[data-theme="tcp"] .tab  { color: #6A85A8; font-family: 'DM Sans', sans-serif; }
+[data-theme="tcp"] .tab.active { color: #8CE000; border-bottom-color: #8CE000; }
+[data-theme="tcp"] .tab:hover  { color: #F4F7FB; }
+
+/* Inputs — turquesa, panel azul oscuro */
+[data-theme="tcp"] .field-input {
+  background: #122245;
+  border-color: #2D4D85;
+  color: #35C9C9;    /* turquesa = dato introducido */
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+}
+[data-theme="tcp"] .field-input:focus {
+  border-color: #8CE000;   /* verde lima al enfocar */
+  box-shadow: 0 0 0 2px rgba(140,224,0,0.15);
+}
+[data-theme="tcp"] .field-label { color: #B8C6D8; }
+
+/* Botones */
+[data-theme="tcp"] .btn-primary {
+  background: #8CE000;
+  color: #0D1B3E;
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+}
+[data-theme="tcp"] .btn-primary:active { background: #72B800; }
+[data-theme="tcp"] .btn-secondary {
+  background: #122245;
+  border-color: #2D4D85;
+  color: #B8C6D8;
+  border-radius: 8px;
+}
+[data-theme="tcp"] .btn-secondary:hover { border-color: #35C9C9; color: #35C9C9; }
+[data-theme="tcp"] .btn-danger { background: #FF4D4D; color: #fff; border-radius: 8px; }
+
+/* Toggles */
+[data-theme="tcp"] .toggle-btn        { background: #122245; border-color: #2D4D85; color: #6A85A8; border-radius: 6px; }
+[data-theme="tcp"] .toggle-btn.active { background: #142200; border-color: #8CE000; color: #8CE000; }
+[data-theme="tcp"] .dot-btn           { background: #122245; border-color: #2D4D85; color: #6A85A8; border-radius: 50%; }
+[data-theme="tcp"] .dot-btn.active    { background: #0D2B2B; border-color: #35C9C9; color: #35C9C9; }
+[data-theme="tcp"] .ios-slider        { background: #2D4D85; }
+[data-theme="tcp"] .ios-toggle input:checked + .ios-slider { background: #8CE000; }
+
+/* Nómina */
+[data-theme="tcp"] .nomina-concept    { color: #B8C6D8; }
+[data-theme="tcp"] .nomina-amount     { color: #35C9C9; }  /* turquesa = valor calculado */
+[data-theme="tcp"] .nomina-row.deduccion .nomina-amount  { color: #FFC247; }  /* ámbar = deducción */
+[data-theme="tcp"] .nomina-row.subtotal  { background: #0D2B2B; border-color: #35C9C9; }
+[data-theme="tcp"] .nomina-row.subtotal .nomina-concept  { color: #35C9C9; font-weight: 600; }
+[data-theme="tcp"] .nomina-row.subtotal .nomina-amount   { color: #35C9C9; }
+[data-theme="tcp"] .nomina-row.total-row { background: #142200; border-color: #8CE000; }
+[data-theme="tcp"] .nomina-row.total-row .nomina-concept { color: #8CE000; font-weight: 700; }
+[data-theme="tcp"] .nomina-row.total-row .nomina-amount  { color: #8CE000; font-size: 18px; font-weight: 700; }
+
+/* Tramos HV */
+[data-theme="tcp"] .tramo-input { color: #35C9C9; }
+[data-theme="tcp"] .tramo-rate  { color: #8CE000; }
+[data-theme="tcp"] .tramo-cell  { background: #122245; border-color: #2D4D85; border-radius: 8px; }
+[data-theme="tcp"] .tramo-label { color: #B8C6D8; }
+
+/* Resultado / valores */
+[data-theme="tcp"] .result-val        { color: #35C9C9; }
+[data-theme="tcp"] .result-val.big    { color: #8CE000; }
+[data-theme="tcp"] .result-val.blue   { color: #35C9C9; }
+[data-theme="tcp"] .result-val.amber  { color: #FFC247; }
+[data-theme="tcp"] .result-val.red    { color: #FF4D4D; }
+[data-theme="tcp"] .result-cell { background: #122245; border-color: #2D4D85; border-radius: 8px; }
+
+/* Summary bar */
+[data-theme="tcp"] .summary-bar { background: #122245; border-color: #2D4D85; border-radius: 10px; }
+[data-theme="tcp"] .sum-val     { color: #35C9C9; }
+[data-theme="tcp"] .sum-label   { color: #B8C6D8; }
+
+/* Alertas */
+[data-theme="tcp"] .alert.success { background: #142200; border-color: #8CE000; }
+[data-theme="tcp"] .alert.success .alert-title { color: #8CE000; }
+[data-theme="tcp"] .alert.warning { background: #2A1E00; border-color: #FFC247; }
+[data-theme="tcp"] .alert.warning .alert-title { color: #FFC247; }
+[data-theme="tcp"] .alert.info    { background: #0D2B2B; border-color: #35C9C9; }
+[data-theme="tcp"] .alert.info .alert-title    { color: #35C9C9; }
+
+/* Comparativa diffs */
+[data-theme="tcp"] .diff-row.ok   { border-color: #2D4D85; }
+[data-theme="tcp"] .diff-row.ok .diff-real    { color: #8CE000; }
+[data-theme="tcp"] .diff-row.warn { background: #2A1E00; border-color: #FFC247; }
+[data-theme="tcp"] .diff-row.warn .diff-real  { color: #FFC247; }
+[data-theme="tcp"] .diff-row.err  { background: #280D0D; border-color: #FF4D4D; }
+[data-theme="tcp"] .diff-row.err .diff-real   { color: #FF4D4D; }
+
+/* Upload zone */
+[data-theme="tcp"] .upload-zone { background: #122245; border-color: #2D4D85; border-radius: 10px; }
+[data-theme="tcp"] .upload-zone:hover { border-color: #35C9C9; background: #0D2B2B; }
+
+/* Badges */
+[data-theme="tcp"] .badge-blue  { background: #0D2B2B; color: #35C9C9; border-color: #35C9C9; }
+[data-theme="tcp"] .badge-amber { background: #2A1E00; color: #FFC247; border-color: #FFC247; }
+[data-theme="tcp"] .badge-green { background: #142200; color: #8CE000; border-color: #8CE000; }
+[data-theme="tcp"] .badge-red   { background: #280D0D; color: #FF4D4D; border-color: #FF4D4D; }
+
+/* Modal */
+[data-theme="tcp"] .modal-sheet { background: #1A3060; border-top: 2px solid #8CE000; }
+[data-theme="tcp"] input, [data-theme="tcp"] select, [data-theme="tcp"] textarea { color-scheme: dark; }
+
+/* Simulador */
+[data-theme="tcp"] #sim-resultado .result-val       { color: #35C9C9; }
+[data-theme="tcp"] #sim-resultado .result-val.big   { color: #8CE000; }
+[data-theme="tcp"] #sim-resultado .result-val.amber { color: #FFC247; }
+
 /* ── TEMA: OFFICE (Microsoft 365) ── */
 [data-theme="office"] {
   --bg:      #f5f5f5;
@@ -1232,9 +1417,11 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="row">
           <div class="field">
             <span class="field-label">Función</span>
-            <select class="field-input" id="funcion" onchange="recalc()">
+            <select class="field-input" id="funcion" onchange="onFuncionChange()">
               <option value="CMD">Comandante</option>
               <option value="COP">Copiloto</option>
+              <option value="SCC">SCC — Sobrecargo</option>
+              <option value="CC">CC — Tripulante de Cabina</option>
             </select>
           </div>
           <div class="field">
@@ -1462,6 +1649,74 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="field" id="pp-amount-field" style="display:none">
             <span class="field-label">Importe mensual (€)</span>
             <input class="field-input" id="pp-amount" type="number" value="29.74" onchange="recalc()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BAJAS / INCAPACIDAD TEMPORAL ── -->
+      <div class="card" id="card-bajas">
+        <div class="card-title"><div class="section-dot amber"></div>Incapacidad Temporal (IT)</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.7;margin-bottom:10px">
+          Binter aplica la normativa mínima legal.<br>
+          <span style="color:var(--amber2)">Días 1–3:</span> sin prestación &nbsp;·&nbsp;
+          <span style="color:var(--amber2)">Días 4–20:</span> 60 % base reguladora (INSS) &nbsp;·&nbsp;
+          <span style="color:var(--blue2)">Día 21+:</span> 75 % base reguladora (INSS)
+        </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">¿Baja este mes?</span>
+            <div class="toggle-group">
+              <div class="toggle-btn" id="tog-baja-si" onclick="toggleBaja(true)">Sí</div>
+              <div class="toggle-btn active" id="tog-baja-no" onclick="toggleBaja(false)">No</div>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field-label">Tipo de baja</span>
+            <select class="field-input" id="baja-tipo" onchange="recalcBaja()" disabled>
+              <option value="CC">Enf. común / Acc. no laboral</option>
+              <option value="AT">Accidente laboral / Enf. profesional</option>
+              <option value="MAT">Maternidad / Paternidad</option>
+            </select>
+          </div>
+        </div>
+        <div id="baja-fields" style="display:none">
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Día inicio baja</span>
+              <input class="field-input" id="baja-dia-inicio" type="number" min="1" max="31" placeholder="1" onchange="recalcBaja()">
+            </div>
+            <div class="field">
+              <span class="field-label">Día fin (o fin de mes)</span>
+              <input class="field-input" id="baja-dia-fin" type="number" min="1" max="31" placeholder="31" onchange="recalcBaja()">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Base reguladora diaria (€)</span>
+              <input class="field-input" id="baja-base-reg" type="number" step="0.01" placeholder="Se calcula del salario base" onchange="recalcBaja()">
+            </div>
+            <div class="field" style="align-self:flex-end">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);line-height:1.5">
+                Si no la conoces se estima como SB×12÷365
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultado visual -->
+          <div id="baja-resultado" style="display:none;margin-top:10px;padding:12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;margin-bottom:8px">DESGLOSE INCAPACIDAD TEMPORAL</div>
+            <div id="baja-desglose" style="font-size:12px;font-family:var(--mono);line-height:2.2"></div>
+            <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:8px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Prestación IT estimada</span>
+                <span id="baja-total" style="font-size:14px;font-weight:700;color:var(--amber2);font-family:var(--mono)">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between">
+                <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Días con salario íntegro</span>
+                <span id="baja-dias-trab" style="font-size:12px;color:var(--blue2);font-family:var(--mono)">—</span>
+              </div>
+            </div>
+            <div id="baja-nota" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.6;border-top:1px solid var(--border);padding-top:6px"></div>
           </div>
         </div>
       </div>
@@ -1962,6 +2217,30 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
             </div>
 
+            <!-- BINTER CABINA / TCP -->
+            <div class="theme-slide" id="theme-tcp" onclick="setTheme('tcp')"
+                 style="background:#0D1B3E;border-color:#2D4D85">
+              <div class="theme-slide-preview" style="background:#0D1B3E">
+                <!-- Simula el uniforme: panel azul + franja verde lima + turquesa -->
+                <div class="theme-slide-bar" style="background:#1A3060;width:90%;border:1px solid #2D4D85"></div>
+                <!-- Franja verde lima — como el uniforme -->
+                <div style="display:flex;gap:3px;margin-top:5px;align-items:center">
+                  <div style="height:5px;width:55%;background:#8CE000;border-radius:3px"></div>
+                  <div style="height:5px;width:25%;background:#35C9C9;border-radius:3px"></div>
+                </div>
+                <div class="theme-slide-dots" style="margin-top:5px">
+                  <div class="theme-slide-dot" style="background:#8CE000"></div>
+                  <div class="theme-slide-dot" style="background:#35C9C9"></div>
+                  <div class="theme-slide-dot" style="background:#FFC247"></div>
+                  <div class="theme-slide-dot" style="background:#FF4D4D"></div>
+                </div>
+              </div>
+              <div class="theme-slide-info" style="background:#1A3060;border-top:1px solid #2D4D85">
+                <div class="theme-slide-name" style="color:#8CE000;font-size:11px">🫱 Binter Cabina</div>
+                <div class="theme-slide-desc" style="color:#B8C6D8">TCP · Uniforme azul</div>
+              </div>
+            </div>
+
             <!-- OFFICE -->
             <div class="theme-slide" id="theme-office" onclick="setTheme('office')"
                  style="background:#f5f5f5;border-color:#0078d4">
@@ -2046,9 +2325,11 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
           <div class="field">
             <span class="field-label">Función</span>
-            <select class="field-input" id="adm-funcion">
+            <select class="field-input" id="adm-funcion" onchange="onAdmFuncionChange()">
               <option value="CMD">Comandante</option>
               <option value="COP">Copiloto</option>
+              <option value="SCC">SCC — Sobrecargo</option>
+              <option value="CC">CC — Tripulante de Cabina</option>
             </select>
           </div>
         </div>
@@ -2116,7 +2397,56 @@ const TABLAS = {
     lv3:     [ 225.00,  200.00,  175.00,  150.00,  125.00,  100.00],
     plus_tr: [ 167.25,  167.25,  167.25,  167.25,  167.25,  167.25],
     dpo_anual: 0,
-  }
+  },
+  // ── GRUPO III: TCPs — Convenio BCSA 2026 Anexo I ──
+  // Niveles: 1 (máx antigüedad) → 5 (entrada)
+  // O = días ordinarios · R = días de especial relevancia
+  SCC: {
+    salbase:       [950.10, 940.50, 932.00, 913.60, 891.60],
+    extra:         [ 79.20,  78.40,  77.70,  76.10,  74.30],
+    hv_t1_o:       [ 11.00,  10.63,  10.29,   9.57,   8.71],
+    hv_t2_o:       [ 14.85,  14.34,  13.89,  12.92,  11.76],
+    hv_t3_o:       [ 17.60,  17.00,  16.47,  15.31,  13.94],
+    hv_t4_o:       [ 19.80,  19.13,  18.53,  17.23,  15.68],
+    hv_t1_r:       [ 13.44,  12.99,  12.58,  11.70,  10.65],
+    hv_t2_r:       [ 18.15,  17.53,  16.98,  15.79,  14.37],
+    hv_t3_r:       [ 21.51,  20.78,  20.13,  18.72,  17.03],
+    hv_t4_r:       [ 24.20,  23.38,  22.64,  21.06,  19.16],
+    lv1:           [225.00, 200.00, 175.00, 150.00, 125.00],
+    lv2:           [135.00, 110.00,  95.00,  80.00,  65.00],
+    lv3:           [ 90.00,  80.00,  70.00,  60.00,  50.00],
+    plus_sobrecargo:[20.80,  19.50,  17.17,  14.27,  10.93],
+    plus_tr_anual: 117.08,
+    dest_nac: 20.07,
+    dest_int: 28.89,
+    dieta_nac:     [ 26.50,  22.70,  21.13,  16.07,  11.45],
+    supl_int:      [  4.80,   4.40,   4.25,   3.86,   3.29],
+    supl_pernoc_nac: 17.86,
+    supl_pernoc_int: 34.67,
+  },
+  CC: {
+    salbase:       [950.10, 940.50, 932.00, 913.60, 891.60],
+    extra:         [ 79.20,  78.40,  77.70,  76.10,  74.30],
+    hv_t1_o:       [ 11.00,  10.63,  10.29,   9.57,   8.71],
+    hv_t2_o:       [ 14.85,  14.34,  13.89,  12.92,  11.76],
+    hv_t3_o:       [ 17.60,  17.00,  16.47,  15.31,  13.94],
+    hv_t4_o:       [ 19.80,  19.13,  18.53,  17.23,  15.68],
+    hv_t1_r:       [ 13.44,  12.99,  12.58,  11.70,  10.65],
+    hv_t2_r:       [ 18.15,  17.53,  16.98,  15.79,  14.37],
+    hv_t3_r:       [ 21.51,  20.78,  20.13,  18.72,  17.03],
+    hv_t4_r:       [ 24.20,  23.38,  22.64,  21.06,  19.16],
+    lv1:           [225.00, 200.00, 175.00, 150.00, 125.00],
+    lv2:           [135.00, 110.00,  95.00,  80.00,  65.00],
+    lv3:           [ 90.00,  80.00,  70.00,  60.00,  50.00],
+    plus_sobrecargo:[  0,      0,      0,      0,      0  ],  // CC no es SCC
+    plus_tr_anual: 117.08,
+    dest_nac: 20.07,
+    dest_int: 28.89,
+    dieta_nac:     [ 26.50,  22.70,  21.13,  16.07,  11.45],
+    supl_int:      [  4.80,   4.40,   4.25,   3.86,   3.29],
+    supl_pernoc_nac: 17.86,
+    supl_pernoc_int: 34.67,
+  },
 };
 
 // Dietas (iguales para todos)
@@ -2278,6 +2608,13 @@ function enterApp() {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
+
+  // Primer acceso: sin tema guardado → llevar a Config para que el usuario configure su perfil
+  const isFirstAccess = !profileData.theme &&
+    !(function(){ try { return localStorage.getItem('pilotpay_theme_' + currentUser); } catch(e){ return false; } })();
+  if (isFirstAccess) {
+    setTimeout(() => showTab('config'), 350);
+  }
 }
 
 function doLogout() {
@@ -2295,9 +2632,10 @@ function initApp() {
   const u = USERS[currentUser];
   const isAdmin = currentUser === ADMIN_CODE;
   const baseLabel = parseFloat(profileData.base || u.base) > 1 ? 'MAD' : 'CAN';
+  const fnBadge = { CMD:'CMD', COP:'COP', SCC:'SCC', CC:'CC' };
   document.getElementById('user-pill').textContent = currentUser + ' ↩';
   document.getElementById('header-badge').textContent =
-    `${u.funcion} · NVL${profileData.nivel || u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
+    `${fnBadge[u.funcion]||u.funcion} · NVL${profileData.nivel || u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
 
   // Set funcion and base from profile
   const funcEl = document.getElementById('funcion');
@@ -2337,6 +2675,7 @@ function initApp() {
   }
 
   loadTheme();
+  onFuncionChange();  // set TCP panels / nivel dots correctly for logged-in user
   onBaseChange();
   recalc();
   initPerfil();
@@ -2582,7 +2921,7 @@ Tus credenciales:
 • Contraseña: ${pass}
 
 Tu perfil configurado:
-• Función: ${funcion === 'CMD' ? 'Comandante' : 'Copiloto'}
+• Función: ${{ CMD:'Comandante', COP:'Copiloto', SCC:'Sobrecargo (SCC)', CC:'Tripulante de Cabina (CC)' }[funcion] || funcion}
 • Base: ${baseLabel}
 
 Si necesitas cambiar algún dato de tu perfil, desde la sección Perfil puedes solicitar modificaciones.
@@ -2681,15 +3020,20 @@ function editarUsuario(code) {
     <div class="row">
       <div class="field">
         <span class="field-label">Función</span>
-        <select class="field-input" id="edit-funcion">
+        <select class="field-input" id="edit-funcion" onchange="updateEditNivelOptions()">
           <option value="CMD" ${u.funcion==='CMD'?'selected':''}>Comandante</option>
           <option value="COP" ${u.funcion==='COP'?'selected':''}>Copiloto</option>
+          <option value="SCC" ${u.funcion==='SCC'?'selected':''}>SCC — Sobrecargo</option>
+          <option value="CC"  ${u.funcion==='CC' ?'selected':''}>CC — Tripulante de Cabina</option>
         </select>
       </div>
       <div class="field">
         <span class="field-label">Nivel</span>
         <select class="field-input" id="edit-nivel">
-          ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${u.nivel==n?'selected':''}>${n}</option>`).join('')}
+          ${(['SCC','CC'].includes(u.funcion||'CMD')
+            ? [1,2,3,4,5]
+            : [1,2,3,4,5,6]
+          ).map(n=>`<option value="${n}" ${u.nivel==n?'selected':''}>${n}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -2828,10 +3172,11 @@ const THEMES = {
   binter:   { label: '✈️ Binter',      desc: 'Verde corporativo' },
   starwars: { label: '⚔️ Imperio',     desc: 'Dark side of the Force' },
   ecam:     { label: '🖥️ ECAM',        desc: 'Embraer E195-E2' },
-  emb2:     { label: '✈️ EMB2·FMS',    desc: 'Cabina semántica' },
+  emb2:     { label: '✈️ EMB2·FMS',    desc: 'Cabina técnica' },
+  tcp:      { label: '🫱 Binter Cabina', desc: 'TCP · Uniforme azul' },
   office:   { label: '📊 Office',      desc: 'Microsoft 365' },
 };
-let currentTheme = 'ecam';
+let currentTheme = 'emb2';
 
 function setTheme(theme) {
   currentTheme = theme;
@@ -2842,14 +3187,19 @@ function setTheme(theme) {
   if (currentUser) {
     profileData.theme = theme;
     saveUserData(currentUser);
+    // Persist to Firebase so theme follows user across devices
+    fbUpdate(`pilotpay/usuarios/${currentUser}`, { theme });
   }
   try { localStorage.setItem('pilotpay_theme_' + (currentUser||'_default'), theme); } catch(e) {}
 }
 
 function loadTheme() {
+  // Priority: Firebase profile → localStorage → default by role
+  const isTCPuser = ['SCC','CC'].includes(profileData.funcion || USERS[currentUser]?.funcion);
+  const defaultTheme = isTCPuser ? 'tcp' : 'emb2';
   const saved = profileData.theme
     || (function(){ try { return localStorage.getItem('pilotpay_theme_' + (currentUser||'_default')); } catch(e){ return null; } })()
-    || 'ecam';
+    || defaultTheme;
   setTheme(saved);
 }
 
@@ -2972,6 +3322,83 @@ function buildAzafataHat() {
   </svg>`;
 }
 
+// ── BIENVENIDA TCP — gorro azul Binter + banda uniforme ──
+function buildTCPWelcome(isSCC) {
+  const label = isSCC ? 'SCC' : 'CC';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 165" width="110">
+    <defs>
+      <linearGradient id="tcpBg" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#1A3060"/>
+        <stop offset="100%" style="stop-color:#0D1B3E"/>
+      </linearGradient>
+      <linearGradient id="tcpHat" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#1a4aaa"/>
+        <stop offset="100%" style="stop-color:#0d2c7a"/>
+      </linearGradient>
+      <linearGradient id="tcpBrim" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#1238a0"/>
+        <stop offset="100%" style="stop-color:#091d60"/>
+      </linearGradient>
+      <linearGradient id="tcpStripe1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#8CE000"/>
+        <stop offset="100%" style="stop-color:#72B800"/>
+      </linearGradient>
+      <linearGradient id="tcpStripe2" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#35C9C9"/>
+        <stop offset="100%" style="stop-color:#20AAAA"/>
+      </linearGradient>
+      <linearGradient id="wingG" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#d0ddf5"/>
+        <stop offset="100%" style="stop-color:#a0b0d8"/>
+      </linearGradient>
+      <filter id="tcpShadow">
+        <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.3"/>
+      </filter>
+    </defs>
+
+    <!-- Gorro pillbox azul Binter -->
+    <ellipse cx="50" cy="38" rx="40" ry="9"  fill="url(#tcpHat)"/>
+    <rect    x="10"  y="29"  width="80" height="28" fill="url(#tcpHat)"/>
+    <ellipse cx="50" cy="57" rx="40" ry="9"  fill="#0d2260"/>
+
+    <!-- Luz sutil en el top del gorro -->
+    <ellipse cx="40" cy="34" rx="16" ry="3.5" fill="#2a5acc" opacity="0.3"/>
+
+    <!-- Visera -->
+    <ellipse cx="50" cy="59" rx="44" ry="10" fill="url(#tcpBrim)"/>
+    <ellipse cx="50" cy="59" rx="44" ry="10" fill="none" stroke="#091848" stroke-width="0.8"/>
+    <ellipse cx="32" cy="57" rx="14" ry="3" fill="#1a3faa" opacity="0.25"/>
+
+    <!-- Pin Binter — banda de alas plateada centrada -->
+    <g transform="translate(50,45)" filter="url(#tcpShadow)">
+      <path d="M-18,0 C-14,-3 -8,-2 -1,0 C-8,2 -14,1 -18,0 Z" fill="url(#wingG)" stroke="#90a8d0" stroke-width="0.25"/>
+      <path d="M18,0  C14,-3 8,-2  1,0  C8,2  14,1  18,0  Z"  fill="url(#wingG)" stroke="#90a8d0" stroke-width="0.25"/>
+      <circle cx="0" cy="0" r="2.5" fill="#d8e4f5" stroke="#90a8d0" stroke-width="0.4"/>
+      <circle cx="0" cy="0" r="1.2" fill="#f0f5ff"/>
+    </g>
+
+    <!-- Cuerpo uniforme — banda diagonal Binter (verde lima + turquesa) -->
+    <!-- Banda verde lima — diagonal de hombro izquierdo a cadera derecha -->
+    <path d="M12,75 L62,75 L72,85 L22,85 Z" fill="url(#tcpStripe1)" opacity="0.95"/>
+    <!-- Banda turquesa debajo -->
+    <path d="M12,85 L62,85 L72,95 L22,95 Z" fill="url(#tcpStripe2)" opacity="0.90"/>
+    <!-- Fondo torso uniforme -->
+    <rect x="10" y="67" width="80" height="8"  fill="#1A3060" rx="2"/>
+    <rect x="10" y="95" width="80" height="12" fill="#1A3060"/>
+
+    <!-- Etiquetas -->
+    <text x="50" y="124" text-anchor="middle"
+      font-family="'DM Sans', Arial" font-size="11" font-weight="700" letter-spacing="1.5"
+      fill="#8CE000">${label}</text>
+    <text x="50" y="136" text-anchor="middle"
+      font-family="'DM Sans', Arial" font-size="9" font-weight="400"
+      fill="#B8C6D8" opacity="0.8">TRIPULANTE</text>
+    <text x="50" y="147" text-anchor="middle"
+      font-family="'DM Sans', Arial" font-size="8.5" font-weight="400"
+      fill="#6A85A8" opacity="0.7">BINTER CANARIAS</text>
+  </svg>`;
+}
+
 function showWelcome() {
   document.getElementById('login-screen').style.display = 'none';
   const ws = document.getElementById('welcome-screen');
@@ -2982,24 +3409,25 @@ function showWelcome() {
   const funcion = profileData.funcion || u.funcion || 'CMD';
   const nivel   = profileData.nivel || u.nivel || 3;
   const isCMD   = funcion === 'CMD';
-  const isAZF   = funcion === 'AZF';
+  const isTCP   = funcion === 'SCC' || funcion === 'CC';
+  const isSCC   = funcion === 'SCC';
   const alias   = profileData.alias || u.alias || '';
-  const nombre  = alias || (profileData.name || u.name || 'Piloto').split(' ')[0];
+  const nombre  = alias || (profileData.name || u.name || 'Tripulante').split(' ')[0];
   const baseLabel = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
 
   document.getElementById('welcome-name').textContent = nombre;
 
   const roleEl = document.getElementById('welcome-role-sub');
-  const roleLabel = isCMD ? 'COMANDANTE' : isAZF ? 'TRIPULANTE DE CABINA' : 'COPILOTO';
-  const nivelLine = isAZF ? '' : ` · NIVEL ${nivel}`;
+  const roleLabel = isSCC ? 'SOBRECARGO' : isTCP ? 'TRIPULANTE DE CABINA' : isCMD ? 'COMANDANTE' : 'COPILOTO';
+  const nivelLine = isTCP ? ` · NIVEL ${nivel}` : ` · NIVEL ${nivel}`;
   roleEl.innerHTML =
     `${roleLabel}${nivelLine} · ${baseLabel.toUpperCase()}<br>
      <span style="font-size:10px;letter-spacing:3px;opacity:0.6">BINTER CANARIAS</span>` +
     (isAdmin ? `<br><span style="font-size:10px;color:var(--amber2);letter-spacing:2px">★ ADMINISTRADOR</span>` : '');
 
   const epEl = document.getElementById('welcome-epaulettes');
-  if (isAZF) {
-    epEl.innerHTML = buildAzafataHat();
+  if (isTCP) {
+    epEl.innerHTML = buildTCPWelcome(isSCC);
   } else {
     epEl.innerHTML = buildEpaulettes(funcion, nivel, 110);
   }
@@ -3148,16 +3576,95 @@ function togglePP(on) {
   recalc();
 }
 
+// ── FUNCIÓN CHANGE — muestra/oculta paneles según función ──
+function onFuncionChange() {
+  const fn = document.getElementById('funcion').value;
+  const isTCP = fn === 'SCC' || fn === 'CC';
+  const isSCC = fn === 'SCC';
+
+  // Nivel dot-6 solo para pilotos (TCP tiene 5 niveles)
+  const dot6 = document.getElementById('nivel-dot-6');
+  if (dot6) dot6.style.display = isTCP ? 'none' : '';
+  if (isTCP && currentNivel > 5) { currentNivel = 5; highlightNivel(); }
+
+  // Paneles específicos TCP
+  const panelHVtype = document.getElementById('tcp-hv-type');
+  const panelSCC    = document.getElementById('scc-plus');
+  if (panelHVtype) panelHVtype.style.display = isTCP ? 'block' : 'none';
+  if (panelSCC)    panelSCC.style.display    = isSCC  ? 'block' : 'none';
+
+  // Base Madrid no aplica a TCP
+  const baseEl = document.getElementById('base');
+  if (isTCP) {
+    baseEl.style.opacity = '0.4';
+    baseEl.style.pointerEvents = 'none';
+  } else {
+    baseEl.style.opacity = '1';
+    baseEl.style.pointerEvents = 'auto';
+  }
+
+  updateRates();
+  recalc();
+}
+
+function onAdmFuncionChange() {
+  const fn = document.getElementById('adm-funcion')?.value || 'CMD';
+  const isTCP = fn === 'SCC' || fn === 'CC';
+  const isSCC = fn === 'SCC';
+
+  // Ajustar máximo nivel (TCP: 5, pilotos: 6)
+  const nivelSel = document.getElementById('adm-nivel');
+  if (nivelSel) {
+    const max = isTCP ? 5 : 6;
+    const cur = parseInt(nivelSel.value) || 1;
+    nivelSel.innerHTML = Array.from({length: max}, (_,i) =>
+      `<option value="${i+1}" ${i+1 === Math.min(cur,max) ? 'selected':''}>${i+1}</option>`
+    ).join('');
+  }
+
+  // Base Madrid: CC no aplica (solo SCC tiene derecho), pilotos siempre aplica
+  const baseEl = document.getElementById('adm-base');
+  if (baseEl) {
+    const madOpt = baseEl.querySelector('option[value="1.2"]');
+    if (madOpt) {
+      if (fn === 'CC') {
+        madOpt.disabled = true;
+        madOpt.textContent = 'Madrid (solo SCC/pilotos)';
+        if (baseEl.value === '1.2') baseEl.value = '1';
+      } else {
+        madOpt.disabled = false;
+        madOpt.textContent = 'Madrid';
+      }
+    }
+  }
+}
+
 // ── RATES DISPLAY ──
 function updateRates() {
   const fn = document.getElementById('funcion').value;
   const t = TABLAS[fn];
-  const n = currentNivel - 1;
-  const mad = parseFloat(document.getElementById('base').value) || 1;
-  ['t1','t2','t3','t4'].forEach((k,i) => {
-    const rate = t[`hv_${k}`][n] * mad;
-    document.getElementById(`rate-${k}`).textContent = `${rate.toFixed(2)} €/HB`;
-  });
+  if (!t) return;
+  const n = Math.min(currentNivel - 1, t.salbase.length - 1);
+  const isTCP = fn === 'SCC' || fn === 'CC';
+
+  if (isTCP) {
+    ['t1','t2','t3','t4'].forEach(k => {
+      const rO = (t[`hv_${k}_o`]?.[n] || 0).toFixed(2);
+      const rR = (t[`hv_${k}_r`]?.[n] || 0).toFixed(2);
+      const el = document.getElementById(`rate-${k}`);
+      if (el) el.textContent = `O:${rO} / R:${rR} €/HB`;
+    });
+    // Plus sobrecargo rate
+    const sccEl = document.getElementById('rate-scc');
+    if (sccEl) sccEl.textContent = (t.plus_sobrecargo?.[n] || 0).toFixed(2) + ' €/día';
+  } else {
+    const mad = parseFloat(document.getElementById('base').value) || 1;
+    ['t1','t2','t3','t4'].forEach(k => {
+      const rate = (t[`hv_${k}`]?.[n] || 0) * mad;
+      const el = document.getElementById(`rate-${k}`);
+      if (el) el.textContent = `${rate.toFixed(2)} €/HB`;
+    });
+  }
 }
 
 // ── HV DISTRIBUCIÓN ──
@@ -3245,6 +3752,7 @@ function clearTotal() {
 // ── CÁLCULO ──
 function recalc() {
   const fn = document.getElementById('funcion').value;
+  if (fn === 'SCC' || fn === 'CC') { recalcTCP(); return; }
   const t = TABLAS[fn];
   const n = currentNivel - 1;
   const madF = parseFloat(document.getElementById('base').value) || 1;
@@ -3364,38 +3872,33 @@ function recalc() {
   const baseIRPF = Math.round((totalDevengado - totalDietasEx) * 100) / 100;
   const retencionIRPF = Math.round(baseIRPF * irpf_pct / 100 * 100) / 100;
 
-  // BASE SS:
-  // La base de cotización SIEMPRE incluye la prorrata mensual de pagas extra,
-  // aunque el trabajador cobre en 14 pagas.
-  // En esta app, extra1 y extra2 ya son importes mensuales prorrateados,
-  // por tanto NO se dividen entre 12 y NO dependen del toggle de paga completa.
+  // BASE SS según normativa SS 2026:
+  // BCC = SB + complementos salariales + prorrata pagas extra + retribuciones especie
+  // BCP = BCC + horas extraordinarias (HV en pilotos)
+  // Las dietas NO se incluyen. Tope máximo 2026 = 5.101,20€/mes
   const BASE_SS_TOPE = 5101.20;
-  const prorrata_extras_ss = Math.round((extra1 + extra2) * 100) / 100;
-
+  const prorrata_extras_ss = !isPagaCompleta ? Math.round((extra1 + extra2) / 12 * 100) / 100 : 0;
+  // Complementos salariales fijos: plus transporte, DPO mensual, complemento MAD
+  // Retribuciones especie: seguro médico, seguro vida
+  // HV = horas extraordinarias de pilotos → van a BCP
   const baseSS_teorica = Math.round((
-    sb +                  // salario base
-    plus_tr +             // plus transporte / complemento fijo según nómina Binter
-    dpo +                 // otros conceptos / DPO
-    compMad +             // complemento de base
-    prorrata_extras_ss +  // prorrata mensual de pagas extra SIEMPRE
-    hvTotal +             // horas de vuelo
-    totalDietasSuj +      // dieta manutención sujeta
-    segMed_dev +          // retribución especie, si procede
-    SEG_VIDA_ESPECIE      // seguro vida especie
+    sb +              // salario base
+    plus_tr +         // complemento salarial fijo
+    dpo +             // complemento salarial (DPO)
+    compMad +         // complemento base Madrid
+    prorrata_extras_ss + // prorrata pagas extra
+    hvTotal +         // horas extraordinarias (BCP)
+    segMed_dev +      // retribución especie
+    SEG_VIDA_ESPECIE  // retribución especie
   ) * 100) / 100;
-
   const baseSS = Math.min(baseSS_teorica, BASE_SS_TOPE);
   const ss_cc  = Math.round(baseSS * 0.0470 * 100) / 100;
   const ss_mei = Math.round(baseSS * 0.0015 * 100) / 100;
   const ss_dfp = Math.round(baseSS * 0.0165 * 100) / 100;
-
-  // Cotización adicional de solidaridad:
-  // solo debe aplicarse sobre retribuciones que superen la base máxima,
-  // nunca sobre toda la base SS. Si no se supera el tope, es 0.
-  const exceso_solidaridad = Math.max(0, baseSS_teorica - BASE_SS_TOPE);
-  const ss_sol_t1 = Math.round(exceso_solidaridad * 0.10 * 0.0019 * 100) / 100;
-  const ss_sol_t2 = Math.round(exceso_solidaridad * 0.40 * 0.0021 * 100) / 100;
-  const ss_sol_t3 = Math.round(exceso_solidaridad * 0.2557 * 0.0024 * 100) / 100;
+  // Cotización adicional solidaridad
+  const ss_sol_t1 = Math.round(baseSS * 0.10 * 0.0019 * 100) / 100;
+  const ss_sol_t2 = Math.round(baseSS * 0.40 * 0.0021 * 100) / 100;
+  const ss_sol_t3 = Math.round(baseSS * 0.2557 * 0.0024 * 100) / 100;
   const ss_solidaridad = Math.round((ss_sol_t1 + ss_sol_t2 + ss_sol_t3) * 100) / 100;
   const ss_total = Math.round((ss_cc + ss_mei + ss_dfp + ss_solidaridad) * 100) / 100;
 
@@ -3574,6 +4077,96 @@ function renderNomina() {
     </div>
   `;
   document.getElementById('nomina-output').innerHTML = html;
+}
+
+// ── BAJAS / INCAPACIDAD TEMPORAL ──
+let bajaActiva = false;
+
+function toggleBaja(on) {
+  bajaActiva = on;
+  document.getElementById('tog-baja-si').classList.toggle('active', on);
+  document.getElementById('tog-baja-no').classList.toggle('active', !on);
+  document.getElementById('baja-fields').style.display = on ? 'block' : 'none';
+  document.getElementById('baja-tipo').disabled = !on;
+  if (!on) {
+    document.getElementById('baja-resultado').style.display = 'none';
+  } else {
+    recalcBaja();
+  }
+}
+
+function recalcBaja() {
+  if (!bajaActiva) return;
+
+  const tipo      = document.getElementById('baja-tipo').value;
+  const diaInicio = parseInt(document.getElementById('baja-dia-inicio').value) || 1;
+  const diaFin    = parseInt(document.getElementById('baja-dia-fin').value)    || getDiasMes();
+  const diasMes   = getDiasMes();
+
+  if (diaFin < diaInicio || diaInicio < 1) return;
+
+  // Base reguladora: valor introducido o estimado de SB × 12 / 365
+  const fn = document.getElementById('funcion').value;
+  const t  = TABLAS[fn];
+  if (!t) return;
+  const n = Math.min(currentNivel - 1, t.salbase.length - 1);
+  const brDiaria = parseFloat(document.getElementById('baja-base-reg').value)
+    || Math.round(t.salbase[n] * 12 / 365 * 100) / 100;
+
+  const totalDiasBaja  = diaFin - diaInicio + 1;
+  const diasTrabajados = diasMes - totalDiasBaja;
+  const fmt = v => Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  let prestacion = 0;
+  const lineas   = [];
+
+  if (tipo === 'MAT') {
+    // Maternidad/Paternidad: 100 % a cargo INSS desde el día 1
+    prestacion = Math.round(brDiaria * totalDiasBaja * 100) / 100;
+    lineas.push(`${totalDiasBaja} días × ${fmt(brDiaria)} €/día × <span style="color:var(--green)">100 %</span> (INSS) = <strong style="color:var(--green)">${fmt(prestacion)} €</strong>`);
+    document.getElementById('baja-nota').innerHTML =
+      '✓ Maternidad/Paternidad: el INSS abona el 100 % de la base reguladora desde el primer día. La empresa no complementa.';
+
+  } else if (tipo === 'AT') {
+    // AT/EP: empresa abona el día del accidente íntegramente; INSS 75 % desde el día siguiente
+    const imp_dia1  = Math.round(brDiaria * 100) / 100;
+    const diasINSS  = Math.max(0, totalDiasBaja - 1);
+    const imp_inss  = Math.round(diasINSS * brDiaria * 0.75 * 100) / 100;
+    prestacion = imp_dia1 + imp_inss;
+
+    lineas.push(`Día del accidente (empresa, íntegro): <strong style="color:var(--green)">${fmt(imp_dia1)} €</strong>`);
+    if (diasINSS > 0)
+      lineas.push(`${diasINSS} días × ${fmt(brDiaria)} €/día × <span style="color:var(--blue2)">75 %</span> (INSS) = <strong style="color:var(--blue2)">${fmt(imp_inss)} €</strong>`);
+    document.getElementById('baja-nota').innerHTML =
+      'ℹ️ AT/EP: la empresa abona el día del accidente. El INSS abona el 75 % BR desde el día siguiente sin límite temporal.';
+
+  } else {
+    // Enfermedad común / accidente no laboral (mínimo legal)
+    let diasEspera = 0, dias4a20 = 0, dias21plus = 0;
+    for (let d = 1; d <= totalDiasBaja; d++) {
+      if (d <= 3)       diasEspera++;
+      else if (d <= 20) dias4a20++;
+      else              dias21plus++;
+    }
+    const imp4a20   = Math.round(dias4a20   * brDiaria * 0.60 * 100) / 100;
+    const imp21plus = Math.round(dias21plus * brDiaria * 0.75 * 100) / 100;
+    prestacion = imp4a20 + imp21plus;
+
+    if (diasEspera > 0)
+      lineas.push(`Días 1–3 (espera): ${diasEspera} día${diasEspera > 1 ? 's' : ''} × <span style="color:var(--red)">0 %</span> = <strong style="color:var(--red)">0,00 €</strong>`);
+    if (dias4a20 > 0)
+      lineas.push(`Días 4–20: ${dias4a20} día${dias4a20 > 1 ? 's' : ''} × ${fmt(brDiaria)} € × <span style="color:var(--amber2)">60 %</span> = <strong style="color:var(--amber2)">${fmt(imp4a20)} €</strong>`);
+    if (dias21plus > 0)
+      lineas.push(`Día 21+: ${dias21plus} día${dias21plus > 1 ? 's' : ''} × ${fmt(brDiaria)} € × <span style="color:var(--blue2)">75 %</span> = <strong style="color:var(--blue2)">${fmt(imp21plus)} €</strong>`);
+
+    document.getElementById('baja-nota').innerHTML =
+      `ℹ️ Binter aplica el mínimo legal: sin mejora voluntaria en EC/ANL. Los 3 días de espera no generan prestación alguna.<br>Base reguladora estimada: ${fmt(brDiaria)} €/día (SB nivel ${currentNivel} × 12 ÷ 365).`;
+  }
+
+  document.getElementById('baja-desglose').innerHTML   = lineas.join('<br>');
+  document.getElementById('baja-total').textContent     = fmt(prestacion) + ' €';
+  document.getElementById('baja-dias-trab').textContent = `${diasTrabajados} de ${diasMes} días`;
+  document.getElementById('baja-resultado').style.display = 'block';
 }
 
 // ── COMPARATIVA ──
@@ -4016,25 +4609,108 @@ function renderComparativa(nomData) {
 }
 
 function generarInformeReclamacion(errores) {
-  // This would generate a formal complaint text
-  const text = `ESCRITO DE RECLAMACIÓN DE DIFERENCIAS SALARIALES
-  
-Al Departamento de RRHH — Binter Canarias (BCSA)
+  const u = USERS[currentUser] || {};
+  const nombre  = `${profileData.name || u.name || ''} ${profileData.apellidos || u.apellidos || ''}`.trim();
+  const nif     = profileData.nif || u.nif || '___________';
+  const nss     = profileData.nss || u.nss || '___________';
+  const fn      = profileData.funcion || u.funcion || 'CMD';
+  const nivel   = currentNivel;
+  const base    = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
+  const mes     = document.getElementById('mes-nomina')?.value || '___';
+  const año     = new Date().getFullYear();
+  const fecha   = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' });
 
-D./Dña. ${profileData.fullName || profileData.name}, con NIF ${profileData.nif || '___'} y Nº SS ${profileData.nss || '___'}, en calidad de ${USERS[currentUser]?.funcion === 'CMD' ? 'Comandante' : 'Copiloto'} Nivel ${currentNivel}, por medio del presente escrito pongo en su conocimiento las siguientes discrepancias detectadas en mi nómina respecto a lo establecido en el Convenio Colectivo BCSA 2026 (BOE 18/03/2026):
+  const funLabels  = { CMD:'Comandante', COP:'Copiloto', SCC:'Sobrecargo (SCC)', CC:'Tripulante de Cabina (CC)' };
+  const grupoLabels = { CMD:'Grupo IV', COP:'Grupo IV', SCC:'Grupo III', CC:'Grupo III' };
+  const funLabel   = funLabels[fn]  || fn;
+  const grupoLabel = grupoLabels[fn] || 'Grupo IV';
 
-${errores.map(e => `• ${e.concept}: percibido ${e.real?.toFixed(2)||0} €, correspondía ${e.teorico?.toFixed(2)||0} € (diferencia: ${(e.delta||0).toFixed(2)} €)`).join('\n')}
+  const totalDelta = errores.reduce((s, e) => s + (e.delta || 0), 0);
+  const fmt = v => Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
-Por lo expuesto, solicito la revisión y regularización de los importes indicados conforme a las tablas salariales del Grupo IV del citado convenio colectivo.
+  // Línea detallada por concepto
+  const conceptLines = errores.map(e => {
+    const diff    = e.delta || 0;
+    const absDiff = Math.abs(diff);
+    const sentido = diff > 0 ? 'por exceso respecto al convenio' : 'por defecto respecto al convenio';
+    return [
+      `  · ${e.concept}`,
+      `      Importe percibido en nómina : ${fmt(e.real ?? 0)} €`,
+      `      Importe s/ convenio (calc.) : ${fmt(e.teorico ?? 0)} €`,
+      `      Diferencia apreciada        : ${fmt(absDiff)} € (${sentido})`,
+    ].join('\n');
+  }).join('\n\n');
 
-Fecha: ${new Date().toLocaleDateString('es-ES')}
-Firma: ___________________`;
+  const text =
+`CONSULTA SOBRE NÓMINA — ${mes.toUpperCase()} ${año}
+${'═'.repeat(60)}
+
+A la atención del Departamento de Recursos Humanos
+Binter Canarias, S.A.
+
+${fecha}
+
+━━━ DATOS DEL TRABAJADOR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nombre y apellidos : ${nombre || '___________'}
+NIF                : ${nif}
+Nº Seguridad Social: ${nss}
+Categoría          : ${funLabel}
+Nivel              : ${nivel}
+Base               : ${base}
+Grupo laboral      : ${grupoLabel}
+
+━━━ OBJETO DE LA CONSULTA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Me dirijo a ustedes con el fin de poner en su conocimiento
+una posible discrepancia que he detectado al revisar mi
+nómina correspondiente al mes de ${mes} de ${año}.
+
+He realizado un cálculo orientativo aplicando las tablas
+salariales recogidas en el Convenio Colectivo de Binter
+Canarias, S.A. (Cód. 90105132012026), publicado en el
+BOE núm. 68 de 18 de marzo de 2026, y he observado
+diferencias en los siguientes conceptos:
+
+━━━ CONCEPTOS CON DIFERENCIA APRECIADA ━━━━━━━━━━━━━━━
+
+${conceptLines}
+
+─────────────────────────────────────────────────────
+  Diferencia total estimada: ${fmt(Math.abs(totalDelta))} €
+─────────────────────────────────────────────────────
+
+━━━ CONSIDERACIONES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Deseo subrayar que este cálculo es de carácter orientativo
+y puede contener errores derivados de variables que no
+están a mi alcance (regularizaciones, prorrateos, ajustes
+por situaciones específicas del período, etc.). Por ello,
+no se trata en ningún caso de una reclamación formal, sino
+de una solicitud de revisión y aclaración, con la finalidad
+de verificar conjuntamente si los importes son correctos.
+
+Quedo completamente a disposición del departamento para
+aportar cualquier información adicional que facilite la
+revisión.
+
+Agradezco sinceramente su atención y quedo a la espera
+de su respuesta.
+
+Atentamente,
+
+${nombre || '___________'}
+NIF: ${nif}
+
+___________________________
+(Firma)`;
 
   const blob = new Blob([text], { type: 'text/plain; charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'reclamacion_nomina.txt';
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `consulta_nomina_${mes.toLowerCase().replace(/\s/g,'_')}_${año}.txt`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 // ── PERFIL ──
@@ -4049,9 +4725,11 @@ function renderPerfil() {
   const nombreCompleto = `${profileData.name || u.name || ''} ${profileData.apellidos || u.apellidos || ''}`.trim();
   const aliasDisplay = profileData.alias || u.alias || '';
 
+  const fn = u.funcion || profileData.funcion || 'CMD';
+  const fnLabels = { CMD:'COMANDANTE', COP:'COPILOTO', SCC:'SOBRECARGO (SCC)', CC:'TRIPULANTE DE CABINA (CC)' };
   document.getElementById('prf-nombre').textContent = nombreCompleto || `${u.name || ''} — ${currentUser}`;
   document.getElementById('prf-role').textContent =
-    `${u.funcion === 'CMD' ? 'COMANDANTE' : 'COPILOTO'} · NIVEL ${currentNivel} · ${parseFloat(u.base||1)>1?'BASE MADRID':'BASE CANARIAS'}`;
+    `${fnLabels[fn]||fn} · NIVEL ${currentNivel} · ${parseFloat(u.base||1)>1?'BASE MADRID':'BASE CANARIAS'}`;
   document.getElementById('prf-ingreso').textContent = ingreso;
   document.getElementById('prf-nif').textContent = profileData.nif || '—';
   document.getElementById('prf-nss').textContent = profileData.nss || '—';
