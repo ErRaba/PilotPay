@@ -809,7 +809,7 @@ main { flex: 1; overflow-y: auto; }
 /* ── LOGIN ── */
 #login-screen {
   position: fixed; inset: 0; z-index: 200;
-  background: var(--bg);
+  background: #0a0e1a;  /* siempre oscuro, independiente del tema */
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 32px;
@@ -817,33 +817,33 @@ main { flex: 1; overflow-y: auto; }
 .login-logo {
   font-family: var(--mono);
   font-size: 28px; font-weight: 700;
-  color: var(--blue2);
+  color: #60a5fa;  /* azul fijo */
   margin-bottom: 4px;
 }
-.login-logo span { color: var(--amber); }
+.login-logo span { color: #fbbf24; } /* ámbar fijo */
 .login-sub {
-  color: var(--text3); font-size: 13px;
+  color: #64748b; font-size: 13px;
   margin-bottom: 40px;
   font-family: var(--mono);
 }
 .login-card {
   width: 100%; max-width: 340px;
-  background: var(--card);
-  border: 1px solid var(--border);
+  background: #111827;  /* card oscura fija */
+  border: 1px solid #1e2d4a;
   border-radius: 16px;
   padding: 28px;
 }
-.form-label { font-size: 11px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; display: block; }
+.form-label { font-size: 11px; color: #64748b; font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; display: block; }
 .form-input {
   width: 100%; padding: 10px 14px;
-  background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 8px; color: var(--text);
+  background: #151d35; border: 1px solid #253555;
+  border-radius: 8px; color: #e2e8f0;
   font-family: var(--mono); font-size: 14px;
   outline: none; margin-bottom: 16px;
   transition: border-color .2s;
   -webkit-appearance: none;
 }
-.form-input:focus { border-color: var(--blue); }
+.form-input:focus { border-color: #3b82f6; }
 .btn-primary {
   width: 100%; padding: 12px;
   background: var(--blue);
@@ -865,7 +865,7 @@ main { flex: 1; overflow-y: auto; }
 /* ── WELCOME ── */
 #welcome-screen {
   position: fixed; inset: 0; z-index: 199;
-  background: var(--bg);
+  background: #0a0e1a;  /* siempre oscuro, independiente del tema */
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 32px; text-align: center;
@@ -874,20 +874,20 @@ main { flex: 1; overflow-y: auto; }
   width: 100%; max-width: 280px;
   border-radius: 16px;
   margin-bottom: 24px;
-  border: 1px solid var(--border);
-  background: var(--bg3);
+  border: 1px solid #1e2d4a;
+  background: #151d35;
   padding: 20px;
   display: flex; align-items: center; justify-content: center;
 }
 .welcome-greeting {
   font-size: 26px; font-weight: 300;
-  color: var(--text2); margin-bottom: 4px;
+  color: #94a3b8; margin-bottom: 4px;
 }
-.welcome-greeting strong { color: var(--text); font-weight: 600; }
-.welcome-sub { color: var(--text3); font-size: 12px; margin-bottom: 32px; font-family: var(--mono); line-height: 1.8; }
+.welcome-greeting strong { color: #e2e8f0; font-weight: 600; }
+.welcome-sub { color: #64748b; font-size: 12px; margin-bottom: 32px; font-family: var(--mono); line-height: 1.8; }
 .btn-continue {
   padding: 14px 40px;
-  background: var(--blue); color: white;
+  background: #3b82f6; color: white;
   border: none; border-radius: 10px;
   font-size: 15px; font-weight: 600;
   cursor: pointer; font-family: var(--sans);
@@ -2890,10 +2890,10 @@ function initApp() {
     funcEl.style.pointerEvents = 'auto';
     baseEl.style.opacity = '1';
     baseEl.style.pointerEvents = 'auto';
-    funcEl.onchange = () => recalc();
+    funcEl.onchange = () => onFuncionChange();
     baseEl.onchange = () => onBaseChange();
   } else {
-    // Lock selectors for regular users
+    // Lock selectors for regular users (applyUserPerms will unlock if multi-perm)
     funcEl.style.opacity = '0.6';
     funcEl.style.pointerEvents = 'none';
     baseEl.style.opacity = '0.6';
@@ -2993,12 +2993,14 @@ function renderAdmin() {
     const isAdmin = code === ADMIN_CODE;
     // Admin always has all perms
     const userPerms = isAdmin
-      ? { funciones: ['CMD', 'COP'], bases: ['GC', 'TFN', 'MAD'] }
+      ? { funciones: ['CMD', 'COP', 'SCC', 'CC'], bases: ['GC', 'TFN', 'MAD'] }
       : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
 
     const funcChecks = [
       { val: 'CMD', label: 'Comandante' },
       { val: 'COP', label: 'Copiloto' },
+      { val: 'SCC', label: 'SCC — Sobrecargo' },
+      { val: 'CC',  label: 'CC — Tripulante Cabina' },
     ].map(f => `
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
         <input type="checkbox"
@@ -3189,27 +3191,34 @@ function loadAdminCreatedUsers() {
 
 // Apply permissions to calculadora selectors
 function applyUserPerms() {
-  if (currentUser === ADMIN_CODE) return; // admin sees everything
-  const perms = getUserPerms(currentUser);
-  const u = USERS[currentUser];
-
   const funcEl = document.getElementById('funcion');
   const baseEl = document.getElementById('base');
 
-  // If user has only one funcion and one base → lock (already done in initApp)
-  // If user has multiple → unlock but limit options
+  if (currentUser === ADMIN_CODE) {
+    // Admin: full access, all options visible, changes trigger onFuncionChange
+    funcEl.style.opacity = '1';
+    funcEl.style.pointerEvents = 'auto';
+    Array.from(funcEl.options).forEach(opt => { opt.disabled = false; opt.style.display = ''; });
+    funcEl.onchange = () => onFuncionChange();
+    baseEl.style.opacity = '1';
+    baseEl.style.pointerEvents = 'auto';
+    baseEl.onchange = () => onBaseChange();
+    return;
+  }
+
+  const perms    = getUserPerms(currentUser);
+  const u        = USERS[currentUser];
   const funciones = perms.funciones || [u.funcion];
-  const bases     = perms.bases || [u.base];
+  const bases     = perms.bases     || [getBaseCode(u.base)];
 
   if (funciones.length > 1) {
     funcEl.style.opacity = '1';
     funcEl.style.pointerEvents = 'auto';
-    // Remove options not in perms
     Array.from(funcEl.options).forEach(opt => {
       opt.disabled = !funciones.includes(opt.value);
       opt.style.display = !funciones.includes(opt.value) ? 'none' : '';
     });
-    funcEl.onchange = () => recalc();
+    funcEl.onchange = () => onFuncionChange();  // triggers panel switch
   }
 
   if (bases.length > 1) {
@@ -3564,116 +3573,84 @@ function buildAzafataHat() {
 }
 
 // ── BIENVENIDA TCP — Elegante, a la altura del uniforme Binter ──
+// ── BIENVENIDA TCP — mismo nivel que los galones de piloto ──
 function buildTCPWelcome(isSCC) {
   const label    = isSCC ? 'SCC' : 'CC';
   const subtitle = isSCC ? 'SOBRECARGO' : 'CABINA';
-  // Paleta del uniforme Binter: azul rey #1A3CAA, verde lima #8CE000, turquesa #35C9C9
+
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 165" width="110">
     <defs>
-      <!-- Fondo hombrerera: azul rey del uniforme -->
-      <linearGradient id="tBg" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%"   style="stop-color:#1E4DC0"/>
-        <stop offset="100%" style="stop-color:#0D2B7A"/>
+      <linearGradient id="tcpEp" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"   style="stop-color:#1845B8"/>
+        <stop offset="100%" style="stop-color:#0C2878"/>
       </linearGradient>
-      <!-- Franja 1: verde lima del uniforme -->
-      <linearGradient id="tG1" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%"   style="stop-color:#9BF200"/>
-        <stop offset="100%" style="stop-color:#72B800"/>
+      <linearGradient id="tcpLime" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   style="stop-color:#A0F000"/>
+        <stop offset="100%" style="stop-color:#6EBE00"/>
       </linearGradient>
-      <!-- Franja 2: turquesa del pañuelo/corbata -->
-      <linearGradient id="tG2" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%"   style="stop-color:#3AD8D8"/>
-        <stop offset="100%" style="stop-color:#1AADAD"/>
+      <linearGradient id="tcpCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   style="stop-color:#30D8D8"/>
+        <stop offset="100%" style="stop-color:#18AAAA"/>
       </linearGradient>
-      <!-- Gorro: azul más intenso -->
-      <linearGradient id="tHat" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%"   style="stop-color:#2255CC"/>
-        <stop offset="100%" style="stop-color:#0D2370"/>
+      <linearGradient id="tcpWing" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   style="stop-color:#E8F0FF"/>
+        <stop offset="50%"  style="stop-color:#C0CCEE"/>
+        <stop offset="100%" style="stop-color:#8899CC"/>
       </linearGradient>
-      <!-- Visera -->
-      <linearGradient id="tVis" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%"   style="stop-color:#1840AA"/>
-        <stop offset="100%" style="stop-color:#091848"/>
+      <linearGradient id="tcpShine" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%"   style="stop-color:#FFFFFF;stop-opacity:0.10"/>
+        <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0"/>
       </linearGradient>
-      <!-- Pin plateado -->
-      <linearGradient id="tPin" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%"   style="stop-color:#dce8ff"/>
-        <stop offset="50%"  style="stop-color:#b8ccf0"/>
-        <stop offset="100%" style="stop-color:#8899cc"/>
-      </linearGradient>
-      <filter id="tGlow">
-        <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <filter id="tcpGlow">
+        <feGaussianBlur stdDeviation="1" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-      <filter id="tSh">
-        <feDropShadow dx="0" dy="1.5" stdDeviation="1.2" flood-color="#000820" flood-opacity="0.5"/>
+      <filter id="tcpSh">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000820" flood-opacity="0.45"/>
       </filter>
     </defs>
 
-    <!-- ── CUERPO DE LA HOMBRERERA / BLAZER ── -->
-    <!-- Base hombrerera — azul rey, como el blazer del uniforme -->
-    <rect x="8"  y="60" width="84" height="68" rx="6" fill="url(#tBg)" filter="url(#tSh)"/>
+    <!-- Hombrerera — mismo frame que buildEpaulettes -->
+    <rect x="10" y="10" width="80" height="115" rx="10"
+          fill="url(#tcpEp)" filter="url(#tcpSh)"/>
+    <!-- Brillo tejido -->
+    <rect x="10" y="10" width="80" height="55" rx="10"
+          fill="url(#tcpShine)"/>
 
-    <!-- Banda diagonal VERDE LIMA — característica del uniforme Binter
-         De hombro izquierdo (bajo pin) hacia cadera derecha, diagonal suave -->
-    <path d="M8,82 L92,82 L92,93 L8,93 Z"
-          fill="url(#tG1)" opacity="0.95"/>
-    <!-- Banda TURQUESA — debajo de la verde, más delgada -->
-    <path d="M8,92 L92,92 L92,100 L8,100 Z"
-          fill="url(#tG2)" opacity="0.90"/>
+    <!-- Franja verde lima — identidad Binter -->
+    <rect x="10" y="40" width="80" height="13" rx="3" fill="url(#tcpLime)" opacity="0.95"/>
+    <!-- Franja turquesa — debajo -->
+    <rect x="10" y="52" width="80" height="9"  rx="2" fill="url(#tcpCyan)"  opacity="0.88"/>
 
-    <!-- Borde superior hombrerera (hombro) -->
-    <rect x="8"  y="60" width="84" height="6"  rx="3" fill="#0D2B7A" opacity="0.6"/>
+    <!-- Borde inferior -->
+    <rect x="10" y="118" width="80" height="7" rx="3" fill="#0A1E60" opacity="0.6"/>
 
-    <!-- ── GORRO PILLBOX BINTER — azul rey, ala plana ── -->
-    <!-- Corona del gorro -->
-    <ellipse cx="50" cy="34" rx="36" ry="8.5" fill="url(#tHat)" filter="url(#tSh)"/>
-    <rect    x="14"  y="25"  width="72" height="23" fill="url(#tHat)"/>
-    <ellipse cx="50" cy="48" rx="36" ry="8.5" fill="#0D2370"/>
-
-    <!-- Luz sutil en crown -->
-    <ellipse cx="38" cy="30" rx="15" ry="3.5" fill="#3366DD" opacity="0.28"/>
-
-    <!-- Ala/visera — más ancha que la corona, característica del pillbox -->
-    <ellipse cx="50" cy="50" rx="41" ry="9.5" fill="url(#tVis)" filter="url(#tSh)"/>
-    <ellipse cx="50" cy="50" rx="41" ry="9.5" fill="none" stroke="#091040" stroke-width="0.7"/>
-    <!-- Brillo visera -->
-    <ellipse cx="30" cy="48" rx="12" ry="3"   fill="#2255BB" opacity="0.20"/>
-
-    <!-- Banda del gorro — franja delgada justo sobre la visera -->
-    <rect x="14" y="44" width="72" height="4" rx="1.5" fill="#0A1848" opacity="0.55"/>
-
-    <!-- ── PIN / INSIGNIA BINTER — alas plateadas con círculo ── -->
-    <g transform="translate(50,38)" filter="url(#tGlow)">
-      <!-- Ala izquierda -->
-      <path d="M-1.5,0 C-5,-2.5 -13,-2 -17,0.5 C-13,2 -7,1.5 -1.5,0 Z"
-            fill="url(#tPin)" stroke="#8899BB" stroke-width="0.25"/>
-      <!-- Plumas ala izq -->
-      <line x1="-5"  y1="-0.5" x2="-12" y2="0.5" stroke="#99AACC" stroke-width="0.35" opacity="0.7"/>
-      <line x1="-9"  y1="-0.8" x2="-15" y2="0.2" stroke="#99AACC" stroke-width="0.25" opacity="0.5"/>
-      <!-- Ala derecha -->
-      <path d="M1.5,0  C5,-2.5 13,-2  17,0.5  C13,2  7,1.5  1.5,0  Z"
-            fill="url(#tPin)" stroke="#8899BB" stroke-width="0.25"/>
-      <!-- Plumas ala der -->
-      <line x1="5"   y1="-0.5" x2="12"  y2="0.5" stroke="#99AACC" stroke-width="0.35" opacity="0.7"/>
-      <line x1="9"   y1="-0.8" x2="15"  y2="0.2" stroke="#99AACC" stroke-width="0.25" opacity="0.5"/>
-      <!-- Círculo central -->
-      <circle cx="0" cy="0" r="2.8" fill="#ccd8f0" stroke="#8899BB" stroke-width="0.4"/>
-      <circle cx="0" cy="0" r="1.4" fill="#eef3ff"/>
+    <!-- Pin de alas — centrado sobre las franjas, igual que los galones -->
+    <g transform="translate(50,26)" filter="url(#tcpGlow)">
+      <path d="M-2,0 C-8,-3.5 -19,-3 -23,0.5 C-19,2.5 -10,2 -2,0 Z"
+            fill="url(#tcpWing)" stroke="#9AAABB" stroke-width="0.3"/>
+      <line x1="-6"  y1="-0.8" x2="-15" y2="0.5"  stroke="#AABBD0" stroke-width="0.4" opacity="0.7"/>
+      <line x1="-12" y1="-1.2" x2="-20" y2="0"    stroke="#AABBD0" stroke-width="0.3" opacity="0.5"/>
+      <path d="M2,0  C8,-3.5 19,-3  23,0.5  C19,2.5 10,2  2,0  Z"
+            fill="url(#tcpWing)" stroke="#9AAABB" stroke-width="0.3"/>
+      <line x1="6"   y1="-0.8" x2="15"  y2="0.5"  stroke="#AABBD0" stroke-width="0.4" opacity="0.7"/>
+      <line x1="12"  y1="-1.2" x2="20"  y2="0"    stroke="#AABBD0" stroke-width="0.3" opacity="0.5"/>
+      <circle cx="0" cy="0" r="3.2" fill="#D0DCFA" stroke="#8899BB" stroke-width="0.45"/>
+      <circle cx="0" cy="0" r="1.5" fill="#EEF3FF"/>
     </g>
 
-    <!-- ── ETIQUETAS ── -->
-    <text x="50" y="115"
-      text-anchor="middle" font-family="'DM Sans',Arial" font-size="13"
-      font-weight="800" letter-spacing="2" fill="#8CE000" filter="url(#tGlow)">${label}</text>
-    <text x="50" y="127"
-      text-anchor="middle" font-family="'DM Sans',Arial" font-size="9"
-      font-weight="500" letter-spacing="1.5" fill="#F4F7FB" opacity="0.85">${subtitle}</text>
-    <text x="50" y="139"
-      text-anchor="middle" font-family="'DM Sans',Arial" font-size="8"
-      letter-spacing="1" fill="#35C9C9" opacity="0.75">BINTER CANARIAS</text>
+    <!-- Etiquetas — misma posición que en buildEpaulettes -->
+    <text x="50" y="145"
+      text-anchor="middle" font-family="'DM Sans',Arial,sans-serif"
+      font-size="11" font-weight="800" letter-spacing="2"
+      fill="#A0F000" filter="url(#tcpGlow)">${label}</text>
+    <text x="50" y="158"
+      text-anchor="middle" font-family="'DM Sans',Arial,sans-serif"
+      font-size="9" font-weight="500" letter-spacing="1.5"
+      fill="#B8C6D8" opacity="0.85">${subtitle}</text>
   </svg>`;
 }
+
 
 function showWelcome() {
   document.getElementById('login-screen').style.display = 'none';
