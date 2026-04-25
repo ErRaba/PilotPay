@@ -156,7 +156,134 @@
   --text3: #8b5c5c;
 }
 
-/* ── TEMA: EMBRAER ECAM ── */
+/* ── TEMA: OFFICE (Microsoft 365 style) ── */
+[data-theme="office"] {
+  --bg:     #f5f5f5;
+  --bg2:    #ebebeb;
+  --bg3:    #e0e0e0;
+  --card:   #ffffff;
+  --card2:  #fafafa;
+  --border: #d0d0d0;
+  --border2:#b0b0b0;
+  --blue:   #0078d4;
+  --blue2:  #005a9e;
+  --blue-dim:#deeeff;
+  --amber:  #c19c00;
+  --amber2: #8a6e00;
+  --amber-dim:#fff4ce;
+  --green:  #107c10;
+  --green-dim:#dff6dd;
+  --red:    #a4262c;
+  --red-dim:#fde7e9;
+  --text:   #201f1e;
+  --text2:  #323130;
+  --text3:  #605e5c;
+}
+[data-theme="office"] body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+[data-theme="office"] .card {
+  box-shadow: 0 1.6px 3.6px rgba(0,0,0,.13), 0 0.3px 0.9px rgba(0,0,0,.1);
+  border-color: #edebe9;
+}
+[data-theme="office"] header {
+  background: #0078d4;
+  border-bottom: none;
+}
+[data-theme="office"] .logo { color: #ffffff; }
+[data-theme="office"] .logo span { color: #c7e0f4; }
+[data-theme="office"] .header-base {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  color: #ffffff;
+}
+[data-theme="office"] .user-pill {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+  color: #ffffff;
+}
+[data-theme="office"] .tabs {
+  background: #ffffff;
+  border-bottom: 1px solid #edebe9;
+}
+[data-theme="office"] .tab {
+  color: #605e5c;
+  font-size: 13px;
+}
+[data-theme="office"] .tab.active {
+  color: #0078d4;
+  border-bottom-color: #0078d4;
+  font-weight: 600;
+}
+[data-theme="office"] .field-input {
+  background: #ffffff;
+  border-color: #8a8886;
+  color: #201f1e;
+}
+[data-theme="office"] .field-input:focus {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 1px #0078d4;
+}
+[data-theme="office"] .btn-primary {
+  background: #0078d4;
+  border-radius: 2px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+[data-theme="office"] .btn-primary:active { background: #005a9e; }
+[data-theme="office"] .btn-secondary {
+  background: #ffffff;
+  border-color: #8a8886;
+  color: #201f1e;
+  border-radius: 2px;
+}
+[data-theme="office"] .btn-secondary:hover {
+  background: #f3f2f1;
+  border-color: #0078d4;
+  color: #0078d4;
+}
+[data-theme="office"] .toggle-btn {
+  background: #ffffff;
+  border-color: #8a8886;
+  color: #201f1e;
+  border-radius: 2px;
+}
+[data-theme="office"] .toggle-btn.active {
+  background: #deeeff;
+  border-color: #0078d4;
+  color: #005a9e;
+}
+[data-theme="office"] .nomina-row { border-color: #edebe9; }
+[data-theme="office"] .nomina-row.header { background: #f3f2f1; }
+[data-theme="office"] .nomina-row.subtotal {
+  background: #deeeff; border-color: #0078d4;
+}
+[data-theme="office"] .nomina-row.subtotal .nomina-concept,
+[data-theme="office"] .nomina-row.subtotal .nomina-amount { color: #005a9e; }
+[data-theme="office"] .nomina-row.total-row {
+  background: #dff6dd; border-color: #107c10;
+}
+[data-theme="office"] .nomina-row.total-row .nomina-concept,
+[data-theme="office"] .nomina-row.total-row .nomina-amount { color: #107c10; }
+[data-theme="office"] .nomina-row.deduccion .nomina-amount { color: #a4262c; }
+[data-theme="office"] .result-val.big { color: #107c10; }
+[data-theme="office"] .result-val.blue { color: #0078d4; }
+[data-theme="office"] .result-val.red { color: #a4262c; }
+[data-theme="office"] .card-title { color: #605e5c; }
+[data-theme="office"] .section-dot { background: #0078d4; }
+[data-theme="office"] .section-dot.amber { background: #c19c00; }
+[data-theme="office"] .section-dot.green { background: #107c10; }
+[data-theme="office"] .section-dot.red { background: #a4262c; }
+[data-theme="office"] .dot-btn { background: #ffffff; border-color: #8a8886; color: #201f1e; }
+[data-theme="office"] .dot-btn.active { background: #deeeff; border-color: #0078d4; color: #005a9e; }
+[data-theme="office"] .summary-bar { background: #ffffff; border-color: #edebe9; }
+[data-theme="office"] .upload-zone { background: #ffffff; border-color: #8a8886; }
+[data-theme="office"] .tramo-cell { background: #ffffff; border-color: #edebe9; }
+[data-theme="office"] .tramo-input { color: #201f1e; }
+[data-theme="office"] .ios-slider { background: #8a8886; }
+[data-theme="office"] .ios-toggle input:checked + .ios-slider { background: #0078d4; }
+[data-theme="office"] input, [data-theme="office"] select, [data-theme="office"] textarea {
+  color-scheme: light;
+}
 [data-theme="ecam"] {
   --bg: #000000;
   --bg2: #050505;
@@ -215,12 +342,64 @@
 [data-theme="ecam"] body { font-family: 'Space Mono', monospace; }
 [data-theme="ecam"] .card { border-color: #1a2a1a; }
 
+/* ── TEMA: OFFICE (Microsoft 365) ── */
+[data-theme="office"] {
+  --bg:      #f5f5f5;
+  --bg2:     #ebebeb;
+  --bg3:     #e0e0e0;
+  --card:    #ffffff;
+  --card2:   #f9f9f9;
+  --border:  #d0d0d0;
+  --border2: #bdbdbd;
+  --blue:    #0078d4;
+  --blue2:   #005a9e;
+  --blue-dim:#deeaf7;
+  --amber:   #ca5010;
+  --amber2:  #a33d00;
+  --amber-dim:#fce4d6;
+  --green:   #107c10;
+  --green-dim:#dff0df;
+  --red:     #d13438;
+  --red-dim: #fde7e9;
+  --text:    #201f1e;
+  --text2:   #3b3a39;
+  --text3:   #797775;
+}
+[data-theme="office"] body   { font-family: 'Segoe UI', 'DM Sans', sans-serif; }
+[data-theme="office"] .card  { box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-color: #e0e0e0; }
+[data-theme="office"] .field-input { background: #fff; border-color: #8a8886; color: #201f1e; }
+[data-theme="office"] .field-input:focus { border-color: #0078d4; box-shadow: 0 0 0 1px #0078d4; }
+[data-theme="office"] .btn-primary { background: #0078d4; }
+[data-theme="office"] .btn-primary:active { background: #005a9e; }
+[data-theme="office"] .tabs { background: #ffffff; border-bottom: 2px solid #0078d4; }
+[data-theme="office"] .tab { color: #3b3a39; }
+[data-theme="office"] .tab.active { color: #0078d4; border-bottom-color: #0078d4; font-weight: 600; }
+[data-theme="office"] header { background: #0078d4; border-bottom: none; }
+[data-theme="office"] .logo { color: #ffffff; }
+[data-theme="office"] .logo span { color: #c7e0f4; }
+[data-theme="office"] .user-pill { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
+[data-theme="office"] .header-badge { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
+[data-theme="office"] .result-val.big   { color: #107c10; }
+[data-theme="office"] .result-val.blue  { color: #0078d4; }
+[data-theme="office"] .result-val.red   { color: #d13438; }
+[data-theme="office"] .nomina-row.total-row { background: #dff0df; border-color: #107c10; }
+[data-theme="office"] .nomina-row.total-row .nomina-concept,
+[data-theme="office"] .nomina-row.total-row .nomina-amount { color: #107c10; }
+[data-theme="office"] .nomina-row.subtotal { background: #deeaf7; border-color: #0078d4; }
+[data-theme="office"] .nomina-row.subtotal .nomina-concept,
+[data-theme="office"] .nomina-row.subtotal .nomina-amount { color: #005a9e; }
+[data-theme="office"] .nomina-row.deduccion .nomina-amount { color: #d13438; }
+[data-theme="office"] .ios-slider { background: #8a8886; }
+[data-theme="office"] .card-title { color: #605e5c; }
+[data-theme="office"] input, [data-theme="office"] select,
+[data-theme="office"] textarea { color-scheme: light; }
+
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 html {
   color-scheme: dark;
 }
-[data-theme="light"], [data-theme="binter"] {
+[data-theme="light"], [data-theme="binter"], [data-theme="office"] {
   color-scheme: light;
 }
 
@@ -1504,6 +1683,17 @@ input[type=number] { -moz-appearance: textfield; }
             <div class="theme-desc" style="color:#00e000">Verde·Magenta·Cyan·Blanco</div>
           </div>
 
+          <!-- Office -->
+          <div class="theme-card" id="theme-office" onclick="setTheme('office')" style="background:#f5f5f5;border:2px solid #0078d4;grid-column:1/-1">
+            <div class="theme-preview" style="display:flex;gap:6px;align-items:center;background:#ffffff;border-radius:4px;padding:6px">
+              <div style="background:#0078d4;height:18px;border-radius:3px;width:40%"></div>
+              <div style="background:#107c10;height:10px;border-radius:3px;width:25%"></div>
+              <div style="background:#d13438;height:10px;border-radius:3px;width:20%"></div>
+            </div>
+            <div class="theme-name" style="color:#201f1e">📊 Office</div>
+            <div class="theme-desc" style="color:#605e5c">Microsoft 365 · Administrativo</div>
+          </div>
+
         </div>
       </div>
 
@@ -2349,6 +2539,7 @@ const THEMES = {
   binter:   { label: '✈️ Binter',      desc: 'Verde corporativo' },
   starwars: { label: '⚔️ Imperio',     desc: 'Dark side of the Force' },
   ecam:     { label: '🖥️ ECAM',        desc: 'Embraer E195-E2' },
+  office:   { label: '📊 Office',      desc: 'Microsoft 365' },
 };
 let currentTheme = 'ecam';
 
