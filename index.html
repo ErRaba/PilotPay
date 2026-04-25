@@ -2861,10 +2861,14 @@ function enterApp() {
 function doLogout() {
   if (confirm('¿Cerrar sesión?')) {
     document.getElementById('app').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    const loginEl = document.getElementById('login-screen');
+    loginEl.style.display = 'flex';
+    loginEl.setAttribute('data-theme', '');   // forzar oscuro
+    document.getElementById('welcome-screen').setAttribute('data-theme', '');
     document.getElementById('login-pass').value = '';
     document.getElementById('login-err').style.display = 'none';
     currentUser = null;
+    profileData = {};
   }
 }
 
