@@ -1366,7 +1366,7 @@ input[type=number] { -moz-appearance: textfield; }
 <body>
 
 <!-- ══════════ LOGIN ══════════ -->
-<div id="login-screen">
+<div id="login-screen" data-theme="">
   <div class="login-logo">PILOT<span>PAY</span></div>
   <div class="login-sub">BINTER CANARIAS // GRUPO IV</div>
   <div class="login-card" id="login-card">
@@ -1375,12 +1375,12 @@ input[type=number] { -moz-appearance: textfield; }
     <label class="form-label">Contraseña</label>
     <input class="form-input" id="login-pass" type="password" placeholder="••••">
     <button class="btn-primary" onclick="doLogin()">Entrar</button>
-    <p id="login-err" style="display:none;text-align:center;margin-top:10px;font-size:12px;color:var(--red);font-family:var(--mono)">Credenciales incorrectas</p>
+    <p id="login-err" style="display:none;text-align:center;margin-top:10px;font-size:12px;color:#ef4444;font-family:var(--mono)">Credenciales incorrectas</p>
   </div>
 </div>
 
 <!-- ══════════ WELCOME ══════════ -->
-<div id="welcome-screen" style="display:none">
+<div id="welcome-screen" data-theme="" style="display:none">
   <div class="welcome-img">
     <div id="welcome-epaulettes"></div>
   </div>
@@ -3430,14 +3430,20 @@ let currentTheme = 'emb2';
 
 function setTheme(theme) {
   currentTheme = theme;
+  // Aplica el tema al <html> (afecta solo a #app, no a login/welcome)
   document.documentElement.setAttribute('data-theme', theme === 'dark' ? '' : theme);
+  // Login y bienvenida siempre oscuro — nunca cambia
+  const loginEl   = document.getElementById('login-screen');
+  const welcomeEl = document.getElementById('welcome-screen');
+  if (loginEl)   loginEl.setAttribute('data-theme', '');
+  if (welcomeEl) welcomeEl.setAttribute('data-theme', '');
+
   document.querySelectorAll('.theme-slide').forEach(c => c.classList.remove('active-theme'));
   const card = document.getElementById('theme-' + theme);
   if (card) card.classList.add('active-theme');
   if (currentUser) {
     profileData.theme = theme;
     saveUserData(currentUser);
-    // Persist to Firebase so theme follows user across devices
     fbUpdate(`pilotpay/usuarios/${currentUser}`, { theme });
   }
   try { localStorage.setItem('pilotpay_theme_' + (currentUser||'_default'), theme); } catch(e) {}
