@@ -2108,8 +2108,10 @@ Complemento de Base MAD: 1500"></textarea>
             <button class="btn-primary" style="flex:1" onclick="varsAnalyzePaste()">
               Analizar texto
             </button>
-            <button class="btn-secondary" style="font-size:11px;padding:8px 12px;border-color:var(--text3);color:var(--text3);white-space:nowrap"
-              onclick="document.getElementById('vars-paste-area').value='';document.getElementById('vars-paste-area').focus()">
+            <button onclick="document.getElementById('vars-paste-area').value='';document.getElementById('vars-paste-area').focus()"
+              style="background:none;border:1px solid var(--text3);border-radius:8px;color:var(--text3);
+                     font-size:11px;font-family:var(--mono);padding:8px 12px;cursor:pointer;
+                     white-space:nowrap;flex-shrink:0">
               🗑 Limpiar
             </button>
           </div>
@@ -2175,15 +2177,9 @@ Complemento de Base MAD: 1500"></textarea>
 
         <!-- Tabla editable -->
         <div class="card">
-          <div class="card-title" style="color:var(--amber2)">
-            <div class="section-dot amber"></div>
-            ⚠️ Revisar y editar antes de cargar
-          </div>
-          <div style="font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:10px;line-height:1.6;background:var(--amber-dim,var(--bg3));border-radius:6px;padding:8px 10px;border-left:3px solid var(--amber2)">
-            Comprueba cada valor antes de cargar. La app ha hecho su mejor interpretación pero puede haber errores. Los campos vacíos (⬜) no se detectaron — introdúcelos manualmente si los necesitas.
-          </div>
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:10px">
-            🟢 identificado con certeza &nbsp;·&nbsp; 🟡 verificar &nbsp;·&nbsp; ⬜ no detectado
+          <div class="card-title"><div class="section-dot amber"></div>Variables identificadas · revisar y editar</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:10px;line-height:1.6">
+            🟢 identificado con certeza &nbsp;·&nbsp; 🟡 verificar antes de cargar &nbsp;·&nbsp; ⬜ no detectado
           </div>
           <div id="vars-tabla"></div>
         </div>
@@ -2197,7 +2193,9 @@ Complemento de Base MAD: 1500"></textarea>
         <button class="btn-primary" onclick="varsCargarEnCalculadora()" style="margin-bottom:10px">
           ✓ He revisado — Cargar en Calculadora
         </button>
-        <button class="btn-secondary" style="border-color:var(--text3);color:var(--text3);font-size:11px;padding:8px 14px;width:auto" onclick="varsReset()">
+        <button onclick="varsReset()"
+          style="background:none;border:1px solid var(--text3);border-radius:8px;color:var(--text3);
+                 font-size:11px;font-family:var(--mono);padding:8px 14px;cursor:pointer;display:inline-block">
           🗑 Limpiar
         </button>
         <div id="vars-status" style="font-size:11px;font-family:var(--mono);color:var(--green);
@@ -4654,8 +4652,8 @@ function clearTotal() {
 
 // ── CÁLCULO ──
 function recalc() {
-  try {
-  const fn = document.getElementById('funcion').value;
+  const fn = document.getElementById('funcion')?.value;
+  if (!fn) return;
   if (fn === 'SCC' || fn === 'CC') { recalcTCP(); return; }
   const t = TABLAS[fn];
   if (!t) return;
@@ -4842,7 +4840,6 @@ function recalc() {
   document.getElementById('sum-neto').textContent = fmt(liquidoReal);
 
   updateRates();
-  } catch(e) { console.error('recalc error:', e); }
 }
 
 // ── NÓMINA COMPLETA ──
