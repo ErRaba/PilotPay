@@ -4636,9 +4636,10 @@ function recalc() {
   const hv_t4_rate_base = t.hv_t4[n];
   const hvSS = Math.round((hv1*hv_t1_rate_base + hv2*hv_t2_rate_base + hv3*hv_t3_rate_base + hv4*hv_t4_rate_base) * 100) / 100;
 
-  const hbMode = false; // im/fr now handled via HB field — not a toggle
-  const im = hbMode ? 0 : Math.round((parseFloat(document.getElementById('imaginarias').value)||0) * 3 * hv_t1_rate * 100) / 100;
-  const fr = hbMode ? 0 : Math.round((parseFloat(document.getElementById('francos').value)||0) * 2 * hv_t1_rate * 100) / 100;
+  // im y fr NO se monetizan directamente — ya están incluidas en los tramos HB
+  // Solo sirven para calcular el HB total en la UI (calcularHB())
+  const im = 0;
+  const fr = 0;
 
   const lv1 = (parseFloat(document.getElementById('lv1').value)||0) * t.lv1[n];
   const lv2 = (parseFloat(document.getElementById('lv2').value)||0) * t.lv2[n];
@@ -4875,6 +4876,8 @@ function renderNominaTCP(r) {
     }
     if (row.type === 'especie')
       return `<div class="nomina-row" style="opacity:.65"><span class="nomina-concept">${row.concept}</span><span class="nomina-amount" style="color:var(--text3)">${row.total?fmt(row.total)+' €':'—'}</span></div>`;
+    if (row.type === 'info')
+      return `<div class="nomina-row" style="opacity:.6;font-style:italic"><span class="nomina-concept" style="color:var(--text3)">${row.concept}</span><span class="nomina-amount" style="color:var(--text3);font-size:11px">${row.total} HB</span></div>`;
     if (row.uds !== null && row.precio !== null && row.precio !== 0)
       return `<div class="nomina-row"><span class="nomina-concept">${row.concept}</span>${fmtU(row.uds,row.precio,row.total)}</div>`;
     return `<div class="nomina-row"><span class="nomina-concept">${row.concept}</span><span class="nomina-amount">${fmt(row.total)} €</span></div>`;
@@ -4942,8 +4945,11 @@ function renderNomina() {
   if (r.hv2 > 0) addR(r.hv2, r.hv_t2_rate, 'Hora Vuelo T2', r.hv2_imp);
   if (r.hv3 > 0) addR(r.hv3, r.hv_t3_rate, 'Hora Vuelo T3', r.hv3_imp);
   if (r.hv4 > 0) addR(r.hv4, r.hv_t4_rate, 'Hora Vuelo T4', r.hv4_imp);
-  if (r.im > 0) addR(null, null, 'Imaginarias', r.im, '');
-  if (r.fr > 0) addR(null, null, 'Francos', r.fr, '');
+  // Imaginarias y Francos — informativas, ya incluidas en HB/tramos
+  const imVal = parseFloat(document.getElementById('imaginarias')?.value) || 0;
+  const frVal = parseFloat(document.getElementById('francos')?.value) || 0;
+  if (imVal > 0) rows.push({type:'info', concept:`Imaginarias (${imVal} uds · ya incluidas en tramos HB)`, total: imVal * 3, unit:'HB'});
+  if (frVal > 0) rows.push({type:'info', concept:`Francos (${frVal} uds · ya incluidos en tramos HB)`, total: frVal * 2, unit:'HB'});
   if (r.lv1 > 0) addR(null, null, 'Libre Volado <24h', r.lv1, '');
   if (r.lv2 > 0) addR(null, null, 'Libre Volado 24-72h', r.lv2, '');
   if (r.lv3 > 0) addR(null, null, 'Libre Volado >72h', r.lv3, '');
