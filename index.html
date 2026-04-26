@@ -1509,42 +1509,77 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
             </div>
           </div>
-          <div class="row" style="margin-bottom:8px">
+          <!-- Fila 1: HV · Imaginarias · Francos -->
+          <div class="row" style="margin-bottom:10px">
             <div class="field">
-              <span class="field-label">Total HV (distribuye automático)</span>
-              <input class="field-input" id="hv-total" type="number" placeholder="ej: 75" onchange="distribuirHV()" oninput="distribuirHV()">
+              <span class="field-label">Total HV (horas vuelo puras)</span>
+              <input class="field-input" id="hv-total" type="number" placeholder="ej: 65"
+                     onchange="calcularHB()" oninput="calcularHB()">
             </div>
+          </div>
+          <div class="row" style="margin-bottom:12px">
+            <div class="field">
+              <span class="field-label">Imaginarias (uds)</span>
+              <input class="field-input" id="imaginarias" type="number" placeholder="0"
+                     onchange="calcularHB()" oninput="calcularHB()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 3 HB c/u</div>
+            </div>
+            <div class="field">
+              <span class="field-label">Francos (uds)</span>
+              <input class="field-input" id="francos" type="number" placeholder="0"
+                     onchange="calcularHB()" oninput="calcularHB()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 2 HB c/u</div>
+            </div>
+          </div>
+
+          <!-- Fila 2: HB calculado / introducido -->
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
+            <div class="row" style="align-items:center;margin-bottom:0">
+              <div class="field" style="margin-bottom:0">
+                <span class="field-label" style="color:var(--blue2)">Total HB (Horas Baremo)</span>
+                <input class="field-input" id="hb-total" type="number" placeholder="calculado automático"
+                       step="0.01"
+                       style="color:var(--blue2);font-weight:600"
+                       onchange="onHBManualChange()" oninput="onHBManualChange()">
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">
+                  HV + (im×3) + (fr×2) · <span id="hb-formula-hint">introduce HV e im/fr para calcular</span>
+                </div>
+              </div>
+            </div>
+            <!-- Aviso discrepancia -->
+            <div id="hb-discrepancia" style="display:none;margin-top:8px;padding:6px 8px;
+                 background:var(--amber-dim,var(--bg3));border-radius:6px;
+                 border:1px solid var(--amber2)">
+              <span style="font-size:11px;font-family:var(--mono);color:var(--amber2)">
+                ⚠️ <span id="hb-discrepancia-txt"></span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Tramos — se distribuyen sobre HB -->
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;letter-spacing:.06em">
+            TRAMOS · distribuir sobre HB o introducir directamente
           </div>
           <div class="tramo-grid">
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t1">T1 · h61–70</div>
-              <input class="tramo-input" id="hv1" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
+              <input class="tramo-input" id="hv1" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t1">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t2">T2 · h71–80</div>
-              <input class="tramo-input" id="hv2" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
+              <input class="tramo-input" id="hv2" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t2">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t3">T3 · h81–90</div>
-              <input class="tramo-input" id="hv3" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
+              <input class="tramo-input" id="hv3" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t3">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t4">T4 · &gt;90h</div>
-              <input class="tramo-input" id="hv4" type="number" placeholder="0" onchange="recalc()" oninput="clearTotal()">
+              <input class="tramo-input" id="hv4" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t4">—</div>
-            </div>
-          </div>
-          <div class="row mt-8">
-            <div class="field">
-              <span class="field-label">Imaginarias</span>
-              <input class="field-input" id="imaginarias" type="number" placeholder="0" onchange="recalc()">
-            </div>
-            <div class="field">
-              <span class="field-label">Francos</span>
-              <input class="field-input" id="francos" type="number" placeholder="0" onchange="recalc()">
             </div>
           </div>
         </div>
@@ -4059,6 +4094,10 @@ function setCurrentMonth() {
 function resetCalculadora() {
   // Clear variable fields only — keep profile settings
   document.getElementById('hv-total').value = '';
+  const hbEl2 = document.getElementById('hb-total');
+  if (hbEl2) hbEl2.value = '';
+  const discEl2 = document.getElementById('hb-discrepancia');
+  if (discEl2) discEl2.style.display = 'none';
   document.getElementById('hv1').value = '';
   document.getElementById('hv2').value = '';
   document.getElementById('hv3').value = '';
@@ -4079,6 +4118,9 @@ function resetCalculadora() {
   document.getElementById('comp-mad').value = '';
   const trEl = document.getElementById('type-rating');
   if (trEl) trEl.value = '';
+  // Reset HB mode
+  const hbToggle = document.getElementById('toggle-hb-mode');
+  if (hbToggle && hbToggle.checked) { hbToggle.checked = false; onHBModeChange(); }
   resetBaja();
   // Reset toggles
   toggleSegmed(true);
@@ -4177,6 +4219,111 @@ function togglePP(on) {
 }
 
 // ── FUNCIÓN CHANGE — muestra/oculta paneles según función ──
+function onHBModeChange() {
+  // Legacy — kept for compatibility, no longer needed
+  recalc();
+}
+
+// ── HB CALCULATION ──
+// HB = HV + (imaginarias × 3) + (francos × 2)
+// Cuando el usuario cambia HV, im o fr → recalcula HB y distribuye tramos
+// Cuando el usuario introduce HB directamente → distribuye tramos desde HB
+function calcularHB() {
+  const hv = parseFloat(document.getElementById('hv-total').value) || 0;
+  const im = parseFloat(document.getElementById('imaginarias').value) || 0;
+  const fr = parseFloat(document.getElementById('francos').value) || 0;
+
+  const hbCalculado = Math.round((hv + im * 3 + fr * 2) * 100) / 100;
+
+  // Actualizar campo HB
+  const hbEl = document.getElementById('hb-total');
+  if (hbEl) {
+    hbEl.value = hbCalculado > 0 ? hbCalculado : '';
+    // Mostrar fórmula
+    const hintEl = document.getElementById('hb-formula-hint');
+    if (hintEl && hbCalculado > 0) {
+      let parts = [];
+      if (hv > 0) parts.push(`${hv} HV`);
+      if (im > 0) parts.push(`${im} im×3`);
+      if (fr > 0) parts.push(`${fr} fr×2`);
+      hintEl.textContent = parts.length ? `= ${parts.join(' + ')}` : 'introduce HV e im/fr para calcular';
+    }
+  }
+
+  // Verificar discrepancia con HB del PDF si existe
+  checkHBDiscrepancia(hbCalculado);
+
+  // Distribuir tramos sobre HB
+  distribuirDesdeHB(hbCalculado);
+}
+
+function onHBManualChange() {
+  // El usuario ha introducido HB directamente (desde el PDF)
+  const hbEl = document.getElementById('hb-total');
+  const hb = parseFloat(hbEl?.value) || 0;
+
+  const hv = parseFloat(document.getElementById('hv-total').value) || 0;
+  const im = parseFloat(document.getElementById('imaginarias').value) || 0;
+  const fr = parseFloat(document.getElementById('francos').value) || 0;
+
+  // Si hay HV+im+fr, comparar con HB introducido
+  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2) * 100) / 100 : null;
+  checkHBDiscrepancia(hb, hbCalculado);
+
+  // Distribuir tramos sobre HB introducido
+  distribuirDesdeHB(hb);
+}
+
+function checkHBDiscrepancia(hbActual, hbReferencia) {
+  const discEl = document.getElementById('hb-discrepancia');
+  const discTxt = document.getElementById('hb-discrepancia-txt');
+  if (!discEl || !discTxt) return;
+
+  // Si tenemos tanto HB calculado como HB del PDF, comparar
+  const hbEl = document.getElementById('hb-total');
+  const hbPDF = parseFloat(hbEl?.value) || 0;
+  const hbCalc = hbReferencia !== undefined ? hbReferencia : hbActual;
+
+  if (hbPDF > 0 && hbCalc > 0 && Math.abs(hbPDF - hbCalc) > 0.1) {
+    const diff = Math.abs(hbPDF - hbCalc).toFixed(2);
+    discTxt.textContent = `HB introducido (${hbPDF}) difiere de HV+im+fr calculado (${hbCalc}) en ${diff} HB — revisa los datos`;
+    discEl.style.display = 'block';
+  } else {
+    discEl.style.display = 'none';
+  }
+}
+
+function distribuirDesdeHB(hbTotal) {
+  if (!hbTotal || hbTotal <= 0) { recalc(); return; }
+  const p = getVacParams();
+  const base = p.horasBase;
+  const a    = p.anchoTramo;
+  const exceso = Math.max(0, hbTotal - base);
+  const t1 = Math.min(exceso, a);
+  const t2 = Math.min(Math.max(exceso - a, 0), a);
+  const t3 = Math.min(Math.max(exceso - a*2, 0), a);
+  const t4 = Math.max(exceso - a*3, 0);
+
+  document.getElementById('hv1').value = t1 > 0 ? Math.round(t1*100)/100 : '';
+  document.getElementById('hv2').value = t2 > 0 ? Math.round(t2*100)/100 : '';
+  document.getElementById('hv3').value = t3 > 0 ? Math.round(t3*100)/100 : '';
+  document.getElementById('hv4').value = t4 > 0 ? Math.round(t4*100)/100 : '';
+  recalc();
+}
+
+function clearHBTotal() {
+  // El usuario ha editado los tramos manualmente → limpiar HB y HV-total
+  document.getElementById('hb-total').value = '';
+  document.getElementById('hv-total').value = '';
+  document.getElementById('hb-discrepancia').style.display = 'none';
+  recalc();
+}
+
+// Legacy alias — distribuirHV now works via calcularHB
+function distribuirHV() { calcularHB(); }
+function clearTotal()    { clearHBTotal(); }
+
+
 function onFuncionChange() {
   const fn    = document.getElementById('funcion').value;
   const isTCP = fn === 'SCC' || fn === 'CC';
@@ -4489,8 +4636,9 @@ function recalc() {
   const hv_t4_rate_base = t.hv_t4[n];
   const hvSS = Math.round((hv1*hv_t1_rate_base + hv2*hv_t2_rate_base + hv3*hv_t3_rate_base + hv4*hv_t4_rate_base) * 100) / 100;
 
-  const im = Math.round((parseFloat(document.getElementById('imaginarias').value)||0) * 3 * hv_t1_rate * 100) / 100;
-  const fr = Math.round((parseFloat(document.getElementById('francos').value)||0) * 2 * hv_t1_rate * 100) / 100;
+  const hbMode = false; // im/fr now handled via HB field — not a toggle
+  const im = hbMode ? 0 : Math.round((parseFloat(document.getElementById('imaginarias').value)||0) * 3 * hv_t1_rate * 100) / 100;
+  const fr = hbMode ? 0 : Math.round((parseFloat(document.getElementById('francos').value)||0) * 2 * hv_t1_rate * 100) / 100;
 
   const lv1 = (parseFloat(document.getElementById('lv1').value)||0) * t.lv1[n];
   const lv2 = (parseFloat(document.getElementById('lv2').value)||0) * t.lv2[n];
@@ -6427,22 +6575,23 @@ function mostrarInfoTooltip(concepto) {
 // ══════════════════════════════════════════════════════
 
 const VARS_CAMPOS = [
-  { id:'hv_total',      label:'Horas de Vuelo (total)',              unit:'HB',       calc:'hv-total'   },
-  { id:'hv_t1',         label:'HV Tramo T1',                         unit:'HB',       calc:'hv1'        },
-  { id:'hv_t2',         label:'HV Tramo T2',                         unit:'HB',       calc:'hv2'        },
-  { id:'hv_t3',         label:'HV Tramo T3',                         unit:'HB',       calc:'hv3'        },
-  { id:'hv_t4',         label:'HV Tramo T4',                         unit:'HB',       calc:'hv4'        },
-  { id:'imaginarias',   label:'Imaginarias',                          unit:'uds',      calc:'imaginarias'},
-  { id:'francos',       label:'Francos',                              unit:'uds',      calc:'francos'    },
-  { id:'dieta_vuelo',   label:'Dieta de vuelo',                       unit:'períodos', calc:'d-mant-nac' },
-  { id:'dest_nac',      label:'Destacamento NAC',                     unit:'días',     calc:'dest-nac'   },
-  { id:'dest_int',      label:'Destacamento INT',                     unit:'días',     calc:'dest-int'   },
-  { id:'dieta_nac_sp',  label:'Desplazamiento NAC sin pernocta',      unit:'días',     calc:'d-nac-sp'   },
-  { id:'dieta_nac_cp',  label:'Desplazamiento NAC con pernocta',      unit:'días',     calc:'d-nac-cp'   },
-  { id:'dieta_int_sp',  label:'Desplazamiento INT sin pernocta',      unit:'días',     calc:'d-int-sp'   },
-  { id:'dieta_int_cp',  label:'Desplazamiento INT con pernocta',      unit:'días',     calc:'d-int-cp'   },
-  { id:'dpo',           label:'Dirección por Objetivos (DPO)',         unit:'€',        calc:'dpo'        },
-  { id:'comp_mad',      label:'Complemento Base MAD',                  unit:'€',        calc:'comp-mad'   },
+  { id:'hb_total',     label:'Horas de Pago Totales (HB)',           unit:'HB',       calc:'hb-total'   },
+  { id:'hv_total',     label:'Horas de Vuelo (HV puras)',             unit:'HB',       calc:'hv-total'   },
+  { id:'hv_t1',        label:'HV Tramo T1',                           unit:'HB',       calc:'hv1'        },
+  { id:'hv_t2',        label:'HV Tramo T2',                           unit:'HB',       calc:'hv2'        },
+  { id:'hv_t3',        label:'HV Tramo T3',                           unit:'HB',       calc:'hv3'        },
+  { id:'hv_t4',        label:'HV Tramo T4',                           unit:'HB',       calc:'hv4'        },
+  { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias'},
+  { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos'    },
+  { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac' },
+  { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac'   },
+  { id:'dest_int',     label:'Destacamento INT',                       unit:'días',     calc:'dest-int'   },
+  { id:'dieta_nac_sp', label:'Desplazamiento NAC sin pernocta',        unit:'días',     calc:'d-nac-sp'   },
+  { id:'dieta_nac_cp', label:'Desplazamiento NAC con pernocta',        unit:'días',     calc:'d-nac-cp'   },
+  { id:'dieta_int_sp', label:'Desplazamiento INT sin pernocta',        unit:'días',     calc:'d-int-sp'   },
+  { id:'dieta_int_cp', label:'Desplazamiento INT con pernocta',        unit:'días',     calc:'d-int-cp'   },
+  { id:'dpo',          label:'Dirección por Objetivos (DPO)',           unit:'€',        calc:'dpo'        },
+  { id:'comp_mad',     label:'Complemento Base MAD',                    unit:'€',        calc:'comp-mad'   },
 ];
 
 let varsData    = {};
@@ -6527,10 +6676,44 @@ function varsParseText(text) {
   const parseVal = pattern => {
     const m = full.match(pattern);
     if (!m) return null;
-    return parseFloat(m[1].replace(/\./g,'').replace(',','.'));
+    const raw = m[1].trim();
+    // Detectar formato:
+    // Si hay punto Y coma: el que aparece último es el decimal
+    // Si solo hay punto: puede ser miles (1.000) o decimal (69.59)
+    //   → si hay exactamente 3 dígitos tras el punto → miles → entero
+    //   → si hay 1 o 2 dígitos tras el punto → decimal
+    // Si solo hay coma: decimal español
+    // Ejemplos del PDF Binter: "69.59" (decimal), "883.33" (decimal), "10" (entero)
+    let normalized;
+    if (raw.includes(',') && raw.includes('.')) {
+      // Formato 1.234,56 → quitar punto, cambiar coma
+      normalized = raw.replace(/\./g,'').replace(',','.');
+    } else if (raw.includes(',')) {
+      // Solo coma → decimal español: 69,59
+      normalized = raw.replace(',','.');
+    } else if (raw.includes('.')) {
+      // Solo punto → mirar cuántos dígitos hay tras él
+      const afterDot = raw.split('.')[1] || '';
+      if (afterDot.length === 3) {
+        // Separador de miles: 1.000 → 1000
+        normalized = raw.replace(/\./g,'');
+      } else {
+        // Decimal: 69.59 → 69.59
+        normalized = raw;
+      }
+    } else {
+      normalized = raw;
+    }
+    return parseFloat(normalized);
   };
 
-  data.hv_total    = parseVal(/(?:Horas?\s+de\s+Pago\s+Totales?|Horas?\s+de\s+Vuelo)\s*:?\s*([\d.,]+)/i);
+  // Horas de Pago Totales = HB (ya incluye im×3 + fr×2)
+  data.hb_total = parseVal(/Horas?\s+de\s+Pago\s+Totales?\s*:?\s*([\d.,]+)/i);
+  // Horas de Vuelo = HV puras (sin imaginarias ni francos)
+  data.hv_puro  = parseVal(/Horas?\s+de\s+Vuelo\s*:?\s*([\d.,]+)/i);
+  // hv_total en VARS_CAMPOS apunta a hv-total en la calculadora → usamos hv_puro
+  data.hv_total = data.hv_puro;
+
   data.hv_t1       = parseVal(/Hora\s+de\s+Vuelo\s+T1\s*:?\s*([\d.,]+)/i);
   data.hv_t2       = parseVal(/Hora\s+de\s+Vuelo\s+T2\s*:?\s*([\d.,]+)/i);
   data.hv_t3       = parseVal(/Hora\s+de\s+Vuelo\s+T3\s*:?\s*([\d.,]+)/i);
@@ -6672,27 +6855,66 @@ function varsCargarEnCalculadora() {
     alert('Confirma primero el período de las variables.');
     return;
   }
-  // Recoger valores editados
+  // Recoger valores editados por el usuario en la tabla
   VARS_CAMPOS.forEach(campo => {
     const inputEl = document.getElementById(`vars-input-${campo.id}`);
     if (!inputEl) return;
     const val = parseFloat(inputEl.value);
     varsData[campo.id] = isNaN(val) ? null : val;
   });
-  // Volcar en calculadora
-  VARS_CAMPOS.forEach(campo => {
-    const calcEl = document.getElementById(campo.calc);
-    if (!calcEl) return;
-    const val = varsData[campo.id];
-    calcEl.value = val != null ? val : '';
+
+  // Volcar campos simples (no HV/HB — esos los manejamos aparte)
+  const camposSimples = ['imaginarias','francos','dieta_vuelo','dest_nac','dest_int',
+    'dieta_nac_sp','dieta_nac_cp','dieta_int_sp','dieta_int_cp','dpo','comp_mad'];
+  const campoCalc = { imaginarias:'imaginarias', francos:'francos',
+    dieta_vuelo:'d-mant-nac', dest_nac:'dest-nac', dest_int:'dest-int',
+    dieta_nac_sp:'d-nac-sp', dieta_nac_cp:'d-nac-cp',
+    dieta_int_sp:'d-int-sp', dieta_int_cp:'d-int-cp',
+    dpo:'dpo', comp_mad:'comp-mad' };
+  camposSimples.forEach(k => {
+    const el = document.getElementById(campoCalc[k]);
+    if (!el) return;
+    el.value = varsData[k] != null ? varsData[k] : '';
   });
-  // Si hay tramos T1-T4, vaciar el total (los tramos son la fuente de verdad)
-  const tieneTramos = ['hv_t1','hv_t2','hv_t3','hv_t4'].some(k => varsData[k] != null);
-  if (tieneTramos) {
-    const totalEl = document.getElementById('hv-total');
-    if (totalEl) totalEl.value = '';
+
+  // HV puras → hv-total
+  const hvEl = document.getElementById('hv-total');
+  if (hvEl) hvEl.value = varsData.hv_total != null ? varsData.hv_total : '';
+
+  // HB total (Horas Baremo = horas de pago totales) → hb-total + distribuir tramos
+  // hv_total en el PDF = "Horas de Pago Totales" = ya incluye im+fr = HB
+  // hv_puro (si existe) = solo horas vuelo sin im/fr
+  const hbTotal = varsData.hb_total ?? varsData.hv_total;
+  const hvPuro  = varsData.hv_puro;
+
+  const hbEl = document.getElementById('hb-total');
+  if (hbEl && hbTotal != null) hbEl.value = hbTotal;
+
+  // Si tenemos HV puras e im/fr, verificar discrepancia
+  if (hvPuro != null) {
+    if (hvEl) hvEl.value = hvPuro;
+    const im = varsData.imaginarias || 0;
+    const fr = varsData.francos     || 0;
+    const hbCalc = Math.round((hvPuro + im*3 + fr*2) * 100) / 100;
+    const hintEl = document.getElementById('hb-formula-hint');
+    if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2 = ${hbCalc}`;
+    if (hbTotal != null && Math.abs(hbTotal - hbCalc) > 0.1) {
+      const discEl = document.getElementById('hb-discrepancia');
+      const discTxt = document.getElementById('hb-discrepancia-txt');
+      if (discEl && discTxt) {
+        discTxt.textContent = `HB del PDF (${hbTotal}) difiere del calculado HV+im+fr (${hbCalc}) en ${Math.abs(hbTotal-hbCalc).toFixed(2)} HB — revisa`;
+        discEl.style.display = 'block';
+      }
+    }
   }
-  recalc();
+
+  // Distribuir tramos desde HB
+  if (hbTotal != null) {
+    distribuirDesdeHB(hbTotal);
+  } else {
+    calcularHB();
+  }
+
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
   if (statusEl) {
