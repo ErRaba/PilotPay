@@ -3268,6 +3268,23 @@ let segmedActivo = true;
 let seglicActivo = false;
 let ppActivo = false;
 let calcResult = null;
+let _calcResultInternal = null;
+Object.defineProperty(window, 'calcResult', {
+  get() { return _calcResultInternal; },
+  set(v) {
+    const stack = new Error().stack?.split('\n').slice(1,4).join(' | ') || '';
+    if (v === null || v === undefined) {
+      // Mostrar en nómina-output quién lo borró
+      const el = document.getElementById('nomina-output');
+      if (el) el.innerHTML = `<div class="card" style="border-color:var(--red);padding:16px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:8px">🔴 calcResult fue puesto a null/undefined</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text2);word-break:break-all;line-height:1.6">${stack}</div>
+      </div>`;
+    }
+    _calcResultInternal = v;
+  },
+  configurable: true
+});
 let nomDataCached = null;
 let profileData = {};
 let totalHVManual = false;
