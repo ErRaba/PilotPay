@@ -1459,7 +1459,7 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="row">
           <div class="field">
             <span class="field-label">Mes nómina</span>
-            <select class="field-input" id="mes-nomina">
+            <select class="field-input" id="mes-nomina" onchange="varsActualizarMesEsperado()">
               <option>Enero</option><option>Febrero</option><option>Marzo</option>
               <option selected>Abril</option><option>Mayo</option><option>Junio</option>
               <option>Julio</option><option>Agosto</option><option>Septiembre</option>
@@ -1514,20 +1514,20 @@ input[type=number] { -moz-appearance: textfield; }
             <div class="field">
               <span class="field-label">Total HV (horas vuelo puras)</span>
               <input class="field-input" id="hv-total" type="number" placeholder="ej: 65"
-                     onchange="calcularHB()" oninput="calcularHB()">
+                     onchange="calcularHB()" onblur="calcularHB()">
             </div>
           </div>
           <div class="row" style="margin-bottom:12px">
             <div class="field">
               <span class="field-label">Imaginarias (uds)</span>
               <input class="field-input" id="imaginarias" type="number" placeholder="0"
-                     onchange="calcularHB()" oninput="calcularHB()">
+                     onchange="calcularHB()" onblur="calcularHB()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 3 HB c/u</div>
             </div>
             <div class="field">
               <span class="field-label">Francos (uds)</span>
               <input class="field-input" id="francos" type="number" placeholder="0"
-                     onchange="calcularHB()" oninput="calcularHB()">
+                     onchange="calcularHB()" onblur="calcularHB()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 2 HB c/u</div>
             </div>
           </div>
@@ -1540,7 +1540,7 @@ input[type=number] { -moz-appearance: textfield; }
                 <input class="field-input" id="hb-total" type="number" placeholder="calculado automático"
                        step="0.01"
                        style="color:var(--blue2);font-weight:600"
-                       onchange="onHBManualChange()" oninput="onHBManualChange()">
+                       onchange="onHBManualChange()" onblur="onHBManualChange()">
                 <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">
                   HV + (im×3) + (fr×2) · <span id="hb-formula-hint">introduce HV e im/fr para calcular</span>
                 </div>
@@ -2072,7 +2072,7 @@ input[type=number] { -moz-appearance: textfield; }
              ondrop="varsHandleDrop(event)">
           <div class="upload-icon">📂</div>
           <div class="upload-text" id="vars-upload-text">Toca para subir PDF de Variables</div>
-          <div class="upload-sub">PDF Variables Binter · mes vencido</div>
+          <div class="upload-sub" id="vars-upload-sub">Variables de <span id="vars-mes-esperado">—</span> · PDF Binter</div>
         </div>
         <input type="file" id="vars-file-input" accept=".pdf,application/pdf"
                onchange="varsProcessPDF(this.files[0])" style="display:none">
@@ -2082,8 +2082,11 @@ input[type=number] { -moz-appearance: textfield; }
       <div id="vars-panel-paste" style="display:none">
         <div class="card">
           <div class="card-title"><div class="section-dot"></div>Pegar texto de variables</div>
-          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;line-height:1.7">
-            Selecciona y copia el texto completo del PDF o email de variables que te manda la empresa y pégalo aquí.
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;line-height:1.7">
+            Copia el texto completo del email o PDF de variables y pégalo aquí.
+          </div>
+          <div style="font-size:12px;color:var(--amber2);font-family:var(--mono);margin-bottom:10px;font-weight:600">
+            ⚠️ Deben ser las variables de <span id="vars-mes-esperado-paste">—</span>
           </div>
           <textarea id="vars-paste-area" class="field-input"
             style="height:180px;resize:vertical;font-family:var(--mono);font-size:11px;line-height:1.6"
@@ -2092,22 +2095,20 @@ input[type=number] { -moz-appearance: textfield; }
 Ejemplo:
 Variables 01/05/2026-31/05/2026
 Estimado/a CHARLES AUGUSTUS LINDBERGH
-Horas de Vuelo: 69.59
-Horas de Pago Totales: 98.59
-Imaginarias: 9
-Francos: 1
+HORAS DE VUELO: 52.19
+IMAGINARIAS: 6
+FRANCOS: 1
+HORAS DE PAGO: 72.19
+Dieta de vuelo: 9
 Hora de Vuelo T1: 10
-Hora de Vuelo T2: 10
-Hora de Vuelo T3: 10
-Hora de Vuelo T4: 8.59
-Dieta de vuelo: 12
+Hora de Vuelo T2: 2.19
 Dirección por Objetivos: 883.33
 Complemento de Base MAD: 1500"></textarea>
-          <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
             <button class="btn-primary" style="flex:1" onclick="varsAnalyzePaste()">
               Analizar texto
             </button>
-            <button class="btn-secondary" style="border-color:var(--text3);color:var(--text3)"
+            <button class="btn-secondary" style="font-size:11px;padding:8px 12px;border-color:var(--text3);color:var(--text3);white-space:nowrap"
               onclick="document.getElementById('vars-paste-area').value='';document.getElementById('vars-paste-area').focus()">
               🗑 Limpiar
             </button>
@@ -2496,15 +2497,24 @@ Complemento de Base MAD: 1500"></textarea>
               <input class="field-input" id="prf-irpf-input" type="number" value="34.15" step=".01" onchange="updateProfileFromInput()">
             </div>
             <div class="field">
-              <span class="field-label">Bruto acumulado (€)</span>
-              <input class="field-input" id="prf-bruto-acum" type="number" placeholder="0" onchange="saveProfile()">
+              <span class="field-label">Paga extra por defecto</span>
+              <select class="field-input" id="prf-paga-extra" onchange="saveProfile()">
+                <option value="prorr">Prorrateada (mensual)</option>
+                <option value="completa">Completa (julio/diciembre)</option>
+              </select>
             </div>
           </div>
           <div class="row">
             <div class="field">
+              <span class="field-label">Bruto acumulado (€)</span>
+              <input class="field-input" id="prf-bruto-acum" type="number" placeholder="0" onchange="saveProfile()">
+            </div>
+            <div class="field">
               <span class="field-label">IRPF retenido acumulado (€)</span>
               <input class="field-input" id="prf-irpf-acum" type="number" placeholder="0" onchange="saveProfile()">
             </div>
+          </div>
+          <div class="row">
             <div class="field">
               <span class="field-label">Mes actual</span>
               <select class="field-input" id="prf-mes-acum" onchange="saveProfile()">
@@ -2514,6 +2524,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
               </select>
             </div>
+            <div class="field"></div>
           </div>
           <div id="acum-fecha-display" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:-4px;margin-bottom:8px"></div>
           <div class="alert info" style="margin-bottom:0;margin-top:4px">
@@ -3312,6 +3323,17 @@ function initApp() {
   }
 
   loadTheme();
+  // Apply paga extra preference from profile
+  if (profileData.pagaExtra) {
+    const toggleEl = document.getElementById('toggle-extra');
+    if (toggleEl) {
+      toggleEl.checked = profileData.pagaExtra === 'completa';
+      const hintEl = document.getElementById('extra-hint');
+      if (hintEl) hintEl.textContent = toggleEl.checked
+        ? 'Paga completa (julio/diciembre)'
+        : 'Prorrateadas (suma mensual)';
+    }
+  }
   onFuncionChange();  // set TCP panels / nivel dots correctly for logged-in user
   onBaseChange();
   recalc();
@@ -3797,6 +3819,7 @@ function showTab(name) {
   if (name === 'comparar')  checkApiKeyCard();
   if (name === 'config')    renderConfig();
   if (name === 'admin')     renderAdmin();
+  if (name === 'variables') varsActualizarMesEsperado();
 }
 
 // ── THEMES ──
@@ -6047,6 +6070,9 @@ function renderPerfil() {
 
   // Sync fiscal + personal variables
   document.getElementById('prf-irpf-input').value = profileData.irpf || USERS[currentUser]?.irpf || 34.15;
+  // Paga extra preference
+  const pagaExtraEl = document.getElementById('prf-paga-extra');
+  if (pagaExtraEl) pagaExtraEl.value = profileData.pagaExtra || 'prorr';
   if (profileData.estadoCivil)  document.getElementById('prf-estado-civil').value  = profileData.estadoCivil;
   if (profileData.hijos)        document.getElementById('prf-hijos').value          = profileData.hijos;
   if (profileData.discapacidad) document.getElementById('prf-discapacidad').value   = profileData.discapacidad;
@@ -6074,6 +6100,21 @@ function saveProfile() {
   profileData.hijos         = document.getElementById('prf-hijos').value;
   profileData.discapacidad  = document.getElementById('prf-discapacidad').value;
   profileData.residencia    = document.getElementById('prf-residencia').value;
+  // Paga extra preference
+  const pagaExtraEl = document.getElementById('prf-paga-extra');
+  if (pagaExtraEl) {
+    profileData.pagaExtra = pagaExtraEl.value;
+    // Apply immediately to calculator
+    const toggleExtra = document.getElementById('toggle-extra');
+    if (toggleExtra) {
+      toggleExtra.checked = pagaExtraEl.value === 'completa';
+      const hintEl = document.getElementById('extra-hint');
+      if (hintEl) hintEl.textContent = toggleExtra.checked
+        ? 'Paga completa (julio/diciembre)'
+        : 'Prorrateadas (suma mensual)';
+      recalc();
+    }
+  }
   const nuevoBruto = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
   const nuevoIRPF  = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
   if (nuevoBruto !== profileData.brutoAcum || nuevoIRPF !== profileData.irpfAcum) {
@@ -6084,17 +6125,13 @@ function saveProfile() {
   profileData.brutoAcum = nuevoBruto;
   profileData.irpfAcum  = nuevoIRPF;
   profileData.mesAcum   = document.getElementById('prf-mes-acum').value;
-  // User-editable fields
   const aliasEl = document.getElementById('prf-alias');
   if (aliasEl) profileData.alias = aliasEl.value.trim();
   const nombreEl = document.getElementById('prf-nombre-edit');
   if (nombreEl) profileData.name = nombreEl.value.trim();
   const apellidosEl = document.getElementById('prf-apellidos-edit');
   if (apellidosEl) profileData.apellidos = apellidosEl.value.trim();
-  if (currentUser) {
-    saveUserData(currentUser);
-    saveUserData(currentUser); // sync to Firebase
-  }
+  if (currentUser) saveUserData(currentUser);
 }
 
 function generarEmailSolicitud() {
@@ -6628,6 +6665,39 @@ let varsData    = {};
 let varsModo    = 'pdf';
 let varsPeriodoConfirmado = false;
 
+// ── MES ESPERADO DE VARIABLES ──
+// Las variables son del mes ANTERIOR al que está seleccionado en la calculadora
+function varsMesEsperado() {
+  const mes = document.getElementById('mes-nomina')?.value || 'Abril';
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const idx = MESES.indexOf(mes);
+  const prevIdx = idx <= 0 ? 11 : idx - 1;
+  return MESES[prevIdx];
+}
+
+function varsActualizarMesEsperado() {
+  const mes = varsMesEsperado();
+  const el1 = document.getElementById('vars-mes-esperado');
+  const el2 = document.getElementById('vars-mes-esperado-paste');
+  if (el1) el1.textContent = mes;
+  if (el2) el2.textContent = mes;
+}
+
+function varsCheckPeriodoMes(data) {
+  // Comprueba si el período detectado corresponde al mes esperado
+  if (!data._periodoFin) return; // no podemos verificar sin fecha
+  const mesEsperado = varsMesEsperado();
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesVariables = MESES[data._periodoFin.getMonth()];
+  if (mesVariables !== mesEsperado) {
+    // Añadir aviso en la confirmación de período
+    data._periodoAviso = `⚠️ Estas variables son de ${mesVariables} pero la calculadora está en ${MESES[MESES.indexOf(mesEsperado)+1]||MESES[0]}. ¿Seguro que son las correctas?`;
+  }
+}
+
+
 // ── MODO ──
 function varsSwitchMode(modo) {
   varsModo = modo;
@@ -6738,18 +6808,30 @@ function varsParseText(text) {
   };
 
   // ── PARSER ROBUSTO — insensible a mayúsculas y variantes de nomenclatura ──
-  // Cada patrón intenta múltiples formas en que la empresa puede escribir el concepto
+  // IMPORTANTE: buscar HB (Horas de Pago) ANTES que HV para no confundirlas
 
-  // Horas de Pago Totales = HB (ya incluye im×3 + fr×2)
+  // HB = Horas de Pago Totales / Horas de Pago (ya incluye im×3 + fr×2)
   data.hb_total = parseVal(
-    /horas?\s*(?:de\s*)?pago\s*totales?\s*:?\s*([\d.,]+)/i
+    /horas?\s*(?:de\s*)?pago\s*(?:totales?)?\s*:?\s*([\d.,]+)/i
   );
 
-  // Horas de Vuelo = HV puras
-  data.hv_puro = parseVal(
-    /horas?\s*(?:de\s*)?vuelo\s*:?\s*([\d.,]+)/i
+  // HV = Horas de Vuelo puras — buscar en línea que NO contenga "pago"
+  const hvLine = full.split('\n').find(l =>
+    /horas?\s*(?:de\s*)?vuelo\s*:/i.test(l) && !/pago/i.test(l)
   );
-  data.hv_total = data.hv_puro;
+  if (hvLine) {
+    const mHV = hvLine.match(/horas?\s*(?:de\s*)?vuelo\s*:?\s*([\d.,]+)/i);
+    if (mHV) {
+      const raw = mHV[1].trim();
+      let n;
+      if (raw.includes(',') && raw.includes('.')) n = parseFloat(raw.replace(/\./g,'').replace(',','.'));
+      else if (raw.includes(',')) n = parseFloat(raw.replace(',','.'));
+      else if (raw.includes('.')) { const after = raw.split('.')[1]||''; n = after.length===3 ? parseFloat(raw.replace(/\./g,'')) : parseFloat(raw); }
+      else n = parseFloat(raw);
+      data.hv_puro  = isNaN(n) ? null : n;
+      data.hv_total = data.hv_puro;
+    }
+  }
 
   // Tramos
   data.hv_t1 = parseVal(/hora\s*(?:de\s*)?vuelo\s*t[\-\s]?1\s*:?\s*([\d.,]+)/i);
@@ -6763,40 +6845,35 @@ function varsParseText(text) {
 
   // Dieta de vuelo / Manutención
   data.dieta_vuelo = parseVal(
-    /(?:dieta\s*(?:de\s*)?vuelo|manutenci[oó]n\s*nac(?:ional)?)\s*:?\s*([\d.,]+)/i
+    /(?:dieta\s*(?:de\s*)?vuelo|manutenci[oó]n)\s*:?\s*([\d.,]+)/i
   );
 
-  // Destacamento NAC / INT
-  data.dest_nac = parseVal(
-    /destacamento\s*(?:nac(?:ional)?)\s*:?\s*([\d.,]+)/i
-  );
-  data.dest_int = parseVal(
-    /destacamento\s*(?:int(?:ernacional)?)\s*:?\s*([\d.,]+)/i
-  );
+  // Destacamentos
+  data.dest_nac = parseVal(/destacamento\s*nac(?:ional)?\s*:?\s*([\d.,]+)/i);
+  data.dest_int = parseVal(/destacamento\s*int(?:ernacional)?\s*:?\s*([\d.,]+)/i);
 
-  // Desplazamiento / Dieta Nacional sin pernocta
-  // Variantes: "Desplazamiento NAC sin pernocta", "Dieta Desplaz. Nac. Exenta",
-  //            "Dieta NAC Sin Pernocta", "Dieta Nacional sin pernoctación"
+  // Desplazamiento/Dieta NAC sin pernocta
+  // "Dieta Desplaz. Nac. Exenta" (sin mencionar pernocta = sin pernocta)
   data.dieta_nac_sp = parseVal(
-    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*(?:desplaz\.?\s*)?nac(?:ional)?\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
-  // Desplazamiento / Dieta Nacional con pernocta
+  // Desplazamiento/Dieta NAC con pernocta
+  // "Dieta Desplaz. Nac. Pernocta Exenta"
   data.dieta_nac_cp = parseVal(
-    /(?:desplazamiento\s*nac(?:ional)?\s*con\s*pernoct|dieta\s*(?:desplaz\.?\s*)?nac(?:ional)?\.?\s*(?:con\s*pernoct|pernoct)\s*exenta|dieta\s*nac(?:ional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*nac(?:ional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*pernoct|dieta\s*nac(?:ional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
-  // Desplazamiento / Dieta Internacional sin pernocta
-  // Variantes: "Desplazamiento INT sin pernocta", "Dieta Desplaz. Inter. Exenta",
-  //            "Dieta INT Sin Pernocta", "Dieta Internacional sin pernoctación"
+  // Desplazamiento/Dieta INT sin pernocta
+  // "Dieta Desplaz. Inter. Exenta" (sin mencionar pernocta = sin pernocta)
   data.dieta_int_sp = parseVal(
-    /(?:desplazamiento\s*int(?:ernacional)?\s*sin\s*pernoct|dieta\s*(?:desplaz\.?\s*)?int(?:er(?:nacional)?)?\.?\s*exenta(?!\s*pernoct)|dieta\s*int(?:ernacional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*int(?:ernacional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*int(?:er)?\.?\s*exenta(?!\s*pernoct)|dieta\s*int(?:ernacional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
-  // Desplazamiento / Dieta Internacional con pernocta
-  // Variantes: "Desplazamiento INT con pernocta", "Dieta Desplaz. Inter. Pernocta Exenta"
+  // Desplazamiento/Dieta INT con pernocta
+  // "Dieta Desplaz. Inter. Pernocta Exenta"
   data.dieta_int_cp = parseVal(
-    /(?:desplazamiento\s*int(?:ernacional)?\s*con\s*pernoct|dieta\s*(?:desplaz\.?\s*)?int(?:er(?:nacional)?)?\.?\s*(?:con\s*pernoct|pernoct)\s*exenta|dieta\s*int(?:ernacional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*int(?:ernacional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*int(?:er)?\.?\s*pernoct|dieta\s*int(?:ernacional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
   // DPO
@@ -6806,7 +6883,7 @@ function varsParseText(text) {
 
   // Complemento Base MAD
   data.comp_mad = parseVal(
-    /(?:complemento\s*(?:de\s*)?base\s*mad|complemento\s*madrid|comp(?:lemento)?\s*base\s*mad)\s*:?\s*([\d.,]+)/i
+    /(?:complemento\s*(?:de\s*)?base\s*mad|complemento\s*madrid)\s*:?\s*([\d.,]+)/i
   );
 
   // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
@@ -6824,16 +6901,20 @@ function varsParseText(text) {
 // ── CONFIRMACIÓN DE PERÍODO ──
 function varsMostrarConfirmacionPeriodo() {
   varsPeriodoConfirmado = false;
+  varsCheckPeriodoMes(varsData);
   const confirmEl = document.getElementById('vars-periodo-confirm');
   confirmEl.style.display = 'block';
 
   const nomMes = varsGetNominaMes(varsData._periodoFin);
   document.getElementById('vars-periodo-display').textContent =
     varsData._periodo || 'Período no detectado — introduce las fechas manualmente';
-  document.getElementById('vars-nomina-mes-display').innerHTML =
-    `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${nomMes}</strong>`;
 
-  // Si no se detectó período, abrir directamente la corrección manual
+  let nomHtml = `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${nomMes}</strong>`;
+  if (varsData._periodoAviso) {
+    nomHtml += `<br><span style="color:var(--amber2);font-size:11px">${varsData._periodoAviso}</span>`;
+  }
+  document.getElementById('vars-nomina-mes-display').innerHTML = nomHtml;
+
   if (!varsData._periodo) {
     document.getElementById('vars-periodo-edit').style.display = 'block';
   } else {
