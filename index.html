@@ -4933,6 +4933,7 @@ function recalc() {
     fn, nivel: currentNivel, mad: madF, irpf_pct,
     mes: document.getElementById('mes-nomina').value
   };
+  window._calcResultBackup = { ...calcResult };
 
   const fmt = v => v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €';
   document.getElementById('sum-dev').textContent = fmt(totalDevengado);
@@ -5068,6 +5069,12 @@ function renderNominaTCP(r) {
 }
 
 function renderNomina() {
+  // Si calcResult es null, intentar restaurar desde backup (cargado desde Vars)
+  if (!calcResult && window._calcResultBackup) {
+    calcResult = window._calcResultBackup;
+  }
+  // Si sigue sin haber, intentar recalcular desde el DOM
+  if (!calcResult) recalc();
   const r = calcResult;
   if (!r) {
     document.getElementById('nomina-output').innerHTML = `
@@ -5731,14 +5738,14 @@ async function processNomina(file) {
       throw new Error('No se pudieron extraer datos de la nómina. Comprueba que el PDF es una nómina Binter en formato texto (no escaneada).');
     }
 
-    // Update profile
+    // Update profile — but do NOT change currentNivel or current calc state
     if (nomData.trabajador) {
       const t = nomData.trabajador;
       if (t.nombre) profileData.fullName = t.nombre;
       if (t.nif) profileData.nif = t.nif;
       if (t.nss) profileData.nss = t.nss;
       if (t.fecha_ingreso) profileData.ingreso_display = t.fecha_ingreso;
-      if (t.nivel) { profileData.nivel = t.nivel; currentNivel = t.nivel; }
+      // Note: intentionally NOT changing currentNivel to preserve calculator state
     }
     if (nomData.irpf_pct) profileData.irpf = nomData.irpf_pct;
     if (currentUser) saveUserData(currentUser);
@@ -7203,12 +7210,13 @@ function varsCargarEnCalculadora() {
   // Recalc único y definitivo — todos los campos DOM ya están rellenos
   recalc();
 
-  // Ir a calculadora y forzar render de nómina
-  showTab('calcular');
+  // Guardar copia de seguridad del calcResult por si algo lo sobreescribe
+  if (calcResult) window._calcResultBackup = { ...calcResult };
 
-  // Forzar re-render nómina con el calcResult recién generado
-  // (para que la próxima vez que el usuario vaya a Nómina ya esté listo)
+  // Pre-renderizar nómina
   renderNomina();
+
+  showTab('calcular');
 
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
