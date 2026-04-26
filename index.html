@@ -1408,6 +1408,7 @@ input[type=number] { -moz-appearance: textfield; }
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
+    <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Vars</button>
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
@@ -2016,7 +2017,143 @@ input[type=number] { -moz-appearance: textfield; }
 
 
     <!-- ── TAB: NÓMINA ── -->
-    <div class="page" id="page-nomina">
+    <!-- ── TAB: VARIABLES ── -->
+    <div class="page" id="page-variables">
+
+      <!-- SELECTOR DE MODO -->
+      <div class="card" style="padding:12px">
+        <div class="toggle-group" style="margin-bottom:0">
+          <div class="toggle-btn active" id="vars-mode-pdf" onclick="varsSwitchMode('pdf')">📂 Subir PDF</div>
+          <div class="toggle-btn" id="vars-mode-paste" onclick="varsSwitchMode('paste')">📋 Pegar texto</div>
+        </div>
+      </div>
+
+      <!-- MODO PDF -->
+      <div id="vars-panel-pdf">
+        <div class="upload-zone" id="vars-upload-zone"
+             onclick="document.getElementById('vars-file-input').click()"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="varsHandleDrop(event)">
+          <div class="upload-icon">📂</div>
+          <div class="upload-text" id="vars-upload-text">Toca para subir PDF de Variables</div>
+          <div class="upload-sub">PDF Variables Binter · mes vencido</div>
+        </div>
+        <input type="file" id="vars-file-input" accept=".pdf,application/pdf"
+               onchange="varsProcessPDF(this.files[0])" style="display:none">
+      </div>
+
+      <!-- MODO PEGAR TEXTO -->
+      <div id="vars-panel-paste" style="display:none">
+        <div class="card">
+          <div class="card-title"><div class="section-dot"></div>Pegar texto de variables</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;line-height:1.7">
+            Selecciona y copia el texto completo del PDF o email de variables que te manda la empresa y pégalo aquí.
+          </div>
+          <textarea id="vars-paste-area" class="field-input"
+            style="height:180px;resize:vertical;font-family:var(--mono);font-size:11px;line-height:1.6"
+            placeholder="Pega aquí el texto de las variables tal como te lo manda la empresa...
+
+Ejemplo:
+Variables 01/05/2026-31/05/2026
+Estimado/a ELOY INFANTE
+Horas de Vuelo: 69.59
+Imaginarias: 9
+Francos: 1
+Hora de Vuelo T1: 10
+..."></textarea>
+          <button class="btn-primary" style="margin-top:10px" onclick="varsAnalyzePaste()">
+            Analizar texto
+          </button>
+        </div>
+      </div>
+
+      <!-- LOADING -->
+      <div id="vars-loading" class="loading-block" style="display:none">
+        <div class="spinner"></div>
+        <div>Analizando variables...</div>
+      </div>
+
+      <!-- CONFIRMACIÓN DE PERÍODO — aparece antes que la tabla -->
+      <div id="vars-periodo-confirm" style="display:none">
+        <div class="card" style="border-color:var(--amber2);background:var(--amber-dim,var(--bg3))">
+          <div class="card-title" style="color:var(--amber2)">
+            <div class="section-dot amber"></div>Confirmar período
+          </div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px" id="vars-periodo-display">—</div>
+          <div style="font-size:12px;color:var(--text2);font-family:var(--mono);margin-bottom:14px" id="vars-nomina-mes-display">
+            Estas variables corresponden a la nómina de <strong>—</strong>
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px">
+            ¿Es correcto el período?
+          </div>
+          <div class="row">
+            <button class="btn-secondary" style="border-color:var(--green);color:var(--green);flex:1"
+              onclick="varsConfirmarPeriodo(true)">✓ Confirmar</button>
+            <button class="btn-secondary" style="border-color:var(--amber2);color:var(--amber2);flex:1"
+              onclick="varsConfirmarPeriodo(false)">✏️ Corregir</button>
+          </div>
+          <!-- Campo de corrección manual -->
+          <div id="vars-periodo-edit" style="display:none;margin-top:12px">
+            <div class="row">
+              <div class="field">
+                <span class="field-label">Inicio período</span>
+                <input class="field-input" id="vars-per-inicio" type="date">
+              </div>
+              <div class="field">
+                <span class="field-label">Fin período</span>
+                <input class="field-input" id="vars-per-fin" type="date">
+              </div>
+            </div>
+            <button class="btn-secondary" style="border-color:var(--green);color:var(--green);margin-top:6px"
+              onclick="varsAplicarPeriodoManual()">Aplicar corrección</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADO — tabla editable + acciones -->
+      <div id="vars-result" style="display:none">
+
+        <!-- Info período confirmado -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;
+                    font-family:var(--mono);font-size:11px;color:var(--text3)">
+          <span style="color:var(--green)">✓</span>
+          <span id="vars-periodo-badge" style="color:var(--blue2)">—</span>
+          <span>·</span>
+          <span id="vars-nomina-badge">Nómina de —</span>
+          <button onclick="varsEditarPeriodo()" style="background:none;border:none;cursor:pointer;
+            color:var(--text3);font-size:10px;font-family:var(--mono);padding:0;margin-left:4px">✏️</button>
+        </div>
+
+        <!-- Tabla editable -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot amber"></div>Variables identificadas · revisar y editar</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:10px;line-height:1.6">
+            🟢 identificado con certeza &nbsp;·&nbsp; 🟡 verificar antes de cargar &nbsp;·&nbsp; ⬜ no detectado
+          </div>
+          <div id="vars-tabla"></div>
+        </div>
+
+        <!-- Trabajador detectado -->
+        <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:12px">
+          Trabajador: <span id="vars-nombre" style="color:var(--text2)">—</span>
+        </div>
+
+        <!-- Acciones -->
+        <button class="btn-primary" onclick="varsCargarEnCalculadora()" style="margin-bottom:10px">
+          → Cargar en Calculadora
+        </button>
+        <button class="btn-secondary" style="border-color:var(--text3);color:var(--text3)" onclick="varsReset()">
+          🗑 Limpiar
+        </button>
+        <div id="vars-status" style="font-size:11px;font-family:var(--mono);color:var(--green);
+             text-align:center;margin-top:6px;min-height:18px"></div>
+
+      </div><!-- /vars-result -->
+
+    </div><!-- /page-variables -->
+
+    <!-- ── TAB: NÓMINA ── -->
       <div id="nomina-output">
         <div class="card" style="text-align:center;padding:32px">
           <div style="font-size:32px;margin-bottom:8px">📄</div>
@@ -3601,17 +3738,17 @@ function renderConfig() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const tabs = ['calcular','nomina','comparar','simulador','perfil','config','admin'];
+  const tabs = ['calcular','variables','nomina','comparar','simulador','perfil','config','admin'];
   const idx = tabs.indexOf(name);
   const tabEls = document.querySelectorAll('.tab');
   if (tabEls[idx]) tabEls[idx].classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
-  if (name === 'nomina')   renderNomina();
-  if (name === 'perfil')   renderPerfil();
+  if (name === 'nomina')    renderNomina();
+  if (name === 'perfil')    renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
-  if (name === 'comparar') checkApiKeyCard();
-  if (name === 'config')   renderConfig();
-  if (name === 'admin')    renderAdmin();
+  if (name === 'comparar')  checkApiKeyCard();
+  if (name === 'config')    renderConfig();
+  if (name === 'admin')     renderAdmin();
 }
 
 // ── THEMES ──
@@ -6282,6 +6419,301 @@ function mostrarInfoTooltip(concepto) {
   const texto = SIM_TOOLTIPS[concepto];
   if (!texto) return;
   alert(`ℹ️ ${concepto}\n\n${texto}`);
+}
+
+// ══════════════════════════════════════════════════════
+// PESTAÑA VARIABLES — Lector PDF + Pegar texto
+// ══════════════════════════════════════════════════════
+
+const VARS_CAMPOS = [
+  { id:'hv_total',      label:'Horas de Vuelo (total)',              unit:'HB',       calc:'hv-total'   },
+  { id:'hv_t1',         label:'HV Tramo T1',                         unit:'HB',       calc:'hv1'        },
+  { id:'hv_t2',         label:'HV Tramo T2',                         unit:'HB',       calc:'hv2'        },
+  { id:'hv_t3',         label:'HV Tramo T3',                         unit:'HB',       calc:'hv3'        },
+  { id:'hv_t4',         label:'HV Tramo T4',                         unit:'HB',       calc:'hv4'        },
+  { id:'imaginarias',   label:'Imaginarias',                          unit:'uds',      calc:'imaginarias'},
+  { id:'francos',       label:'Francos',                              unit:'uds',      calc:'francos'    },
+  { id:'dieta_vuelo',   label:'Dieta de vuelo',                       unit:'períodos', calc:'d-mant-nac' },
+  { id:'dest_nac',      label:'Destacamento NAC',                     unit:'días',     calc:'dest-nac'   },
+  { id:'dest_int',      label:'Destacamento INT',                     unit:'días',     calc:'dest-int'   },
+  { id:'dieta_nac_sp',  label:'Desplazamiento NAC sin pernocta',      unit:'días',     calc:'d-nac-sp'   },
+  { id:'dieta_nac_cp',  label:'Desplazamiento NAC con pernocta',      unit:'días',     calc:'d-nac-cp'   },
+  { id:'dieta_int_sp',  label:'Desplazamiento INT sin pernocta',      unit:'días',     calc:'d-int-sp'   },
+  { id:'dieta_int_cp',  label:'Desplazamiento INT con pernocta',      unit:'días',     calc:'d-int-cp'   },
+  { id:'dpo',           label:'Dirección por Objetivos (DPO)',         unit:'€',        calc:'dpo'        },
+  { id:'comp_mad',      label:'Complemento Base MAD',                  unit:'€',        calc:'comp-mad'   },
+];
+
+let varsData    = {};
+let varsModo    = 'pdf';
+let varsPeriodoConfirmado = false;
+
+// ── MODO ──
+function varsSwitchMode(modo) {
+  varsModo = modo;
+  document.getElementById('vars-mode-pdf').classList.toggle('active', modo === 'pdf');
+  document.getElementById('vars-mode-paste').classList.toggle('active', modo === 'paste');
+  document.getElementById('vars-panel-pdf').style.display   = modo === 'pdf'   ? 'block' : 'none';
+  document.getElementById('vars-panel-paste').style.display = modo === 'paste' ? 'block' : 'none';
+  document.getElementById('vars-periodo-confirm').style.display = 'none';
+  document.getElementById('vars-result').style.display = 'none';
+}
+
+// ── PDF ──
+function varsHandleDrop(e) {
+  e.preventDefault();
+  document.getElementById('vars-upload-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) varsProcessPDF(f);
+}
+
+async function varsProcessPDF(file) {
+  if (!file) return;
+  document.getElementById('vars-upload-text').textContent = file.name;
+  document.getElementById('vars-loading').style.display = 'flex';
+  document.getElementById('vars-result').style.display = 'none';
+  document.getElementById('vars-periodo-confirm').style.display = 'none';
+  try {
+    const text = await extractPdfText(file);
+    varsData = varsParseText(text);
+    varsMostrarConfirmacionPeriodo();
+  } catch(e) {
+    alert('Error leyendo el PDF. Comprueba que es el PDF de variables de la empresa.');
+    console.error(e);
+  } finally {
+    document.getElementById('vars-loading').style.display = 'none';
+  }
+}
+
+// ── PEGAR TEXTO ──
+function varsAnalyzePaste() {
+  const text = document.getElementById('vars-paste-area').value.trim();
+  if (!text) { alert('Pega primero el texto de las variables.'); return; }
+  document.getElementById('vars-loading').style.display = 'flex';
+  document.getElementById('vars-result').style.display = 'none';
+  document.getElementById('vars-periodo-confirm').style.display = 'none';
+  setTimeout(() => {
+    varsData = varsParseText(text);
+    document.getElementById('vars-loading').style.display = 'none';
+    varsMostrarConfirmacionPeriodo();
+  }, 200);
+}
+
+// ── PARSER ──
+function varsParseText(text) {
+  const data = { _periodo: '', _periodoInicio: null, _periodoFin: null,
+                 _nombre: '', _confianza: {} };
+  const full = text.replace(/\r\n/g,'\n');
+
+  // Período — varios formatos posibles
+  const mPer = full.match(/Variables?\s+(\d{2}[\/\-]\d{2}[\/\-]\d{4})\s*[-–]\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i)
+            || full.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})\s*[-–a-z\s]+\s*(\d{2}[\/\-]\d{2}[\/\-]\d{4})/i);
+  if (mPer) {
+    data._periodo = `${mPer[1]} – ${mPer[2]}`;
+    // Normalizar a objetos Date
+    const parseDate = s => {
+      const p = s.replace(/\-/g,'/').split('/');
+      return p.length === 3 ? new Date(`${p[2]}-${p[1]}-${p[0]}`) : null;
+    };
+    data._periodoInicio = parseDate(mPer[1]);
+    data._periodoFin    = parseDate(mPer[2]);
+  }
+
+  // Nombre
+  const mNom = full.match(/(?:Estimado\/a|Estimado|Estimada)\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ\s]+)/i);
+  if (mNom) data._nombre = mNom[1].trim();
+
+  const parseVal = pattern => {
+    const m = full.match(pattern);
+    if (!m) return null;
+    return parseFloat(m[1].replace(/\./g,'').replace(',','.'));
+  };
+
+  data.hv_total    = parseVal(/(?:Horas?\s+de\s+Pago\s+Totales?|Horas?\s+de\s+Vuelo)\s*:?\s*([\d.,]+)/i);
+  data.hv_t1       = parseVal(/Hora\s+de\s+Vuelo\s+T1\s*:?\s*([\d.,]+)/i);
+  data.hv_t2       = parseVal(/Hora\s+de\s+Vuelo\s+T2\s*:?\s*([\d.,]+)/i);
+  data.hv_t3       = parseVal(/Hora\s+de\s+Vuelo\s+T3\s*:?\s*([\d.,]+)/i);
+  data.hv_t4       = parseVal(/Hora\s+de\s+Vuelo\s+T4\s*:?\s*([\d.,]+)/i);
+  data.imaginarias = parseVal(/Imaginarias?\s*:?\s*([\d.,]+)/i);
+  data.francos     = parseVal(/Francos?\s*:?\s*([\d.,]+)/i);
+  data.dieta_vuelo = parseVal(/Dieta\s+de\s+vuelo\s*:?\s*([\d.,]+)/i);
+  data.dest_nac    = parseVal(/Destacamento\s+(?:NAC|Nacional)\s*:?\s*([\d.,]+)/i);
+  data.dest_int    = parseVal(/Destacamento\s+(?:INT|Internacional)\s*:?\s*([\d.,]+)/i);
+  data.dieta_nac_sp= parseVal(/Desplazamiento\s+(?:NAC|Nacional)\s+[Ss]in\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
+  data.dieta_nac_cp= parseVal(/Desplazamiento\s+(?:NAC|Nacional)\s+[Cc]on\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
+  data.dieta_int_sp= parseVal(/Desplazamiento\s+(?:INT|Internacional)\s+[Ss]in\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
+  data.dieta_int_cp= parseVal(/Desplazamiento\s+(?:INT|Internacional)\s+[Cc]on\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
+  data.dpo         = parseVal(/(?:Direcci[oó]n\s+por\s+Objetivos?|DPO)\s*:?\s*([\d.,]+)/i);
+  data.comp_mad    = parseVal(/Complemento\s+(?:de\s+)?[Bb]ase\s+MAD\s*:?\s*([\d.,]+)/i);
+
+  // Horas de pago totales son las HB reales (incluye imaginarias y francos ya sumados)
+  // Si no hay hv_total pero hay horas de vuelo separadas, intentar sumarlos
+  if (data.hv_total == null) {
+    const hvPuro = parseVal(/Horas?\s+de\s+Vuelo\s*:?\s*([\d.,]+)/i);
+    if (hvPuro != null) data.hv_total = hvPuro;
+  }
+
+  // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
+  const t1=data.hv_t1||0, t2=data.hv_t2||0, t3=data.hv_t3||0, t4=data.hv_t4||0;
+  if (data.hv_total != null && (t1||t2||t3||t4)) {
+    const suma = t1+t2+t3+t4;
+    if (Math.abs(suma - data.hv_total) > 0.5) {
+      ['hv_t1','hv_t2','hv_t3','hv_t4'].forEach(k => data._confianza[k] = 'amber');
+    }
+  }
+
+  return data;
+}
+
+// ── CONFIRMACIÓN DE PERÍODO ──
+function varsMostrarConfirmacionPeriodo() {
+  varsPeriodoConfirmado = false;
+  const confirmEl = document.getElementById('vars-periodo-confirm');
+  confirmEl.style.display = 'block';
+
+  const nomMes = varsGetNominaMes(varsData._periodoFin);
+  document.getElementById('vars-periodo-display').textContent =
+    varsData._periodo || 'Período no detectado — introduce las fechas manualmente';
+  document.getElementById('vars-nomina-mes-display').innerHTML =
+    `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${nomMes}</strong>`;
+
+  // Si no se detectó período, abrir directamente la corrección manual
+  if (!varsData._periodo) {
+    document.getElementById('vars-periodo-edit').style.display = 'block';
+  } else {
+    document.getElementById('vars-periodo-edit').style.display = 'none';
+  }
+}
+
+function varsGetNominaMes(fechaFin) {
+  // Las variables se cobran el mes SIGUIENTE al período
+  if (!fechaFin || isNaN(fechaFin)) return '— (no detectado)';
+  const siguiente = new Date(fechaFin.getFullYear(), fechaFin.getMonth() + 1, 1);
+  return siguiente.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+                  .replace(/^\w/, c => c.toUpperCase());
+}
+
+function varsConfirmarPeriodo(confirmado) {
+  if (confirmado) {
+    document.getElementById('vars-periodo-edit').style.display = 'none';
+    varsPeriodoConfirmado = true;
+    varsMostrarResultado();
+  } else {
+    document.getElementById('vars-periodo-edit').style.display = 'block';
+    // Pre-rellenar con fechas detectadas si existen
+    if (varsData._periodoInicio) {
+      document.getElementById('vars-per-inicio').value =
+        varsData._periodoInicio.toISOString().split('T')[0];
+    }
+    if (varsData._periodoFin) {
+      document.getElementById('vars-per-fin').value =
+        varsData._periodoFin.toISOString().split('T')[0];
+    }
+  }
+}
+
+function varsAplicarPeriodoManual() {
+  const ini = document.getElementById('vars-per-inicio').value;
+  const fin = document.getElementById('vars-per-fin').value;
+  if (!ini || !fin) { alert('Introduce ambas fechas.'); return; }
+  varsData._periodoInicio = new Date(ini);
+  varsData._periodoFin    = new Date(fin);
+  const fmtD = d => d.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
+  varsData._periodo = `${fmtD(varsData._periodoInicio)} – ${fmtD(varsData._periodoFin)}`;
+  varsPeriodoConfirmado = true;
+  // Actualizar display de nómina
+  document.getElementById('vars-nomina-mes-display').innerHTML =
+    `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${varsGetNominaMes(varsData._periodoFin)}</strong>`;
+  varsMostrarResultado();
+}
+
+function varsEditarPeriodo() {
+  document.getElementById('vars-periodo-confirm').style.display = 'block';
+  document.getElementById('vars-result').style.display = 'none';
+  varsConfirmarPeriodo(false);
+}
+
+// ── TABLA ──
+function varsMostrarResultado() {
+  document.getElementById('vars-periodo-confirm').style.display = 'none';
+
+  // Badge período
+  const nomMes = varsGetNominaMes(varsData._periodoFin);
+  document.getElementById('vars-periodo-badge').textContent = varsData._periodo || '—';
+  document.getElementById('vars-nomina-badge').textContent  = `Nómina de ${nomMes}`;
+  document.getElementById('vars-nombre').textContent        = varsData._nombre || '—';
+
+  // Renderizar tabla
+  const confianza = varsData._confianza || {};
+  const filas = VARS_CAMPOS.map(campo => {
+    const val  = varsData[campo.id];
+    const conf = confianza[campo.id] || (val != null ? 'green' : 'empty');
+    const icono = conf === 'green' ? '🟢' : conf === 'amber' ? '🟡' : '⬜';
+    return `
+      <div style="display:grid;grid-template-columns:18px 1fr 80px 42px;gap:6px;align-items:center;
+                  padding:7px 0;border-bottom:1px solid var(--border);${val==null?'opacity:0.5':''}">
+        <span style="font-size:11px">${icono}</span>
+        <span style="font-size:12px;font-family:var(--mono);color:var(--text2)">${campo.label}</span>
+        <input class="field-input" id="vars-input-${campo.id}" type="number"
+               value="${val != null ? val : ''}" placeholder="—" step="0.01"
+               style="padding:5px 7px;font-size:12px;text-align:right">
+        <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${campo.unit}</span>
+      </div>`;
+  }).join('');
+  document.getElementById('vars-tabla').innerHTML = filas;
+  document.getElementById('vars-result').style.display = 'block';
+  document.getElementById('vars-result').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── CARGAR EN CALCULADORA ──
+function varsCargarEnCalculadora() {
+  if (!varsPeriodoConfirmado) {
+    alert('Confirma primero el período de las variables.');
+    return;
+  }
+  // Recoger valores editados
+  VARS_CAMPOS.forEach(campo => {
+    const inputEl = document.getElementById(`vars-input-${campo.id}`);
+    if (!inputEl) return;
+    const val = parseFloat(inputEl.value);
+    varsData[campo.id] = isNaN(val) ? null : val;
+  });
+  // Volcar en calculadora
+  VARS_CAMPOS.forEach(campo => {
+    const calcEl = document.getElementById(campo.calc);
+    if (!calcEl) return;
+    const val = varsData[campo.id];
+    calcEl.value = val != null ? val : '';
+  });
+  // Si hay tramos T1-T4, vaciar el total (los tramos son la fuente de verdad)
+  const tieneTramos = ['hv_t1','hv_t2','hv_t3','hv_t4'].some(k => varsData[k] != null);
+  if (tieneTramos) {
+    const totalEl = document.getElementById('hv-total');
+    if (totalEl) totalEl.value = '';
+  }
+  recalc();
+  showTab('calcular');
+  const statusEl = document.getElementById('vars-status');
+  if (statusEl) {
+    statusEl.textContent = '✓ Variables cargadas en la calculadora';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  }
+}
+
+// ── RESET ──
+function varsReset() {
+  varsData = {};
+  varsPeriodoConfirmado = false;
+  document.getElementById('vars-upload-text').textContent = 'Toca para subir PDF de Variables';
+  const fi = document.getElementById('vars-file-input');
+  if (fi) fi.value = '';
+  const ta = document.getElementById('vars-paste-area');
+  if (ta) ta.value = '';
+  document.getElementById('vars-periodo-confirm').style.display = 'none';
+  document.getElementById('vars-result').style.display  = 'none';
+  document.getElementById('vars-loading').style.display = 'none';
+  document.getElementById('vars-status').textContent    = '';
 }
 
 // Initial calc
