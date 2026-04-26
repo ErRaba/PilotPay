@@ -3222,6 +3222,15 @@ async function doLogin() {
   btn.disabled = false;
 
   if (USERS[u] && USERS[u].pass === p) {
+    // Comprobar bloqueo antes de entrar
+    if (USERS[u].bloqueado) {
+      errEl.textContent = '🔒 Usuario bloqueado por el administrador';
+      errEl.style.display = 'block';
+      card.classList.add('login-shake');
+      setTimeout(() => card.classList.remove('login-shake'), 400);
+      document.getElementById('login-pass').value = '';
+      return;
+    }
     currentUser = u;
     profileData = { ...USERS[u] };
     btn.textContent = 'Cargando perfil...';
@@ -3232,6 +3241,7 @@ async function doLogin() {
     btn.disabled = false;
     showWelcome();
   } else {
+    errEl.textContent = 'Credenciales incorrectas';
     errEl.style.display = 'block';
     card.classList.add('login-shake');
     setTimeout(() => card.classList.remove('login-shake'), 400);
@@ -3480,16 +3490,31 @@ function renderAdmin() {
         </div>
         ${isAdmin ? `<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:var(--mono)">
           ★ Administrador — acceso total a todas las opciones
-        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
-            Acceso: ${userPerms.funciones.join(', ')} · ${userPerms.bases.map(b => BASES_OPTIONS.find(o=>o.val===b)?.label||b).join(', ')}
+        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
+              Acceso: ${userPerms.funciones.join(', ')} · ${userPerms.bases.map(b => BASES_OPTIONS.find(o=>o.val===b)?.label||b).join(', ')}
+            </div>
+            <button onclick="editarUsuario('${code}')"
+              style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+              background:var(--blue-dim);border:1px solid var(--blue);
+              color:var(--blue2);border-radius:5px;cursor:pointer">
+              ✏️ Editar
+            </button>
           </div>
-          <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
-            background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer">
-            ✏️ Editar
-          </button>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:10px;font-family:var(--mono);color:${u.bloqueado ? 'var(--red)' : 'var(--text3)'}">
+              ${u.bloqueado ? '🔒 Usuario bloqueado' : '🟢 Acceso activo'}
+            </div>
+            <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
+              style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+              background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
+              border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
+              color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
+              border-radius:5px;cursor:pointer">
+              ${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
+            </button>
+          </div>
         </div>`}
       </div>`;
   }).join('');
@@ -3564,11 +3589,31 @@ async function crearUsuarioLocal() {
     await fbSet(`pilotpay/permisos/${codigo}`, perms[codigo]);
     savePermsToFirebase();
 
-    // Perfil inicial vacío
+    // Perfil inicial — todo a cero, sin rastro de ningún otro usuario
     await fbSet(`pilotpay/perfiles/${codigo}`, {
       theme: defaultTheme,
       funcion, nivel, base, irpf: 30.00,
-      pagaExtra: 'prorr', firstAccess: true,
+      pagaExtra: 'prorr',
+      firstAccess: true,
+      // Variables personales — primer elemento de cada desplegable
+      estadoCivil:  'soltero',
+      hijos:        '0',
+      discapacidad: '0',
+      residencia:   '',
+      // Fiscales — todo a cero
+      brutoAcum: 0,
+      irpfAcum:  0,
+      mesAcum:   '',
+      // Simulador — todo a cero
+      sim_brutoAcum:  '',
+      sim_irpfAcum:   '',
+      sim_brutoResto: '',
+      sim_irpfActual: '',
+      sim_ccaa:       'can',
+      sim_civil:      'soltero',
+      sim_hijos:      '0',
+      sim_discap:     '0',
+      simHistorico:   {},
     });
 
     // Limpiar formulario
@@ -3782,15 +3827,27 @@ async function confirmarEliminarUsuario(code) {
   `;
 }
 
+async function toggleBloqueoUsuario(code, bloquear) {
+  if (code === ADMIN_CODE) { alert('No se puede bloquear al administrador.'); return; }
+  try {
+    USERS[code].bloqueado = bloquear;
+    await fbUpdate(`pilotpay/usuarios/${code}`, { bloqueado: bloquear });
+    renderAdmin();
+  } catch(e) {
+    alert('Error al cambiar estado: ' + e.message);
+  }
+}
+
 async function eliminarUsuario(code) {
   try {
-    // Delete from Firebase
-    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
-    // Remove from runtime cache
+    // Borrar absolutamente todo rastro en Firebase
+    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
+    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
+    await fetch(`${FB_URL}/pilotpay/perfiles/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
+    // Borrar también cualquier caché local
+    try { localStorage.removeItem(`pilotpay_v2_${code}`); } catch(e) {}
+    // Borrar de la caché en memoria
     delete USERS[code];
-    // Remove from admin perms
-    // perms is now the global Firebase-backed object
     delete perms[code];
     savePermsToFirebase();
     closeDayModal();
