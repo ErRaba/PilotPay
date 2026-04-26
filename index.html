@@ -2091,15 +2091,27 @@ input[type=number] { -moz-appearance: textfield; }
 
 Ejemplo:
 Variables 01/05/2026-31/05/2026
-Estimado/a ELOY INFANTE
+Estimado/a CHARLES AUGUSTUS LINDBERGH
 Horas de Vuelo: 69.59
+Horas de Pago Totales: 98.59
 Imaginarias: 9
 Francos: 1
 Hora de Vuelo T1: 10
-..."></textarea>
-          <button class="btn-primary" style="margin-top:10px" onclick="varsAnalyzePaste()">
-            Analizar texto
-          </button>
+Hora de Vuelo T2: 10
+Hora de Vuelo T3: 10
+Hora de Vuelo T4: 8.59
+Dieta de vuelo: 12
+Dirección por Objetivos: 883.33
+Complemento de Base MAD: 1500"></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn-primary" style="flex:1" onclick="varsAnalyzePaste()">
+              Analizar texto
+            </button>
+            <button class="btn-secondary" style="border-color:var(--text3);color:var(--text3)"
+              onclick="document.getElementById('vars-paste-area').value='';document.getElementById('vars-paste-area').focus()">
+              🗑 Limpiar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -4225,68 +4237,80 @@ function onHBModeChange() {
 }
 
 // ── HB CALCULATION ──
-// HB = HV + (imaginarias × 3) + (francos × 2)
-// Cuando el usuario cambia HV, im o fr → recalcula HB y distribuye tramos
-// Cuando el usuario introduce HB directamente → distribuye tramos desde HB
+// Reglas:
+// 1. Si HB vacío y HV tiene valor → HB = HV + (im×3) + (fr×2) → distribuir tramos desde HB
+// 2. Si HB tiene valor y HV tiene valor → comparar, mostrar discrepancia si no cuadra → distribuir desde HB
+// 3. Si HB tiene valor y HV vacío → distribuir tramos desde HB directamente
+// 4. im y fr NUNCA generan dinero directamente — solo contribuyen al HB
+
 function calcularHB() {
-  const hv = parseFloat(document.getElementById('hv-total').value) || 0;
+  const hv = parseFloat(document.getElementById('hv-total').value)  || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
-  const fr = parseFloat(document.getElementById('francos').value) || 0;
-
-  const hbCalculado = Math.round((hv + im * 3 + fr * 2) * 100) / 100;
-
-  // Actualizar campo HB
+  const fr = parseFloat(document.getElementById('francos').value)     || 0;
   const hbEl = document.getElementById('hb-total');
-  if (hbEl) {
-    hbEl.value = hbCalculado > 0 ? hbCalculado : '';
-    // Mostrar fórmula
-    const hintEl = document.getElementById('hb-formula-hint');
-    if (hintEl && hbCalculado > 0) {
-      let parts = [];
-      if (hv > 0) parts.push(`${hv} HV`);
-      if (im > 0) parts.push(`${im} im×3`);
-      if (fr > 0) parts.push(`${fr} fr×2`);
-      hintEl.textContent = parts.length ? `= ${parts.join(' + ')}` : 'introduce HV e im/fr para calcular';
+  const hbManual = parseFloat(hbEl?.value) || 0;
+
+  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2) * 100) / 100 : 0;
+
+  // Actualizar hint de fórmula
+  const hintEl = document.getElementById('hb-formula-hint');
+  if (hintEl) {
+    if (hv > 0) {
+      let parts = [`${hv} HV`];
+      if (im > 0) parts.push(`${im}×3=${im*3} im`);
+      if (fr > 0) parts.push(`${fr}×2=${fr*2} fr`);
+      hintEl.textContent = `= ${parts.join(' + ')} = ${hbCalculado} HB`;
+    } else {
+      hintEl.textContent = 'introduce HV para calcular automáticamente';
     }
   }
 
-  // Verificar discrepancia con HB del PDF si existe
-  checkHBDiscrepancia(hbCalculado);
-
-  // Distribuir tramos sobre HB
-  distribuirDesdeHB(hbCalculado);
+  if (hbManual > 0) {
+    // HB introducido manualmente — verificar discrepancia con HV+im+fr
+    if (hv > 0) checkHBDiscrepancia(hbManual, hbCalculado);
+    distribuirDesdeHB(hbManual);
+  } else if (hbCalculado > 0) {
+    // HB vacío — rellenar automáticamente desde HV+im+fr
+    if (hbEl) hbEl.value = hbCalculado;
+    document.getElementById('hb-discrepancia').style.display = 'none';
+    distribuirDesdeHB(hbCalculado);
+  } else {
+    recalc();
+  }
 }
 
 function onHBManualChange() {
-  // El usuario ha introducido HB directamente (desde el PDF)
   const hbEl = document.getElementById('hb-total');
   const hb = parseFloat(hbEl?.value) || 0;
-
-  const hv = parseFloat(document.getElementById('hv-total').value) || 0;
+  const hv = parseFloat(document.getElementById('hv-total').value)   || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
-  const fr = parseFloat(document.getElementById('francos').value) || 0;
+  const fr = parseFloat(document.getElementById('francos').value)     || 0;
 
-  // Si hay HV+im+fr, comparar con HB introducido
-  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2) * 100) / 100 : null;
-  checkHBDiscrepancia(hb, hbCalculado);
+  if (hb <= 0) {
+    // HB borrado — recalcular desde HV+im+fr si existen
+    document.getElementById('hb-discrepancia').style.display = 'none';
+    calcularHB();
+    return;
+  }
 
-  // Distribuir tramos sobre HB introducido
+  // Verificar discrepancia si hay HV
+  if (hv > 0) {
+    const hbCalc = Math.round((hv + im*3 + fr*2) * 100) / 100;
+    checkHBDiscrepancia(hb, hbCalc);
+  } else {
+    document.getElementById('hb-discrepancia').style.display = 'none';
+  }
+
   distribuirDesdeHB(hb);
 }
 
-function checkHBDiscrepancia(hbActual, hbReferencia) {
-  const discEl = document.getElementById('hb-discrepancia');
+function checkHBDiscrepancia(hbIntroducido, hbCalculado) {
+  const discEl  = document.getElementById('hb-discrepancia');
   const discTxt = document.getElementById('hb-discrepancia-txt');
   if (!discEl || !discTxt) return;
-
-  // Si tenemos tanto HB calculado como HB del PDF, comparar
-  const hbEl = document.getElementById('hb-total');
-  const hbPDF = parseFloat(hbEl?.value) || 0;
-  const hbCalc = hbReferencia !== undefined ? hbReferencia : hbActual;
-
-  if (hbPDF > 0 && hbCalc > 0 && Math.abs(hbPDF - hbCalc) > 0.1) {
-    const diff = Math.abs(hbPDF - hbCalc).toFixed(2);
-    discTxt.textContent = `HB introducido (${hbPDF}) difiere de HV+im+fr calculado (${hbCalc}) en ${diff} HB — revisa los datos`;
+  if (hbIntroducido > 0 && hbCalculado > 0 && Math.abs(hbIntroducido - hbCalculado) > 0.1) {
+    const diff = Math.abs(hbIntroducido - hbCalculado).toFixed(2);
+    discTxt.textContent = `HB introducido (${hbIntroducido}) ≠ HV+im+fr calculado (${hbCalculado}) — diferencia: ${diff} HB`;
     discEl.style.display = 'block';
   } else {
     discEl.style.display = 'none';
@@ -6713,35 +6737,77 @@ function varsParseText(text) {
     return parseFloat(normalized);
   };
 
+  // ── PARSER ROBUSTO — insensible a mayúsculas y variantes de nomenclatura ──
+  // Cada patrón intenta múltiples formas en que la empresa puede escribir el concepto
+
   // Horas de Pago Totales = HB (ya incluye im×3 + fr×2)
-  data.hb_total = parseVal(/Horas?\s+de\s+Pago\s+Totales?\s*:?\s*([\d.,]+)/i);
-  // Horas de Vuelo = HV puras (sin imaginarias ni francos)
-  data.hv_puro  = parseVal(/Horas?\s+de\s+Vuelo\s*:?\s*([\d.,]+)/i);
-  // hv_total en VARS_CAMPOS apunta a hv-total en la calculadora → usamos hv_puro
+  data.hb_total = parseVal(
+    /horas?\s*(?:de\s*)?pago\s*totales?\s*:?\s*([\d.,]+)/i
+  );
+
+  // Horas de Vuelo = HV puras
+  data.hv_puro = parseVal(
+    /horas?\s*(?:de\s*)?vuelo\s*:?\s*([\d.,]+)/i
+  );
   data.hv_total = data.hv_puro;
 
-  data.hv_t1       = parseVal(/Hora\s+de\s+Vuelo\s+T1\s*:?\s*([\d.,]+)/i);
-  data.hv_t2       = parseVal(/Hora\s+de\s+Vuelo\s+T2\s*:?\s*([\d.,]+)/i);
-  data.hv_t3       = parseVal(/Hora\s+de\s+Vuelo\s+T3\s*:?\s*([\d.,]+)/i);
-  data.hv_t4       = parseVal(/Hora\s+de\s+Vuelo\s+T4\s*:?\s*([\d.,]+)/i);
-  data.imaginarias = parseVal(/Imaginarias?\s*:?\s*([\d.,]+)/i);
-  data.francos     = parseVal(/Francos?\s*:?\s*([\d.,]+)/i);
-  data.dieta_vuelo = parseVal(/Dieta\s+de\s+vuelo\s*:?\s*([\d.,]+)/i);
-  data.dest_nac    = parseVal(/Destacamento\s+(?:NAC|Nacional)\s*:?\s*([\d.,]+)/i);
-  data.dest_int    = parseVal(/Destacamento\s+(?:INT|Internacional)\s*:?\s*([\d.,]+)/i);
-  data.dieta_nac_sp= parseVal(/Desplazamiento\s+(?:NAC|Nacional)\s+[Ss]in\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
-  data.dieta_nac_cp= parseVal(/Desplazamiento\s+(?:NAC|Nacional)\s+[Cc]on\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
-  data.dieta_int_sp= parseVal(/Desplazamiento\s+(?:INT|Internacional)\s+[Ss]in\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
-  data.dieta_int_cp= parseVal(/Desplazamiento\s+(?:INT|Internacional)\s+[Cc]on\s+[Pp]ernocta\s*:?\s*([\d.,]+)/i);
-  data.dpo         = parseVal(/(?:Direcci[oó]n\s+por\s+Objetivos?|DPO)\s*:?\s*([\d.,]+)/i);
-  data.comp_mad    = parseVal(/Complemento\s+(?:de\s+)?[Bb]ase\s+MAD\s*:?\s*([\d.,]+)/i);
+  // Tramos
+  data.hv_t1 = parseVal(/hora\s*(?:de\s*)?vuelo\s*t[\-\s]?1\s*:?\s*([\d.,]+)/i);
+  data.hv_t2 = parseVal(/hora\s*(?:de\s*)?vuelo\s*t[\-\s]?2\s*:?\s*([\d.,]+)/i);
+  data.hv_t3 = parseVal(/hora\s*(?:de\s*)?vuelo\s*t[\-\s]?3\s*:?\s*([\d.,]+)/i);
+  data.hv_t4 = parseVal(/hora\s*(?:de\s*)?vuelo\s*t[\-\s]?4\s*:?\s*([\d.,]+)/i);
 
-  // Horas de pago totales son las HB reales (incluye imaginarias y francos ya sumados)
-  // Si no hay hv_total pero hay horas de vuelo separadas, intentar sumarlos
-  if (data.hv_total == null) {
-    const hvPuro = parseVal(/Horas?\s+de\s+Vuelo\s*:?\s*([\d.,]+)/i);
-    if (hvPuro != null) data.hv_total = hvPuro;
-  }
+  // Imaginarias y Francos
+  data.imaginarias = parseVal(/imaginarias?\s*:?\s*([\d.,]+)/i);
+  data.francos     = parseVal(/francos?\s*:?\s*([\d.,]+)/i);
+
+  // Dieta de vuelo / Manutención
+  data.dieta_vuelo = parseVal(
+    /(?:dieta\s*(?:de\s*)?vuelo|manutenci[oó]n\s*nac(?:ional)?)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Destacamento NAC / INT
+  data.dest_nac = parseVal(
+    /destacamento\s*(?:nac(?:ional)?)\s*:?\s*([\d.,]+)/i
+  );
+  data.dest_int = parseVal(
+    /destacamento\s*(?:int(?:ernacional)?)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Desplazamiento / Dieta Nacional sin pernocta
+  // Variantes: "Desplazamiento NAC sin pernocta", "Dieta Desplaz. Nac. Exenta",
+  //            "Dieta NAC Sin Pernocta", "Dieta Nacional sin pernoctación"
+  data.dieta_nac_sp = parseVal(
+    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*(?:desplaz\.?\s*)?nac(?:ional)?\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Desplazamiento / Dieta Nacional con pernocta
+  data.dieta_nac_cp = parseVal(
+    /(?:desplazamiento\s*nac(?:ional)?\s*con\s*pernoct|dieta\s*(?:desplaz\.?\s*)?nac(?:ional)?\.?\s*(?:con\s*pernoct|pernoct)\s*exenta|dieta\s*nac(?:ional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Desplazamiento / Dieta Internacional sin pernocta
+  // Variantes: "Desplazamiento INT sin pernocta", "Dieta Desplaz. Inter. Exenta",
+  //            "Dieta INT Sin Pernocta", "Dieta Internacional sin pernoctación"
+  data.dieta_int_sp = parseVal(
+    /(?:desplazamiento\s*int(?:ernacional)?\s*sin\s*pernoct|dieta\s*(?:desplaz\.?\s*)?int(?:er(?:nacional)?)?\.?\s*exenta(?!\s*pernoct)|dieta\s*int(?:ernacional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Desplazamiento / Dieta Internacional con pernocta
+  // Variantes: "Desplazamiento INT con pernocta", "Dieta Desplaz. Inter. Pernocta Exenta"
+  data.dieta_int_cp = parseVal(
+    /(?:desplazamiento\s*int(?:ernacional)?\s*con\s*pernoct|dieta\s*(?:desplaz\.?\s*)?int(?:er(?:nacional)?)?\.?\s*(?:con\s*pernoct|pernoct)\s*exenta|dieta\s*int(?:ernacional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+  );
+
+  // DPO
+  data.dpo = parseVal(
+    /(?:direcci[oó]n\s*(?:por\s*)?objetivos?|d\.?\s*p\.?\s*o\.?)\s*:?\s*([\d.,]+)/i
+  );
+
+  // Complemento Base MAD
+  data.comp_mad = parseVal(
+    /(?:complemento\s*(?:de\s*)?base\s*mad|complemento\s*madrid|comp(?:lemento)?\s*base\s*mad)\s*:?\s*([\d.,]+)/i
+  );
 
   // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
   const t1=data.hv_t1||0, t2=data.hv_t2||0, t3=data.hv_t3||0, t4=data.hv_t4||0;
