@@ -2815,8 +2815,12 @@ async function loadUsersFromFirebase() {
 let _pendingSync = false;   // hay cambios offline pendientes de subir
 let _online = navigator.onLine;
 
-window.addEventListener('online',  () => { _online = true;  flushOfflineQueue(); });
-window.addEventListener('offline', () => { _online = false; });
+window.addEventListener('error', function(e) {
+  console.error('PilotPay error:', e.message, e.filename, e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('PilotPay async error:', e.reason);
+});
 
 // Cola de cambios offline — persiste en localStorage hasta sincronizar
 function _getQueue() {
