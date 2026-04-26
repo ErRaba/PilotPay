@@ -2988,22 +2988,33 @@ async function fbUpdate(path, data) {
 // ── USERS — runtime cache (loaded from Firebase) ──
 let USERS = {};
 
-// Default users to migrate on first run
+// Solo ESH como usuario inicial — el resto se crean desde el panel Admin
 const DEFAULT_USERS = {
   'ESH': { pass: '7800', name: 'Eloy', apellidos: 'Infante Seco de Herrera', alias: '',
            funcion:'CMD', nivel:3, base:'1.2', irpf:34.15, ingreso:'2024-07-01', admin: true },
-  'FLZ': { pass: '7472', name: 'Francisco', apellidos: 'Lopez Zafra', alias: '',
-           funcion:'CMD', nivel:3, base:'1.2', irpf:33.75, ingreso:'2022-03-15', admin: false },
 };
 
-// Load all users from Firebase, migrate defaults if first run
+// Load all users from Firebase
 async function loadUsersFromFirebase() {
   let fbUsers = await fbGet('pilotpay/usuarios');
   if (!fbUsers) {
-    // First run — migrate default users
+    // Primera ejecución — crear solo ESH
     await fbSet('pilotpay/usuarios', DEFAULT_USERS);
-    fbUsers = DEFAULT_USERS;
+    fbUsers = { ...DEFAULT_USERS };
   }
+  // Limpiar usuarios legacy hardcodeados que no deberían estar en Firebase
+  // (FLZ y cualquier otro que no sea ESH y no haya sido creado por el admin)
+  const LEGACY_CODES = ['FLZ'];
+  let cleaned = false;
+  for (const code of LEGACY_CODES) {
+    if (fbUsers[code]) {
+      await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
+      await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
+      delete fbUsers[code];
+      cleaned = true;
+    }
+  }
+  if (cleaned) console.log('[PilotPay] Usuarios legacy eliminados de Firebase');
   USERS = fbUsers;
 }
 
@@ -3257,11 +3268,11 @@ function enterApp() {
   document.getElementById('app').style.display = 'flex';
   initApp();
 
-  // Primer acceso: sin tema guardado → llevar a Config para que el usuario configure su perfil
-  const isFirstAccess = !profileData.theme &&
-    !(function(){ try { return localStorage.getItem('pilotpay_theme_' + currentUser); } catch(e){ return false; } })();
-  if (isFirstAccess) {
-    setTimeout(() => showTab('config'), 350);
+  // Primer acceso → redirigir a Perfil y limpiar el flag
+  if (profileData.firstAccess) {
+    profileData.firstAccess = false;
+    saveUserData(currentUser);
+    setTimeout(() => showTab('perfil'), 350);
   }
 }
 
@@ -3526,29 +3537,48 @@ async function crearUsuarioLocal() {
     alert(`El código ${codigo} ya existe`); return;
   }
 
+  // Tema por defecto según función
+  const isTCP = funcion === 'SCC' || funcion === 'CC';
+  const defaultTheme = isTCP ? 'binter' : 'emb2';
+
   const newUser = {
     pass, name: nombre, apellidos, alias,
-    funcion, nivel, base, irpf: 30.00, ingreso: null, admin: false
+    funcion, nivel, base, irpf: 30.00, ingreso: null, admin: false,
+    theme: defaultTheme,
+    firstAccess: true,   // flag para redirigir a Perfil en primer login
+    pagaExtra: 'prorr',  // prorr por defecto
   };
 
-  // Save to Firebase
-  await fbSet(`pilotpay/usuarios/${codigo}`, newUser);
-  USERS[codigo] = newUser;
+  try {
+    // Guardar en Firebase
+    await fbSet(`pilotpay/usuarios/${codigo}`, newUser);
+    USERS[codigo] = newUser;
 
-  // Set default perms
-  // perms is now the global Firebase-backed object
-  perms[codigo] = { funciones: [funcion], bases: [getBaseCode(base)] };
-  savePermsToFirebase();
-  await fbSet(`pilotpay/permisos/${codigo}`, perms[codigo]);
+    // Permisos — bloqueados a su función y base
+    perms[codigo] = { funciones: [funcion], bases: [getBaseCode(base)] };
+    await fbSet(`pilotpay/permisos/${codigo}`, perms[codigo]);
+    savePermsToFirebase();
 
-  // Clear form
-  document.getElementById('adm-nombre').value = '';
-  document.getElementById('adm-codigo').value = '';
-  document.getElementById('adm-pass').value = '';
-  if (document.getElementById('adm-apellidos')) document.getElementById('adm-apellidos').value = '';
+    // Perfil inicial vacío
+    await fbSet(`pilotpay/perfiles/${codigo}`, {
+      theme: defaultTheme,
+      funcion, nivel, base, irpf: 30.00,
+      pagaExtra: 'prorr', firstAccess: true,
+    });
 
-  renderAdmin();
-  alert(`✓ Usuario ${codigo} creado en Firebase`);
+    // Limpiar formulario
+    document.getElementById('adm-nombre').value = '';
+    document.getElementById('adm-codigo').value = '';
+    document.getElementById('adm-pass').value = '';
+    if (document.getElementById('adm-apellidos')) document.getElementById('adm-apellidos').value = '';
+    if (document.getElementById('adm-alias-new')) document.getElementById('adm-alias-new').value = '';
+
+    renderAdmin();
+    alert(`✓ Usuario ${codigo} creado correctamente.\nTema asignado: ${defaultTheme}\nPrimer acceso: pestaña Perfil`);
+  } catch(e) {
+    alert(`Error al crear usuario: ${e.message}`);
+    console.error('crearUsuarioLocal error:', e);
+  }
 }
 
 function generarAltaUsuario() {
@@ -3862,12 +3892,11 @@ function setTheme(theme) {
 }
 
 function loadTheme() {
-  // Priority: Firebase profile → localStorage → default by role
-  const isTCPuser = ['SCC','CC'].includes(profileData.funcion || USERS[currentUser]?.funcion);
-  const defaultTheme = isTCPuser ? 'tcp' : 'emb2';
-  const saved = profileData.theme
-    || (function(){ try { return localStorage.getItem('pilotpay_theme_' + (currentUser||'_default')); } catch(e){ return null; } })()
-    || defaultTheme;
+  // Priority: Firebase profile → default by role
+  const fn = profileData.funcion || USERS[currentUser]?.funcion;
+  const isTCPuser = fn === 'SCC' || fn === 'CC';
+  const defaultTheme = isTCPuser ? 'binter' : 'emb2';
+  const saved = profileData.theme || defaultTheme;
   setTheme(saved);
 }
 
@@ -4978,7 +5007,6 @@ function renderNomina() {
     return;
   }
   const r = calcResult;
-  console.log('[PilotPay] renderNomina r:', r.hv1, r.hv1_imp, r.dpo, r.compMad, r.totalDevengado);
   if (r.isTCP) { renderNominaTCP(r); return; }
 
   const mes = r.mes || document.getElementById('mes-nomina').value;
