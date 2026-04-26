@@ -3268,23 +3268,7 @@ let segmedActivo = true;
 let seglicActivo = false;
 let ppActivo = false;
 let calcResult = null;
-let _calcResultInternal = null;
-Object.defineProperty(window, 'calcResult', {
-  get() { return _calcResultInternal; },
-  set(v) {
-    const stack = new Error().stack?.split('\n').slice(1,4).join(' | ') || '';
-    if (v === null || v === undefined) {
-      // Mostrar en nómina-output quién lo borró
-      const el = document.getElementById('nomina-output');
-      if (el) el.innerHTML = `<div class="card" style="border-color:var(--red);padding:16px">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:8px">🔴 calcResult fue puesto a null/undefined</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--text2);word-break:break-all;line-height:1.6">${stack}</div>
-      </div>`;
-    }
-    _calcResultInternal = v;
-  },
-  configurable: true
-});
+window._calcResultBackup = null;
 let nomDataCached = null;
 let profileData = {};
 let totalHVManual = false;
@@ -5086,13 +5070,7 @@ function renderNominaTCP(r) {
 }
 
 function renderNomina() {
-  // Si calcResult es null, intentar restaurar desde backup (cargado desde Vars)
-  if (!calcResult && window._calcResultBackup) {
-    calcResult = window._calcResultBackup;
-  }
-  // Si sigue sin haber, intentar recalcular desde el DOM
-  if (!calcResult) recalc();
-  const r = calcResult;
+  const r = calcResult || window._calcResultBackup || null;
   if (!r) {
     document.getElementById('nomina-output').innerHTML = `
       <div class="card" style="text-align:center;padding:32px">
@@ -5101,18 +5079,27 @@ function renderNomina() {
       </div>`;
     return;
   }
+  if (!calcResult) calcResult = r;
   if (r.isTCP) { renderNominaTCP(r); return; }
+
 
   const mes = r.mes || document.getElementById('mes-nomina').value;
   const funLabel = r.fn === 'CMD' ? 'COMANDANTE' : 'COPILOTO';
   const baseLabel = r.mad > 1 ? 'BASE MADRID' : 'BASE CANARIAS';
-  const fmt = v => v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmt = v => {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return Number(v).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
+  };
   const fmtU = (uds, precio, total) =>
-    `<span style="color:var(--text3);font-size:10px;min-width:90px;text-align:right">${uds} × ${fmt(precio)}</span><span class="nomina-amount">${fmt(total)} €</span>`;
+    `<span style="color:var(--text3);font-size:10px;min-width:90px;text-align:right">${fmt(uds)}×${fmt(precio)}</span><span class="nomina-amount">${fmt(total)} €</span>`;
 
   const rows = [];
-  const addR = (uds, precio, concept, total, type='') => rows.push({uds, precio, concept, total: total !== null ? total : uds*precio, type});
-  const addS = (concept, total, type='subtotal') => rows.push({concept, total, type, simple:true});
+  const addR = (uds, precio, concept, total, type='') => {
+    let t = total !== null && total !== undefined ? total : (uds && precio ? uds * precio : 0);
+    if (isNaN(t)) t = 0;
+    rows.push({uds, precio, concept, total: t, type});
+  };
+  const addS = (concept, total, type='subtotal') => rows.push({concept, total: total||0, type, simple:true});
   const addH = (label) => rows.push({type:'header', concept: label});
 
   addH('DEVENGOS');
@@ -7227,13 +7214,11 @@ function varsCargarEnCalculadora() {
   // Recalc único y definitivo — todos los campos DOM ya están rellenos
   recalc();
 
-  // Guardar copia de seguridad del calcResult por si algo lo sobreescribe
+  // Guardar copia de seguridad
   if (calcResult) window._calcResultBackup = { ...calcResult };
 
-  // Pre-renderizar nómina
+  // Pre-renderizar nómina con los datos correctos
   renderNomina();
-
-  showTab('calcular');
 
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
