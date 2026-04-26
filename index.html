@@ -5789,8 +5789,14 @@ function resetComparativa() {
 }
 
 function renderComparativa(nomData) {
-  if (!calcResult) recalc();
   const r = calcResult;
+  if (!r) {
+    document.getElementById('comp-output').innerHTML = `
+      <div class="card" style="text-align:center;padding:24px">
+        <div style="color:var(--text2);font-size:13px">Completa primero la calculadora para poder comparar.</div>
+      </div>`;
+    return;
+  }
   const fmt = v => v ? v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €' : '—';
   const fmtD = v => {
     if (v === null || v === undefined) return '';
@@ -5915,7 +5921,7 @@ function renderComparativa(nomData) {
   }
 
   // ── ACUMULADOS BLOCK ──
-  const ac = nomina.acumulados || {};
+  const ac = nomData.acumulados || {};
   const fmt2 = v => v != null ? v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' : '—';
   const acumRows = [
     { label: 'Acum. Base IRPF',        val: ac.base_irpf,      key: 'base_irpf',      sim: true  },
@@ -7196,6 +7202,35 @@ function varsCargarEnCalculadora() {
 
   // Recalc único y definitivo — todos los campos DOM ya están rellenos
   recalc();
+  // Panel diagnóstico visual — muestra en pantalla en lugar de consola
+  const _diag = {
+    hv1: document.getElementById('hv1')?.value,
+    hv2: document.getElementById('hv2')?.value,
+    hv3: document.getElementById('hv3')?.value,
+    hv4: document.getElementById('hv4')?.value,
+    dpo: document.getElementById('dpo')?.value,
+    compMad: document.getElementById('comp-mad')?.value,
+    hvTotal: calcResult?.hvTotal,
+    dpoR: calcResult?.dpo,
+    totalDev: calcResult?.totalDevengado,
+    isTCP: calcResult?.isTCP,
+    calcOK: !!calcResult
+  };
+  const _diagEl = document.getElementById('nomina-output');
+  if (_diagEl) {
+    _diagEl.innerHTML = `
+      <div class="card" style="border-color:var(--amber2)">
+        <div class="card-title" style="color:var(--amber2)">🔍 Diagnóstico — Borrar tras revisar</div>
+        <div style="font-family:var(--mono);font-size:11px;line-height:2;color:var(--text2)">
+          <div>hv1=${_diag.hv1} · hv2=${_diag.hv2} · hv3=${_diag.hv3} · hv4=${_diag.hv4}</div>
+          <div>dpo campo=${_diag.dpo} · compMad campo=${_diag.compMad}</div>
+          <div>calcResult OK: ${_diag.calcOK} · isTCP: ${_diag.isTCP}</div>
+          <div>hvTotal calculado: ${_diag.hvTotal}</div>
+          <div>dpo en calcResult: ${_diag.dpoR}</div>
+          <div style="color:var(--green);font-weight:700">totalDevengado: ${_diag.totalDev}</div>
+        </div>
+      </div>`;
+  }
 
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
