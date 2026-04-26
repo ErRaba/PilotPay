@@ -1325,6 +1325,14 @@ input[type=number] { -moz-appearance: textfield; }
   margin-top: -4px;
   letter-spacing: .06em;
 }
+.theme-active-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin: 4px auto 0;
+  display: none;
+}
+.theme-slide.active-theme .theme-active-dot { display: block; }
 
 
 /* ── UTILITIES ── */
@@ -1559,15 +1567,16 @@ input[type=number] { -moz-appearance: textfield; }
 
         <div class="card">
           <div class="card-title"><div class="section-dot green"></div>Dietas y Compensatorios</div>
-          <div class="dieta-section-label">🛫 Dieta de Vuelo</div>
+          <div class="dieta-section-label">🛫 Dieta de Vuelo (Manutención)</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Manutención NAC (períodos)</span>
               <input class="field-input" id="d-mant-nac" type="number" placeholder="0" onchange="recalc()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Art. 53 Convenio · ${(DIETAS.mant_nac.total).toFixed(2)} €/período (${(DIETAS.mant_nac.exenta).toFixed(2)} € exento)</div>
             </div>
             <div class="field"></div>
           </div>
-          <div class="dieta-section-label">🏨 Desplazamiento Nacional</div>
+          <div class="dieta-section-label">🏨 Compensatorio por Desplazamiento Nacional</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
@@ -1578,7 +1587,7 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="d-nac-cp" type="number" placeholder="0" onchange="recalc()">
             </div>
           </div>
-          <div class="dieta-section-label">🌍 Desplazamiento Internacional</div>
+          <div class="dieta-section-label">🌍 Compensatorio por Desplazamiento Internacional</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
@@ -1589,7 +1598,7 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="d-int-cp" type="number" placeholder="0" onchange="recalc()">
             </div>
           </div>
-          <div class="dieta-section-label">📍 Destacamento</div>
+          <div class="dieta-section-label">📍 Compensatorio por Destacamento</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Nacional (días)</span>
@@ -1613,6 +1622,14 @@ input[type=number] { -moz-appearance: textfield; }
               <span class="field-label">Comp. Base MAD (€)</span>
               <input class="field-input" id="comp-mad" type="number" placeholder="0" onchange="recalc()">
             </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Préstamo Type Rating (€/mes)</span>
+              <input class="field-input" id="type-rating" type="number" placeholder="0" step="0.01" onchange="recalc()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Se descuenta del líquido</div>
+            </div>
+            <div class="field"></div>
           </div>
           <div class="row">
             <div class="field">
@@ -1959,7 +1976,13 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
             </div>
             <div id="baja-nota" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.6;border-top:1px solid var(--border);padding-top:6px"></div>
+            <!-- Impacto en nómina -->
+            <div id="baja-impacto" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;margin-bottom:8px">IMPACTO ESTIMADO EN NÓMINA</div>
+              <div id="baja-impacto-rows" style="font-size:12px;font-family:var(--mono);line-height:2"></div>
+            </div>
           </div>
+          <button class="btn-secondary" style="margin-top:10px;border-color:var(--text3);color:var(--text3)" onclick="resetBaja()">↺ Limpiar baja</button>
         </div>
       </div>
 
@@ -2086,6 +2109,8 @@ input[type=number] { -moz-appearance: textfield; }
             <select class="field-input" id="sim-ccaa" onchange="simRecalc()">
               <option value="mad">Madrid</option>
               <option value="can">Canarias</option>
+              <option value="and">Andalucía</option>
+              <option value="val">C. Valenciana</option>
             </select>
           </div>
         </div>
@@ -2157,6 +2182,22 @@ input[type=number] { -moz-appearance: textfield; }
 
       <!-- RESULTADOS -->
       <div id="sim-resultado"></div>
+
+      <!-- Histórico anual -->
+      <div class="card" style="margin-top:4px">
+        <div class="card-title" style="cursor:pointer" onclick="toggleSimHistorico()">
+          <div class="section-dot"></div>Histórico acumulados por mes
+          <span id="sim-hist-arrow" style="margin-left:auto;font-size:12px;color:var(--text3)">▼</span>
+        </div>
+        <div id="sim-historico-wrap" style="display:none">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;line-height:1.6">
+            Edita los acumulados mes a mes. Se guardan en tu perfil.
+          </div>
+          <div id="sim-historico-table"></div>
+          <button class="btn-secondary" style="margin-top:10px;border-color:var(--green);color:var(--green)" onclick="guardarHistorico()">💾 Guardar histórico</button>
+          <div id="sim-hist-save-status" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px"></div>
+        </div>
+      </div>
 
     </div><!-- /page-simulador -->
 
@@ -2336,6 +2377,9 @@ input[type=number] { -moz-appearance: textfield; }
 
       <div class="card">
         <div class="card-title"><div class="section-dot"></div>Tema de color</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-family:var(--mono);font-size:11px;color:var(--text3)">
+          Tema activo: <span id="cfg-tema-label" style="color:var(--blue2);font-weight:600">—</span>
+        </div>
         <div class="theme-scroll-wrap">
           <div class="theme-scroll" id="theme-scroll-container">
 
@@ -2350,6 +2394,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#0f1526">
                 <div class="theme-slide-name" style="color:#e2e8f0">🌙 Oscuro</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#64748b">Por defecto</div>
               </div>
             </div>
@@ -2365,6 +2410,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#ffffff;border-top:1px solid #e2e8f0">
                 <div class="theme-slide-name" style="color:#0f172a">☀️ Claro</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#64748b">Fondo blanco</div>
               </div>
             </div>
@@ -2380,6 +2426,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#071209">
                 <div class="theme-slide-name" style="color:#dcfce7">🛩️ Cockpit</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#4ade80">Verde aviación</div>
               </div>
             </div>
@@ -2395,6 +2442,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#f0f7f2;border-top:1px solid #a8d5b5">
                 <div class="theme-slide-name" style="color:#0a2e14">✈️ Binter</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#4a8c5c">Verde corporativo</div>
               </div>
             </div>
@@ -2414,6 +2462,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#130000">
                 <div class="theme-slide-name" style="color:#f5e6e6">⚔️ Imperio</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#8b5c5c">Dark side</div>
               </div>
             </div>
@@ -2434,6 +2483,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#050505">
                 <div class="theme-slide-name" style="color:#00d4ff">🖥️ ECAM</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#00e000">Embraer E195-E2</div>
               </div>
             </div>
@@ -2454,6 +2504,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#0B1820;border-top:1px solid #344B56">
                 <div class="theme-slide-name" style="color:#35E6E6;font-family:'Space Mono',monospace;font-size:11px">✈ EMB2·FMS</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#9BA8A8">Cabina semántica</div>
               </div>
             </div>
@@ -2496,6 +2547,7 @@ input[type=number] { -moz-appearance: textfield; }
               </div>
               <div class="theme-slide-info" style="background:#f5f5f5;border-top:1px solid #e0e0e0">
                 <div class="theme-slide-name" style="color:#201f1e">📊 Office</div>
+                <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#605e5c">Microsoft 365</div>
               </div>
             </div>
@@ -3391,15 +3443,15 @@ function renderConfig() {
   const card = document.getElementById('theme-' + currentTheme);
   if (card) {
     card.classList.add('active-theme');
-    // Scroll the active theme into view within the scroll container
     setTimeout(() => {
       const container = document.getElementById('theme-scroll-container');
       if (container && card) {
-        const cardLeft = card.offsetLeft;
-        container.scrollTo({ left: cardLeft - 16, behavior: 'smooth' });
+        container.scrollTo({ left: card.offsetLeft - 16, behavior: 'smooth' });
       }
     }, 80);
   }
+  const temaLabel = document.getElementById('cfg-tema-label');
+  if (temaLabel && THEMES[currentTheme]) temaLabel.textContent = THEMES[currentTheme].label;
 }
 
 function showTab(name) {
@@ -3743,6 +3795,9 @@ function resetCalculadora() {
   document.getElementById('dest-int').value = '';
   document.getElementById('dpo').value = '';
   document.getElementById('comp-mad').value = '';
+  const trEl = document.getElementById('type-rating');
+  if (trEl) trEl.value = '';
+  resetBaja();
   // Reset toggles
   toggleSegmed(true);
   toggleSegLic(false);
@@ -4272,8 +4327,9 @@ function recalc() {
   const irpf_especie = Math.round(SEG_VIDA_ESPECIE * irpf_pct / 100 * 100) / 100;
 
   // NETO
+  const typeRating = parseFloat(document.getElementById('type-rating')?.value) || 0;
   const devEfectivo = Math.round((dev_salarial + totalDietas) * 100) / 100;
-  const liquidoReal = Math.round((devEfectivo - ss_total - retencionIRPF - irpf_especie - segLic_ded) * 100) / 100;
+  const liquidoReal = Math.round((devEfectivo - ss_total - retencionIRPF - irpf_especie - segLic_ded - typeRating) * 100) / 100;
 
   calcResult = {
     sb, plus_tr, extra1, extra2, extra1_dev, extra2_dev, extras_devengados, extras_label,
@@ -4288,7 +4344,7 @@ function recalc() {
     segMed_dev, segMed_ded, segLic_ded,
     dev_salarial, totalDevengado, baseIRPF,
     baseSS, ss_cc, ss_mei, ss_dfp, ss_sol_t1, ss_sol_t2, ss_sol_t3, ss_solidaridad, ss_total,
-    retencionIRPF, irpf_especie, liquidoReal,
+    retencionIRPF, irpf_especie, liquidoReal, typeRating,
     fn, nivel: currentNivel, mad: madF, irpf_pct,
     mes: document.getElementById('mes-nomina').value
   };
@@ -4656,6 +4712,7 @@ function recalcBaja() {
   document.getElementById('baja-total').textContent     = fmt(prestacion) + ' €';
   document.getElementById('baja-dias-trab').textContent = `${diasTrabajados} de ${diasMes} días`;
   document.getElementById('baja-resultado').style.display = 'block';
+  actualizarImpactoBaja(prestacion, totalDiasBaja, diasMes, brDiaria);
 }
 
 // ── CÁLCULO TCP (SCC / CC) — usando panel-tcp ──
@@ -5017,6 +5074,16 @@ function parseBinterNomina(text) {
   if (!base_ss)         base_ss         = findNum(/BASE\s+COTIZACI[OÓ]N\s+([\d.,]+)/i);
   if (!liquido)         liquido         = findNum(/L[IÍ]QUIDO\s+TOTAL\s+A\s+PERCIBIR\s+([\d.,]+)/i);
 
+  // ── ACUMULADOS ──
+  // Formato típico: "Acum. Base IRPF  12.345,67"
+  const acum_base_irpf   = findNum(/Acum\.?\s+Base\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
+  const acum_irpf        = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
+  const acum_cotiz_ss    = findNum(/Acum\.?\s+Cotiz(?:aci[oó]n)?\.?\s+S\.?\s*S\.?\s+([\d.,]+)/i);
+  const acum_base_esp_rep   = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+  const acum_irpf_esp_rep   = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+  const acum_base_esp_norep = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+  const acum_irpf_esp_norep = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+
   return {
     trabajador: { nombre, nif, nss, fecha_ingreso, funcion, nivel, base },
     periodo: { mes, anio },
@@ -5031,7 +5098,16 @@ function parseBinterNomina(text) {
       ss_solidaridad: (ss_sol_t1||0)+(ss_sol_t2||0)+(ss_sol_t3||0),
       irpf_especie, irpf_retencion, seguro_medico
     },
-    totales: { total_devengado, base_irpf, base_ss, liquido }
+    totales: { total_devengado, base_irpf, base_ss, liquido },
+    acumulados: {
+      base_irpf:       acum_base_irpf,
+      irpf:            acum_irpf,
+      cotiz_ss:        acum_cotiz_ss,
+      base_esp_rep:    acum_base_esp_rep,
+      irpf_esp_rep:    acum_irpf_esp_rep,
+      base_esp_norep:  acum_base_esp_norep,
+      irpf_esp_norep:  acum_irpf_esp_norep,
+    }
   };
 }
 
@@ -5239,6 +5315,40 @@ function renderComparativa(nomData) {
     `;
   }
 
+  // ── ACUMULADOS BLOCK ──
+  const ac = nomina.acumulados || {};
+  const fmt2 = v => v != null ? v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €' : '—';
+  const acumRows = [
+    { label: 'Acum. Base IRPF',        val: ac.base_irpf,      key: 'base_irpf',      sim: true  },
+    { label: 'Acum. IRPF retenido',    val: ac.irpf,           key: 'irpf',           sim: true  },
+    { label: 'Acum. Cotiz. S.S.',       val: ac.cotiz_ss,       key: 'cotiz_ss',       sim: false },
+    { label: 'Acum. Base Esp. Rep.',    val: ac.base_esp_rep,   key: 'base_esp_rep',   sim: false },
+    { label: 'Acum. IRPF Esp. Rep.',    val: ac.irpf_esp_rep,   key: 'irpf_esp_rep',   sim: false },
+    { label: 'Acum. Base Esp. No Rep.', val: ac.base_esp_norep, key: 'base_esp_norep', sim: false },
+    { label: 'Acum. IRPF Esp. No Rep.', val: ac.irpf_esp_norep, key: 'irpf_esp_norep', sim: false },
+  ];
+  const hasAcum = acumRows.some(r => r.val != null);
+  const acumRowsHTML = acumRows.map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:12px;color:${r.sim ? 'var(--text)' : 'var(--text3)'};font-family:var(--mono)">${r.label}</span>
+      <span style="font-size:12px;font-family:var(--mono);color:${r.val != null ? (r.sim ? 'var(--blue2)' : 'var(--text2)') : 'var(--text3)'}">${fmt2(r.val)}</span>
+    </div>`).join('');
+  const canSendToSim = ac.base_irpf != null || ac.irpf != null;
+  const acumHTML = `
+    <div class="card" style="margin-top:12px">
+      <div class="card-title"><div class="section-dot blue"></div>Acumulados anuales en nómina</div>
+      ${hasAcum ? acumRowsHTML : '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);padding:8px 0">No se detectaron acumulados en este PDF.</div>'}
+      ${canSendToSim ? `
+        <button class="btn-secondary" style="margin-top:12px;border-color:var(--green);color:var(--green)"
+          onclick="enviarAcumuladosAlSimulador(${ac.base_irpf||0}, ${ac.irpf||0})">
+          📊 Enviar al Simulador IRPF
+        </button>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;line-height:1.5">
+          Actualiza Bruto acumulado e IRPF retenido en el Simulador con los datos de esta nómina.
+        </div>` : ''}
+    </div>
+  `;
+
   document.getElementById('comp-output').innerHTML = `
     ${alertHTML}
     ${trabajadorHTML}
@@ -5250,11 +5360,28 @@ function renderComparativa(nomData) {
       </div>
       ${diffsHTML}
     </div>
+    ${acumHTML}
     ${reclamacionHTML}
   `;
 
   // Refresh perfil tab
   renderPerfil();
+}
+
+function enviarAcumuladosAlSimulador(brutoAcum, irpfAcum) {
+  const brutoEl = document.getElementById('sim-bruto-acum');
+  const irpfEl  = document.getElementById('sim-irpf-acum');
+  if (brutoEl) brutoEl.value = brutoAcum.toFixed(2);
+  if (irpfEl)  irpfEl.value  = irpfAcum.toFixed(2);
+  // Save to profile
+  if (profileData) {
+    profileData.sim_brutoAcum = brutoAcum.toFixed(2);
+    profileData.sim_irpfAcum  = irpfAcum.toFixed(2);
+    if (currentUser) saveUserData(currentUser);
+  }
+  // Navigate to simulador and recalc
+  showTab('simulador');
+  setTimeout(() => simRecalc(), 200);
 }
 
 function generarInformeReclamacion(errores) {
@@ -5597,7 +5724,35 @@ const TRAMOS_CAN = [
   { hasta: Infinity, tipo: 0.26  },
 ];
 
-// MÍNIMOS PERSONALES Y FAMILIARES 2026
+// TRAMOS IRPF 2026 — Autonómico Andalucía (5 tramos, 9,5%–22,5%)
+// Fuente: CUADRO_TIPOS_RETENCION_IRPF_2026 + taxdown.es
+const TRAMOS_AND = [
+  { hasta: 12450,    tipo: 0.095 },
+  { hasta: 20200,    tipo: 0.12  },
+  { hasta: 35200,    tipo: 0.15  },
+  { hasta: 50000,    tipo: 0.185 },
+  { hasta: 60000,    tipo: 0.185 },
+  { hasta: Infinity, tipo: 0.225 },
+];
+
+// TRAMOS IRPF 2026 — Autonómico Comunitat Valenciana (11 tramos, 9%–29,5%)
+// Fuente: Ley 13/1997 modificada por Ley 9/2022 (vigente 2026)
+// Nota: C. Valenciana tiene uno de los tipos más altos en rentas altas de España
+const TRAMOS_VAL = [
+  { hasta: 12000,    tipo: 0.09  },
+  { hasta: 22000,    tipo: 0.12  },
+  { hasta: 32000,    tipo: 0.14  },
+  { hasta: 42000,    tipo: 0.155 },
+  { hasta: 52000,    tipo: 0.165 },
+  { hasta: 62000,    tipo: 0.175 },
+  { hasta: 72000,    tipo: 0.185 },
+  { hasta: 82000,    tipo: 0.195 },
+  { hasta: 100000,   tipo: 0.21  },
+  { hasta: 120000,   tipo: 0.225 },
+  { hasta: Infinity, tipo: 0.295 },
+];
+
+
 const MINIMOS = {
   personal: 5550,
   // Por descendientes (hijos a cargo)
@@ -5668,6 +5823,7 @@ function loadSimulatorData() {
   if (profileData.sim_hijos)      document.getElementById('sim-hijos').value      = profileData.sim_hijos;
   if (profileData.sim_discap)     document.getElementById('sim-discap').value     = profileData.sim_discap;
   if (profileData.sim_residencia) document.getElementById('sim-residencia').value = profileData.sim_residencia;
+  cargarHistorico();
 }
 
 function simSyncFromPerfil() {
@@ -5684,7 +5840,9 @@ function simSyncFromPerfil() {
     const idx = mes.indexOf(profileData.mesAcum) + 1;
     if (idx > 0) document.getElementById('sim-mes').value = idx;
   }
-  document.getElementById('sim-ccaa').value = (u.base > 1) ? 'mad' : 'can';
+  if (!profileData.sim_ccaa) {
+    document.getElementById('sim-ccaa').value = (parseFloat(u.base||1) > 1) ? 'mad' : 'can';
+  }
   document.getElementById('sim-irpf-actual').value = profileData.irpf || u.irpf || 34.15;
   simRecalc();
 }
@@ -5742,7 +5900,7 @@ function simRecalc() {
   const cuotaEstNeta  = Math.max(0, cuotaEstBase - cuotaEstMin);
 
   // Cuota autonómica
-  const tramosAut = ccaa === 'mad' ? TRAMOS_MAD : TRAMOS_CAN;
+  const tramosAut = { mad: TRAMOS_MAD, can: TRAMOS_CAN, and: TRAMOS_AND, val: TRAMOS_VAL }[ccaa] || TRAMOS_CAN;
   const cuotaAutBase  = calcCuotaTramos(baseLiquidable, tramosAut);
   const cuotaAutMin   = calcCuotaTramos(minTotal, tramosAut);
   const cuotaAutNeta  = Math.max(0, cuotaAutBase - cuotaAutMin);
@@ -5771,7 +5929,7 @@ function simRecalc() {
   // Si retención = cuota total → saldo = 0
 
   const fmt = v => v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
-  const ccaaLabel = ccaa === 'mad' ? 'Madrid' : 'Canarias';
+  const ccaaLabel = { mad: 'Madrid', can: 'Canarias', and: 'Andalucía', val: 'C. Valenciana' }[ccaa] || ccaa;
 
   // Semáforo
   const diffAcum = irpfAcum - cuotaProporAcum;
@@ -5796,15 +5954,15 @@ function simRecalc() {
     <div class="card">
       <div class="card-title"><div class="section-dot blue"></div>Proyección anual — ${ccaaLabel} 2026</div>
       <div class="nomina-wrap">
-        <div class="nomina-row"><span class="nomina-concept">Bruto anual estimado</span><span class="nomina-amount">${fmt(brutoAnualEst)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">SS estimada anual</span><span class="nomina-amount">-${fmt(ssAnual)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Gastos deducibles</span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo</span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar</span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
-        <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable</span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Cuota estatal</span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Cuota autonómica (${ccaaLabel})</span><span class="nomina-amount">${fmt(cuotaAutNeta)} €</span></div>
-        <div class="nomina-row subtotal"><span class="nomina-concept">Cuota IRPF total estimada</span><span class="nomina-amount">${fmt(cuotaTotal)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Bruto anual estimado <span onclick="mostrarInfoTooltip('Bruto anual estimado')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(brutoAnualEst)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">SS estimada anual <span onclick="mostrarInfoTooltip('SS estimada anual')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(ssAnual)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Gastos deducibles <span onclick="mostrarInfoTooltip('Gastos deducibles')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar <span onclick="mostrarInfoTooltip('Mínimo personal + familiar')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
+        <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable <span onclick="mostrarInfoTooltip('Base liquidable')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Cuota estatal <span onclick="mostrarInfoTooltip('Cuota estatal')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Cuota autonómica (${ccaaLabel}) <span onclick="mostrarInfoTooltip('Cuota autonómica')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaAutNeta)} €</span></div>
+        <div class="nomina-row subtotal"><span class="nomina-concept">Cuota IRPF total estimada <span onclick="mostrarInfoTooltip('Cuota IRPF total estimada')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaTotal)} €</span></div>
       </div>
     </div>
 
@@ -5848,6 +6006,138 @@ function simRecalc() {
       </div>
     </div>
   `;
+}
+
+// ── RESET BAJA ──
+function resetBaja() {
+  bajaActiva = false;
+  document.getElementById('tog-baja-si').classList.remove('active');
+  document.getElementById('tog-baja-no').classList.add('active');
+  document.getElementById('baja-fields').style.display = 'none';
+  document.getElementById('baja-tipo').disabled = true;
+  document.getElementById('baja-tipo').value = 'CC';
+  document.getElementById('baja-dia-inicio').value = '';
+  document.getElementById('baja-dia-fin').value = '';
+  document.getElementById('baja-base-reg').value = '';
+  document.getElementById('baja-resultado').style.display = 'none';
+  document.getElementById('baja-desglose').innerHTML = '';
+  document.getElementById('baja-nota').innerHTML = '';
+  document.getElementById('baja-total').textContent = '—';
+  document.getElementById('baja-dias-trab').textContent = '—';
+  const impactoEl = document.getElementById('baja-impacto');
+  if (impactoEl) impactoEl.style.display = 'none';
+}
+
+// ── IMPACTO BAJA EN NÓMINA ──
+function actualizarImpactoBaja(prestacion, diasBaja, diasMes, brDiaria) {
+  const impactoEl = document.getElementById('baja-impacto');
+  const rowsEl    = document.getElementById('baja-impacto-rows');
+  if (!impactoEl || !rowsEl) return;
+
+  const fn = document.getElementById('funcion').value;
+  const t  = TABLAS[fn];
+  if (!t) return;
+  const n = Math.min(currentNivel - 1, t.salbase.length - 1);
+  const sb = t.salbase[n];
+  const fmt = v => v.toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+  // Salario base proporcional — empresa descuenta días no trabajados del fijo
+  // (días trabajados / días mes) × SB
+  const diasTrab = diasMes - diasBaja;
+  const sbProp   = Math.round(sb * diasTrab / diasMes * 100) / 100;
+  const sbDesc   = Math.round((sb - sbProp) * 100) / 100;
+
+  rowsEl.innerHTML = [
+    `<span style="color:var(--text3)">Días trabajados:</span> <span style="color:var(--blue2)">${diasTrab} de ${diasMes}</span>`,
+    `<span style="color:var(--text3)">Sal. Base proporcional:</span> <span style="color:var(--text)">${fmt(sbProp)} €</span> <span style="color:var(--red)">(−${fmt(sbDesc)} €)</span>`,
+    `<span style="color:var(--text3)">Prestación INSS estimada:</span> <span style="color:var(--amber2)">${fmt(prestacion)} €</span>`,
+    `<span style="color:var(--text3)">Diferencia vs mes completo:</span> <span style="color:var(--red)">−${fmt(sbDesc - prestacion > 0 ? sbDesc - prestacion : 0)} €</span>`,
+    `<span style="color:var(--text3);font-size:10px">⚠️ El variable (HV, dietas) no se descuenta si ya has introducido las horas reales voladas.</span>`,
+  ].join('<br>');
+
+  impactoEl.style.display = 'block';
+}
+
+// ── SIMULADOR HISTÓRICO ──
+let simHistoricoData = {};
+
+function toggleSimHistorico() {
+  const wrap = document.getElementById('sim-historico-wrap');
+  const arrow = document.getElementById('sim-hist-arrow');
+  const open = wrap.style.display === 'none';
+  wrap.style.display = open ? 'block' : 'none';
+  arrow.textContent = open ? '▲' : '▼';
+  if (open) renderSimHistorico();
+}
+
+function renderSimHistorico() {
+  const tableEl = document.getElementById('sim-historico-table');
+  if (!tableEl) return;
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const data = simHistoricoData;
+  tableEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:4px;margin-bottom:4px;font-family:var(--mono);font-size:10px;color:var(--text3);padding:0 2px">
+      <span>Mes</span><span>Bruto acum. (€)</span><span>IRPF acum. (€)</span>
+    </div>` +
+    MESES.map((m, i) => {
+      const key = i + 1;
+      const d = data[key] || {};
+      return `<div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:4px;margin-bottom:4px;align-items:center">
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text3)">${m.slice(0,3)}</span>
+        <input type="number" class="field-input" style="padding:6px 8px;font-size:11px"
+          id="simh-bruto-${key}" value="${d.bruto||''}" placeholder="0"
+          step="0.01" oninput="simHistoricoChanged()">
+        <input type="number" class="field-input" style="padding:6px 8px;font-size:11px"
+          id="simh-irpf-${key}" value="${d.irpf||''}" placeholder="0"
+          step="0.01" oninput="simHistoricoChanged()">
+      </div>`;
+    }).join('');
+}
+
+function simHistoricoChanged() {
+  const statusEl = document.getElementById('sim-hist-save-status');
+  if (statusEl) { statusEl.textContent = '● Cambios sin guardar'; statusEl.style.color = 'var(--amber2)'; }
+}
+
+function guardarHistorico() {
+  const MESES_N = 12;
+  for (let i = 1; i <= MESES_N; i++) {
+    const bruto = parseFloat(document.getElementById(`simh-bruto-${i}`)?.value) || 0;
+    const irpf  = parseFloat(document.getElementById(`simh-irpf-${i}`)?.value)  || 0;
+    if (bruto || irpf) simHistoricoData[i] = { bruto, irpf };
+    else delete simHistoricoData[i];
+  }
+  if (profileData) {
+    profileData.simHistorico = simHistoricoData;
+    if (currentUser) saveUserData(currentUser);
+  }
+  const statusEl = document.getElementById('sim-hist-save-status');
+  if (statusEl) { statusEl.textContent = '✓ Guardado'; statusEl.style.color = 'var(--green)'; }
+  setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 2000);
+}
+
+function cargarHistorico() {
+  simHistoricoData = profileData?.simHistorico || {};
+}
+
+// ── INFO TOOLTIPS PROYECCIÓN ──
+const SIM_TOOLTIPS = {
+  'Bruto anual estimado':       'Suma del bruto acumulado hasta este mes más la estimación de los meses restantes.',
+  'SS estimada anual':          'Cotización a la Seguridad Social: 4,70% CC + 0,15% MEI + 1,65% Desempleo+FP, sobre base máxima 2026.',
+  'Gastos deducibles':          'Reducción fija de 2.000 € aplicable a todos los trabajadores por cuenta ajena (art. 19 LIRPF).',
+  'Reducción rto. trabajo':     'Reducción adicional para rentas bajas según art. 20 LIRPF. Decrece a medida que sube el sueldo.',
+  'Mínimo personal + familiar': 'Importe exento de tributación por circunstancias personales y familiares (hijos, discapacidad).',
+  'Base liquidable':            'Base sobre la que se aplican los tramos de IRPF, tras restar reducciones y gastos.',
+  'Cuota estatal':              'Parte del IRPF que corresponde al Estado (tramos estatales 2026, deducido el mínimo).',
+  'Cuota autonómica':           'Parte del IRPF que corresponde a tu comunidad autónoma (tramos autonómicos vigentes 2026).',
+  'Cuota IRPF total estimada':  'Suma de cuota estatal + autonómica. Es lo que deberías pagar en total en la declaración anual.',
+};
+
+function mostrarInfoTooltip(concepto) {
+  const texto = SIM_TOOLTIPS[concepto];
+  if (!texto) return;
+  alert(`ℹ️ ${concepto}\n\n${texto}`);
 }
 
 // Initial calc
