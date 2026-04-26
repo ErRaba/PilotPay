@@ -1402,6 +1402,7 @@ input[type=number] { -moz-appearance: textfield; }
   <header>
     <div class="logo">PILOT<span>PAY</span></div>
     <div id="header-badge" class="badge badge-blue" style="font-size:10px"></div>
+    <div id="online-indicator" style="font-size:9px;font-family:var(--mono);color:var(--green);margin-left:auto;padding-right:4px;transition:color .3s;white-space:nowrap"></div>
     <div class="user-pill" id="user-pill" onclick="doLogout()">ESH ↩</div>
   </header>
 
@@ -2806,43 +2807,186 @@ async function loadUsersFromFirebase() {
   USERS = fbUsers;
 }
 
-// ── PERSISTENCE — hybrid: Firebase for profile, localStorage for private calc data ──
-async function saveUserProfile(user, data) {
-  // Save non-sensitive profile to Firebase
-  const profileFields = {
-    name: data.name, apellidos: data.apellidos, alias: data.alias,
-    funcion: data.funcion, nivel: data.nivel, base: data.base,
-    irpf: data.irpf, nif: data.nif, nss: data.nss,
-    ingreso: data.ingreso, theme: data.theme,
-    estadoCivil: data.estadoCivil, hijos: data.hijos,
-    discapacidad: data.discapacidad, residencia: data.residencia,
-    brutoAcum: data.brutoAcum, irpfAcum: data.irpfAcum,
-    mesAcum: data.mesAcum, acumFecha: data.acumFecha, acumTipo: data.acumTipo,
-  };
-  await fbUpdate(`pilotpay/usuarios/${user}`, profileFields);
-  // Also update runtime cache
-  USERS[user] = { ...USERS[user], ...profileFields };
-  // Save simulator/calc prefs locally (private)
-  saveUserData(user);
+// ══════════════════════════════════════════════════════
+// CAPA DE PERSISTENCIA — Firebase primero, localStorage como caché offline
+// Todo cambio va a Firebase. Si no hay conexión, se encola y sincroniza al reconectar.
+// ══════════════════════════════════════════════════════
+
+let _pendingSync = false;   // hay cambios offline pendientes de subir
+let _online = navigator.onLine;
+
+window.addEventListener('online',  () => { _online = true;  flushOfflineQueue(); });
+window.addEventListener('offline', () => { _online = false; });
+
+// Cola de cambios offline — persiste en localStorage hasta sincronizar
+function _getQueue() {
+  try { return JSON.parse(localStorage.getItem('pilotpay_offline_queue') || '{}'); } catch(e) { return {}; }
+}
+function _setQueue(q) {
+  try { localStorage.setItem('pilotpay_offline_queue', JSON.stringify(q)); } catch(e) {}
+}
+function _enqueue(path, data) {
+  const q = _getQueue();
+  // Deep merge: si ya hay datos pendientes para ese path, fusionar
+  q[path] = { ...(q[path] || {}), ...data, _ts: Date.now() };
+  _setQueue(q);
 }
 
-function saveUserData(user) {
+async function flushOfflineQueue() {
+  const q = _getQueue();
+  if (!Object.keys(q).length) return;
+  const paths = Object.keys(q);
+  for (const path of paths) {
+    const data = { ...q[path] };
+    delete data._ts;
+    try {
+      await fbUpdate(path, data);
+      // Éxito — eliminar de la cola
+      const current = _getQueue();
+      delete current[path];
+      _setQueue(current);
+    } catch(e) {
+      // Dejar en cola para el próximo intento
+    }
+  }
+}
+
+// ── GUARDAR: Firebase + localStorage como respaldo ──
+async function saveUserData(user) {
+  if (!user || !profileData) return;
+
+  // Snapshot completo del perfil
+  const data = { ...profileData };
+
+  // 1) Siempre guardar en localStorage (caché inmediata, funciona offline)
+  try { localStorage.setItem(`pilotpay_v2_${user}`, JSON.stringify(data)); } catch(e) {}
+
+  const path = `pilotpay/perfiles/${user}`;
+
+  if (_online) {
+    try {
+      await fbUpdate(path, data);
+      // También actualizar nodo de usuario para campos que usa el login
+      const userFields = {
+        name: data.name, apellidos: data.apellidos, alias: data.alias,
+        funcion: data.funcion, nivel: data.nivel, base: data.base,
+        irpf: data.irpf, theme: data.theme,
+      };
+      await fbUpdate(`pilotpay/usuarios/${user}`, userFields);
+      USERS[user] = { ...USERS[user], ...userFields };
+    } catch(e) {
+      // Sin conexión real — encolar
+      _enqueue(path, data);
+    }
+  } else {
+    _enqueue(path, data);
+  }
+}
+
+// ── CARGAR: Firebase primero, localStorage como fallback offline ──
+async function loadUserData(user) {
+  if (!user) return;
+
+  // 1) Intentar cargar desde Firebase
+  if (_online) {
+    try {
+      const fbData = await fbGet(`pilotpay/perfiles/${user}`);
+      if (fbData && typeof fbData === 'object') {
+        profileData = { ...USERS[user], ...fbData };
+        // Actualizar caché local con lo que viene de Firebase
+        try { localStorage.setItem(`pilotpay_v2_${user}`, JSON.stringify(profileData)); } catch(e) {}
+        // Si había cola offline, fusionar y subir
+        const q = _getQueue();
+        if (q[`pilotpay/perfiles/${user}`]) {
+          profileData = { ...profileData, ...q[`pilotpay/perfiles/${user}`] };
+          delete q[`pilotpay/perfiles/${user}`];
+          _setQueue(q);
+          await saveUserData(user);  // subir el merge
+        }
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // 2) Fallback: localStorage (modo offline)
   try {
-    localStorage.setItem(`pilotpay_${user}`, JSON.stringify(profileData));
+    const local = localStorage.getItem(`pilotpay_v2_${user}`);
+    if (local) {
+      const parsed = JSON.parse(local);
+      profileData = { ...USERS[user], ...parsed };
+      return;
+    }
+  } catch(e) {}
+
+  // 3) Migrar datos del formato v1 si existen
+  try {
+    const old = localStorage.getItem(`pilotpay_${user}`);
+    if (old) {
+      const parsed = JSON.parse(old);
+      profileData = { ...USERS[user], ...parsed };
+      // Subir la migración a Firebase
+      await saveUserData(user);
+      localStorage.removeItem(`pilotpay_${user}`);
+    }
   } catch(e) {}
 }
-function loadUserData(user) {
+
+// ── PERMISOS ADMIN — ahora en Firebase ──
+async function loadPermsFromFirebase() {
+  if (_online) {
+    try {
+      const fbPerms = await fbGet('pilotpay/permisos');
+      if (fbPerms) {
+        perms = fbPerms;
+        try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
+        return;
+      }
+    } catch(e) {}
+  }
+  // Fallback local
   try {
-    const d = localStorage.getItem(`pilotpay_${user}`);
-    if (d) profileData = { ...profileData, ...JSON.parse(d) };
+    const local = localStorage.getItem('pilotpay_perms_cache')
+               || localStorage.getItem('pilotpay_admin_perms');
+    if (local) perms = JSON.parse(local);
   } catch(e) {}
+
+async function savePermsToFirebase() {
+  try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
+  if (_online) {
+    try { await fbSet('pilotpay/permisos', perms); return; } catch(e) {}
+  }
+  _enqueue('pilotpay/permisos', perms);
 }
+
+// API key — sigue siendo local (es un secreto del dispositivo)
 function saveApiKey(key) {
   try { if (key) localStorage.setItem('pilotpay_apikey', key); } catch(e) {}
 }
 function loadApiKey() {
   try { return localStorage.getItem('pilotpay_apikey') || ''; } catch(e) { return ''; }
 }
+
+// Indicador de estado de conexión — visible en la UI
+function updateOnlineIndicator() {
+  const el = document.getElementById('online-indicator');
+  if (!el) return;
+  const q = _getQueue();
+  const pending = Object.keys(q).length;
+  if (!_online) {
+    el.textContent = '🔴 Sin conexión';
+    el.style.color = 'var(--red)';
+  } else if (pending > 0) {
+    el.textContent = '🟡 Sincronizando...';
+    el.style.color = 'var(--amber2)';
+  } else {
+    el.textContent = '🟢 Sincronizado';
+    el.style.color = 'var(--green)';
+    setTimeout(() => { if (el) el.textContent = ''; }, 3000);
+  }
+}
+
+window.addEventListener('online',  updateOnlineIndicator);
+window.addEventListener('offline', updateOnlineIndicator);
 
 // ── LOGIN ──
 async function doLogin() {
@@ -2864,9 +3008,12 @@ async function doLogin() {
   if (USERS[u] && USERS[u].pass === p) {
     currentUser = u;
     profileData = { ...USERS[u] };
-    loadUserData(u);
-    // Merge Firebase profile into profileData
-    profileData = { ...profileData, ...USERS[u] };
+    btn.textContent = 'Cargando perfil...';
+    btn.disabled = true;
+    await loadUserData(u);
+    await loadPermsFromFirebase();
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
     showWelcome();
   } else {
     errEl.style.display = 'block';
@@ -3010,32 +3157,22 @@ const BASES_OPTIONS = [
   { val: 'MAD', label: 'Madrid',       factor: '1.2' },
 ];
 
-// Load/save admin permissions from localStorage
-function loadAdminPerms() {
-  try {
-    const d = localStorage.getItem('pilotpay_admin_perms');
-    return d ? JSON.parse(d) : {};
-  } catch(e) { return {}; }
-}
-
-function saveAdminPerms(perms) {
-  try { localStorage.setItem('pilotpay_admin_perms', JSON.stringify(perms)); } catch(e) {}
-}
+// ── PERMISOS (ahora en Firebase, con caché local) ──
+let perms = {};
 
 function getUserPerms(userCode) {
-  const perms = loadAdminPerms();
   const u = USERS[userCode];
   if (!u) return { funciones: [], bases: [] };
-  // Default: only their own funcion and base
   return perms[userCode] || {
     funciones: [u.funcion],
     bases: [u.base]
   };
 }
+}
 
 function renderAdmin() {
   const el = document.getElementById('admin-users-list');
-  const perms = loadAdminPerms();
+  // perms is now the global Firebase-backed object
 
   // Include ALL users including ESH
   const allUsers = Object.entries(USERS);
@@ -3124,8 +3261,8 @@ function renderAdmin() {
   }).join('');
 }
 
-function togglePerm(userCode, type, val, checked) {
-  const perms = loadAdminPerms();
+async function togglePerm(userCode, type, val, checked) {
+  // perms is now the global Firebase-backed object
   const u = USERS[userCode];
   if (!perms[userCode]) {
     perms[userCode] = {
@@ -3149,7 +3286,7 @@ function togglePerm(userCode, type, val, checked) {
       return;
     }
   }
-  saveAdminPerms(perms);
+  savePermsToFirebase();
   // Re-render summary line
   renderAdmin();
 }
@@ -3181,9 +3318,9 @@ async function crearUsuarioLocal() {
   USERS[codigo] = newUser;
 
   // Set default perms
-  const perms = loadAdminPerms();
+  // perms is now the global Firebase-backed object
   perms[codigo] = { funciones: [funcion], bases: [getBaseCode(base)] };
-  saveAdminPerms(perms);
+  savePermsToFirebase();
   await fbSet(`pilotpay/permisos/${codigo}`, perms[codigo]);
 
   // Clear form
@@ -3400,9 +3537,9 @@ async function eliminarUsuario(code) {
     // Remove from runtime cache
     delete USERS[code];
     // Remove from admin perms
-    const perms = loadAdminPerms();
+    // perms is now the global Firebase-backed object
     delete perms[code];
-    saveAdminPerms(perms);
+    savePermsToFirebase();
     closeDayModal();
     renderAdmin();
   } catch(e) {
@@ -3500,7 +3637,7 @@ function setTheme(theme) {
   if (currentUser) {
     profileData.theme = theme;
     saveUserData(currentUser);
-    fbUpdate(`pilotpay/usuarios/${currentUser}`, { theme });
+    updateOnlineIndicator();
   }
   try { localStorage.setItem('pilotpay_theme_' + (currentUser||'_default'), theme); } catch(e) {}
 }
@@ -5633,7 +5770,7 @@ function saveProfile() {
   if (apellidosEl) profileData.apellidos = apellidosEl.value.trim();
   if (currentUser) {
     saveUserData(currentUser);
-    saveUserProfile(currentUser, profileData); // sync to Firebase
+    saveUserData(currentUser); // sync to Firebase
   }
 }
 
@@ -5809,6 +5946,8 @@ function saveSimulator() {
   profileData.sim_hijos     = document.getElementById('sim-hijos').value;
   profileData.sim_discap    = document.getElementById('sim-discap').value;
   profileData.sim_residencia= document.getElementById('sim-residencia').value;
+  if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
+}
   if (currentUser) saveUserData(currentUser);
 }
 
@@ -6110,7 +6249,7 @@ function guardarHistorico() {
   }
   if (profileData) {
     profileData.simHistorico = simHistoricoData;
-    if (currentUser) saveUserData(currentUser);
+    if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
   }
   const statusEl = document.getElementById('sim-hist-save-status');
   if (statusEl) { statusEl.textContent = '✓ Guardado'; statusEl.style.color = 'var(--green)'; }
