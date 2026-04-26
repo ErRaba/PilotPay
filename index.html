@@ -2949,6 +2949,7 @@ async function loadPermsFromFirebase() {
                || localStorage.getItem('pilotpay_admin_perms');
     if (local) perms = JSON.parse(local);
   } catch(e) {}
+}
 
 async function savePermsToFirebase() {
   try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
@@ -3027,6 +3028,11 @@ async function doLogin() {
 window.addEventListener('DOMContentLoaded', async () => {
   // Pre-load users in background for faster login
   if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
+  // Key listeners
+  const loginUser = document.getElementById('login-user');
+  const loginPass = document.getElementById('login-pass');
+  if (loginUser) loginUser.addEventListener('keydown', e => { if (e.key==='Enter') loginPass?.focus(); });
+  if (loginPass) loginPass.addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 });
 
 let currentUser = null;
@@ -3040,8 +3046,6 @@ let calcResult = null;
 let nomDataCached = null;
 let profileData = {};
 let totalHVManual = false;
-document.getElementById('login-user').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('login-pass').focus(); });
-document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
 
 
 function enterApp() {
@@ -3167,7 +3171,6 @@ function getUserPerms(userCode) {
     funciones: [u.funcion],
     bases: [u.base]
   };
-}
 }
 
 function renderAdmin() {
@@ -5947,8 +5950,6 @@ function saveSimulator() {
   profileData.sim_discap    = document.getElementById('sim-discap').value;
   profileData.sim_residencia= document.getElementById('sim-residencia').value;
   if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
-}
-  if (currentUser) saveUserData(currentUser);
 }
 
 function loadSimulatorData() {
