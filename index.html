@@ -4978,6 +4978,7 @@ function renderNomina() {
     return;
   }
   const r = calcResult;
+  console.log('[PilotPay] renderNomina r:', r.hv1, r.hv1_imp, r.dpo, r.compMad, r.totalDevengado);
   if (r.isTCP) { renderNominaTCP(r); return; }
 
   const mes = r.mes || document.getElementById('mes-nomina').value;
