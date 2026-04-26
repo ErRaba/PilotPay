@@ -5068,17 +5068,15 @@ function renderNominaTCP(r) {
 }
 
 function renderNomina() {
-  if (!calcResult) { recalc(); }
-  if (!calcResult) {
-    // recalc falló — mostrar mensaje de error en lugar de pantalla en blanco
+  const r = calcResult;
+  if (!r) {
     document.getElementById('nomina-output').innerHTML = `
       <div class="card" style="text-align:center;padding:32px">
         <div style="font-size:32px;margin-bottom:8px">📄</div>
-        <div style="color:var(--text2);font-size:13px">Rellena los datos en la pestaña Calcular y pulsa calcular</div>
+        <div style="color:var(--text2);font-size:13px">Rellena los datos en la pestaña Calcular</div>
       </div>`;
     return;
   }
-  const r = calcResult;
   if (r.isTCP) { renderNominaTCP(r); return; }
 
   const mes = r.mes || document.getElementById('mes-nomina').value;
@@ -5550,9 +5548,9 @@ function parseBinterNomina(text) {
   };
 
   // ── TRABAJADOR ──
-  const nombre = findTxt(/ELOY\s+([\w\s]+?)(?:\s+___|\s+\d{2}\/\d{2}\/\d{4})/i)
-    || findTxt(/TRABAJADOR\s+([\w\s]+?)\s+(?:N\.?I\.?F|NIF)/i)
-    || findTxt(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/);
+  const nombre = findTxt(/TRABAJADOR\s+([\w\s]+?)\s+(?:N\.?I\.?F|NIF)/i)
+    || findTxt(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/)
+    || findTxt(/Estimado\/a\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúña-z\s]+?)(?:\n|Se adelantan)/i);
 
   const nif = findTxt(/N\.?I\.?F\.?\s*([A-Z0-9]{8,9})/i)
     || findTxt(/([A-Z]\d{7}[A-Z0-9])\s/);
@@ -5726,9 +5724,11 @@ async function processNomina(file) {
 
     document.getElementById('comp-loading').style.display = 'none';
 
-    // Validate — at minimum we need liquido or total_devengado
-    if (!nomData.totales.liquido && !nomData.totales.total_devengado) {
-      throw new Error('No se pudieron extraer los datos de la nómina. Comprueba que el PDF es una nómina Binter válida.');
+    // Validate — need at least some data to show results
+    const hasData = nomData.totales.liquido || nomData.totales.total_devengado
+      || nomData.totales.base_irpf || nomData.totales.base_ss;
+    if (!hasData) {
+      throw new Error('No se pudieron extraer datos de la nómina. Comprueba que el PDF es una nómina Binter en formato texto (no escaneada).');
     }
 
     // Update profile
@@ -7178,12 +7178,24 @@ function varsCargarEnCalculadora() {
     }
   }
 
-  // Distribuir tramos desde HB
+  // Distribuir tramos desde HB o calcular desde HV+im+fr
   if (hbTotal != null) {
-    distribuirDesdeHB(hbTotal);
-  } else {
-    calcularHB();
+    // Calcular distribución de tramos sin llamar recalc todavía
+    const p = typeof getVacParams === 'function' ? getVacParams() : { horasBase:60, anchoTramo:10 };
+    const base = p.horasBase, a = p.anchoTramo;
+    const exceso = Math.max(0, hbTotal - base);
+    const t1 = Math.min(exceso, a);
+    const t2 = Math.min(Math.max(exceso - a, 0), a);
+    const t3 = Math.min(Math.max(exceso - a*2, 0), a);
+    const t4 = Math.max(exceso - a*3, 0);
+    document.getElementById('hv1').value = t1 > 0 ? Math.round(t1*100)/100 : '';
+    document.getElementById('hv2').value = t2 > 0 ? Math.round(t2*100)/100 : '';
+    document.getElementById('hv3').value = t3 > 0 ? Math.round(t3*100)/100 : '';
+    document.getElementById('hv4').value = t4 > 0 ? Math.round(t4*100)/100 : '';
   }
+
+  // Recalc único y definitivo — todos los campos DOM ya están rellenos
+  recalc();
 
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
