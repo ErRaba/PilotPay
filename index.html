@@ -3268,9 +3268,14 @@ function enterApp() {
   document.getElementById('app').style.display = 'flex';
   initApp();
 
-  // Primer acceso → redirigir a Perfil y limpiar el flag
+  // Primer acceso → resetear simulador y redirigir a Perfil
   if (profileData.firstAccess) {
     profileData.firstAccess = false;
+    // Reset todos los campos del simulador a 0
+    ['sim-bruto-acum','sim-irpf-acum','sim-bruto-resto','sim-irpf-actual'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
     saveUserData(currentUser);
     setTimeout(() => showTab('perfil'), 350);
   }
@@ -4423,8 +4428,18 @@ function onFuncionChange() {
 
   const baseEl = document.getElementById('base');
   if (fn === 'CC') {
+    // CC nunca puede cambiar de base
     baseEl.style.opacity = '0.5'; baseEl.style.pointerEvents = 'none';
+  } else if (currentUser !== ADMIN_CODE) {
+    // Usuarios normales: solo desbloquear si tienen permiso para múltiples bases
+    const userBases = getUserPerms(currentUser).bases || [];
+    if (userBases.length > 1) {
+      baseEl.style.opacity = '1'; baseEl.style.pointerEvents = 'auto';
+    } else {
+      baseEl.style.opacity = '0.6'; baseEl.style.pointerEvents = 'none';
+    }
   } else {
+    // Admin: siempre desbloqueado
     baseEl.style.opacity = '1'; baseEl.style.pointerEvents = 'auto';
   }
 
@@ -6354,12 +6369,13 @@ function saveSimulator() {
 }
 
 function loadSimulatorData() {
+  // Always set — empty string if no data (prevents browser autocomplete bleed)
+  document.getElementById('sim-bruto-acum').value  = profileData.sim_brutoAcum  || '';
+  document.getElementById('sim-irpf-acum').value   = profileData.sim_irpfAcum   || '';
+  document.getElementById('sim-bruto-resto').value = profileData.sim_brutoResto  || '';
+  document.getElementById('sim-irpf-actual').value = profileData.sim_irpfActual  || '';
   if (profileData.sim_mes)        document.getElementById('sim-mes').value        = profileData.sim_mes;
   if (profileData.sim_ccaa)       document.getElementById('sim-ccaa').value       = profileData.sim_ccaa;
-  if (profileData.sim_brutoAcum)  document.getElementById('sim-bruto-acum').value = profileData.sim_brutoAcum;
-  if (profileData.sim_irpfAcum)   document.getElementById('sim-irpf-acum').value  = profileData.sim_irpfAcum;
-  if (profileData.sim_brutoResto) document.getElementById('sim-bruto-resto').value= profileData.sim_brutoResto;
-  if (profileData.sim_irpfActual) document.getElementById('sim-irpf-actual').value= profileData.sim_irpfActual;
   if (profileData.sim_civil)      document.getElementById('sim-civil').value      = profileData.sim_civil;
   if (profileData.sim_hijos)      document.getElementById('sim-hijos').value      = profileData.sim_hijos;
   if (profileData.sim_discap)     document.getElementById('sim-discap').value     = profileData.sim_discap;
