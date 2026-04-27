@@ -4970,15 +4970,17 @@ function recalc() {
   const segMed_ded = segmedActivo ? SEG_MEDICO : 0;  // solo deducción
   const segLic_ded = seglicActivo ? SEG_LIC * 0.5 : 0;
 
-  // DEVENGADO TOTAL
-  // Seg. Médico no entra — solo Seg. Vida como especie
+  // DEVENGADO TOTAL — solo devengos monetarios, sin especies
+  // Seg. Vida y Seg. Médico aparecen en Especies/Info pero NO en Total Devengado
   const dev_salarial = Math.round((sb + plus_tr + extras_devengados + hvTotal + im + fr + lv1 + lv2 + lv3 + dpo + compMad) * 100) / 100;
-  const totalDevengado = Math.round((dev_salarial + totalDietas + SEG_VIDA_ESPECIE) * 100) / 100;
+  const totalDevengado = Math.round((dev_salarial + totalDietas) * 100) / 100;
 
   // BASE IRPF = total devengado - dietas exentas
-  // Seg. Médico NO entra en base IRPF (no es devengo)
-  // Seg. Vida SÍ entra (retribución especie)
+  // Verificado mar-2026: 8709.30 - 535.60 = 8173.70 ✓
+  // Seguro Vida NO entra en base IRPF — tiene su propia línea "Retención especie"
   const baseIRPF = Math.round((totalDevengado - totalDietasEx) * 100) / 100;
+
+  // Retención IRPF monetaria + retención especie (seguro vida) por separado
   const retencionIRPF = Math.round(baseIRPF * irpf_pct / 100 * 100) / 100;
 
   // BASE SS según normativa SS 2026:
