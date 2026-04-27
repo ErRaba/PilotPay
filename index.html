@@ -2857,6 +2857,47 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>
 
+      <!-- TABLA DE RUTAS -->
+      <div class="card">
+        <div class="card-title"><div class="section-dot blue"></div>Tabla de Rutas — Valor HB</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px;line-height:1.7">
+          Define el valor en Horas Bloque de cada ruta especial. El parser de eCrew consultará esta tabla para calcular la previsión mensual.<br>
+          <span style="color:var(--amber2)">Rutas MAD↔TFN y MAD↔LPA</span> tienen valor fijo de 2,9 HB por tramo por defecto.
+        </div>
+
+        <!-- Lista de rutas -->
+        <div id="rutas-lista" style="margin-bottom:12px"></div>
+
+        <!-- Formulario añadir ruta -->
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;margin-bottom:8px">AÑADIR / EDITAR RUTA</div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Nº vuelo (ej: 6075)</span>
+              <input class="field-input" id="ruta-vuelo" type="text" placeholder="6075" maxlength="6">
+            </div>
+            <div class="field">
+              <span class="field-label">HB por tramo</span>
+              <input class="field-input" id="ruta-hb" type="number" placeholder="2.9" step="0.1" min="0.5" max="20">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Origen (IATA)</span>
+              <input class="field-input" id="ruta-origen" type="text" placeholder="MAD" maxlength="3"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <div class="field">
+              <span class="field-label">Destino (IATA)</span>
+              <input class="field-input" id="ruta-destino" type="text" placeholder="TFN" maxlength="3"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+          </div>
+          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
+            onclick="adminAddRuta()">➕ Añadir ruta</button>
+        </div>
+      </div>
+
     </div><!-- /page-admin -->
 
   </main>
@@ -3417,7 +3458,9 @@ function getUserPerms(userCode) {
 
 function renderAdmin() {
   const el = document.getElementById('admin-users-list');
-  // perms is now the global Firebase-backed object
+
+  // Cargar y renderizar rutas (siempre async)
+  loadRutas().then(() => renderRutas());
 
   // Include ALL users including ESH
   const allUsers = Object.entries(USERS);
@@ -7244,7 +7287,120 @@ function varsReset() {
   document.getElementById('vars-status').textContent    = '';
 }
 
-// Initial calc
+// ══════════════════════════════════════════════════════
+// TABLA DE RUTAS — Admin
+// Persiste en Firebase: /pilotpay/rutas/{vuelo_orig_dest}
+// ══════════════════════════════════════════════════════
+
+// Rutas por defecto — MAD↔TFN y MAD↔LPA a 2.9 HB
+const RUTAS_DEFAULT = {
+  '6075_MAD_TFN': { vuelo:'6075', origen:'MAD', destino:'TFN', hb:2.9 },
+  '6074_TFN_MAD': { vuelo:'6074', origen:'TFN', destino:'MAD', hb:2.9 },
+  '6015_MAD_LPA': { vuelo:'6015', origen:'MAD', destino:'LPA', hb:2.9 },
+  '6014_LPA_MAD': { vuelo:'6014', origen:'LPA', destino:'MAD', hb:2.9 },
+  '6017_MAD_LPA': { vuelo:'6017', origen:'MAD', destino:'LPA', hb:2.9 },
+  '6012_LPA_MAD': { vuelo:'6012', origen:'LPA', destino:'MAD', hb:2.9 },
+  '6073_MAD_TFN': { vuelo:'6073', origen:'MAD', destino:'TFN', hb:2.9 },
+  '6072_TFN_MAD': { vuelo:'6072', origen:'TFN', destino:'MAD', hb:2.9 },
+};
+
+let rutasData = {};
+
+function rutaKey(vuelo, origen, destino) {
+  return `${vuelo}_${origen}_${destino}`;
+}
+
+async function loadRutas() {
+  try {
+    const fb = await fbGet('pilotpay/rutas');
+    if (fb && Object.keys(fb).length > 0) {
+      rutasData = fb;
+    } else {
+      // Primera vez — cargar defaults
+      rutasData = { ...RUTAS_DEFAULT };
+      await fbSet('pilotpay/rutas', rutasData);
+    }
+  } catch(e) {
+    // Offline — usar defaults
+    rutasData = { ...RUTAS_DEFAULT };
+  }
+}
+
+async function saveRutas() {
+  try { await fbSet('pilotpay/rutas', rutasData); } catch(e) {}
+}
+
+function renderRutas() {
+  const el = document.getElementById('rutas-lista');
+  if (!el) return;
+  const keys = Object.keys(rutasData).sort();
+  if (!keys.length) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--text3);font-family:var(--mono);padding:8px 0">Sin rutas definidas</div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:80px 60px 60px 60px 1fr;gap:4px;
+      font-size:10px;font-family:var(--mono);color:var(--text3);
+      padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <span>Vuelo</span><span>Origen</span><span>Destino</span><span>HB</span><span></span>
+    </div>` +
+    keys.map(k => {
+      const r = rutasData[k];
+      return `
+        <div style="display:grid;grid-template-columns:80px 60px 60px 60px 1fr;gap:4px;
+          align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--mono);font-size:12px;color:var(--blue2)">${r.vuelo}</span>
+          <span style="font-family:var(--mono);font-size:12px">${r.origen}</span>
+          <span style="font-family:var(--mono);font-size:12px">${r.destino}</span>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--green)">${r.hb}</span>
+          <button onclick="adminDeleteRuta('${k}')"
+            style="background:none;border:1px solid var(--red);border-radius:4px;
+            color:var(--red);font-size:10px;padding:3px 8px;cursor:pointer;font-family:var(--mono)">
+            🗑
+          </button>
+        </div>`;
+    }).join('');
+}
+
+async function adminAddRuta() {
+  const vuelo   = document.getElementById('ruta-vuelo').value.trim();
+  const origen  = document.getElementById('ruta-origen').value.trim().toUpperCase();
+  const destino = document.getElementById('ruta-destino').value.trim().toUpperCase();
+  const hb      = parseFloat(document.getElementById('ruta-hb').value);
+
+  if (!vuelo || !origen || !destino || isNaN(hb)) {
+    alert('Rellena todos los campos correctamente.'); return;
+  }
+  if (origen.length !== 3 || destino.length !== 3) {
+    alert('Origen y destino deben ser códigos IATA de 3 letras (ej: MAD, TFN, LPA).'); return;
+  }
+
+  const key = rutaKey(vuelo, origen, destino);
+  rutasData[key] = { vuelo, origen, destino, hb };
+  await saveRutas();
+  renderRutas();
+
+  // Limpiar formulario
+  document.getElementById('ruta-vuelo').value   = '';
+  document.getElementById('ruta-origen').value  = '';
+  document.getElementById('ruta-destino').value = '';
+  document.getElementById('ruta-hb').value      = '';
+}
+
+async function adminDeleteRuta(key) {
+  if (!confirm(`¿Eliminar la ruta ${key.replace(/_/g,' ')}?`)) return;
+  delete rutasData[key];
+  await saveRutas();
+  renderRutas();
+}
+
+// Función para que el parser de eCrew consulte el HB de una ruta
+function getHBRuta(vuelo, origen, destino) {
+  const key = rutaKey(vuelo, origen, destino);
+  return rutasData[key]?.hb ?? null;
+}
+
+// Initial setup
 document.addEventListener('DOMContentLoaded', () => {
   // Nothing needed — recalc on login
 });
