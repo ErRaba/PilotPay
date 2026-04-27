@@ -1384,6 +1384,7 @@ input[type=number] { -moz-appearance: textfield; }
     <input class="form-input" id="login-pass" type="password" placeholder="••••">
     <button class="btn-primary" onclick="doLogin()">Entrar</button>
     <p id="login-err" style="display:none;text-align:center;margin-top:10px;font-size:12px;color:#ef4444;font-family:var(--mono)">Credenciales incorrectas</p>
+    <div style="text-align:center;margin-top:14px;font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);letter-spacing:.08em">PILOTPAY BETA 2.0</div>
   </div>
 </div>
 
@@ -1408,7 +1409,7 @@ input[type=number] { -moz-appearance: textfield; }
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
-    <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Vars</button>
+    <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Variables</button>
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
@@ -1490,25 +1491,6 @@ input[type=number] { -moz-appearance: textfield; }
 
         <div class="card">
           <div class="card-title"><div class="section-dot amber"></div>Horas de Vuelo</div>
-          <div class="flex-between" style="align-items:center;padding:4px 0;margin-bottom:10px">
-            <div>
-              <span class="field-label" style="margin-bottom:2px;display:block">Vacaciones este mes</span>
-              <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
-            </div>
-            <label class="ios-toggle">
-              <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-          <div id="vac-field" style="display:none;margin-bottom:10px">
-            <div class="row">
-              <div class="field">
-                <span class="field-label">Días de vacaciones</span>
-                <input class="field-input" id="vac-dias" type="number" placeholder="ej: 6" min="1" max="31" oninput="onVacDiasChange()">
-                <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px"></div>
-              </div>
-            </div>
-          </div>
           <!-- Fila 1: HV · Imaginarias · Francos -->
           <div class="row" style="margin-bottom:10px">
             <div class="field">
@@ -1953,6 +1935,30 @@ input[type=number] { -moz-appearance: textfield; }
 
       </div><!-- /panel-tcp -->
 
+      <!-- VACACIONES -->
+      <div class="card">
+        <div class="card-title"><div class="section-dot blue"></div>🏖 Vacaciones</div>
+        <div class="flex-between" style="align-items:center;padding:4px 0">
+          <div>
+            <span class="field-label" style="margin-bottom:2px;display:block">Vacaciones este mes</span>
+            <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
+          </div>
+          <label class="ios-toggle">
+            <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
+            <span class="ios-slider"></span>
+          </label>
+        </div>
+        <div id="vac-field" style="display:none;margin-top:10px">
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Días de vacaciones</span>
+              <input class="field-input" id="vac-dias" type="number" placeholder="ej: 6" min="1" max="31" oninput="onVacDiasChange()">
+              <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- BAJAS (común) -->
       <div class="card" id="card-bajas">
         <div class="card-title"><div class="section-dot amber"></div>Incapacidad Temporal (IT)</div>
@@ -2025,7 +2031,7 @@ input[type=number] { -moz-appearance: textfield; }
 
       <button class="btn-secondary" style="margin-bottom:8px;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear variables</button>
 
-      <div class="summary-bar" id="summary-bar">
+      <div class="summary-bar" id="summary-bar" style="justify-content:center">
         <div class="sum-item">
           <div class="sum-label">Devengado</div>
           <div class="sum-val" id="sum-dev" style="color:var(--blue2)">—</div>
@@ -2045,8 +2051,6 @@ input[type=number] { -moz-appearance: textfield; }
       </div>
 
       <button class="btn-secondary" onclick="showTab('nomina')">Ver nómina completa →</button>
-      <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="acumularSimulador()">📊 Acumular al simulador IRPF</button>
-      <div id="acum-status" style="font-size:11px;color:var(--text3);font-family:var(--mono);text-align:center;margin-top:-4px;margin-bottom:8px"></div>
 
     </div><!-- /page-calcular -->
 
@@ -2057,9 +2061,10 @@ input[type=number] { -moz-appearance: textfield; }
 
       <!-- SELECTOR DE MODO -->
       <div class="card" style="padding:12px">
-        <div class="toggle-group" style="margin-bottom:0">
-          <div class="toggle-btn active" id="vars-mode-pdf" onclick="varsSwitchMode('pdf')">📂 Subir PDF</div>
-          <div class="toggle-btn" id="vars-mode-paste" onclick="varsSwitchMode('paste')">📋 Pegar texto</div>
+        <div style="display:flex;gap:6px">
+          <div class="toggle-btn active" id="vars-mode-pdf"   onclick="varsSwitchMode('pdf')"   style="flex:1;font-size:11px">📂 Subir PDF</div>
+          <div class="toggle-btn"        id="vars-mode-paste" onclick="varsSwitchMode('paste')" style="flex:1;font-size:11px">📋 Pegar texto</div>
+          <div class="toggle-btn"        id="vars-mode-prog"  onclick="varsSwitchMode('prog')"  style="flex:1;font-size:11px">📅 PDF Prog.</div>
         </div>
       </div>
 
@@ -2118,7 +2123,16 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>
 
-      <!-- LOADING -->
+      <!-- MODO PROGRAMACIÓN — En construcción -->
+      <div id="vars-panel-prog" style="display:none">
+        <div class="card" style="text-align:center;padding:32px">
+          <div style="font-size:36px;margin-bottom:12px">🚧</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">En construcción</div>
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono);line-height:1.7">
+            El parser de PDF de programación eCrew<br>estará disponible próximamente.
+          </div>
+        </div>
+      </div>
       <div id="vars-loading" class="loading-block" style="display:none">
         <div class="spinner"></div>
         <div>Analizando variables...</div>
@@ -2286,7 +2300,7 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="row">
           <div class="field">
             <span class="field-label">Mes actual</span>
-            <select class="field-input" id="sim-mes" onchange="simRecalc()">
+            <select class="field-input" id="sim-mes" onchange="actualizarSimuladorDesdeHistorico();simRecalc()">
               <option value="1">Enero</option><option value="2">Febrero</option>
               <option value="3">Marzo</option><option value="4" selected>Abril</option>
               <option value="5">Mayo</option><option value="6">Junio</option>
@@ -2571,6 +2585,55 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
 
       </div>
+      <!-- SOLICITAR CAMBIO DE DATOS -->
+      <div class="card">
+        <div class="card-title"><div class="section-dot amber"></div>Solicitar cambio de datos</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px;line-height:1.6">
+          Solicita un cambio de base o cargo. El administrador recibirá la solicitud y la procesará.
+        </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Tipo de solicitud</span>
+            <select class="field-input" id="sol-tipo" onchange="onSolTipoChange()">
+              <option value="">— Selecciona —</option>
+              <option value="base">Cambio de base</option>
+              <option value="cargo">Cambio de cargo</option>
+            </select>
+          </div>
+        </div>
+        <div id="sol-opciones-base" style="display:none">
+          <div class="field">
+            <span class="field-label">Nueva base</span>
+            <select class="field-input" id="sol-base">
+              <option value="MAD">Madrid</option>
+              <option value="TFN">Tenerife</option>
+              <option value="GC">Gran Canaria</option>
+            </select>
+          </div>
+        </div>
+        <div id="sol-opciones-cargo" style="display:none">
+          <div class="field">
+            <span class="field-label">Nuevo cargo</span>
+            <select class="field-input" id="sol-cargo">
+              <option value="CMD">Comandante</option>
+              <option value="COP">Copiloto</option>
+              <option value="SCC">SCC — Sobrecargo</option>
+              <option value="CC">CC — Tripulante de Cabina</option>
+            </select>
+          </div>
+        </div>
+        <div id="sol-motivo-field" style="display:none;margin-top:4px">
+          <div class="field">
+            <span class="field-label">Motivo / observaciones (opcional)</span>
+            <textarea class="field-input" id="sol-motivo" rows="2"
+              style="resize:none;font-family:var(--mono);font-size:12px" placeholder="Añade contexto si lo necesitas"></textarea>
+          </div>
+          <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2);margin-top:6px"
+            onclick="enviarSolicitudCambio()">📤 Enviar solicitud</button>
+          <div id="sol-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
+        </div>
+      </div>
+
     </div><!-- /page-perfil -->
 
     <!-- ── TAB: CONFIGURACIÓN ── -->
@@ -2769,10 +2832,15 @@ Complemento de Base MAD: 1500"></textarea>
       <div class="card">
         <div class="card-title"><div class="section-dot"></div>Acerca de</div>
         <div style="font-size:12px;color:var(--text2);line-height:1.7">
-          <div style="font-family:var(--mono);color:var(--text);font-size:13px;margin-bottom:4px">PilotPay v1.0</div>
+          <div style="font-family:var(--mono);color:var(--text);font-size:13px;font-weight:700;margin-bottom:4px">PilotPay Beta 2.0</div>
           Calculadora de nómina para pilotos Binter Canarias<br>
           Convenio Colectivo BCSA 2026 · BOE 18/03/2026<br>
-          <span style="color:var(--text3)">IRPF 2026 · Madrid y Canarias</span>
+          <span style="color:var(--text3)">IRPF 2026 · Madrid y Canarias</span><br>
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+            <span style="color:var(--text3);font-size:11px;font-family:var(--mono)">
+              © Rava Tech. 2026 · Todos los derechos reservados
+            </span>
+          </div>
         </div>
       </div>
 
@@ -3400,7 +3468,7 @@ function initApp() {
     baseEl.style.pointerEvents = 'none';
   }
 
-  document.getElementById('irpf').value = profileData.irpf || u.irpf;
+  document.getElementById('irpf').value = profileData.irpf || USERS[currentUser]?.irpf || 30.00;
   currentNivel = profileData.nivel || u.nivel;
   highlightNivel();
 
@@ -5692,17 +5760,48 @@ function parseBinterNomina(text) {
     anio = parseInt(periodoM[4]);
   }
 
-  // Función y nivel
-  const esCMD = /CMDT|COMANDANTE|CMD/i.test(text);
-  const funcion = esCMD ? 'COMANDANTE' : 'COPILOTO';
+  // Función — extraída del campo PUESTO de la nómina
+  // Binter usa: "Comandante", "Copiloto", "SCC — Sobrecargo", "CC — Tripulante de Cabina"
+  const puestoLine = text.match(/(?:PUESTO|Puesto)[:\s]+([^\n]+)/i);
+  const puestoTxt  = puestoLine ? puestoLine[1].trim() : '';
+  let funcion = 'CMD';
+  if (/comandante/i.test(puestoTxt))   funcion = 'CMD';
+  else if (/copiloto/i.test(puestoTxt)) funcion = 'COP';
+  else if (/SCC|sobrecargo/i.test(puestoTxt)) funcion = 'SCC';
+  else if (/CC|tripulante.*cabina/i.test(puestoTxt)) funcion = 'CC';
+  else if (/CMDT|COMANDANTE|CMD/i.test(text)) funcion = 'CMD';
+  else if (/COP|COPILOTO/i.test(text)) funcion = 'COP';
+
   const nivelM = text.match(/(?:CMDT|COP)\.?\s*(\d)/i);
   const nivel = nivelM ? parseInt(nivelM[1]) : null;
-  const base = /MAD|MADRID/i.test(text) ? 'MADRID' : 'CANARIAS';
 
-  // IRPF %
-  const irpf_pct = findNum(/(\d{1,2}[,.]\d{2})%\s+[\d.,]+\s+Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i)
-    || findNum(/Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf\s+[\d.,]+\s+([\d.,]+)/i)
-    || findNum(/(\d{2}[,.]\d{2})%\s+[\d.,]+\s+[\d.,]+\s*\n/);
+  // Base — extraída del CENTRO DE TRABAJO
+  // "Aeropuerto MAD" → Madrid, "Aeropuerto TFN" → Tenerife, "Aeropuerto LPA" → Gran Canaria
+  const centroLine = text.match(/CENTRO\s+DE\s+TRABAJO[:\s]+([^\n]+)/i)
+    || text.match(/Aeropuerto\s+([A-Z]{3})/i);
+  let base = 'CANARIAS';
+  if (centroLine) {
+    const ct = centroLine[1].trim();
+    if (/MAD|MADRID/i.test(ct)) base = 'MADRID';
+    else if (/TFN|TENERIFE/i.test(ct)) base = 'TENERIFE';
+    else if (/LPA|PALMAS|CANARIA/i.test(ct)) base = 'GRAN_CANARIA';
+  } else if (/MAD|MADRID/i.test(text)) base = 'MADRID';
+
+  // IRPF % — en la nómina Binter aparece como "34,15% 8.173,70 Retención A Cuenta Del Irpf"
+  // Hay que extraer el primer número (el porcentaje) de esa línea específica
+  const irpfLine = text.split('\n').find(l =>
+    /Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i.test(l) && !/[Ee]specie/i.test(l)
+  );
+  let irpf_pct = null;
+  if (irpfLine) {
+    const mPct = irpfLine.match(/^([\d]+[,.][\d]+)%/);
+    if (mPct) irpf_pct = parseFloat(mPct[1].replace(',','.'));
+  }
+  if (!irpf_pct) {
+    // Fallback: buscar patrón XX,XX% seguido de base IRPF grande
+    const mFb = text.match(/(3[0-9][,.][\d]{2})%\s+[\d.,]+\s+Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i);
+    if (mFb) irpf_pct = parseFloat(mFb[1].replace(',','.'));
+  }
 
   // ── DEVENGOS ──
   const salario_base = findNum(/Salario\s+Base\s+([\d.,]+)/i);
@@ -5802,6 +5901,23 @@ function parseBinterNomina(text) {
   const acum_base_esp_norep = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
   const acum_irpf_esp_norep = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
 
+  // ── TIRA DE DÍAS (pie de nómina) ──
+  // Formato: "1 2 3 ... 31" con porcentajes debajo (100.0 = día normal, 60/75 = baja)
+  // Extraer todos los valores de la tira
+  const diasStrip = [];
+  const stripLines = text.match(/(?:100\.0\s+){5,}/g); // detectar línea de días
+  const pctLine = text.match(/(\d{1,3}\.\d\s+){10,}/g); // línea de porcentajes
+  if (pctLine && pctLine.length > 0) {
+    const vals = pctLine[0].trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
+    vals.forEach((v, i) => { if (v > 0) diasStrip.push({ dia: i+1, pct: v }); });
+  }
+  const bajaDias = diasStrip.filter(d => d.pct < 100);
+  const bajaInfo = bajaDias.length > 0 ? {
+    detectada: true,
+    dias: bajaDias,
+    resumen: `Baja detectada: días ${bajaDias.map(d => `${d.dia}(${d.pct}%)`).join(', ')}`
+  } : { detectada: false };
+
   return {
     trabajador: { nombre, nif, nss, fecha_ingreso, funcion, nivel, base },
     periodo: { mes, anio },
@@ -5825,7 +5941,8 @@ function parseBinterNomina(text) {
       irpf_esp_rep:    acum_irpf_esp_rep,
       base_esp_norep:  acum_base_esp_norep,
       irpf_esp_norep:  acum_irpf_esp_norep,
-    }
+    },
+    bajaInfo
   };
 }
 
@@ -5852,17 +5969,42 @@ async function processNomina(file) {
       throw new Error('No se pudieron extraer datos de la nómina. Comprueba que el PDF es una nómina Binter en formato texto (no escaneada).');
     }
 
-    // Update profile — but do NOT change currentNivel or current calc state
-    if (nomData.trabajador) {
-      const t = nomData.trabajador;
-      if (t.nombre) profileData.fullName = t.nombre;
-      if (t.nif) profileData.nif = t.nif;
-      if (t.nss) profileData.nss = t.nss;
-      if (t.fecha_ingreso) profileData.ingreso_display = t.fecha_ingreso;
-      // Note: intentionally NOT changing currentNivel to preserve calculator state
+    // ── PROPUESTA DE ACTUALIZACIÓN DE PERFIL (granular, no automático) ──
+    const propuestas = [];
+    const t = nomData.trabajador;
+
+    if (t.nombre && t.nombre !== profileData.fullName)
+      propuestas.push({ campo: 'Nombre completo', clave: 'fullName', actual: profileData.fullName || '—', nuevo: t.nombre });
+    if (t.nif && t.nif !== profileData.nif)
+      propuestas.push({ campo: 'NIF', clave: 'nif', actual: profileData.nif || '—', nuevo: t.nif });
+    if (t.nss && t.nss !== profileData.nss)
+      propuestas.push({ campo: 'Nº SS', clave: 'nss', actual: profileData.nss || '—', nuevo: t.nss });
+    if (t.fecha_ingreso && t.fecha_ingreso !== profileData.ingreso_display)
+      propuestas.push({ campo: 'Fecha ingreso', clave: 'ingreso_display', actual: profileData.ingreso_display || '—', nuevo: t.fecha_ingreso });
+    if (nomData.irpf_pct && nomData.irpf_pct !== profileData.irpf)
+      propuestas.push({ campo: 'IRPF %', clave: 'irpf', actual: profileData.irpf || '—', nuevo: nomData.irpf_pct });
+    if (t.funcion && t.funcion !== (profileData.funcion || USERS[currentUser]?.funcion))
+      propuestas.push({ campo: 'Función', clave: 'funcion_nom', actual: profileData.funcion || '—', nuevo: t.funcion });
+    if (t.base && t.base !== profileData.base_nom)
+      propuestas.push({ campo: 'Base (centro trabajo)', clave: 'base_nom', actual: profileData.base_nom || '—', nuevo: t.base });
+
+    // Acumulados — preguntar si actualizar en histórico
+    const ac = nomData.acumulados;
+    const mesNom = nomData.periodo?.mes;
+    if (ac.base_irpf && mesNom)
+      propuestas.push({ campo: `Acum. Base IRPF (${mesNom})`, clave: 'acum_base_irpf', actual: '—', nuevo: ac.base_irpf, tipo: 'historico', mes: mesNom });
+    if (ac.irpf && mesNom)
+      propuestas.push({ campo: `Acum. IRPF retenido (${mesNom})`, clave: 'acum_irpf', actual: '—', nuevo: ac.irpf, tipo: 'historico', mes: mesNom });
+
+    // Baja detectada
+    if (nomData.bajaInfo?.detectada) {
+      propuestas.push({ campo: 'Baja detectada', clave: 'baja', actual: '—', nuevo: nomData.bajaInfo.resumen, tipo: 'baja' });
     }
-    if (nomData.irpf_pct) profileData.irpf = nomData.irpf_pct;
-    if (currentUser) saveUserData(currentUser);
+
+    // Mostrar panel de confirmación si hay propuestas
+    if (propuestas.length > 0) {
+      mostrarPropuestasActualizacion(propuestas, nomData);
+    }
 
     nomDataCached = nomData;
     document.getElementById('comparativa-result').style.display = 'block';
@@ -5881,6 +6023,100 @@ async function processNomina(file) {
         </div>
       </div>
     `;
+  }
+}
+
+function mostrarPropuestasActualizacion(propuestas, nomData) {
+  // Crear tarjeta de propuestas sobre la comparativa
+  const fmt = v => v !== null && v !== undefined ? String(v) : '—';
+  const filas = propuestas.map((p, i) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:8px;align-items:center;
+      padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono);color:var(--text2)">${p.campo}</span>
+      <span style="font-size:11px;font-family:var(--mono);color:var(--text3)">${fmt(p.actual)}</span>
+      <span style="font-size:11px;font-family:var(--mono);color:var(--blue2)">${fmt(p.nuevo)}</span>
+      <input type="checkbox" id="prop-check-${i}" checked
+        style="width:16px;height:16px;accent-color:var(--blue);cursor:pointer">
+    </div>`).join('');
+
+  const card = document.createElement('div');
+  card.id = 'propuestas-card';
+  card.className = 'card';
+  card.style.cssText = 'border-color:var(--blue);margin-bottom:12px';
+  card.innerHTML = `
+    <div class="card-title" style="color:var(--blue2)">
+      <div class="section-dot blue"></div>Datos detectados en la nómina — ¿Actualizar perfil?
+    </div>
+    <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px">
+      Desmarca los campos que no quieras actualizar.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:8px;
+      font-size:10px;font-family:var(--mono);color:var(--text3);
+      padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px">
+      <span>Campo</span><span>Actual</span><span>En nómina</span><span>✓</span>
+    </div>
+    ${filas}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2);flex:1"
+        onclick="aplicarPropuestas(${JSON.stringify(propuestas).replace(/"/g,'&quot;')})">
+        ✓ Actualizar seleccionados
+      </button>
+      <button onclick="document.getElementById('propuestas-card')?.remove()"
+        style="background:none;border:1px solid var(--text3);border-radius:8px;
+        color:var(--text3);font-size:11px;padding:8px 14px;cursor:pointer">
+        Ignorar
+      </button>
+    </div>`;
+
+  // Insertar antes del comp-output
+  const compOut = document.getElementById('comp-output');
+  if (compOut) compOut.parentNode.insertBefore(card, compOut);
+}
+
+function aplicarPropuestas(propuestas) {
+  propuestas.forEach((p, i) => {
+    const cb = document.getElementById(`prop-check-${i}`);
+    if (!cb?.checked) return;
+
+    if (p.tipo === 'baja') {
+      // Informar de la baja — preguntar si aplica en calculadora
+      if (confirm(`${p.nuevo}\n\n¿Aplicar la baja en la calculadora?`)) {
+        const togBajaSi = document.getElementById('tog-baja-si');
+        if (togBajaSi) togBajaSi.click();
+      }
+      return;
+    }
+
+    if (p.tipo === 'historico') {
+      // Actualizar acumulado en el histórico del mes correspondiente
+      const mesKey = p.mes;
+      if (!profileData.simHistorico) profileData.simHistorico = {};
+      if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
+      if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
+      if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
+      return;
+    }
+
+    // Actualizar campo de perfil
+    profileData[p.clave] = p.nuevo;
+    // Reflejar IRPF en la calculadora si es ese campo
+    if (p.clave === 'irpf') {
+      const irpfEl = document.getElementById('irpf');
+      if (irpfEl) { irpfEl.value = p.nuevo; recalc(); }
+    }
+  });
+
+  if (currentUser) saveUserData(currentUser);
+  document.getElementById('propuestas-card')?.remove();
+
+  // Confirmación visual
+  const out = document.getElementById('comp-output');
+  if (out) {
+    const msg = document.createElement('div');
+    msg.style.cssText = 'font-size:11px;font-family:var(--mono);color:var(--green);text-align:center;padding:6px;margin-bottom:8px';
+    msg.textContent = '✓ Perfil actualizado';
+    out.parentNode.insertBefore(msg, out);
+    setTimeout(() => msg.remove(), 3000);
   }
 }
 
@@ -6553,18 +6789,40 @@ function saveSimulator() {
 }
 
 function loadSimulatorData() {
-  // Always set — empty string if no data (prevents browser autocomplete bleed)
-  document.getElementById('sim-bruto-acum').value  = profileData.sim_brutoAcum  || '';
-  document.getElementById('sim-irpf-acum').value   = profileData.sim_irpfAcum   || '';
-  document.getElementById('sim-bruto-resto').value = profileData.sim_brutoResto  || '';
-  document.getElementById('sim-irpf-actual').value = profileData.sim_irpfActual  || '';
+  // Cargar mes y ccaa
   if (profileData.sim_mes)        document.getElementById('sim-mes').value        = profileData.sim_mes;
   if (profileData.sim_ccaa)       document.getElementById('sim-ccaa').value       = profileData.sim_ccaa;
   if (profileData.sim_civil)      document.getElementById('sim-civil').value      = profileData.sim_civil;
   if (profileData.sim_hijos)      document.getElementById('sim-hijos').value      = profileData.sim_hijos;
   if (profileData.sim_discap)     document.getElementById('sim-discap').value     = profileData.sim_discap;
   if (profileData.sim_residencia) document.getElementById('sim-residencia').value = profileData.sim_residencia;
+
+  // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
+  actualizarSimuladorDesdeHistorico();
   cargarHistorico();
+}
+
+function actualizarSimuladorDesdeHistorico() {
+  const mes = document.getElementById('sim-mes')?.value;
+  const hist = profileData.simHistorico || {};
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesIdx = MESES.indexOf(mes);
+
+  // Sumar acumulados hasta el mes seleccionado
+  let brutoAcum = 0, irpfAcum = 0;
+  MESES.slice(0, mesIdx + 1).forEach(m => {
+    const entry = hist[m];
+    if (entry) {
+      brutoAcum += parseFloat(entry.bruto) || 0;
+      irpfAcum  += parseFloat(entry.irpf)  || 0;
+    }
+  });
+
+  const brutoEl = document.getElementById('sim-bruto-acum');
+  const irpfEl  = document.getElementById('sim-irpf-acum');
+  if (brutoEl) brutoEl.value = brutoAcum > 0 ? brutoAcum.toFixed(2) : '';
+  if (irpfEl)  irpfEl.value  = irpfAcum  > 0 ? irpfAcum.toFixed(2)  : '';
 }
 
 function simSyncFromPerfil() {
@@ -6945,12 +7203,16 @@ function varsCheckPeriodoMes(data) {
 // ── MODO ──
 function varsSwitchMode(modo) {
   varsModo = modo;
-  document.getElementById('vars-mode-pdf').classList.toggle('active', modo === 'pdf');
-  document.getElementById('vars-mode-paste').classList.toggle('active', modo === 'paste');
-  document.getElementById('vars-panel-pdf').style.display   = modo === 'pdf'   ? 'block' : 'none';
-  document.getElementById('vars-panel-paste').style.display = modo === 'paste' ? 'block' : 'none';
-  document.getElementById('vars-periodo-confirm').style.display = 'none';
-  document.getElementById('vars-result').style.display = 'none';
+  ['pdf','paste','prog'].forEach(m => {
+    const btn   = document.getElementById(`vars-mode-${m}`);
+    const panel = document.getElementById(`vars-panel-${m}`);
+    if (btn)   btn.classList.toggle('active', m === modo);
+    if (panel) panel.style.display = m === modo ? 'block' : 'none';
+  });
+  if (modo !== 'prog') {
+    document.getElementById('vars-periodo-confirm').style.display = 'none';
+    document.getElementById('vars-result').style.display = 'none';
+  }
 }
 
 // ── PDF ──
@@ -7470,6 +7732,48 @@ function getHBRuta(vuelo, origen, destino) {
 document.addEventListener('DOMContentLoaded', () => {
   // Nothing needed — recalc on login
 });
+
+function onSolTipoChange() {
+  const tipo = document.getElementById('sol-tipo').value;
+  document.getElementById('sol-opciones-base').style.display  = tipo === 'base'  ? 'block' : 'none';
+  document.getElementById('sol-opciones-cargo').style.display = tipo === 'cargo' ? 'block' : 'none';
+  document.getElementById('sol-motivo-field').style.display   = tipo ? 'block' : 'none';
+}
+
+async function enviarSolicitudCambio() {
+  const tipo   = document.getElementById('sol-tipo').value;
+  const motivo = document.getElementById('sol-motivo').value.trim();
+  if (!tipo) return;
+
+  let valor = '';
+  if (tipo === 'base')  valor = document.getElementById('sol-base').value;
+  if (tipo === 'cargo') valor = document.getElementById('sol-cargo').value;
+
+  const solicitud = {
+    usuario:   currentUser,
+    nombre:    profileData.name || USERS[currentUser]?.name || currentUser,
+    tipo,
+    valor,
+    motivo,
+    fecha:     new Date().toISOString().split('T')[0],
+    estado:    'pendiente'
+  };
+
+  try {
+    await fbSet(`pilotpay/solicitudes/${currentUser}_${Date.now()}`, solicitud);
+    const statusEl = document.getElementById('sol-status');
+    statusEl.textContent = '✓ Solicitud enviada al administrador';
+    statusEl.style.color = 'var(--green)';
+    document.getElementById('sol-tipo').value = '';
+    document.getElementById('sol-motivo').value = '';
+    onSolTipoChange();
+    setTimeout(() => { statusEl.textContent = ''; }, 4000);
+  } catch(e) {
+    alert('Error al enviar la solicitud: ' + e.message);
+  }
+}
+
+
 </script>
 <!-- ══ MODAL GLOBAL ══ -->
 <div class="modal-overlay" id="day-modal" onclick="closeDayModal(event)">
