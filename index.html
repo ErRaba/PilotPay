@@ -5025,7 +5025,7 @@ function recalc() {
   // NETO
   const typeRating = parseFloat(document.getElementById('type-rating')?.value) || 0;
   const devEfectivo = Math.round((dev_salarial + totalDietas) * 100) / 100;
-  const liquidoReal = Math.round((devEfectivo - ss_total - retencionIRPF - irpf_especie - segLic_ded - typeRating) * 100) / 100;
+  const liquidoReal = Math.round((devEfectivo - ss_total - retencionIRPF - irpf_especie - segMed_ded - segLic_ded - typeRating) * 100) / 100;
 
   calcResult = {
     sb, plus_tr, extra1, extra2, extra1_dev, extra2_dev, extras_devengados, extras_label,
