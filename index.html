@@ -2781,103 +2781,115 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ── TAB: ADMIN ── -->
     <div class="page" id="page-admin">
 
-      <div class="card" style="border-color:var(--amber);background:var(--amber-dim)">
+      <!-- Header -->
+      <div class="card" style="border-color:var(--amber);background:var(--amber-dim);margin-bottom:8px">
         <div class="card-title"><div class="section-dot amber"></div>Panel de Administrador</div>
-        <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">
-          Solo visible para ESH · Binter Canarias Base MAD
+        <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">Solo visible para ESH · Binter Canarias</div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:12px">
+        <button id="adm-tab-alta"     onclick="adminTab('alta')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:var(--blue);color:#fff">
+          ➕ Alta
+        </button>
+        <button id="adm-tab-usuarios" onclick="adminTab('usuarios')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+          👥 Usuarios
+        </button>
+        <button id="adm-tab-rutas"    onclick="adminTab('rutas')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+          🛣 Rutas
+        </button>
+      </div>
+
+      <!-- ── SUB-TAB: ALTA ── -->
+      <div id="adm-panel-alta">
+        <div class="card">
+          <div class="card-title"><div class="section-dot"></div>Alta nuevo usuario</div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Nombre</span>
+              <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre">
+            </div>
+            <div class="field">
+              <span class="field-label">Apellidos</span>
+              <input class="field-input" id="adm-apellidos" type="text" placeholder="Apellidos">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Código</span>
+              <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
+                oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <div class="field">
+              <span class="field-label">Alias (saludo)</span>
+              <input class="field-input" id="adm-alias-new" type="text" placeholder="Opcional">
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Contraseña</span>
+              <input class="field-input" id="adm-pass" type="text" placeholder="1234">
+            </div>
+            <div class="field">
+              <span class="field-label">Función</span>
+              <select class="field-input" id="adm-funcion" onchange="onAdmFuncionChange()">
+                <option value="CMD">Comandante</option>
+                <option value="COP">Copiloto</option>
+                <option value="SCC">SCC — Sobrecargo</option>
+                <option value="CC">CC — Tripulante de Cabina</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Base</span>
+              <select class="field-input" id="adm-base">
+                <option value="1">Gran Canaria</option>
+                <option value="1">Tenerife</option>
+                <option value="1.2" selected>Madrid</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">Nivel</span>
+              <select class="field-input" id="adm-nivel">
+                <option value="1">1</option><option value="2">2</option>
+                <option value="3" selected>3</option><option value="4">4</option>
+                <option value="5">5</option><option value="6">6</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla</button>
+          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario</button>
         </div>
       </div>
 
-      <!-- ALTA NUEVO USUARIO -->
-      <div class="card">
-        <div class="card-title"><div class="section-dot"></div>Alta nuevo usuario</div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Nombre</span>
-            <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre">
-          </div>
-          <div class="field">
-            <span class="field-label">Apellidos</span>
-            <input class="field-input" id="adm-apellidos" type="text" placeholder="Apellidos">
-          </div>
+      <!-- ── SUB-TAB: USUARIOS ── -->
+      <div id="adm-panel-usuarios" style="display:none">
+        <!-- Buscador -->
+        <div style="position:relative;margin-bottom:10px">
+          <input class="field-input" id="adm-buscar" type="text" placeholder="🔍 Buscar por nombre o código..."
+            oninput="renderAdmin()" style="padding-left:14px">
         </div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Código</span>
-            <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
-              oninput="this.value=this.value.toUpperCase()">
-          </div>
-          <div class="field">
-            <span class="field-label">Alias (saludo)</span>
-            <input class="field-input" id="adm-alias-new" type="text" placeholder="Opcional">
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Contraseña</span>
-            <input class="field-input" id="adm-pass" type="text" placeholder="1234">
-          </div>
-          <div class="field">
-            <span class="field-label">Función</span>
-            <select class="field-input" id="adm-funcion" onchange="onAdmFuncionChange()">
-              <option value="CMD">Comandante</option>
-              <option value="COP">Copiloto</option>
-              <option value="SCC">SCC — Sobrecargo</option>
-              <option value="CC">CC — Tripulante de Cabina</option>
-            </select>
-          </div>
-        </div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Base</span>
-            <select class="field-input" id="adm-base">
-              <option value="1">Gran Canaria</option>
-              <option value="1">Tenerife</option>
-              <option value="1.2" selected>Madrid</option>
-            </select>
-          </div>
-          <div class="field">
-            <span class="field-label">Nivel</span>
-            <select class="field-input" id="adm-nivel">
-              <option value="1">1</option><option value="2">2</option>
-              <option value="3" selected>3</option><option value="4">4</option>
-              <option value="5">5</option><option value="6">6</option>
-            </select>
-          </div>
-        </div>
-        <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla de alta</button>
-        <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario en Firebase</button>
-      </div>
-
-      <!-- GESTIÓN DE PERMISOS -->
-      <div class="card">
-        <div class="card-title"><div class="section-dot amber"></div>Gestión de permisos</div>
         <div id="admin-users-list">
           <div class="loading-block"><div class="spinner"></div></div>
         </div>
       </div>
 
-      <!-- TABLA DE RUTAS -->
-      <div class="card">
-        <div class="card-title"><div class="section-dot blue"></div>Tabla de Rutas — Valor HB</div>
-        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px;line-height:1.7">
-          Define el valor en Horas Bloque de cada ruta especial. El parser de eCrew consultará esta tabla para calcular la previsión mensual.<br>
-          <span style="color:var(--amber2)">Rutas MAD↔TFN y MAD↔LPA</span> tienen valor fijo de 2,9 HB por tramo por defecto.
-        </div>
-
-        <!-- Lista de rutas -->
-        <div id="rutas-lista" style="margin-bottom:12px"></div>
-
-        <!-- Formulario añadir ruta -->
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.08em;margin-bottom:8px">AÑADIR / EDITAR RUTA</div>
+      <!-- ── SUB-TAB: RUTAS ── -->
+      <div id="adm-panel-rutas" style="display:none">
+        <!-- Formulario añadir ruta — arriba -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot green"></div>Añadir ruta</div>
           <div class="row">
             <div class="field">
-              <span class="field-label">Nº vuelo (ej: 6075)</span>
+              <span class="field-label">Nº vuelo</span>
               <input class="field-input" id="ruta-vuelo" type="text" placeholder="6075" maxlength="6">
             </div>
             <div class="field">
-              <span class="field-label">HB por tramo</span>
+              <span class="field-label">HB / tramo</span>
               <input class="field-input" id="ruta-hb" type="number" placeholder="2.9" step="0.1" min="0.5" max="20">
             </div>
           </div>
@@ -2895,6 +2907,15 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
           <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
             onclick="adminAddRuta()">➕ Añadir ruta</button>
+        </div>
+
+        <!-- Lista de rutas — debajo -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot blue"></div>Rutas activas</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:10px">
+            MAD↔TFN y MAD↔LPA = 2,9 HB/tramo por defecto
+          </div>
+          <div id="rutas-lista"></div>
         </div>
       </div>
 
@@ -3456,32 +3477,61 @@ function getUserPerms(userCode) {
   };
 }
 
+// ── ADMIN SUB-TABS ──
+function adminTab(tab) {
+  ['alta','usuarios','rutas'].forEach(t => {
+    const panel = document.getElementById(`adm-panel-${t}`);
+    const btn   = document.getElementById(`adm-tab-${t}`);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.background = t === tab ? 'var(--blue)' : 'transparent';
+      btn.style.color      = t === tab ? '#fff'        : 'var(--text3)';
+    }
+  });
+  if (tab === 'rutas') loadRutas().then(() => renderRutas());
+}
+
 function renderAdmin() {
   const el = document.getElementById('admin-users-list');
+  if (!el) return;
 
-  // Cargar y renderizar rutas (siempre async)
-  loadRutas().then(() => renderRutas());
+  const buscar = (document.getElementById('adm-buscar')?.value || '').toLowerCase().trim();
 
-  // Include ALL users including ESH
-  const allUsers = Object.entries(USERS);
+  // ESH siempre primero, resto ordenado por fecha de ingreso
+  const all = Object.entries(USERS);
+  const esh  = all.find(([c]) => c === ADMIN_CODE);
+  const rest = all
+    .filter(([c]) => c !== ADMIN_CODE)
+    .filter(([code, u]) => {
+      if (!buscar) return true;
+      return code.toLowerCase().includes(buscar)
+        || (u.name||'').toLowerCase().includes(buscar)
+        || (u.apellidos||'').toLowerCase().includes(buscar);
+    })
+    .sort(([,a],[,b]) => {
+      if (a.ingreso && b.ingreso) return a.ingreso.localeCompare(b.ingreso);
+      return a.ingreso ? -1 : b.ingreso ? 1 : 0;
+    });
 
-  if (!allUsers.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">Sin usuarios registrados</div>`;
+  const sorted = esh ? [esh, ...rest] : rest;
+
+  if (!sorted.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">
+      ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios registrados'}</div>`;
     return;
   }
 
-  el.innerHTML = allUsers.map(([code, u]) => {
+  el.innerHTML = sorted.map(([code, u]) => {
     const isAdmin = code === ADMIN_CODE;
-    // Admin always has all perms
     const userPerms = isAdmin
-      ? { funciones: ['CMD', 'COP', 'SCC', 'CC'], bases: ['GC', 'TFN', 'MAD'] }
+      ? { funciones: ['CMD','COP','SCC','CC'], bases: ['GC','TFN','MAD'] }
       : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
 
     const funcChecks = [
-      { val: 'CMD', label: 'Comandante' },
-      { val: 'COP', label: 'Copiloto' },
-      { val: 'SCC', label: 'SCC — Sobrecargo' },
-      { val: 'CC',  label: 'CC — Tripulante Cabina' },
+      { val:'CMD', label:'Comandante' },
+      { val:'COP', label:'Copiloto' },
+      { val:'SCC', label:'SCC — Sobrecargo' },
+      { val:'CC',  label:'CC — Tripulante Cabina' },
     ].map(f => `
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
         <input type="checkbox"
@@ -3493,74 +3543,68 @@ function renderAdmin() {
         <span style="font-size:12px;color:var(--text2)">${f.label}</span>
       </label>`).join('');
 
-    const baseChecks = BASES_OPTIONS.map(b => `
+    const baseChecks = [
+      { val:'GC',  label:'Gran Canaria' },
+      { val:'TFN', label:'Tenerife' },
+      { val:'MAD', label:'Madrid' },
+    ].map(b => `
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
         <input type="checkbox"
           ${isAdmin ? 'checked disabled' : ''}
           ${!isAdmin ? `class="adm-perm-check" data-user="${code}" data-type="base" data-val="${b.val}"
           ${userPerms.bases.includes(b.val) ? 'checked' : ''}
           onchange="togglePerm('${code}','base','${b.val}',this.checked)"` : ''}
-          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--amber)">
+          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--blue)">
         <span style="font-size:12px;color:var(--text2)">${b.label}</span>
       </label>`).join('');
 
+    const fnIcon = {CMD:'✈️ CMD',COP:'🛫 COP',SCC:'👔 SCC',CC:'🧳 CC'}[u.funcion]||u.funcion;
+    const ingresoStr = u.ingreso ? ` · Alta: ${u.ingreso}` : '';
+    const bloqBadge = u.bloqueado
+      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">🔒 BLOQUEADO</span>`
+      : '';
+
     return `
-      <div style="border:1px solid ${isAdmin ? 'var(--amber)' : 'var(--border)'};border-radius:var(--r);
-        padding:14px;margin-bottom:10px;background:${isAdmin ? 'var(--amber-dim)' : 'var(--bg3)'}">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-          <div style="width:36px;height:36px;border-radius:50%;
-            background:${isAdmin ? 'var(--amber-dim)' : 'var(--blue-dim)'};
-            border:1px solid ${isAdmin ? 'var(--amber)' : 'var(--blue)'};
-            display:flex;align-items:center;justify-content:center;
-            font-family:var(--mono);font-size:12px;font-weight:700;
-            color:${isAdmin ? 'var(--amber2)' : 'var(--blue2)'}">${code}</div>
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name}${isAdmin ? ' ★' : ''}</div>
-            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
-              ${u.funcion} · NVL${u.nivel} · ${parseFloat(u.base)>1?'Madrid':'Canarias'}
-              ${isAdmin ? ' · ADMINISTRADOR' : ''}
-            </div>
+    <div class="card" style="margin-bottom:10px;${u.bloqueado?'opacity:0.7':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name||''} ${u.apellidos||''}</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3)">
+            <span style="color:var(--blue2)">${code}</span> · ${fnIcon} · N${u.nivel}${ingresoStr}
           </div>
+          ${bloqBadge ? `<div style="margin-top:4px">${bloqBadge}</div>` : ''}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${isAdmin ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2)">ADMIN</span>` : `
+          <button onclick="eliminarUsuario('${code}')"
+            style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
+            font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono)">🗑</button>`}
+      </div>
+      ${isAdmin ? '' : `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
           <div>
-            <div style="font-size:10px;letter-spacing:2px;color:var(--amber);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">Cargo</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;letter-spacing:.06em">CARGO</div>
             ${funcChecks}
           </div>
           <div>
-            <div style="font-size:10px;letter-spacing:2px;color:var(--amber);font-family:var(--mono);text-transform:uppercase;margin-bottom:6px">Base</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;letter-spacing:.06em">BASE</div>
             ${baseChecks}
           </div>
         </div>
-        ${isAdmin ? `<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:var(--mono)">
-          ★ Administrador — acceso total a todas las opciones
-        </div>` : `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">
-              Acceso: ${userPerms.funciones.join(', ')} · ${userPerms.bases.map(b => BASES_OPTIONS.find(o=>o.val===b)?.label||b).join(', ')}
-            </div>
-            <button onclick="editarUsuario('${code}')"
-              style="font-family:var(--mono);font-size:10px;padding:4px 10px;
-              background:var(--blue-dim);border:1px solid var(--blue);
-              color:var(--blue2);border-radius:5px;cursor:pointer">
-              ✏️ Editar
-            </button>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-size:10px;font-family:var(--mono);color:${u.bloqueado ? 'var(--red)' : 'var(--text3)'}">
-              ${u.bloqueado ? '🔒 Usuario bloqueado' : '🟢 Acceso activo'}
-            </div>
-            <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
-              style="font-family:var(--mono);font-size:10px;padding:4px 10px;
-              background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
-              border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-              color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-              border-radius:5px;cursor:pointer">
-              ${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
-            </button>
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+          <button onclick="editarUsuario('${code}')"
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+            background:var(--blue-dim);border:1px solid var(--blue);
+            color:var(--blue2);border-radius:5px;cursor:pointer">✏️ Editar</button>
+          <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+            background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
+            border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
+            color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
+            border-radius:5px;cursor:pointer">
+            ${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
+          </button>
         </div>`}
-      </div>`;
+    </div>`;
   }).join('');
 }
 
@@ -3958,7 +4002,7 @@ function showTab(name) {
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar')  checkApiKeyCard();
   if (name === 'config')    renderConfig();
-  if (name === 'admin')     renderAdmin();
+  if (name === 'admin')     { adminTab('alta'); renderAdmin(); }
   if (name === 'variables') varsActualizarMesEsperado();
 }
 
@@ -7347,17 +7391,16 @@ function renderRutas() {
     keys.map(k => {
       const r = rutasData[k];
       return `
-        <div style="display:grid;grid-template-columns:80px 60px 60px 60px 1fr;gap:4px;
-          align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
-          <span style="font-family:var(--mono);font-size:12px;color:var(--blue2)">${r.vuelo}</span>
-          <span style="font-family:var(--mono);font-size:12px">${r.origen}</span>
-          <span style="font-family:var(--mono);font-size:12px">${r.destino}</span>
-          <span style="font-family:var(--mono);font-size:12px;color:var(--green)">${r.hb}</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;
+          padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;gap:16px;align-items:center">
+            <span style="font-family:var(--mono);font-size:12px;color:var(--blue2);min-width:44px">${r.vuelo}</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--text2)">${r.origen} → ${r.destino}</span>
+            <span style="font-family:var(--mono);font-size:12px;color:var(--green)">${r.hb} HB</span>
+          </div>
           <button onclick="adminDeleteRuta('${k}')"
-            style="background:none;border:1px solid var(--red);border-radius:4px;
-            color:var(--red);font-size:10px;padding:3px 8px;cursor:pointer;font-family:var(--mono)">
-            🗑
-          </button>
+            style="background:none;border:none;color:var(--text3);font-size:14px;
+            cursor:pointer;padding:2px 6px;line-height:1">×</button>
         </div>`;
     }).join('');
 }
