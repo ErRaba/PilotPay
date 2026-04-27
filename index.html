@@ -4861,10 +4861,14 @@ function recalc() {
   const hv4 = parseFloat(document.getElementById('hv4').value) || 0;
 
   // HV importes por tramo — tarifa redondeada a 2 dec ANTES de multiplicar (como hace Binter)
-  const hv_t1_rate = Math.round(t.hv_t1[n] * madF * 100) / 100;
-  const hv_t2_rate = Math.round(t.hv_t2[n] * madF * 100) / 100;
-  const hv_t3_rate = Math.round(t.hv_t3[n] * madF * 100) / 100;
-  const hv_t4_rate = Math.round(t.hv_t4[n] * madF * 100) / 100;
+  // Tarifas HV con factor MAD — Binter TRUNCA a 2 decimales (no redondea)
+  // Verificado: T4 CMD N3: 110.58×1.2=132.696 → floor→132.69 ✓ (nómina feb-2026)
+  //             T1 CMD N3: 82.52×1.2=99.024   → floor→99.02  ✓ (nómina mar-2026)
+  //             T2 CMD N3: 91.60×1.2=109.92   → floor→109.92 ✓ (nómina mar-2026)
+  const hv_t1_rate = Math.floor(t.hv_t1[n] * madF * 100) / 100;
+  const hv_t2_rate = Math.floor(t.hv_t2[n] * madF * 100) / 100;
+  const hv_t3_rate = Math.floor(t.hv_t3[n] * madF * 100) / 100;
+  const hv_t4_rate = Math.floor(t.hv_t4[n] * madF * 100) / 100;
   const hv1_imp = Math.round(hv1 * hv_t1_rate * 100) / 100;
   const hv2_imp = Math.round(hv2 * hv_t2_rate * 100) / 100;
   const hv3_imp = Math.round(hv3 * hv_t3_rate * 100) / 100;
@@ -4929,14 +4933,17 @@ function recalc() {
   const nDestInt = parseFloat(document.getElementById('dest-int').value) || 0;
 
   // Importes por dieta — valores exactos hardcodeados para precisión
+  // Tarifas SUJETAS a IRPF y SS — valores internos reales de Binter
+  // Verificados contra nóminas feb-2026 (13 períodos) y mar-2026 (9 períodos)
+  // mant_nac: 36,68/9 = 52,98/13 = 4,0756€ (no 4,08 como indicaría 40,14-36,06)
   const SUJETA = {
-    mant_nac: 4.08,   // 40.14 - 36.06
-    nac_sp:   18.58,  // 54.64 - 36.06
-    nac_cp:   1.30,   // 54.64 - 53.34
-    int_sp:   6.36,   // 72.47 - 66.11 (Binter usa 72.47 para INT sin pernocta)
-    int_cp:   0.00,
+    mant_nac: 4.0756,  // verificado: 9×4.0756=36.68 ✓ 13×4.0756=52.98 ✓
+    nac_sp:   18.58,   // 54.64 - 36.06
+    nac_cp:   1.30,    // 54.64 - 53.34
+    int_sp:   6.36,    // 72.47 - 66.11 (verificado mar-2026: 1×6.36=6.36 ✓)
+    int_cp:   0.00,    // pernocta INT: exenta completa (2×72.475=144.95 ✓)
   };
-  // INT pernocta: Binter usa 72.475 internamente (muestra 72,47, pero 2×72.475=144.95)
+  // INT pernocta: Binter usa 72.475 internamente (muestra 72,47; 2×72.475=144.95)
   const EXENTA_INT_CP = 72.475;
   const dMantNac_ex  = Math.round(nMantNac * DIETAS.mant_nac.exenta * 100) / 100;
   const dMantNac_suj = Math.round(nMantNac * SUJETA.mant_nac * 100) / 100;
