@@ -4897,7 +4897,10 @@ function recalc() {
   //   → aparecen como dos líneas de devengo en la nómina mensual
   // Paga completa (toggle ON): no se cobra nada en meses normales
   //   → en julio se cobra Extra1 completa (= importe salario base)
-  //   → en diciembre se cobra Extra2 completa (= importe salario base)
+  // ── PAGAS EXTRA ──
+  // MODO PRORRATEADO: las pagas NO aparecen como línea de devengo en nómina.
+  // Solo se computan en la Base SS (prorrata_extras_ss).
+  // MODO PAGA COMPLETA: aparecen como línea de devengo en julio y diciembre.
   const isPagaCompleta = document.getElementById('toggle-extra').checked;
   const mesActual = document.getElementById('mes-nomina').value;
   const isJulio = mesActual === 'Julio';
@@ -4905,13 +4908,12 @@ function recalc() {
 
   let extra1_dev = 0, extra2_dev = 0, extras_label = '';
   if (!isPagaCompleta) {
-    // Prorrateada: ambas extras se cobran todos los meses
-    extra1_dev = extra1;
-    extra2_dev = extra2;
+    // Prorrateada: NO aparecen en devengado. Solo van a Base SS.
+    extra1_dev = 0;
+    extra2_dev = 0;
     extras_label = 'prorr';
   } else {
-    // Paga completa: solo en julio (Extra1) y diciembre (Extra2)
-    // El importe de la paga extra completa = salario base del nivel
+    // Paga completa: aparecen en devengado solo en julio/diciembre
     if (isJulio)     { extra1_dev = sb; extras_label = 'julio'; }
     if (isDiciembre) { extra2_dev = sb; extras_label = 'dic'; }
   }
@@ -4954,15 +4956,21 @@ function recalc() {
   const totalDietas    = Math.round((totalDietasEx + totalDietasSuj) * 100) / 100;
 
   // Seguros
-  const segMed_dev = segmedActivo ? SEG_MEDICO : 0;
+  // Seguro Médico: Binter lo trata como deducción pura (no repercutido al trabajador)
+  // NO aparece como devengo positivo — solo como retención negativa
+  // Seguro Vida: sí aparece como retribución en especie en devengos
+  const segMed_dev = 0;   // no entra en devengado ni en base IRPF
+  const segMed_ded = segmedActivo ? SEG_MEDICO : 0;  // solo deducción
   const segLic_ded = seglicActivo ? SEG_LIC * 0.5 : 0;
-  const segMed_ded = segmedActivo ? SEG_MEDICO : 0;
 
   // DEVENGADO TOTAL
+  // Seg. Médico no entra — solo Seg. Vida como especie
   const dev_salarial = Math.round((sb + plus_tr + extras_devengados + hvTotal + im + fr + lv1 + lv2 + lv3 + dpo + compMad) * 100) / 100;
-  const totalDevengado = Math.round((dev_salarial + totalDietas + segMed_dev + SEG_VIDA_ESPECIE) * 100) / 100;
+  const totalDevengado = Math.round((dev_salarial + totalDietas + SEG_VIDA_ESPECIE) * 100) / 100;
 
   // BASE IRPF = total devengado - dietas exentas
+  // Seg. Médico NO entra en base IRPF (no es devengo)
+  // Seg. Vida SÍ entra (retribución especie)
   const baseIRPF = Math.round((totalDevengado - totalDietasEx) * 100) / 100;
   const retencionIRPF = Math.round(baseIRPF * irpf_pct / 100 * 100) / 100;
 
@@ -4971,10 +4979,9 @@ function recalc() {
   // BCP = BCC + horas extraordinarias (HV en pilotos)
   // Las dietas NO se incluyen. Tope máximo 2026 = 5.101,20€/mes
   const BASE_SS_TOPE = 5101.20;
-  // ── BASE SS ──
-  // La prorrata de pagas extra SIEMPRE entra en la base SS,
-  // independientemente de si se cobra en 12 o 14 pagas.
-  // extra1 y extra2 ya son el importe mensual prorrateado.
+  // Prorrata pagas para Base SS: SIEMPRE extra1+extra2 del convenio
+  // independientemente de si se cobra en 12 o 14 pagas
+  // extra1 y extra2 = importe mensual de cada paga extra según tabla BCSA
   const prorrata_extras_ss = Math.round((extra1 + extra2) * 100) / 100;
 
   // Conceptos que SÍ entran en Base SS:
@@ -4987,8 +4994,8 @@ function recalc() {
     dpo +                  // DPO
     compMad +              // complemento Madrid
     prorrata_extras_ss +   // prorrata pagas extra (siempre)
-    hvTotal +              // horas de vuelo
-    segMed_dev +           // seguro médico (especie)
+    hvSS +                 // HV a tarifa base sin factor MAD (así cotiza Binter)
+    (segmedActivo ? SEG_MEDICO : 0) + // seguro médico (especie, cotiza)
     SEG_VIDA_ESPECIE +     // seguro vida (especie)
     totalDietasSuj         // dietas sujetas a cotización
   ) * 100) / 100;
@@ -5003,7 +5010,7 @@ function recalc() {
   const ss_solidaridad = Math.round((ss_sol_t1 + ss_sol_t2 + ss_sol_t3) * 100) / 100;
   const ss_total = Math.round((ss_cc + ss_mei + ss_dfp + ss_solidaridad) * 100) / 100;
 
-  // IRPF especie seguro vida
+  // IRPF especie: solo seguro vida (el médico no es devengo → no genera retención especie)
   const irpf_especie = Math.round(SEG_VIDA_ESPECIE * irpf_pct / 100 * 100) / 100;
 
   // NETO
