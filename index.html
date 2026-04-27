@@ -4971,19 +4971,26 @@ function recalc() {
   // BCP = BCC + horas extraordinarias (HV en pilotos)
   // Las dietas NO se incluyen. Tope máximo 2026 = 5.101,20€/mes
   const BASE_SS_TOPE = 5101.20;
-  const prorrata_extras_ss = !isPagaCompleta ? Math.round((extra1 + extra2) / 12 * 100) / 100 : 0;
-  // Complementos salariales fijos: plus transporte, DPO mensual, complemento MAD
-  // Retribuciones especie: seguro médico, seguro vida
-  // HV = horas extraordinarias de pilotos → van a BCP
+  // ── BASE SS ──
+  // La prorrata de pagas extra SIEMPRE entra en la base SS,
+  // independientemente de si se cobra en 12 o 14 pagas.
+  // extra1 y extra2 ya son el importe mensual prorrateado.
+  const prorrata_extras_ss = Math.round((extra1 + extra2) * 100) / 100;
+
+  // Conceptos que SÍ entran en Base SS:
+  // SB + plus transporte + complementos + HV + DPO + prorrata extras
+  // + retrib. especie (seg. médico + seg. vida) + dietas SUJETAS
+  // NO entran: dietas exentas, destacamentos exentos
   const baseSS_teorica = Math.round((
-    sb +              // salario base
-    plus_tr +         // complemento salarial fijo
-    dpo +             // complemento salarial (DPO)
-    compMad +         // complemento base Madrid
-    prorrata_extras_ss + // prorrata pagas extra
-    hvTotal +         // horas extraordinarias (BCP)
-    segMed_dev +      // retribución especie
-    SEG_VIDA_ESPECIE  // retribución especie
+    sb +                   // salario base
+    plus_tr +              // plus transporte (fijo)
+    dpo +                  // DPO
+    compMad +              // complemento Madrid
+    prorrata_extras_ss +   // prorrata pagas extra (siempre)
+    hvTotal +              // horas de vuelo
+    segMed_dev +           // seguro médico (especie)
+    SEG_VIDA_ESPECIE +     // seguro vida (especie)
+    totalDietasSuj         // dietas sujetas a cotización
   ) * 100) / 100;
   const baseSS = Math.min(baseSS_teorica, BASE_SS_TOPE);
   const ss_cc  = Math.round(baseSS * 0.0470 * 100) / 100;
