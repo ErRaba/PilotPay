@@ -6,7 +6,7 @@ import { auditarDistribucionHV } from '../src/engine/tramos.js';
 
 test('la nómina backend devuelve traza auditable con fuente normativa', () => {
   const r = calcularNomina({ funcion: 'CMD', nivel: 1, irpfPct: 20, pagasProrrateadas: true, hv: { t1: 10, t2: 5, t3: 0, t4: 0 } });
-  assert.equal(r.versionMotor, '2026.04-audit-v5-payslip-parser');
+  assert.equal(r.versionMotor, '2026.04-audit-v6-extra-pay-14p');
   assert.ok(r.audit.length >= 6);
   assert.ok(r.audit.some(a => a.codigo === 'SS_BASE_TOPADA'));
   assert.ok(r.audit.some(a => a.fuente === 'CONVENIO_RETRIBUCIONES'));
