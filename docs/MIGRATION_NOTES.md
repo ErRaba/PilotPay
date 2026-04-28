@@ -85,3 +85,18 @@ Pendiente:
 - Migrar el render completo de la nómina para que el backend devuelva todas las líneas de devengo/deducción.
 - Igualar al céntimo los conceptos específicos ya calibrados en el HTML legacy.
 - Completar el motor IRPF reglamentario; por ahora el backend aplica el porcentaje informado.
+
+## v6 — Pagas extra 14 pagas / prorrateadas
+
+Se añade soporte backend auditable para dos modos de paga extra por usuario:
+
+- `pagasProrrateadas: true`: el motor devenga mensualmente la prorrata de ambas extras (`extra * 2`) y la integra en Base IRPF.
+- `pagasProrrateadas: false`: el motor no devenga paga extra en meses ordinarios; en julio devenga la primera paga completa (`salarioBase`) y en diciembre la segunda paga completa (`salarioBase`).
+
+Regla de cotización: la Base SS mensual mantiene siempre la prorrata de pagas extra (`extra * 2`) y no aumenta por cobrar la extra completa en julio/diciembre. La paga extra completa sí aumenta el devengo y la Base IRPF del mes de cobro.
+
+Tests añadidos:
+
+- 14 pagas sin extra en marzo y con prorrata SS.
+- 14 pagas con extra completa en julio sin aumento de Base SS.
+- Paga prorrateada mensual para copiloto.
