@@ -27,3 +27,39 @@ test('calcula una nómina CMD básica', () => {
   assert.ok(r.totales.bruto > 0);
   assert.ok(r.deducciones.ss.total > 0);
 });
+
+test('modo 14 pagas no devenga paga extra en marzo pero sí mantiene prorrata SS', () => {
+  const r = calcularNomina({
+    funcion: 'CMD', nivel: 3, mesNomina: 'Marzo', pagasProrrateadas: false,
+    irpfPct: 34.15, hv: { t1: 10, t2: 2.2 }, seguroMedico: true,
+  });
+  assert.equal(r.conceptos.pagaExtraMes, 0);
+  assert.equal(r.conceptos.pagasExtra.etiqueta, 'sin-extra-mensual');
+  assert.equal(r.bases.prorrataExtrasSS, 719.10);
+});
+
+test('modo 14 pagas devenga paga extra completa en julio y no aumenta base SS por la extra cobrada', () => {
+  const marzo = calcularNomina({
+    funcion: 'CMD', nivel: 3, mesNomina: 'Marzo', pagasProrrateadas: false,
+    irpfPct: 34.15, hv: { t1: 10, t2: 2.2 }, seguroMedico: true,
+  });
+  const julio = calcularNomina({
+    funcion: 'CMD', nivel: 3, mesNomina: 'Julio', pagasProrrateadas: false,
+    irpfPct: 34.15, hv: { t1: 10, t2: 2.2 }, seguroMedico: true,
+  });
+  assert.equal(julio.conceptos.pagaExtraMes, 4314.56);
+  assert.equal(julio.conceptos.pagasExtra.etiqueta, 'extra-julio');
+  assert.equal(julio.bases.baseCotizableSinTope, marzo.bases.baseCotizableSinTope);
+  assert.equal(julio.bases.baseSS, marzo.bases.baseSS);
+  assert.equal(julio.bases.baseIRPF, Number((marzo.bases.baseIRPF + 4314.56).toFixed(2)));
+});
+
+test('modo prorrateado devenga la prorrata mensual de las dos extras', () => {
+  const r = calcularNomina({
+    funcion: 'COP', nivel: 4, mesNomina: 'Marzo', pagasProrrateadas: true,
+    irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroMedico: false,
+  });
+  assert.equal(r.conceptos.pagaExtraMes, 310.56);
+  assert.equal(r.conceptos.pagasExtra.extra1Dev, 155.28);
+  assert.equal(r.conceptos.pagasExtra.extra2Dev, 155.28);
+});
