@@ -24,6 +24,51 @@ function sumaDietas(dietas = {}) {
   }
   return { total: euros(total), exenta: euros(exenta), sujeta: euros(Math.max(0, total - exenta)) };
 }
+
+function normalizarMes(input = {}) {
+  const raw = String(input.mesNomina || input.mes || input.month || '').trim().toLowerCase();
+  const meses = {
+    enero: 'Enero', febrero: 'Febrero', marzo: 'Marzo', abril: 'Abril', mayo: 'Mayo', junio: 'Junio',
+    julio: 'Julio', agosto: 'Agosto', septiembre: 'Septiembre', setiembre: 'Septiembre', octubre: 'Octubre', noviembre: 'Noviembre', diciembre: 'Diciembre',
+    '1': 'Enero', '01': 'Enero', '2': 'Febrero', '02': 'Febrero', '3': 'Marzo', '03': 'Marzo', '4': 'Abril', '04': 'Abril',
+    '5': 'Mayo', '05': 'Mayo', '6': 'Junio', '06': 'Junio', '7': 'Julio', '07': 'Julio', '8': 'Agosto', '08': 'Agosto',
+    '9': 'Septiembre', '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre',
+  };
+  return meses[raw] || null;
+}
+
+function calcularPagasExtraMes({ sb, extra, pagasProrrateadas, mesNomina }) {
+  const modo = pagasProrrateadas ? 'prorrateadas' : '14-pagas';
+  const extraMensualProrrateada = euros(extra * 2);
+  let pagaExtraMes = 0;
+  let extra1Dev = 0;
+  let extra2Dev = 0;
+  let etiqueta = pagasProrrateadas ? 'prorrateada' : 'sin-extra-mensual';
+
+  if (pagasProrrateadas) {
+    pagaExtraMes = extraMensualProrrateada;
+    extra1Dev = euros(extra);
+    extra2Dev = euros(extra);
+  } else if (mesNomina === 'Julio') {
+    pagaExtraMes = euros(sb);
+    extra1Dev = euros(sb);
+    etiqueta = 'extra-julio';
+  } else if (mesNomina === 'Diciembre') {
+    pagaExtraMes = euros(sb);
+    extra2Dev = euros(sb);
+    etiqueta = 'extra-diciembre';
+  }
+
+  return {
+    modo,
+    mesNomina,
+    pagaExtraMes: euros(pagaExtraMes),
+    extra1Dev,
+    extra2Dev,
+    etiqueta,
+    extraMensualProrrateada,
+  };
+}
 function dpoMensual(funcion, nivel, porcentaje = 100, sccEjercido75 = false) {
   const fn = String(funcion).toUpperCase();
   const pct = Math.max(0, Number(porcentaje) || 0) / 100;
@@ -59,7 +104,9 @@ export function calcularNomina(input = {}, options = {}) {
   const sb = t.salbase[idx];
   const extra = t.extra[idx];
   const pagasProrrateadas = Boolean(input.pagasProrrateadas);
-  const pagaExtraMes = pagasProrrateadas ? euros(extra * 2) : 0;
+  const mesNomina = normalizarMes(input);
+  const pagasExtra = calcularPagasExtraMes({ sb, extra, pagasProrrateadas, mesNomina });
+  const pagaExtraMes = pagasExtra.pagaExtraMes;
   const prorrataExtrasSS = euros(extra * 2);
   const irpfPctManual = Number(input.irpfPct) || 0;
   const dietas = sumaDietas(input.dietas);
@@ -121,7 +168,7 @@ export function calcularNomina(input = {}, options = {}) {
   const liquido = euros(bruto - ssLimpio.total - irpf - deduccionesPrivadasNetas);
 
   if (auditEnabled) {
-    audit.push(auditStep({ codigo: 'PAGA_EXTRA_PRORRATEADA', concepto: 'Pagas extra en nómina y prorrata SS', formula: 'pagaExtraMes = extra * 2 si prorrateadas; prorrataExtrasSS = extra * 2 siempre', entradas: { extra, pagasProrrateadas }, resultado: { pagaExtraMes, prorrataExtrasSS }, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id }));
+    audit.push(auditStep({ codigo: 'PAGA_EXTRA', concepto: 'Pagas extra en nómina y prorrata de pagas para Seguridad Social', formula: 'si prorrateadas: pagaExtraMes = extra * 2; si 14 pagas: julio/diciembre = salario base; resto meses = 0. La prorrataExtrasSS = extra * 2 siempre.', entradas: { extra, salarioBase: sb, pagasProrrateadas, mesNomina }, resultado: { ...pagasExtra, prorrataExtrasSS }, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id, notas: ['En modo 14 pagas la extra se suma al devengo y a la base IRPF solo en julio/diciembre.', 'La base de cotización mensual mantiene la prorrata de pagas extra y no aumenta por cobrar la extra completa en julio/diciembre.'] }));
     audit.push(auditStep({ codigo: 'PLUS_TRANSPORTE', concepto: 'Plus transporte mensual', formula: t.grupo === 'III' ? 'plusTransporte = anual / 11' : 'tabla función/nivel', entradas: { grupo: t.grupo, funcion, nivel: Number(input.nivel) }, resultado: plusTransporte, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id }));
     audit.push(auditStep({ codigo: usarIRPFReglamentario ? 'BASE_IRPF_REGLAMENTARIA' : 'BASE_IRPF_PORCENTAJE', concepto: usarIRPFReglamentario ? 'IRPF reglamentario calculado en backend' : 'Base IRPF usada con porcentaje informado', formula: usarIRPFReglamentario ? 'procedimiento general arts. 82 a 86 RIRPF' : 'devengos salariales + dietas sujetas + especie vida', entradas: { devengosSalariales, dietasSujetas: dietas.sujeta, seguroVida: input.seguroVida !== false ? ESPECIE.SEGURO_VIDA : 0, irpfPct }, resultado: { baseIRPF, irpf, irpfPct }, fuente: usarIRPFReglamentario ? FUENTES.IRPF_REGLAMENTO_ART_82.id : FUENTES.IRPF_PORCENTAJE_INFORMADO.id, notas: [usarIRPFReglamentario ? 'IRPF calculado por motor reglamentario core.' : 'Modo manual: porcentaje informado por usuario/nómina.'] }));
     if (usarIRPFReglamentario && irpfReglamentario.audit) audit.push(...irpfReglamentario.audit);
@@ -131,8 +178,8 @@ export function calcularNomina(input = {}, options = {}) {
 
   return {
     funcion, grupo: t.grupo, nivel: Number(input.nivel),
-    versionMotor: '2026.04-audit-v5-payslip-parser',
-    conceptos: { sb, pagaExtraMes, hvImporte, plusTransporte, dpo, complementos, dietas },
+    versionMotor: '2026.04-audit-v6-extra-pay-14p',
+    conceptos: { sb, pagaExtraMes, pagasExtra, hvImporte, plusTransporte, dpo, complementos, dietas },
     bases: { prorrataExtrasSS, baseCotizableSinTope, baseSS: ssLimpio.baseSS, baseIRPF },
     deducciones: { ss: ssLimpio, irpf, irpfPct, irpfModo: usarIRPFReglamentario ? 'reglamentario' : 'manual', irpfReglamentario: usarIRPFReglamentario ? irpfReglamentario : undefined, privadas: { interesesPrestamo, amortizacionPrestamo, otras: otrasDeduccionesPrivadas, total: deduccionesPrivadasNetas } },
     totales: { devengosSalariales, devengosNoSalariales, bruto, liquido },
