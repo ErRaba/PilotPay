@@ -209,6 +209,52 @@ const AvatarManager = (() => {
     }
   }
 
+  // ── ADMIN OPERATIONS ─────────────────────────────────────────────────────
+
+  /**
+   * Return ALL avatars including inactive ones (for admin view).
+   */
+  function getAllIncludingInactive() {
+    return [..._avatars];
+  }
+
+  /**
+   * Toggle the active flag of an avatar by id.
+   * Updates the in-memory list immediately.
+   * Persisting to server is out of scope (static JSON) — caller may
+   * snapshot the state via getAllIncludingInactive() if needed.
+   * @param {string} id
+   * @returns {boolean} new active state
+   */
+  function toggleActive(id) {
+    const av = _avatars.find(a => a.id === id);
+    if (!av) return false;
+    av.active = !av.active;
+    return av.active;
+  }
+
+  /**
+   * Add a new avatar to the in-memory list.
+   * Auto-generates an id based on current list length.
+   * @param {{ name, role, gender, src }} fields
+   * @returns {object} the new avatar entry
+   */
+  function addAvatar({ name, role, gender, src }) {
+    const idx  = _avatars.length + 1;
+    const id   = `avatar_${String(idx).padStart(2, '0')}`;
+    const entry = {
+      id,
+      role:   role   || 'cmd',
+      gender: gender || 'male',
+      name:   name   || `Avatar ${idx}`,
+      src:    src    || '',
+      src_embedded: null,
+      active: true,
+    };
+    _avatars.push(entry);
+    return entry;
+  }
+
   // ── PUBLIC API ───────────────────────────────────────────────────────────
 
   return {
@@ -221,6 +267,12 @@ const AvatarManager = (() => {
     resolveSelection,
     setSelection,
     updateDOM,
+    // Admin
+    getAllIncludingInactive,
+    toggleActive,
+    addAvatar,
+    /** Raw array access for admin panel (same as getAllIncludingInactive) */
+    _getRaw: getAllIncludingInactive,
 
     /** True once init() has completed */
     get loaded() { return _loaded; },
