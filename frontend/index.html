@@ -6255,14 +6255,73 @@ function parseBinterNomina(text) {
   if (!liquido)         liquido         = findNum(/L[IÍ]QUIDO\s+TOTAL\s+A\s+PERCIBIR\s+([\d.,]+)/i);
 
   // ── ACUMULADOS ──
-  // Formato típico: "Acum. Base IRPF  12.345,67"
-  const acum_base_irpf   = findNum(/Acum\.?\s+Base\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
-  const acum_irpf        = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
-  const acum_cotiz_ss    = findNum(/Acum\.?\s+Cotiz(?:aci[oó]n)?\.?\s+S\.?\s*S\.?\s+([\d.,]+)/i);
-  const acum_base_esp_rep   = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_irpf_esp_rep   = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_base_esp_norep = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_irpf_esp_norep = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+  // Layout real nómina Binter (analizado con pdfplumber, Marzo 2026):
+  // PDF.js agrupa por coord. Y → los valores aparecen en líneas anteriores a su etiqueta.
+  // Puede haber texto intercalado ("FIRMA Y SELLO...") entre valor y etiqueta.
+  // Hay líneas con 2 etiquetas Acum. (la 1ª toma valor anterior, la 2ª toma inline).
+  //
+  // Estructura observada:
+  // [15] "Acum.  Base  Esp.  Rep  129,99"                             ← inline
+  // [17] "30.501,12"                                                  ← valor de Base IRPF
+  // [18] "Acum.  Base  IRPF"                                         ← etiqueta sola
+  // [19] "Acum.  IRPF  Esp.  Rep  44,57"                             ← inline
+  // [20] "10.456,83"                                                  ← valor de IRPF retenido
+  // [21] "Acum.  IRPF"                                               ← etiqueta sola
+  // [22] "Acum.  Base  Esp.  No  Rep  0,00"                          ← inline
+  // [23] "FIRMA  Y  SELLO  DE  LA  EMPRESA"                          ← texto intercalado
+  // [24] "1.034,26"                                                  ← valor de Cotiz. S.S.
+  // [25] "Acum.  Cotiz.  S.S.  Acum.  IRPF  Esp.  No  Rep  0,00"   ← línea compuesta
+
+  const _RN_ACM    = '[\\d]{1,3}(?:\\.\\d{3})*,\\d{2}';
+  const _RN_ACM_RE = new RegExp('^' + _RN_ACM + '$');
+
+  function _findAcum(lns, labelRe) {
+    for (let _i = 0; _i < lns.length; _i++) {
+      const _line = lns[_i];
+      if (!labelRe.test(_line)) continue;
+
+      const _nAcum      = (_line.match(/Acum\./g) || []).length;
+      const _inlineNums = _line.match(new RegExp(_RN_ACM, 'g')) || [];
+      const _firstAcumIdx = _line.indexOf('Acum.');
+      const _thisMatch    = labelRe.exec(_line);
+      const _isFirst      = _thisMatch && (_thisMatch.index === _firstAcumIdx);
+
+      // Función: buscar número hacia atrás (hasta 4 líneas, sin cruzar otra etiqueta Acum.)
+      const _scanBack = () => {
+        for (let _j = _i - 1; _j >= Math.max(0, _i - 4); _j--) {
+          if (_RN_ACM_RE.test(lns[_j])) return n(lns[_j]);
+          if (lns[_j] && /Acum\./i.test(lns[_j])) break;
+        }
+        return null;
+      };
+
+      if (_nAcum <= 1) {
+        // Etiqueta única: inline > buscar atrás
+        if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        const _back = _scanBack();
+        if (_back !== null) return _back;
+      } else {
+        // Línea compuesta: 1ª etiqueta ← atrás; 2ª ← inline
+        if (_isFirst) {
+          const _back = _scanBack();
+          if (_back !== null) return _back;
+        } else {
+          if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        }
+      }
+    }
+    return null;
+  }
+
+  const _lns_acm = text.split('\n').map(l => l.trim());
+
+  const acum_base_irpf     = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
+  const acum_irpf          = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
+  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.\s+Cotiz/i);
+  const acum_base_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
+  const acum_irpf_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
+  const acum_base_esp_norep= _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
+  const acum_irpf_esp_norep= _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
 
   // ── TIRA DE DÍAS (pie de nómina) ──
   // Formato: "1 2 3 ... 31" con porcentajes debajo (100.0 = día normal, 60/75 = baja)
@@ -6588,16 +6647,23 @@ function renderComparativa(nomData) {
 
   let trabajadorHTML = '';
   if (nomData.trabajador) {
-    const t2 = nomData.trabajador;
+    const t2  = nomData.trabajador;
+    const ac2 = nomData.acumulados || {};
+    const fmt2b = v => v != null
+      ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+      : null;
+
     trabajadorHTML = `
       <div class="card" style="margin-bottom:12px">
         <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
         <div class="profile-data">
-          ${t2.nombre ? `<div class="profile-item"><div class="profile-item-label">Nombre</div><div class="profile-item-val" style="font-size:12px">${t2.nombre}</div></div>` : ''}
-          ${t2.nif ? `<div class="profile-item"><div class="profile-item-label">NIF</div><div class="profile-item-val">${t2.nif}</div></div>` : ''}
-          ${t2.nss ? `<div class="profile-item"><div class="profile-item-label">Nº SS</div><div class="profile-item-val" style="font-size:11px">${t2.nss}</div></div>` : ''}
+          ${t2.nombre       ? `<div class="profile-item"><div class="profile-item-label">Nombre</div><div class="profile-item-val" style="font-size:12px">${t2.nombre}</div></div>` : ''}
+          ${t2.nif          ? `<div class="profile-item"><div class="profile-item-label">NIF</div><div class="profile-item-val">${t2.nif}</div></div>` : ''}
+          ${t2.nss          ? `<div class="profile-item"><div class="profile-item-label">Nº SS</div><div class="profile-item-val" style="font-size:11px">${t2.nss}</div></div>` : ''}
           ${t2.fecha_ingreso ? `<div class="profile-item"><div class="profile-item-label">Fecha ingreso</div><div class="profile-item-val">${t2.fecha_ingreso}</div></div>` : ''}
           ${nomData.irpf_pct ? `<div class="profile-item"><div class="profile-item-label">IRPF</div><div class="profile-item-val">${nomData.irpf_pct}%</div></div>` : ''}
+          ${fmt2b(ac2.base_irpf) ? `<div class="profile-item"><div class="profile-item-label">Acum. Base IRPF</div><div class="profile-item-val">${fmt2b(ac2.base_irpf)}</div></div>` : ''}
+          ${fmt2b(ac2.irpf)      ? `<div class="profile-item"><div class="profile-item-label">Acum. IRPF retenido</div><div class="profile-item-val">${fmt2b(ac2.irpf)}</div></div>` : ''}
         </div>
         <div class="alert info" style="margin-top:10px;margin-bottom:0">
           <div class="alert-icon">💾</div>
