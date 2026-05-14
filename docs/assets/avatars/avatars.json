@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-04",
+  "updated": "2026-04-14",
   "avatars": [
     {
       "id": "cmd_m_001",
@@ -83,6 +83,14 @@
       "active": true
     },
     {
+      "id": "cmd_f_001",
+      "role": "cmd",
+      "gender": "female",
+      "name": "Comandante mujer 001",
+      "src": "assets/avatars/cmd/female/cmd_f_001.png",
+      "active": true
+    },
+    {
       "id": "cop_m_001",
       "role": "cop",
       "gender": "male",
@@ -107,11 +115,35 @@
       "active": true
     },
     {
+      "id": "cop_m_004",
+      "role": "cop",
+      "gender": "male",
+      "name": "Copiloto hombre 004",
+      "src": "assets/avatars/cop/male/cop_m_004.png",
+      "active": true
+    },
+    {
+      "id": "cop_f_001",
+      "role": "cop",
+      "gender": "female",
+      "name": "Copiloto mujer 001",
+      "src": "assets/avatars/cop/female/cop_f_001.png",
+      "active": true
+    },
+    {
       "id": "tcp_f_001",
       "role": "tcp",
       "gender": "female",
       "name": "Tripulante mujer 001",
       "src": "assets/avatars/tcp/female/tcp_f_001.png",
+      "active": true
+    },
+    {
+      "id": "tcp_m_001",
+      "role": "tcp",
+      "gender": "male",
+      "name": "Tripulante hombre 001",
+      "src": "assets/avatars/tcp/male/tcp_m_001.png",
       "active": true
     },
     {
