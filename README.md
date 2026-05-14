@@ -1,49 +1,48 @@
-# PilotPay — Backend/Frontend auditable v5
+# PilotPay — Avatar Assets
 
-Versión v5: añade parser específico de nóminas Binter y soporte de deducciones privadas/netas como préstamos.
+## Estructura de directorios
 
-## Arranque backend
-
-```bash
-cd backend
-npm install
-npm start
+```
+assets/avatars/
+├── avatars.json          ← catálogo maestro (id, role, gender, name, src, active)
+├── cmd/
+│   ├── male/             ← avatares Comandante masculino  (avatar_01.webp … )
+│   └── female/           ← avatares Comandante femenino
+├── cop/
+│   ├── male/             ← avatares Copiloto masculino
+│   └── female/           ← avatares Copiloto femenino
+└── tcp/
+    ├── male/             ← avatares TCP/SCC masculino
+    └── female/           ← avatares TCP/SCC femenino
 ```
 
-API por defecto: `http://localhost:3000/api`.
+## Formato de imagen
 
-## Tests
+- Formato: **WebP** (fallback PNG aceptado)
+- Tamaño: **120 × 120 px** mínimo, **240 × 240 px** recomendado
+- Fondo: transparente o circular recortado
+- Nombre: `avatar_NN.webp` donde NN es el número de orden con cero inicial
 
-```bash
-cd backend
-npm test
+## Flujo de carga
+
+1. `AvatarManager.init()` intenta cargar `avatars.json` vía fetch
+2. Si falla, usa el array `AVATARS[]` embebido en `index.html` como fallback
+3. La selección del usuario se persiste en `profileData.avatar` (Firebase) y localStorage
+
+## Añadir nuevos avatares
+
+1. Colocar el archivo `.webp` en la carpeta correcta (`role/gender/`)
+2. Añadir la entrada correspondiente en `avatars.json`:
+
+```json
+{
+  "id": "avatar_26",
+  "role": "cmd",
+  "gender": "female",
+  "name": "Comandante 11",
+  "src": "assets/avatars/cmd/female/avatar_26.webp",
+  "active": true
+}
 ```
 
-Resultado esperado en esta versión: `17/17` tests correctos.
-
-## Cambios principales v5
-
-- Nuevo módulo `backend/src/parsers/binterPayslipParser.js`.
-- Nuevos endpoints:
-  - `POST /api/parsear-nomina-binter-texto`
-  - `POST /api/auditar-nomina-binter-texto`
-- Soporte de nóminas de copiloto con base SS no topada.
-- Regla: si `baseSS <= 5.101,20`, no hay solidaridad.
-- Préstamos tratados como deducción privada/neto:
-  - `Intereses Préstamo`
-  - `Amortización Del Préstamo`
-- El motor permite `deduccionesPrivadas` y las descuenta del líquido sin alterar bases.
-
-## Estado
-
-Auditable y extensible. Pendiente: conectar lectura directa de PDF binario en backend o mantener extracción PDF.js en frontend y enviar texto al parser.
-
-
-## Pagas extra
-
-El backend soporta dos modos por usuario:
-
-- Pagas prorrateadas: la prorrata mensual se devenga cada mes.
-- 14 pagas: enero-junio/agosto-noviembre sin devengo de extra; julio y diciembre devengan paga completa.
-
-La paga extra completa suma a Base IRPF en el mes de cobro, pero no incrementa la Base SS mensual porque la cotización ya incorpora la prorrata de pagas extra.
+3. El fallback embebido en `index.html` sigue funcionando sin cambios.

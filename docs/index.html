@@ -1370,6 +1370,54 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .nivel-bar { height: 100%; background: var(--blue); border-radius: 2px; transition: width 1s; }
 
+/* ── AVATAR UI ── */
+.av-filter-btn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  font-size: 11px;
+  font-family: var(--mono);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.av-filter-btn:hover {
+  border-color: var(--blue2);
+  color: var(--blue2);
+}
+.av-filter-btn.av-filter-active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+/* Avatar cells in grid */
+.av-cell {
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  width: 60px;
+  height: 60px;
+  transition: border-color .2s, transform .15s, box-shadow .2s;
+  flex-shrink: 0;
+}
+.av-cell:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 2px var(--blue2);
+}
+.av-cell.av-selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--blue);
+}
+.av-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
 </style>
 </head>
 <body>
@@ -2439,15 +2487,18 @@ Complemento de Base MAD: 1500"></textarea>
       <div id="perfil-output">
 
         <div class="profile-hero">
-          <div style="display:flex;justify-content:center;margin-bottom:12px">
-            <div id="prf-avatar-display" onclick="showTab('perfil');document.getElementById('avatar-selector-card').scrollIntoView({behavior:'smooth'})"
-              style="width:80px;height:80px;border-radius:50%;overflow:hidden;cursor:pointer;
-              border:3px solid var(--blue);background:var(--bg3);display:flex;align-items:center;justify-content:center">
+          <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;gap:10px">
+            <div id="prf-avatar-display"
+              onclick="showTab('perfil');document.getElementById('avatar-selector-card').scrollIntoView({behavior:'smooth'})"
+              style="width:130px;height:130px;border-radius:50%;overflow:hidden;cursor:pointer;
+              border:4px solid var(--blue);box-shadow:0 0 0 2px var(--bg),0 0 0 5px var(--blue2);
+              background:var(--bg3);display:flex;align-items:center;justify-content:center;
+              flex-shrink:0;transition:box-shadow .2s">
               <img id="prf-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
-              <span id="prf-avatar-initials" style="font-size:24px;font-family:var(--mono);color:var(--blue2)">👤</span>
+              <span id="prf-avatar-initials" style="font-size:40px;font-family:var(--mono);color:var(--blue2)">👤</span>
             </div>
+            <div class="profile-name" id="prf-nombre" style="text-align:center;margin-bottom:0">Eloy Infante Seco de Herrera</div>
           </div>
-          <div class="profile-name" id="prf-nombre">Eloy Infante Seco de Herrera</div>
           <div class="profile-role" id="prf-role">COMANDANTE · NIVEL 3 · BASE MADRID</div>
           <div class="profile-data">
             <div class="profile-item">
@@ -2627,7 +2678,30 @@ Complemento de Base MAD: 1500"></textarea>
         <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px">
           Elige tu avatar — aparecerá en la cabecera y en tu perfil.
         </div>
-        <div id="avatar-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+
+        <!-- Filtros por rol -->
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <button class="av-filter-btn av-filter-active" data-filter="all" onclick="filterAvatarGrid('all',this)">
+            Todos
+          </button>
+          <button class="av-filter-btn" data-filter="cmd" onclick="filterAvatarGrid('cmd',this)">
+            ✈️ CMD
+          </button>
+          <button class="av-filter-btn" data-filter="cop" onclick="filterAvatarGrid('cop',this)">
+            🛫 COP
+          </button>
+          <button class="av-filter-btn" data-filter="tcp" onclick="filterAvatarGrid('tcp',this)">
+            🧳 TCP
+          </button>
+        </div>
+
+        <!-- Grid -->
+        <div id="avatar-grid" style="
+          display:grid;
+          grid-template-columns:repeat(auto-fill,minmax(60px,1fr));
+          gap:10px;
+          justify-items:center">
+        </div>
       </div>
 
       <!-- SOLICITAR CAMBIO DE DATOS -->
@@ -2914,6 +2988,10 @@ Complemento de Base MAD: 1500"></textarea>
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
           🛣 Rutas
         </button>
+        <button id="adm-tab-avatares" onclick="adminTab('avatares')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+          🧑‍✈️ Avatares
+        </button>
       </div>
 
       <!-- ── SUB-TAB: ALTA ── -->
@@ -3033,6 +3111,58 @@ Complemento de Base MAD: 1500"></textarea>
       </div>
 
     </div><!-- /page-admin -->
+
+      <!-- ── SUB-TAB: AVATARES ── -->
+      <div id="adm-panel-avatares" style="display:none">
+
+        <!-- Añadir avatar -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot green"></div>Añadir avatar</div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Nombre</span>
+              <input class="field-input" id="av-new-name" type="text" placeholder="Comandante 11">
+            </div>
+            <div class="field">
+              <span class="field-label">Rol</span>
+              <select class="field-input" id="av-new-role">
+                <option value="cmd">CMD — Comandante</option>
+                <option value="cop">COP — Copiloto</option>
+                <option value="tcp">TCP — Tripulante</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Género</span>
+              <select class="field-input" id="av-new-gender">
+                <option value="male">Masculino</option>
+                <option value="female">Femenino</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">Ruta imagen (src)</span>
+              <input class="field-input" id="av-new-src" type="text" placeholder="assets/avatars/cmd/male/avatar_26.webp">
+            </div>
+          </div>
+          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
+            onclick="adminAddAvatar()">➕ Añadir avatar</button>
+          <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+          <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">✈️ CMD</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">🛫 COP</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">🧳 TCP</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">🚫 Inactivos</button>
+        </div>
+
+        <!-- Grid de avatares -->
+        <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
+
+      </div><!-- /adm-panel-avatares -->
 
   </main>
 </div><!-- /app -->
@@ -3621,7 +3751,7 @@ function getUserPerms(userCode) {
 
 // ── ADMIN SUB-TABS ──
 function adminTab(tab) {
-  ['alta','usuarios','rutas'].forEach(t => {
+  ['alta','usuarios','rutas','avatares'].forEach(t => {
     const panel = document.getElementById(`adm-panel-${t}`);
     const btn   = document.getElementById(`adm-tab-${t}`);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
@@ -3630,7 +3760,100 @@ function adminTab(tab) {
       btn.style.color      = t === tab ? '#fff'        : 'var(--text3)';
     }
   });
-  if (tab === 'rutas') loadRutas().then(() => renderRutas());
+  if (tab === 'rutas')    loadRutas().then(() => renderRutas());
+  if (tab === 'avatares') renderAdminAvatarGrid('all');
+}
+
+// ── ADMIN AVATAR MANAGEMENT ──────────────────────────────────────────────
+
+let _adminAvatarFilter = 'all';
+
+function renderAdminAvatarGrid(filter) {
+  if (filter !== undefined) _adminAvatarFilter = filter;
+  const grid = document.getElementById('adm-avatar-grid');
+  if (!grid) return;
+
+  const all = AvatarManager.getAllIncludingInactive
+    ? AvatarManager.getAllIncludingInactive()
+    : AvatarManager._getRaw();
+
+  const shown = _adminAvatarFilter === 'all'      ? all
+    : _adminAvatarFilter === 'inactive'            ? all.filter(a => !a.active)
+    : all.filter(a => a.role === _adminAvatarFilter && a.active !== false);
+
+  const roleLabel = { cmd:'CMD', cop:'COP', tcp:'TCP' };
+  const genderLabel = { male:'♂', female:'♀' };
+
+  grid.innerHTML = shown.map(av => {
+    const src    = AvatarManager.resolveSrc(av);
+    const active = av.active !== false;
+    return `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+        padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;
+        opacity:${active ? '1' : '0.45'}">
+        <div style="width:64px;height:64px;border-radius:50%;overflow:hidden;
+          border:2px solid ${active ? 'var(--blue)' : 'var(--border)'}">
+          <img src="${src}" alt="${av.name}"
+            style="width:100%;height:100%;object-fit:cover"
+            onerror="this.style.display='none'">
+        </div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--text2);
+          text-align:center;line-height:1.4;width:100%">
+          <div style="font-weight:600;color:var(--text)">${av.name}</div>
+          <div style="color:var(--text3)">${roleLabel[av.role]||av.role} ${genderLabel[av.gender]||''}</div>
+        </div>
+        <button onclick="adminToggleAvatar('${av.id}')"
+          style="width:100%;padding:4px 0;border-radius:6px;border:1px solid ${active ? 'var(--red)' : 'var(--green)'};
+          background:none;color:${active ? 'var(--red)' : 'var(--green)'};
+          font-size:10px;font-family:var(--mono);cursor:pointer">
+          ${active ? '🚫 Desactivar' : '✓ Activar'}
+        </button>
+      </div>`;
+  }).join('');
+
+  if (!shown.length) {
+    grid.innerHTML = `<div style="color:var(--text3);font-size:12px;font-family:var(--mono);
+      grid-column:1/-1;text-align:center;padding:20px">Sin avatares en esta categoría</div>`;
+  }
+}
+
+function adminAvatarFilter(filter, btn) {
+  _adminAvatarFilter = filter;
+  document.querySelectorAll('#adm-panel-avatares .av-filter-btn').forEach(b => {
+    b.classList.toggle('av-filter-active', b === btn);
+  });
+  renderAdminAvatarGrid(filter);
+}
+
+function adminToggleAvatar(id) {
+  AvatarManager.toggleActive(id);
+  renderAdminAvatarGrid();
+  // Re-render Perfil grid if visible so inactive avatars disappear immediately
+  if (document.getElementById('avatar-grid')) renderAvatarGrid();
+}
+
+function adminAddAvatar() {
+  const name   = document.getElementById('av-new-name').value.trim();
+  const role   = document.getElementById('av-new-role').value;
+  const gender = document.getElementById('av-new-gender').value;
+  const src    = document.getElementById('av-new-src').value.trim();
+
+  if (!name || !src) {
+    alert('Rellena al menos el nombre y la ruta de imagen.'); return;
+  }
+
+  const newAv = AvatarManager.addAvatar({ name, role, gender, src });
+  if (!newAv) { alert('Error al añadir el avatar.'); return; }
+
+  // Clear form
+  document.getElementById('av-new-name').value = '';
+  document.getElementById('av-new-src').value  = '';
+
+  renderAdminAvatarGrid();
+
+  const st = document.getElementById('av-add-status');
+  st.textContent = `✓ Avatar "${name}" añadido (${newAv.id})`;
+  setTimeout(() => { st.textContent = ''; }, 3000);
 }
 
 function renderAdmin() {
@@ -7152,11 +7375,6 @@ function actualizarImpactoBaja(prestacion, diasBaja, diasMes, brDiaria) {
   const totalReduccionConceptos = round2(reduccionDpo + reduccionCompBase + reduccionPlusTransporte);
   const diferenciaVsMesCompleto = round2(Math.max(0, sbDesc + totalReduccionConceptos - prestacion));
 
-  const impactoTotalEstimado = round2(prestacion - sbDesc - totalReduccionConceptos);
-  const impactoColor = impactoTotalEstimado >= 0 ? 'var(--green)' : 'var(--red)';
-  const impactoSign  = impactoTotalEstimado >= 0 ? '+' : '−';
-  const impactoAbs   = fmt(Math.abs(impactoTotalEstimado));
-
   rowsEl.innerHTML = [
     `<span style="color:var(--text3)">Días trabajados:</span> <span style="color:var(--blue2)">${diasTrab} de ${diasMes}</span>`,
     `<span style="color:var(--text3)">Sal. Base proporcional:</span> <span style="color:var(--text)">${fmt(sbProp)} €</span> <span style="color:var(--red)">(−${fmt(sbDesc)} €)</span>`,
@@ -7165,7 +7383,7 @@ function actualizarImpactoBaja(prestacion, diasBaja, diasMes, brDiaria) {
     `<span style="color:var(--text3)">Reducción complemento base:</span> <span style="color:var(--red)">−${fmt(reduccionCompBase)} €</span>`,
     `<span style="color:var(--text3)">Reducción plus transporte:</span> <span style="color:var(--red)">−${fmt(reduccionPlusTransporte)} €</span>`,
     `<span style="color:var(--text3)">Total reducción conceptos:</span> <span style="color:var(--red)">−${fmt(totalReduccionConceptos)} €</span>`,
-    `<span style="color:var(--text3);font-weight:600">Impacto total estimado:</span> <span style="color:${impactoColor};font-weight:700">${impactoSign}${impactoAbs} €</span>`,
+    `<span style="color:var(--text3)">Diferencia vs mes completo:</span> <span style="color:var(--red)">−${fmt(diferenciaVsMesCompleto)} €</span>`,
     `<span style="color:var(--text3);font-size:10px">⚠️ Cálculo informativo. Esta reducción de DPO, complemento base y plus transporte no se aplica todavía a la nómina.</span>`,
     `<span style="color:var(--text3);font-size:10px">⚠️ El variable (HV, dietas) no se descuenta si ya has introducido las horas reales voladas.</span>`,
   ].join('<br>');
@@ -7874,66 +8092,78 @@ const AVATARS = [
 
 
 // ── AVATARES ──
-function renderAvatarGrid() {
+// ── AVATAR MANAGER INTEGRATION ──────────────────────────────────────────
+// The full avatar logic lives in js/avatarManager.js (loaded via <script> tag).
+// AVATARS[] above is kept as the embedded fallback — AvatarManager uses it
+// automatically when avatars.json cannot be fetched.
+
+// Thin wrappers so existing call-sites (initApp, renderPerfil, etc.) keep working
+// without modification.
+
+// Current active filter for avatar grid
+let _avatarFilter = 'all';
+
+function renderAvatarGrid(filter) {
   const grid = document.getElementById('avatar-grid');
   if (!grid) return;
-  const current = profileData.avatar || null;
-  grid.innerHTML = AVATARS.map((src, i) => `
-    <div onclick="selectAvatar(${i})"
-      style="border-radius:50%;overflow:hidden;cursor:pointer;
-      border:3px solid ${current === i ? 'var(--blue)' : 'transparent'};
-      width:52px;height:52px;transition:border-color .2s" id="av-cell-${i}">
-      <img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">
-    </div>`).join('');
+
+  if (filter !== undefined) _avatarFilter = filter;
+
+  const all      = AvatarManager.getAll();
+  const avatars  = _avatarFilter === 'all'
+    ? all
+    : all.filter(av => av.role === _avatarFilter);
+  const selected = AvatarManager.getSelectedId(currentUser);
+
+  grid.innerHTML = avatars.map((av, i) => {
+    const src        = AvatarManager.resolveSrc(av);
+    const globalIdx  = all.indexOf(av);
+    const isSelected = av.id === selected ||
+                       (typeof selected === 'number' && selected === globalIdx);
+    return `
+      <div onclick="selectAvatar('${av.id}', ${globalIdx})"
+        class="av-cell${isSelected ? ' av-selected' : ''}"
+        id="av-cell-${av.id}"
+        title="${av.name}">
+        <img src="${src}" alt="${av.name}">
+      </div>`;
+  }).join('');
 }
 
-function selectAvatar(idx) {
-  profileData.avatar = idx;
-  // Update grid selection
-  AVATARS.forEach((_, i) => {
-    const cell = document.getElementById(`av-cell-${i}`);
-    if (cell) cell.style.borderColor = i === idx ? 'var(--blue)' : 'transparent';
+function filterAvatarGrid(filter, btn) {
+  _avatarFilter = filter;
+  // Update filter button states
+  document.querySelectorAll('.av-filter-btn').forEach(b => {
+    b.classList.toggle('av-filter-active', b === btn);
   });
-  // Update profile hero
-  updateAvatarDisplay();
-  // Save
+  renderAvatarGrid(filter);
+}
+
+function selectAvatar(id, legacyIdx) {
+  const avatarId = (typeof id === 'string' && id.startsWith('avatar_'))
+    ? id
+    : (legacyIdx !== undefined ? legacyIdx : id);
+
+  AvatarManager.setSelection(currentUser, avatarId);
+
+  // Update grid highlight using CSS classes
+  document.querySelectorAll('.av-cell').forEach(el => {
+    const elId = el.id.replace('av-cell-', '');
+    el.classList.toggle('av-selected', elId === String(id));
+  });
+
+  AvatarManager.updateDOM(currentUser);
   if (currentUser) saveUserData(currentUser);
 }
 
 function updateAvatarDisplay() {
-  const idx = profileData.avatar ?? null;
-  const src = idx !== null && AVATARS[idx] ? AVATARS[idx] : null;
-
-  // Header pill
-  const imgH  = document.getElementById('user-avatar-header');
-  const initH = document.getElementById('user-initials-header');
-  if (imgH && initH) {
-    if (src) {
-      imgH.src = src; imgH.style.display = 'block';
-      initH.style.display = 'none';
-    } else {
-      imgH.style.display = 'none';
-      initH.style.display = '';
-    }
-  }
-
-  // Profile hero
-  const imgP  = document.getElementById('prf-avatar-img');
-  const initP = document.getElementById('prf-avatar-initials');
-  if (imgP && initP) {
-    if (src) {
-      imgP.src = src; imgP.style.display = 'block';
-      initP.style.display = 'none';
-    } else {
-      imgP.style.display = 'none';
-      initP.style.display = '';
-    }
-  }
+  AvatarManager.updateDOM(currentUser);
 }
 
-// Initial setup
+// Initialise AvatarManager on DOMContentLoaded so avatars.json is fetched
+// as early as possible (non-blocking — falls back to embedded AVATARS[]).
 document.addEventListener('DOMContentLoaded', () => {
-  // Nothing needed — recalc on login
+  AvatarManager.init().catch(() => { /* fallback already handled inside */ });
 });
 
 function onSolTipoChange() {
@@ -8112,5 +8342,7 @@ async function enviarSolicitudCambio() {
 // sin eliminar todavía el cálculo local legacy.
 window.PILOTPAY_BACKEND_READY = true;
 </script>
+  <!-- Avatar Manager — carga avatars.json con fallback al AVATARS[] embebido -->
+  <script src="js/avatarManager.js"></script>
 </body>
 </html>

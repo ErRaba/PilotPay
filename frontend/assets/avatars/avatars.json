@@ -1,0 +1,93 @@
+{
+  "version": "1.0",
+  "updated": "2026-04",
+  "avatars": [
+
+    // CMD (4 male)
+    {
+      "id": "cmd_m_001",
+      "role": "CMD",
+      "gender": "male",
+      "name": "Comandante hombre 001",
+      "src": "assets/avatars/cmd/male/cmd_m_001.png",
+      "active": true
+    },
+    {
+      "id": "cmd_m_002",
+      "role": "CMD",
+      "gender": "male",
+      "name": "Comandante hombre 002",
+      "src": "assets/avatars/cmd/male/cmd_m_002.png",
+      "active": true
+    },
+    {
+      "id": "cmd_m_003",
+      "role": "CMD",
+      "gender": "male",
+      "name": "Comandante hombre 003",
+      "src": "assets/avatars/cmd/male/cmd_m_003.png",
+      "active": true
+    },
+    {
+      "id": "cmd_m_004",
+      "role": "CMD",
+      "gender": "male",
+      "name": "Comandante hombre 004",
+      "src": "assets/avatars/cmd/male/cmd_m_004.png",
+      "active": true
+    },
+
+    // COP (3 male)
+    {
+      "id": "cop_m_001",
+      "role": "COP",
+      "gender": "male",
+      "name": "Copiloto hombre 001",
+      "src": "assets/avatars/cop/male/cop_m_001.png",
+      "active": true
+    },
+    {
+      "id": "cop_m_002",
+      "role": "COP",
+      "gender": "male",
+      "name": "Copiloto hombre 002",
+      "src": "assets/avatars/cop/male/cop_m_002.png",
+      "active": true
+    },
+    {
+      "id": "cop_m_003",
+      "role": "COP",
+      "gender": "male",
+      "name": "Copiloto hombre 003",
+      "src": "assets/avatars/cop/male/cop_m_003.png",
+      "active": true
+    },
+
+    // TCP (3 female)
+    {
+      "id": "tcp_f_001",
+      "role": "TCP",
+      "gender": "female",
+      "name": "Tripulante mujer 001",
+      "src": "assets/avatars/tcp/female/tcp_f_001.png",
+      "active": true
+    },
+    {
+      "id": "tcp_f_002",
+      "role": "TCP",
+      "gender": "female",
+      "name": "Tripulante mujer 002",
+      "src": "assets/avatars/tcp/female/tcp_f_002.png",
+      "active": true
+    },
+    {
+      "id": "tcp_f_003",
+      "role": "TCP",
+      "gender": "female",
+      "name": "Tripulante mujer 003",
+      "src": "assets/avatars/tcp/female/tcp_f_003.png",
+      "active": true
+    }
+
+  ]
+}
