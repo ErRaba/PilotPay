@@ -73,7 +73,6 @@ const AvatarManager = (() => {
       gender,
       name:         _defaultName(roles[i] || 'cmd', i),
       src:          src,           // data URI — works immediately
-      src_embedded: src,
       active:       true,
     }));
   }
@@ -116,7 +115,7 @@ const AvatarManager = (() => {
     // If src is a data URI, use it directly
     if (avatar.src && avatar.src.startsWith('data:')) return avatar.src;
     // Otherwise return external path (relative to app root)
-    return avatar.src || avatar.src_embedded || null;
+    return avatar.src || null;
   }
 
   // ── PERSISTENCE ──────────────────────────────────────────────────────────
