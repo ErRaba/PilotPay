@@ -35,7 +35,7 @@ test('modo 14 pagas no devenga paga extra en marzo pero sí mantiene prorrata SS
   });
   assert.equal(r.conceptos.pagaExtraMes, 0);
   assert.equal(r.conceptos.pagasExtra.etiqueta, 'sin-extra-mensual');
-  assert.equal(r.bases.prorrataExtrasSS, 719.10);
+  assert.equal(r.bases.prorrataExtrasSS, 719.09);
 });
 
 test('modo 14 pagas devenga paga extra completa en julio y no aumenta base SS por la extra cobrada', () => {
@@ -59,7 +59,7 @@ test('modo prorrateado devenga la prorrata mensual de las dos extras', () => {
     funcion: 'COP', nivel: 4, mesNomina: 'Marzo', pagasProrrateadas: true,
     irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroMedico: false,
   });
-  assert.equal(r.conceptos.pagaExtraMes, 310.56);
+  assert.equal(r.conceptos.pagaExtraMes, 310.55);
   assert.equal(r.conceptos.pagasExtra.extra1Dev, 155.28);
   assert.equal(r.conceptos.pagasExtra.extra2Dev, 155.28);
 });

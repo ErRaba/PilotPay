@@ -11,8 +11,16 @@ export const SS_2026 = Object.freeze({
 export const ESPECIE = Object.freeze({
   SEGURO_MEDICO: 20.16,
   SEGURO_LICENCIA: 93.00,
+  SEGURO_VIDA_CMD: 43.33,
+  SEGURO_VIDA_COP: 9.92,
   SEGURO_VIDA: 43.33,
 });
+
+export function getSeguroVidaEspecie(funcion) {
+  const f = String(funcion || '').toUpperCase();
+  if (f === 'COP') return ESPECIE.SEGURO_VIDA_COP;
+  return ESPECIE.SEGURO_VIDA_CMD;
+}
 
 export const DIETAS = Object.freeze({
   mant_nac: { total: 40.14, exenta: 36.06 },

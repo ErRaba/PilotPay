@@ -1,5 +1,5 @@
 import { TABLAS } from '../config/salaryTables.js';
-import { DIETAS, ESPECIE, euros } from '../config/constants.js';
+import { DIETAS, ESPECIE, getSeguroVidaEspecie, euros } from '../config/constants.js';
 import { FUENTES } from '../config/sourceRegistry.js';
 import { auditStep } from './audit.js';
 import { calcularSSTrabajador } from './ss2026.js';
@@ -78,9 +78,15 @@ function dpoMensual(funcion, nivel, porcentaje = 100, sccEjercido75 = false) {
   if (fn === 'CC') return euros(1500 / 12 * pct);
   return 0;
 }
-function calcularHVGrupoIV(t, idx, hv = {}) {
+function calcularHVGrupoIV(t, idx, hv = {}, baseFactor = 1) {
   const t1 = Number(hv.t1) || 0, t2 = Number(hv.t2) || 0, t3 = Number(hv.t3) || 0, t4 = Number(hv.t4) || 0;
-  return euros(t1 * t.hv_t1[idx] + t2 * t.hv_t2[idx] + t3 * t.hv_t3[idx] + t4 * t.hv_t4[idx]);
+  const rate = (v) => Math.floor(v * baseFactor * 100) / 100;
+  return euros(
+    euros(t1 * rate(t.hv_t1[idx])) +
+    euros(t2 * rate(t.hv_t2[idx])) +
+    euros(t3 * rate(t.hv_t3[idx])) +
+    euros(t4 * rate(t.hv_t4[idx]))
+  );
 }
 function calcularHVGrupoIII(t, idx, hv = {}) {
   const o = hv.ordinarias || {};
@@ -99,6 +105,7 @@ export function calcularNomina(input = {}, options = {}) {
   const funcion = String(input.funcion || '').toUpperCase();
   const t = getTabla(funcion);
   const idx = nivelIndex(input.nivel);
+  const baseFactor = Number(input.baseFactor || input.madFactor || input.base || 1) || 1;
   if (!t.salbase[idx]) throw new Error(`Nivel no válido para ${funcion}: ${input.nivel}`);
 
   const sb = t.salbase[idx];
@@ -123,7 +130,7 @@ export function calcularNomina(input = {}, options = {}) {
       hvUsadas = hvAudit.distribucion;
       if (auditEnabled) audit.push(...hvAudit.audit);
     }
-    hvImporte = calcularHVGrupoIV(t, idx, hvUsadas);
+    hvImporte = calcularHVGrupoIV(t, idx, hvUsadas, baseFactor);
     plusTransporte = t.plus_tr[idx];
     if (auditEnabled) audit.push(auditStep({ codigo: 'HV_GRUPO_IV', concepto: 'Importe horas de vuelo Grupo IV', formula: 'Σ(horas tramo * tarifa tramo función/nivel)', entradas: hvUsadas || {}, resultado: hvImporte, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id }));
   } else {
@@ -139,23 +146,24 @@ export function calcularNomina(input = {}, options = {}) {
   const interesesPrestamo = euros(Number(deduccionesPrivadas.interesesPrestamo) || 0);
   const amortizacionPrestamo = euros(Number(deduccionesPrivadas.amortizacionPrestamo) || 0);
   const otrasDeduccionesPrivadas = euros(Number(deduccionesPrivadas.otras) || 0);
-  const deduccionesPrivadasNetas = euros(interesesPrestamo + amortizacionPrestamo + otrasDeduccionesPrivadas);
-  const especieCotizable = euros((input.seguroMedico ? ESPECIE.SEGURO_MEDICO : 0) + (input.seguroVida !== false ? ESPECIE.SEGURO_VIDA : 0));
+  const deduccionesPrivadasNetas = euros(amortizacionPrestamo + otrasDeduccionesPrivadas);
+  const seguroVidaEspecie = input.seguroVida !== false ? getSeguroVidaEspecie(funcion) : 0;
+  const especieCotizable = euros((input.seguroMedico ? ESPECIE.SEGURO_MEDICO : 0) + seguroVidaEspecie);
 
-  const devengosSalariales = euros(sb + pagaExtraMes + hvImporte + plusTransporte + dpo + complementos);
+  const devengosSalariales = euros(sb + pagaExtraMes + hvImporte + plusTransporte + dpo + complementos + interesesPrestamo);
   const devengosNoSalariales = dietas.total;
   const bruto = euros(devengosSalariales + devengosNoSalariales);
 
-  const baseCotizableSinTope = euros(sb + hvImporte + plusTransporte + dpo + complementos + prorrataExtrasSS + especieCotizable + dietas.sujeta);
+  const baseCotizableSinTope = euros(sb + hvImporte + plusTransporte + dpo + complementos + prorrataExtrasSS + especieCotizable + dietas.sujeta + interesesPrestamo);
   const ss = calcularSSTrabajador(baseCotizableSinTope, { audit: auditEnabled });
   if (auditEnabled && ss.audit) audit.push(...ss.audit);
   const ssLimpio = { ...ss };
   delete ssLimpio.audit;
 
-  const baseIRPF = euros(devengosSalariales + dietas.sujeta + (input.seguroVida !== false ? ESPECIE.SEGURO_VIDA : 0));
+  const baseIRPF = euros(devengosSalariales + dietas.sujeta);
   const usarIRPFReglamentario = input.irpfModo === 'reglamentario' || input.irpfReglamentario === true;
   const retribucionMensualPrevisible = baseIRPF;
-  const retribucionesAnualesEstimadas = euros(input.irpf?.retribucionesAnuales ?? ((devengosSalariales - pagaExtraMes + dietas.sujeta + (input.seguroVida !== false ? ESPECIE.SEGURO_VIDA : 0)) * 12 + (extra * 2)));
+  const retribucionesAnualesEstimadas = euros(input.irpf?.retribucionesAnuales ?? ((devengosSalariales - pagaExtraMes + dietas.sujeta) * 12 + (extra * 2)));
   const ssAnualEstimada = euros(input.irpf?.ssAnual ?? (ssLimpio.total * 12));
   const irpfReglamentario = calcularTipoRetencionReglamentario({
     ...(input.irpf || {}),
@@ -170,16 +178,16 @@ export function calcularNomina(input = {}, options = {}) {
   if (auditEnabled) {
     audit.push(auditStep({ codigo: 'PAGA_EXTRA', concepto: 'Pagas extra en nómina y prorrata de pagas para Seguridad Social', formula: 'si prorrateadas: pagaExtraMes = extra * 2; si 14 pagas: julio/diciembre = salario base; resto meses = 0. La prorrataExtrasSS = extra * 2 siempre.', entradas: { extra, salarioBase: sb, pagasProrrateadas, mesNomina }, resultado: { ...pagasExtra, prorrataExtrasSS }, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id, notas: ['En modo 14 pagas la extra se suma al devengo y a la base IRPF solo en julio/diciembre.', 'La base de cotización mensual mantiene la prorrata de pagas extra y no aumenta por cobrar la extra completa en julio/diciembre.'] }));
     audit.push(auditStep({ codigo: 'PLUS_TRANSPORTE', concepto: 'Plus transporte mensual', formula: t.grupo === 'III' ? 'plusTransporte = anual / 11' : 'tabla función/nivel', entradas: { grupo: t.grupo, funcion, nivel: Number(input.nivel) }, resultado: plusTransporte, fuente: FUENTES.CONVENIO_RETRIBUCIONES.id }));
-    audit.push(auditStep({ codigo: usarIRPFReglamentario ? 'BASE_IRPF_REGLAMENTARIA' : 'BASE_IRPF_PORCENTAJE', concepto: usarIRPFReglamentario ? 'IRPF reglamentario calculado en backend' : 'Base IRPF usada con porcentaje informado', formula: usarIRPFReglamentario ? 'procedimiento general arts. 82 a 86 RIRPF' : 'devengos salariales + dietas sujetas + especie vida', entradas: { devengosSalariales, dietasSujetas: dietas.sujeta, seguroVida: input.seguroVida !== false ? ESPECIE.SEGURO_VIDA : 0, irpfPct }, resultado: { baseIRPF, irpf, irpfPct }, fuente: usarIRPFReglamentario ? FUENTES.IRPF_REGLAMENTO_ART_82.id : FUENTES.IRPF_PORCENTAJE_INFORMADO.id, notas: [usarIRPFReglamentario ? 'IRPF calculado por motor reglamentario core.' : 'Modo manual: porcentaje informado por usuario/nómina.'] }));
+    audit.push(auditStep({ codigo: usarIRPFReglamentario ? 'BASE_IRPF_REGLAMENTARIA' : 'BASE_IRPF_PORCENTAJE', concepto: usarIRPFReglamentario ? 'IRPF reglamentario calculado en backend' : 'Base IRPF usada con porcentaje informado', formula: usarIRPFReglamentario ? 'procedimiento general arts. 82 a 86 RIRPF' : 'devengos salariales + dietas sujetas + especie vida', entradas: { devengosSalariales, dietasSujetas: dietas.sujeta, seguroVidaEspecie, irpfPct }, resultado: { baseIRPF, irpf, irpfPct }, fuente: usarIRPFReglamentario ? FUENTES.IRPF_REGLAMENTO_ART_82.id : FUENTES.IRPF_PORCENTAJE_INFORMADO.id, notas: [usarIRPFReglamentario ? 'IRPF calculado por motor reglamentario core.' : 'Modo manual: porcentaje informado por usuario/nómina.'] }));
     if (usarIRPFReglamentario && irpfReglamentario.audit) audit.push(...irpfReglamentario.audit);
-    audit.push(auditStep({ codigo: 'DEDUCCIONES_PRIVADAS_NETAS', concepto: 'Deducciones privadas/netas', formula: 'interesesPrestamo + amortizacionPrestamo + otrasDeduccionesPrivadas', entradas: { interesesPrestamo, amortizacionPrestamo, otrasDeduccionesPrivadas }, resultado: deduccionesPrivadasNetas, fuente: 'NOMINA_EMPRESA' }));
+    audit.push(auditStep({ codigo: 'DEDUCCIONES_PRIVADAS_NETAS', concepto: 'Deducciones privadas/netas', formula: 'amortizacionPrestamo + otrasDeduccionesPrivadas', entradas: { interesesPrestamo, amortizacionPrestamo, otrasDeduccionesPrivadas }, resultado: deduccionesPrivadasNetas, fuente: 'NOMINA_EMPRESA' }));
     audit.push(auditStep({ codigo: 'LIQUIDO', concepto: 'Líquido a percibir', formula: 'bruto - SS trabajador - IRPF - deduccionesPrivadasNetas', entradas: { bruto, ssTrabajador: ssLimpio.total, irpf, deduccionesPrivadasNetas }, resultado: liquido, fuente: 'CALCULO_ARITMETICO' }));
   }
 
   return {
     funcion, grupo: t.grupo, nivel: Number(input.nivel),
-    versionMotor: '2026.04-audit-v6-extra-pay-14p',
-    conceptos: { sb, pagaExtraMes, pagasExtra, hvImporte, plusTransporte, dpo, complementos, dietas },
+    versionMotor: '2026.04-audit-v7-concept-model',
+    conceptos: { sb, pagaExtraMes, seguroVidaEspecie, pagasExtra, hvImporte, plusTransporte, dpo, complementos, dietas },
     bases: { prorrataExtrasSS, baseCotizableSinTope, baseSS: ssLimpio.baseSS, baseIRPF },
     deducciones: { ss: ssLimpio, irpf, irpfPct, irpfModo: usarIRPFReglamentario ? 'reglamentario' : 'manual', irpfReglamentario: usarIRPFReglamentario ? irpfReglamentario : undefined, privadas: { interesesPrestamo, amortizacionPrestamo, otras: otrasDeduccionesPrivadas, total: deduccionesPrivadasNetas } },
     totales: { devengosSalariales, devengosNoSalariales, bruto, liquido },

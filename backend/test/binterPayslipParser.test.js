@@ -107,10 +107,13 @@ test('empresa comparable expone campos auditables', () => {
   assert.equal(empresa.deduccionesPrivadas, 312.33);
 });
 
-test('motor descuenta préstamo del líquido sin tocar bases', () => {
+test('motor separa intereses y amortización del préstamo', () => {
   const sin = calcularNomina({ funcion: 'COP', nivel: 4, irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroVida: true, seguroMedico: false, pagasProrrateadas: true });
-  const con = calcularNomina({ funcion: 'COP', nivel: 4, irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroVida: true, seguroMedico: false, pagasProrrateadas: true, deduccionesPrivadas: { interesesPrestamo: 41.58, amortizacionPrestamo: 270.75 } });
-  assert.equal(sin.bases.baseSS, con.bases.baseSS);
-  assert.equal(sin.bases.baseIRPF, con.bases.baseIRPF);
-  assert.equal(Number((sin.totales.liquido - con.totales.liquido).toFixed(2)), 312.33);
+  const conIntereses = calcularNomina({ funcion: 'COP', nivel: 4, irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroVida: true, seguroMedico: false, pagasProrrateadas: true, deduccionesPrivadas: { interesesPrestamo: 41.58 } });
+  const conAmortizacion = calcularNomina({ funcion: 'COP', nivel: 4, irpfPct: 21.05, hv: { t1: 10, t2: 10, t3: 0.5 }, seguroVida: true, seguroMedico: false, pagasProrrateadas: true, deduccionesPrivadas: { amortizacionPrestamo: 270.75 } });
+  assert.equal(Number((conIntereses.bases.baseIRPF - sin.bases.baseIRPF).toFixed(2)), 41.58);
+  assert.equal(Number((conIntereses.bases.baseCotizableSinTope - sin.bases.baseCotizableSinTope).toFixed(2)), 41.58);
+  assert.equal(sin.bases.baseSS, conAmortizacion.bases.baseSS);
+  assert.equal(sin.bases.baseIRPF, conAmortizacion.bases.baseIRPF);
+  assert.equal(Number((sin.totales.liquido - conAmortizacion.totales.liquido).toFixed(2)), 270.75);
 });
