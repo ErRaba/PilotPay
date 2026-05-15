@@ -6181,7 +6181,7 @@ function _buildNominaPDF(r, logo) {
   // Especie no repercutida
   if ((r.segMed_ded||0)>0) add(1.0000, r.segMed_ded, 'Seguro Médico No Repercutido', null, null, r.segMed_ded);
   if ((r.segLic_ded||0)>0) add(1.0000, r.segLic_ded, 'Seguro Pérdida Licencia',      null, null, r.segLic_ded);
-  if ((r.ppImporte||0)>0)  add(null, null,             'Prevención de Pérdidas',      null, r.ppImporte);
+  if ((r.ppImporte||0)>0)  add(null, null,             'Aport. Empr. Plan De Pensiones', null, r.ppImporte);
 
   // Borde exterior tabla
   dc(...BLK); dlw(0.3); doc.rect(ML, TABLE_Y_START, TW, y - TABLE_Y_START, 'S');
