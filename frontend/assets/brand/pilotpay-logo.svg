@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1600" height="700" viewBox="0 0 1600 700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .navy { fill: #0A2342; }
+      .gold { fill: #D4A646; }
+      .line { stroke: #0A2342; stroke-width: 6; stroke-linecap: round; fill: none; }
+      .goldline { stroke: #D4A646; stroke-width: 6; stroke-linecap: round; fill: none; }
+      .text-navy {
+        fill: #0A2342;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 92px;
+        font-weight: 300;
+        letter-spacing: 18px;
+      }
+      .text-gold {
+        fill: #D4A646;
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 92px;
+        font-weight: 300;
+        letter-spacing: 18px;
+      }
+      .morse {
+        fill: #D4A646;
+        font-family: 'Courier New', monospace;
+        font-size: 28px;
+        letter-spacing: 6px;
+      }
+    </style>
+  </defs>
+
+  <!-- Aircraft symbol -->
+  <g transform="translate(800,140)">
+    <path class="navy" d="M0,-35 L18,0 L460,0 L460,4 L18,12 L0,70 L-18,12 L-460,4 L-460,0 L-18,0 Z"/>
+    <line x1="-460" y1="0" x2="-500" y2="0" class="goldline"/>
+  </g>
+
+  <!-- PILOT -->
+  <text x="300" y="360" class="text-navy">PILOT</text>
+
+  <!-- PAY -->
+  <text x="860" y="360" class="text-gold">PAY</text>
+
+  <!-- Morse -->
+  <text x="300" y="470" class="morse">-. --- -- .. -. .- ... / .- ..- -.. .. - .- -.. .- ...</text>
+</svg>
