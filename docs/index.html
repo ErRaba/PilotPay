@@ -1122,12 +1122,12 @@ input, select, textarea {
 .diff-row.err { border-color: var(--red); background: var(--red-dim); }
 .diff-concept { font-size: 12px; color: var(--text2); flex: 1; }
 .diff-vals { display: flex; gap: 10px; align-items: center; }
-.diff-teorico { font-family: var(--mono); font-size: 11px; color: var(--text3); }
-.diff-real { font-family: var(--mono); font-size: 12px; }
+.diff-teorico { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 82px; text-align: right; }
+.diff-real { font-family: var(--mono); font-size: 12px; min-width: 82px; text-align: right; }
 .diff-row.ok .diff-real { color: var(--green); }
 .diff-row.warn .diff-real { color: var(--amber2); }
 .diff-row.err .diff-real { color: var(--red); }
-.diff-delta { font-family: var(--mono); font-size: 11px; min-width: 60px; text-align: right; }
+.diff-delta { font-family: var(--mono); font-size: 11px; min-width: 70px; text-align: right; }
 .diff-row.ok .diff-delta { color: var(--text3); }
 .diff-row.warn .diff-delta { color: var(--amber); }
 .diff-row.err .diff-delta { color: var(--red); }
@@ -6609,8 +6609,13 @@ function renderComparativa(nomData) {
   addDiff('Líquido neto', r.liquidoReal, t.liquido, 2);
 
   const errores = diffs.filter(d => d.status === 'err');
-  const avisos = diffs.filter(d => d.status === 'warn');
-  const totalDelta = errores.reduce((s, d) => s + d.delta, 0);
+  const avisos  = diffs.filter(d => d.status === 'warn');
+  // Diferencia total = impacto neto real = diferencia directa del Líquido neto.
+  // NO se suman el resto de conceptos (HV, DPO, Base IRPF, Retención, etc.)
+  // porque son causas o consecuencias y acumularlos duplicaría el efecto.
+  const _liqDiff  = diffs.find(d => d.concept === 'Líquido neto');
+  const totalDelta = _liqDiff ? _liqDiff.delta : null;
+  const _totalFmt  = totalDelta !== null ? fmtD(totalDelta) : 'No disponible';
 
   let alertHTML = '';
   if (errores.length > 0) {
@@ -6619,7 +6624,10 @@ function renderComparativa(nomData) {
         <div class="alert-icon">⚠️</div>
         <div class="alert-content">
           <div class="alert-title">${errores.length} discrepancia${errores.length>1?'s':''} detectada${errores.length>1?'s':''}</div>
-          <div class="alert-text">Diferencia total: <strong style="color:var(--amber2)">${fmtD(totalDelta)}</strong> respecto al cálculo teórico según convenio BCSA 2026.</div>
+          <div class="alert-text">
+            Impacto neto real: <strong style="color:var(--amber2)">${_totalFmt}</strong> respecto al cálculo teórico según convenio BCSA 2026.<br>
+            <span style="font-size:10px;color:var(--text3)">La diferencia corresponde al Líquido neto. Los demás conceptos son causas o consecuencias y no se suman entre sí.</span>
+          </div>
         </div>
       </div>
     `;
@@ -6745,9 +6753,13 @@ function renderComparativa(nomData) {
     ${trabajadorHTML}
     <div class="card">
       <div class="card-title"><div class="section-dot"></div>Comparativa concepto por concepto</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;padding:0 12px">
-        <span>Concepto</span>
-        <span>Teórico · Real · Dif.</span>
+      <div style="display:flex;align-items:center;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;padding:0 12px">
+        <span style="flex:1">Concepto</span>
+        <div style="display:flex;gap:10px">
+          <span style="min-width:82px;text-align:right">Teórico</span>
+          <span style="min-width:82px;text-align:right">Real</span>
+          <span style="min-width:70px;text-align:right">Dif.</span>
+        </div>
       </div>
       ${diffsHTML}
     </div>
