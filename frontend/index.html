@@ -1419,6 +1419,8 @@ input[type=number] { -moz-appearance: textfield; }
   display: block;
 }
 </style>
+  <!-- jsPDF para generación de nómina PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -2329,6 +2331,25 @@ Complemento de Base MAD: 1500"></textarea>
 
     <!-- ── TAB: NÓMINA ── -->
     <div class="page" id="page-nomina">
+      <!-- Botón Generar Nómina PDF -->
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.03em">
+          Pulsa para generar un PDF con la nómina calculada
+        </span>
+        <button id="btn-generar-pdf" onclick="generarNominaPDF()"
+          style="display:inline-flex;align-items:center;gap:6px;
+                 background:transparent;border:1px solid var(--text3);
+                 color:var(--text2);border-radius:8px;
+                 font-size:11px;font-family:var(--mono);
+                 padding:5px 12px;cursor:pointer;letter-spacing:.03em;
+                 white-space:nowrap;
+                 transition:border-color .15s,color .15s"
+          onmouseover="this.style.borderColor='var(--blue2)';this.style.color='var(--blue2)'"
+          onmouseout="this.style.borderColor='var(--text3)';this.style.color='var(--text2)'">
+          ↓ PDF
+        </button>
+      </div>
+
       <div id="nomina-output">
         <div class="card" style="text-align:center;padding:32px">
           <div style="font-size:32px;margin-bottom:8px">📄</div>
@@ -5766,6 +5787,529 @@ function renderNomina() {
   document.getElementById('nomina-output').innerHTML = html;
 }
 
+// ── GENERAR NÓMINA PDF ─────────────────────────────────────────────────────
+/**
+ * generarNominaPDF()
+ * Genera un PDF A4 vertical con los datos calculados por PilotPay.
+ * Usa jsPDF desde CDN. Logo desde assets/brand/pilotpay-logo.png.
+ * Si el logo no carga, usa texto "PilotPay" como fallback.
+ */
+function generarNominaPDF() {
+  const r = calcResult || window._calcResultBackup || null;
+  if (!r) { alert('Primero calcula la nómina en la pestaña Calcular.'); return; }
+
+  const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  if (!jsPDFClass || typeof jsPDFClass !== 'function') {
+    alert('jsPDF no disponible. Recarga la página.'); return;
+  }
+
+  // ── Cargar logo ANTES de generar el PDF ────────────────────────────────────
+  // Usamos Promise para esperar a que la imagen esté completamente cargada
+  const loadLogo = () => new Promise((resolve) => {
+    const img = new Image();
+    // Intentar con ruta absoluta desde la raíz del servidor
+    const tryPaths = [
+      window.location.origin + '/assets/brand/pilotpay-logo.png',
+      './assets/brand/pilotpay-logo.png',
+      'assets/brand/pilotpay-logo.png',
+    ];
+    let pathIdx = 0;
+
+    const tryNext = () => {
+      if (pathIdx >= tryPaths.length) { resolve(null); return; }
+      img.onload = () => {
+        // Convertir a data URL via canvas para que jsPDF pueda usarla
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          resolve({ dataUrl: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+        } catch(e) { resolve(null); }
+      };
+      img.onerror = () => { pathIdx++; tryNext(); };
+      img.src = tryPaths[pathIdx];
+    };
+    // Si ya está en caché del navegador, onload no se dispara → forzar
+    img.src = tryPaths[0];
+    if (img.complete && img.naturalWidth > 0) {
+      img.onload = null; img.onerror = null;
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        resolve({ dataUrl: c.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+      } catch(e) { pathIdx = 1; tryNext(); }
+    } else { tryNext(); }
+  });
+
+  // Generar el PDF una vez cargado el logo
+  loadLogo().then(logo => _buildNominaPDF(r, logo));
+}
+
+function _buildNominaPDF(r, logo) {
+  const jsPDFClass = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  // ════════════════════════════════════════════════════════════════════
+  // CONSTANTES DE LAYOUT — estilo ERP administrativo español
+  // ════════════════════════════════════════════════════════════════════
+  const W = 210, H = 297;
+  const ML = 8, MR = 202, TW = MR - ML;   // márgenes muy pequeños
+
+  // Colores monocromáticos
+  const BLK  = [0,   0,   0  ];
+  const GRY1 = [80,  80,  80 ];   // texto secundario
+  const GRY2 = [120, 120, 120];   // bordes
+  const GRY3 = [190, 190, 190];   // líneas internas
+  const HDR  = [217, 217, 217];   // fondo cabecera tabla
+  const LIQBG= [178, 178, 178];   // fondo celda líquido
+  const WHT  = [255, 255, 255];
+
+  // Fuentes: solo Helvetica (equivalente a Arial en PDF)
+  const F = {
+    n7:  () => { doc.setFont('Helvetica','normal'); doc.setFontSize(7);  },
+    b7:  () => { doc.setFont('Helvetica','bold');   doc.setFontSize(7);  },
+    n8:  () => { doc.setFont('Helvetica','normal'); doc.setFontSize(8);  },
+    b8:  () => { doc.setFont('Helvetica','bold');   doc.setFontSize(8);  },
+    n6:  () => { doc.setFont('Helvetica','normal'); doc.setFontSize(6);  },
+    b6:  () => { doc.setFont('Helvetica','bold');   doc.setFontSize(6);  },
+  };
+  const tc  = (...rgb) => doc.setTextColor(...rgb);
+  const dlw = (w) => doc.setLineWidth(w);
+  const dc  = (...rgb) => doc.setDrawColor(...rgb);
+  const fc  = (...rgb) => doc.setFillColor(...rgb);
+
+  // Formato numérico español
+  const fmt = v => (v == null || isNaN(v)) ? ''
+    : Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const fmtU = v => (v == null || isNaN(v)) ? ''
+    : Number(v).toLocaleString('es-ES', { minimumFractionDigits:4, maximumFractionDigits:4 });
+  const fmtPct = v => (v == null || isNaN(v)) ? ''
+    : Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + '%';
+
+  // Texto alineado a la derecha dentro de una celda [x, ancho]
+  const tR = (txt, x, y, w) => doc.text(String(txt||''), x + w, y, { align:'right' });
+  const tL = (txt, x, y)    => doc.text(String(txt||''), x, y);
+  const tC = (txt, x, y, w) => doc.text(String(txt||''), x + w/2, y, { align:'center' });
+
+  // Dibujar rectángulo con borde fino
+  const rect = (x,y,w,h,fill,stroke) => {
+    if (fill) { fc(...fill); doc.rect(x,y,w,h,'F'); }
+    if (stroke) { dc(...stroke); dlw(0.1); doc.rect(x,y,w,h,'S'); }
+    if (fill && stroke) { fc(...fill); dc(...stroke); dlw(0.1); doc.rect(x,y,w,h,'FD'); }
+  };
+  const hline = (x1,y,x2,c) => {
+    dc(...(c||GRY2)); dlw(0.1); doc.line(x1,y,x2,y);
+  };
+  const vline = (x,y1,y2,c) => {
+    dc(...(c||GRY2)); dlw(0.1); doc.line(x,y1,x,y2);
+  };
+
+  // Datos perfil
+  const nombreTrab = document.getElementById('prf-nombre')?.textContent?.trim()
+    || (typeof profileData !== 'undefined' && (profileData.name || '')) || 'TRABAJADOR';
+  const nifTrab  = (typeof profileData !== 'undefined' && profileData.nif)   || '';
+  const ingrDate = (typeof profileData !== 'undefined' && profileData.ingreso_display) || '';
+  const ccaa     = (typeof profileData !== 'undefined' && profileData.ccaa)  || 'LAS PALMAS';
+  const baseLabel= r.mad > 1 ? 'MADRID' : 'CANARIAS';
+  const funLabel = r.fn === 'CMD' ? 'COMANDANTE' : r.fn === 'COP' ? 'COPILOTO'
+    : r.fn === 'SCC' ? 'SOBRECARGO' : r.fn === 'CC' ? 'TCP' : (r.fn || '');
+  const mes = (r.mes || '').toUpperCase();
+  const nivel = r.nivel || 1;
+
+  let y = ML; // cursor vertical
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 1: LOGO + EMPRESA (fila superior)
+  // ════════════════════════════════════════════════════════════════════
+  // Logo: ancho fijo 70mm (proporcional), centrado verticalmente en la franja
+  const LOGO_W = 70;
+  const LOGO_Y = y;
+
+  if (logo) {
+    const aspect = logo.w / logo.h;
+    const lw = LOGO_W;
+    const lh = lw / aspect;
+    // Altura real de la franja = lo que ocupe el logo o mínimo 22mm
+    const LOGO_H = Math.max(lh, 22);
+    doc.addImage(logo.dataUrl, 'PNG', ML, LOGO_Y, lw, lh);
+
+    // Datos empresa alineados verticalmente al centro de la misma franja
+    const midY = LOGO_Y + LOGO_H / 2;
+    F.b7(); tc(...BLK);
+    doc.text('PILOTPAY Rava Tech.', MR, midY - 3, { align:'right' });
+    F.n7(); tc(...GRY1);
+    doc.text('Simulación de nómina · Convenio BCSA 2026', MR, midY + 1.5, { align:'right' });
+    doc.text('BOE 18/03/2026', MR, midY + 6, { align:'right' });
+
+    y = LOGO_Y + LOGO_H + 3;
+  } else {
+    // Sin logo: wordmark tipográfico
+    const LOGO_H = 22;
+    F.b8(); tc(...BLK);
+    doc.text('PILOTPAY', ML, LOGO_Y + 12);
+    F.b7(); tc(...BLK);
+    doc.text('PILOTPAY Rava Tech.', MR, LOGO_Y + 5, { align:'right' });
+    F.n7(); tc(...GRY1);
+    doc.text('Simulación de nómina · Convenio BCSA 2026', MR, LOGO_Y + 10, { align:'right' });
+    doc.text('BOE 18/03/2026', MR, LOGO_Y + 15, { align:'right' });
+    y = LOGO_Y + LOGO_H + 3;
+  }
+
+  // Línea divisora gruesa bajo la cabecera empresa
+  dc(...BLK); dlw(0.4); doc.line(ML, y, MR, y);
+  y += 1;
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 2: DATOS TRABAJADOR (estilo formulario SAP)
+  // ════════════════════════════════════════════════════════════════════
+  const TRAB_H = 22;
+  rect(ML, y, TW, TRAB_H, WHT, GRY2);
+
+  // Columna izquierda: datos trabajador
+  const LW = TW * 0.58;
+  const RW = TW - LW - 0.5;
+  const RX = ML + LW + 0.5;
+
+  // Separador vertical centro
+  vline(ML + LW, y, y + TRAB_H, GRY2);
+
+  // Encabezado celda izquierda
+  rect(ML, y, LW, 4.5, HDR, GRY2);
+  F.b7(); tc(...BLK); tL('TRABAJADOR', ML + 1, y + 3.2);
+
+  // Encabezado celda derecha
+  rect(RX, y, RW, 4.5, HDR, GRY2);
+  tL('PERIODO LIQUIDACIÓN', RX + 1, y + 3.2);
+
+  // Línea bajo encabezados
+  hline(ML, y + 4.5, MR, GRY2);
+
+  const LY0 = y + 4.5;
+
+  // Datos izquierda — grid de 2 columnas dentro de la celda
+  // CCAA según base: Madrid → 'MADRID', Canarias → 'LAS PALMAS / TENERIFE'
+  const ccaaLabel = r.mad > 1 ? 'COMUNIDAD DE MADRID' : 'CANARIAS';
+  const campos = [
+    ['NOMBRE',     nombreTrab],
+    ['CARGO',      funLabel],
+    ['NIVEL',      'NIVEL ' + nivel + '  ·  ' + baseLabel],
+    ['ANTIGÜEDAD', ingrDate || '—'],
+    ['C.C.A.A.',   ccaaLabel],
+  ];
+  const cH = (TRAB_H - 4.5) / campos.length;
+  campos.forEach(([l, v], i) => {
+    const cy = LY0 + i * cH + cH * 0.65;
+    F.b7(); tc(...GRY1); tL(l, ML + 1, cy);
+    F.n7(); tc(...BLK);  tL(v, ML + 30, cy);
+    if (i < campos.length - 1) hline(ML, LY0 + (i+1)*cH, ML+LW, GRY3);
+  });
+
+  // Datos derecha
+  const periodoDesde = '01/' + (mes.toLowerCase().includes('enero') ? '01'
+    : mes.toLowerCase().includes('feb') ? '02'
+    : mes.toLowerCase().includes('mar') ? '03'
+    : mes.toLowerCase().includes('abr') ? '04'
+    : mes.toLowerCase().includes('may') ? '05'
+    : mes.toLowerCase().includes('jun') ? '06'
+    : mes.toLowerCase().includes('jul') ? '07'
+    : mes.toLowerCase().includes('ago') ? '08'
+    : mes.toLowerCase().includes('sep') ? '09'
+    : mes.toLowerCase().includes('oct') ? '10'
+    : mes.toLowerCase().includes('nov') ? '11' : '12') + '/2026';
+
+  const periodoFin = periodoDesde.replace('01/', periodoDesde.includes('/02/') ? '28/' : periodoDesde.includes('/04/')||periodoDesde.includes('/06/')||periodoDesde.includes('/09/')||periodoDesde.includes('/11/') ? '30/' : '31/');
+
+  const rdatos = [
+    ['PERIODO', periodoDesde + ' - ' + periodoFin],
+    ['DÍAS',    '30'],
+    ['ID CONTRATO', '100'],
+  ];
+  const rcH = (TRAB_H - 4.5) / rdatos.length;
+  rdatos.forEach(([l, v], i) => {
+    const cy = LY0 + i * rcH + rcH * 0.65;
+    F.b7(); tc(...GRY1); tL(l, RX + 1, cy);
+    F.n7(); tc(...BLK);  tL(v, RX + 30, cy);
+    if (i < rdatos.length - 1) hline(RX, LY0 + (i+1)*rcH, MR, GRY3);
+  });
+
+  y += TRAB_H + 2;
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 3: TABLA PRINCIPAL DE CONCEPTOS
+  // ════════════════════════════════════════════════════════════════════
+  // Columnas: UNIDADES(10%) PRECIO(12%) CONCEPTOS(42%) ESPECIES/INFO(12%) DEVENGOS(12%) RETENCIÓN(12%)
+  const COLS = [
+    { label:'UNIDADES',     pct:0.10, align:'R' },
+    { label:'PRECIO',       pct:0.12, align:'R' },
+    { label:'CONCEPTOS',    pct:0.42, align:'L' },
+    { label:'ESPECIES/INFO',pct:0.12, align:'R' },
+    { label:'DEVENGOS',     pct:0.12, align:'R' },
+    { label:'RETENCIÓN',    pct:0.12, align:'R' },
+  ];
+  // Calcular posiciones X absolutas
+  let cx = ML;
+  const cols = COLS.map(c => {
+    const w = TW * c.pct;
+    const x = cx;
+    cx += w;
+    return { ...c, x, w };
+  });
+
+  const ROW_H = 4.2;  // altura muy compacta
+  const HDR_H = 5.0;
+
+  // ── Cabecera tabla ──────────────────────────────────────────────────
+  rect(ML, y, TW, HDR_H, HDR, BLK);
+  F.b7(); tc(...BLK);
+  cols.forEach(col => {
+    tC(col.label, col.x + 0.5, y + 3.5, col.w - 1);
+    if (col.x > ML) vline(col.x, y, y + HDR_H, GRY2);
+  });
+  y += HDR_H;
+
+  // Borde exterior tabla (se dibuja al final)
+  const TABLE_Y_START = y;
+
+  // ── Helper: dibujar fila ────────────────────────────────────────────
+  let rowCount = 0;
+  const drawRow = (uds, precio, concepto, especie, devengo, retencion) => {
+    // Fondo blanco — sin alternancia para aspecto ERP real
+    rect(ML, y, TW, ROW_H, WHT, null);
+    F.n7(); tc(...BLK);
+
+    const vals = [uds, precio, concepto, especie, devengo, retencion];
+    cols.forEach((col, i) => {
+      const v = vals[i] || '';
+      const px = col.x + 0.8;
+      const pw = col.w - 1.6;
+      if (col.align === 'R') {
+        tR(v, col.x + 0.5, y + ROW_H - 1.2, col.w - 1);
+      } else {
+        tL(v, px, y + ROW_H - 1.2);
+      }
+      if (col.x > ML) vline(col.x, y, y + ROW_H, GRY3);
+    });
+    hline(ML, y + ROW_H, MR, GRY3);
+    y += ROW_H;
+    rowCount++;
+  };
+
+  // ── Helper: fila de sección (sin valores, solo concepto en gris) ───
+  const drawSubheader = (label) => {
+    rect(ML, y, TW, ROW_H * 0.85, [235,235,235], null);
+    F.b7(); tc(...GRY1);
+    tL(label, ML + cols[2].x - ML + 0.8, y + ROW_H * 0.6);
+    hline(ML, y + ROW_H * 0.85, MR, GRY2);
+    y += ROW_H * 0.85;
+  };
+
+  // ── Construir filas desde calcResult ───────────────────────────────
+  const add = (uds, precio, concepto, devengo, retencion, especie) => {
+    drawRow(
+      uds   != null ? fmtU(uds) : '',
+      precio!= null ? fmt(precio) : '',
+      concepto,
+      especie != null ? fmt(especie) : '',
+      devengo != null && devengo !== 0 ? fmt(devengo) : '',
+      retencion != null && retencion !== 0 ? fmt(retencion) : ''
+    );
+  };
+
+  // Devengos fijos
+  add(1.0000, r.sb,      'Salario Base',         r.sb,      null);
+  add(1.0000, r.plus_tr, 'Plus De Transporte',   r.plus_tr, null);
+
+  // Pagas extra
+  if (r.extras_label === 'prorr' && (r.extras_devengados||0) > 0)
+    add(1.0000, r.extras_devengados, 'Paga Extra Prorrateada', r.extras_devengados, null);
+  else if (r.extras_label === 'julio' && (r.extra1_dev||0) > 0)
+    add(1.0000, r.extra1_dev, 'Paga Extra — Julio', r.extra1_dev, null);
+  else if (r.extras_label === 'dic' && (r.extra2_dev||0) > 0)
+    add(1.0000, r.extra2_dev, 'Paga Extra — Diciembre', r.extra2_dev, null);
+
+  // Horas de vuelo
+  if ((r.hv1||0) > 0) add(r.hv1, r.hv_t1_rate, 'Hora Vuelo T1', r.hv1_imp, null);
+  if ((r.hv2||0) > 0) add(r.hv2, r.hv_t2_rate, 'Hora Vuelo T2', r.hv2_imp, null);
+  if ((r.hv3||0) > 0) add(r.hv3, r.hv_t3_rate, 'Hora Vuelo T3', r.hv3_imp, null);
+  if ((r.hv4||0) > 0) add(r.hv4, r.hv_t4_rate, 'Hora Vuelo T4', r.hv4_imp, null);
+
+  // Libres volados
+  if ((r.lv1||0) > 0) add(null, null, 'Libre Volado < 24h', r.lv1, null);
+  if ((r.lv2||0) > 0) add(null, null, 'Libre Volado 24-72h', r.lv2, null);
+  if ((r.lv3||0) > 0) add(null, null, 'Libre Volado > 72h', r.lv3, null);
+
+  // Complementos
+  if ((r.dpo||0) > 0)            add(1.0000, r.dpo, 'Otros Conceptos', r.dpo, null);
+  if ((r.mediaVariables||0) > 0) add(null, null, 'Media de Variables', r.mediaVariables, null);
+  if ((r.compMad||0) > 0)        add(null, null, 'Complemento de Base', r.compMad, null);
+  if ((r.typeRating||0) > 0)     add(null, null, 'Type Rating', r.typeRating, null);
+  if ((r.interesesPrestamo||0)>0)add(null, null, 'Intereses Préstamo', r.interesesPrestamo, null);
+
+  // Dietas exentas
+  if ((r.dIntCp_ex||0)>0)   add(r.nIntCp, null,'Dieta Desplaz. Inter. Pernocta Exenta',r.dIntCp_ex,null);
+  if ((r.dIntSp_ex||0)>0)   add(r.nIntSp, null,'Dieta Desplaz. Inter. Exenta',          r.dIntSp_ex,null);
+  if ((r.dNacCp_ex||0)>0)   add(r.nNacCp, null,'Dieta Desplaz. Nac. Pernocta Exenta',   r.dNacCp_ex,null);
+  if ((r.dNacSp_ex||0)>0)   add(r.nNacSp, null,'Dieta Desplaz. Nac. Exenta',            r.dNacSp_ex,null);
+  if ((r.dMantNac_ex||0)>0) add(r.nMantNac,null,'Dieta Manutención Exenta',             r.dMantNac_ex,null);
+  if ((r.dDestNac_ex||0)>0) add(r.nDestNac,null,'Destacamento NAC',                      r.dDestNac_ex,null);
+  if ((r.dDestInt_ex||0)>0) add(r.nDestInt,null,'Destacamento INT',                      r.dDestInt_ex,null);
+
+  // Dietas sujetas
+  if ((r.dIntSp_suj||0)>0)   add(r.nIntSp, null,'Dieta Desplaz. Inter. Sujeta',         r.dIntSp_suj,null);
+  if ((r.dNacSp_suj||0)>0)   add(r.nNacSp, null,'Dieta Desplaz. Nac. Sujeta',           r.dNacSp_suj,null);
+  if ((r.dMantNac_suj||0)>0) add(r.nMantNac,null,'Dieta Manutención Sujeta',            r.dMantNac_suj,null);
+
+  // Especie
+  if ((r.segVidaEspecie||0)>0) add(1.0000, r.segVidaEspecie,'Seguro Vida Especie', null, null, r.segVidaEspecie);
+  if ((r.segMed_dev||0)>0)     add(1.0000, r.segMed_dev,    'Seguro Médico',       null, null, r.segMed_dev);
+
+  // Deducciones SS
+  if ((r.ss_cc||0)>0)     add(null, null, 'Cotización Cont. Comunes',                           null, r.ss_cc);
+  if ((r.ss_mei||0)>0)    add(null, null, 'Cotización MEI',                                     null, r.ss_mei);
+  if ((r.ss_sol_t1||0)>0) add(null, null, 'Cot. Adic. Solidaridad. Exceso Primer tramo',        null, r.ss_sol_t1);
+  if ((r.ss_sol_t2||0)>0) add(null, null, 'Cot. Adic. Solidaridad. Exceso Segundo tramo',       null, r.ss_sol_t2);
+  if ((r.ss_sol_t3||0)>0) add(null, null, 'Cot. Adic. Solidaridad. Exceso Tercer tramo',        null, r.ss_sol_t3);
+  if ((r.ss_dfp||0)>0)    add(null, null, 'Cotización D+Fp',                                    null, r.ss_dfp);
+  if ((r.irpf_especie||0)>0) {
+    const pEsp = fmtPct(r.irpf_pct);
+    add(null, null, 'Retención A Cuenta Irpf Especie',  null, r.irpf_especie);
+  }
+  // IRPF dinerario
+  add(null, null, 'Retención A Cuenta Del Irpf', null, r.retencionIRPF);
+
+  // Especie no repercutida
+  if ((r.segMed_ded||0)>0) add(1.0000, r.segMed_ded, 'Seguro Médico No Repercutido', null, null, r.segMed_ded);
+  if ((r.segLic_ded||0)>0) add(1.0000, r.segLic_ded, 'Seguro Licencia',              null, null, r.segLic_ded);
+  if ((r.ppImporte||0)>0)  add(null, null,             'Prevención de Pérdidas',      null, r.ppImporte);
+
+  // Borde exterior tabla
+  dc(...BLK); dlw(0.3); doc.rect(ML, TABLE_Y_START, TW, y - TABLE_Y_START, 'S');
+
+  y += 1;
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 4: FILA RESUMEN CLÁSICA ESPAÑOLA
+  // ════════════════════════════════════════════════════════════════════
+  const SUM_COLS = [
+    { label:'REM. TOTAL',      val: fmt(r.totalDevengado) },
+    { label:'PRORRATA PAGAS',  val: fmt(r.extras_devengados||r.extra1_dev||r.extra2_dev||0) },
+    { label:'OTRAS PRORRATAS', val: '0,00' },
+    { label:'BASE COTIZACIÓN', val: fmt(r.baseSS) },
+    { label:'BASE DESEMPLEO',  val: fmt(r.baseSS) },
+    { label:'BASE I.R.P.F.',   val: fmt(r.baseIRPF) },
+    { label:'TOTAL DEVENGADO', val: fmt(r.totalDevengado) },
+    { label:'TOTAL DEDUCIR',   val: fmt((r.ss_total||0)+(r.retencionIRPF||0)+(r.segMed_ded||0)+(r.segLic_ded||0)) },
+  ];
+  const SW = TW / SUM_COLS.length;
+  const SH = 8;
+
+  // Cabecera fila resumen
+  rect(ML, y, TW, SH/2, HDR, BLK);
+  F.b7(); tc(...BLK);
+  SUM_COLS.forEach((sc, i) => {
+    const sx = ML + i * SW;
+    tC(sc.label, sx, y + SH/2 - 1, SW);
+    if (i > 0) vline(sx, y, y + SH, GRY2);
+  });
+
+  // Valores fila resumen
+  rect(ML, y + SH/2, TW, SH/2, WHT, BLK);
+  F.n8(); tc(...BLK);
+  SUM_COLS.forEach((sc, i) => {
+    const sx = ML + i * SW;
+    tR(sc.val, sx, y + SH - 1.5, SW - 0.5);
+    if (i > 0) vline(sx, y + SH/2, y + SH, GRY2);
+  });
+
+  y += SH + 2;
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 5: LÍQUIDO TOTAL A PERCIBIR
+  // ════════════════════════════════════════════════════════════════════
+  const LIQ_H = 8;
+  rect(ML, y, TW, LIQ_H, LIQBG, BLK);
+  F.b8(); tc(...BLK);
+  tL('LÍQUIDO TOTAL A PERCIBIR', ML + 2, y + LIQ_H - 2.5);
+  tR(fmt(r.liquidoReal) + ' €', ML, y + LIQ_H - 2.5, TW - 2);
+
+  y += LIQ_H + 2;
+
+  // ════════════════════════════════════════════════════════════════════
+  // SECCIÓN 6: RESUMEN DE VARIABLES APLICADAS (bloque compacto)
+  // ════════════════════════════════════════════════════════════════════
+  // HB total real: el valor del input hb-total (incluye las 60h garantizadas + distribución)
+  // NO usar suma de tramos (r.hv1+hv2+hv3+hv4) que son las horas YA distribuidas.
+  // El input hb-total tiene el HB total antes de distribuirse en tramos.
+  const hbTotal = parseFloat(document.getElementById('hb-total')?.value) || 
+                  (r.hv1||0)+(r.hv2||0)+(r.hv3||0)+(r.hv4||0);
+  const imVal = parseFloat(document.getElementById('imaginarias')?.value) || 0;
+  const frVal = parseFloat(document.getElementById('francos')?.value)    || 0;
+  const vacDias = parseFloat(document.getElementById('vac-dias')?.value) || 0;
+  const conVac  = document.getElementById('toggle-vac')?.checked;
+
+  const varLines = [
+    ['HB Total aplicado', fmt(hbTotal) + ' h'],
+    imVal>0 ? ['Imaginarias', fmtU(imVal) + ' uds'] : null,
+    frVal>0 ? ['Francos',     fmtU(frVal) + ' uds'] : null,
+    (r.dpo||0)>0           ? ['DPO', fmt(r.dpo) + ' €'] : null,
+    (r.mediaVariables||0)>0? ['Media Variables', fmt(r.mediaVariables) + ' €'] : null,
+    (r.compMad||0)>0       ? ['Comp. Base MAD', fmt(r.compMad) + ' €'] : null,
+    conVac && vacDias>0    ? ['Vacaciones', vacDias + ' días'] : null,
+    ['IRPF aplicado', fmtPct(r.irpf_pct)],
+    ['Base SS', fmt(r.baseSS) + ' €' + (r.baseSS >= 5101.20 ? ' (tope)' : '')],
+  ].filter(Boolean);
+
+  // Título bloque variables
+  rect(ML, y, TW, 4, HDR, GRY2);
+  F.b7(); tc(...BLK);
+  tL('VARIABLES APLICADAS EN ESTE CÁLCULO', ML + 1, y + 2.8);
+  y += 4;
+
+  // Grid de variables: 4 columnas
+  const VCols = 4;
+  const VCW = TW / VCols;
+  const VRH = 3.8;
+  rect(ML, y, TW, Math.ceil(varLines.length/VCols)*VRH, WHT, GRY2);
+
+  varLines.forEach(([l, v], i) => {
+    const col = i % VCols;
+    const row = Math.floor(i / VCols);
+    const vx = ML + col * VCW;
+    const vy = y + row * VRH + VRH * 0.72;
+    F.b7(); tc(...GRY1); tL(l, vx + 1, vy);
+    F.n7(); tc(...BLK);  tR(v, vx, vy, VCW - 1);
+    if (col > 0) vline(vx, y + row*VRH, y + (row+1)*VRH, GRY3);
+    if (row > 0 && col === 0) hline(ML, y + row*VRH, MR, GRY3);
+  });
+
+  y += Math.ceil(varLines.length/VCols) * VRH + 3;
+
+  // ════════════════════════════════════════════════════════════════════
+  // PIE DE PÁGINA — aviso legal discreto
+  // ════════════════════════════════════════════════════════════════════
+  // Línea fina de cierre
+  dc(...GRY2); dlw(0.2); doc.line(ML, y, MR, y);
+  y += 3;
+
+  F.n6(); tc(...GRY1);
+  doc.text(
+    'Documento generado por PilotPay. Simulación informativa sin validez legal ni valor contractual.',
+    ML, y
+  );
+
+  // Número de página (esquina inferior derecha)
+  const totalPgs = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPgs; p++) {
+    doc.setPage(p);
+    F.n6(); tc(...GRY1);
+    doc.text(`Pág. ${p}/${totalPgs}`, MR, H - 4, { align:'right' });
+  }
+
+  // ── Descargar ──────────────────────────────────────────────────────
+  const slug = (r.mes||'nomina').toLowerCase().replace(/\s+/g,'_');
+  doc.save(`PilotPay_${funLabel}_N${nivel}_${slug}_2026.pdf`);
+}
 // ── BAJAS / INCAPACIDAD TEMPORAL ──
 let bajaActiva = false;
 
