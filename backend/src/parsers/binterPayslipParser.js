@@ -101,7 +101,7 @@ function extractDiasInfo(lines) {
     codigosResumen: {},
   };
 
-  // Buscar línea con secuencia de números de día: al menos 15 números 1-31
+  // Buscar línea con secuencia de números de día: al menos 15 tokens numéricos 1-31
   let diasLineIdx = -1;
   for (let i = 0; i < lines.length; i++) {
     const toks = lines[i].trim().split(/\s+/);
@@ -111,44 +111,58 @@ function extractDiasInfo(lines) {
     }
   }
 
-  if (diasLineIdx < 0) return diasInfo;  // no encontrado
+  if (diasLineIdx < 0) return diasInfo;
 
   const diasNums = lines[diasLineIdx].trim().split(/\s+/).map(Number);
   const totalDias = diasNums.length;
 
-  // Buscar fila de códigos o porcentajes en las 1-4 líneas siguientes
-  let codigosLine = null;
+  // Buscar fila de porcentajes/códigos en las 1-4 líneas siguientes.
+  // La tira puede llegar concatenada "100.0100.0..." (sin espacios, layout PDF.js real).
+  let pctTokens = [];
   for (let j = diasLineIdx + 1; j <= Math.min(diasLineIdx + 4, lines.length - 1); j++) {
     const ln = lines[j].trim();
-    if (ln.length > 5 && /\d|[A-Z]{2}/.test(ln)) {
-      codigosLine = ln;
-      break;
+    if (!ln) continue;
+
+    // Caso A: tokens separados por espacios "100.0 100.0 VA ..."
+    const spacedTokens = ln.split(/\s+/).filter(t => /^\d{1,3}\.\d+$/.test(t) || CODIGOS_DIAS[t.toUpperCase()]);
+    if (spacedTokens.length >= 15) { pctTokens = ln.split(/\s+/); break; }
+
+    // Caso B: concatenados "100.0100.0100.0..." → split por regex
+    if (/^[\d.]+$/.test(ln) && ln.length > 30) {
+      const concat = ln.match(/\d{1,3}\.\d+/g) || [];
+      if (concat.length >= 15) { pctTokens = concat; break; }
     }
+
+    // Caso C: línea con códigos mezclados con porcentajes
+    const hasCod = ln.split(/\s+/).some(t => CODIGOS_DIAS[t.toUpperCase()]);
+    if (hasCod) { pctTokens = ln.split(/\s+/); break; }
   }
 
-  if (!codigosLine) {
+  if (pctTokens.length === 0) {
     diasInfo.diasTrabajados = totalDias;
     return diasInfo;
   }
 
-  const tokens = codigosLine.split(/\s+/);
   const diasConIncidencia = [];
   const codigosResumen = {};
+  let diasTrabajados = totalDias;
 
-  tokens.forEach((tok, i) => {
+  pctTokens.forEach((tok, i) => {
     const cod = tok.toUpperCase();
     if (CODIGOS_DIAS[cod]) {
       const dia = diasNums[i] || i + 1;
       diasConIncidencia.push({ dia, cod, nombre: CODIGOS_DIAS[cod] });
       codigosResumen[cod] = (codigosResumen[cod] || 0) + 1;
+      diasTrabajados--;
+    } else if (parseFloat(tok) > 0 && parseFloat(tok) < 100) {
+      diasTrabajados--;  // porcentaje parcial (baja sin código específico)
     }
   });
 
-  const totalConIncidencia = diasConIncidencia.length;
-  diasInfo.diasTrabajados   = totalDias - totalConIncidencia;
-  diasInfo.totalConIncidencia = totalConIncidencia;
-  diasInfo.diasConCodigo    = diasConIncidencia;
-  diasInfo.codigosResumen   = codigosResumen;
+  diasInfo.diasTrabajados     = diasTrabajados;
+  diasInfo.totalConIncidencia = diasConIncidencia.length;
+  diasInfo.diasConCodigo      = diasConIncidencia;
+  diasInfo.codigosResumen     = codigosResumen;
 
   return diasInfo;
 }
