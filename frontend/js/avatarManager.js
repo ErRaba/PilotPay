@@ -3,7 +3,7 @@
  * Rava Tech. 2026
  *
  * Responsibilities:
- *  - Load avatars.json from the server (with simple empty fallback on failure)
+ *  - Load avatars.json from the server with embedded fallback
  *  - Provide filtered avatar lists by role/gender
  *  - Persist selected avatar per user in Firebase / localStorage
  *  - Expose a simple API consumed by profileUI and adminUI
@@ -30,7 +30,7 @@ const AvatarManager = (() => {
 
   /**
    * Initialise: fetch avatars.json.
-   * On failure falls back to an empty list (initials display used).
+   * On failure falls back to the AVATARS[] array embedded in index.html.
    * @returns {Promise<Avatar[]>}
    */
   async function init() {
@@ -45,7 +45,7 @@ const AvatarManager = (() => {
       console.info(`[AvatarManager] Loaded ${_avatars.length} avatars from ${AVATARS_JSON_PATH}`);
     } catch (err) {
       _loadError = err;
-      console.warn(`[AvatarManager] JSON load failed (${err.message}). No avatars available — using initials.`);
+      console.warn(`[AvatarManager] JSON load failed (${err.message}). Using embedded fallback.`);
       _avatars = _buildFallback();
       _loaded  = true;
     }
@@ -54,16 +54,33 @@ const AvatarManager = (() => {
   }
 
   /**
-   * Build a minimal generic fallback avatar list.
-   * Used when avatars.json cannot be fetched AND no embedded AVATARS[] exists.
-   * Returns an empty array — the UI will fall back to initials display.
-   * NO base64-embedded images are used as fallback.
+   * Build a minimal avatar list from the AVATARS[] global embedded in
+   * index.html (base64 data URIs). This is the zero-dependency fallback.
    */
   function _buildFallback() {
-    // No embedded fallback: return empty list.
-    // The UI handles the empty case by showing user initials.
-    console.info('[AvatarManager] No avatars available — initials display will be used.');
-    return [];
+    if (typeof AVATARS === 'undefined' || !Array.isArray(AVATARS)) return [];
+
+    const roles   = ['cmd','cmd','cmd','cmd','cmd',
+                     'cmd','cmd','cmd','cmd','cmd',
+                     'cop','cop','cop','cop','cop',
+                     'cop','cop','cop',
+                     'tcp','tcp','tcp','tcp','tcp','tcp','tcp'];
+    const gender  = 'male'; // current spritesheet is all male
+
+    return AVATARS.map((src, i) => ({
+      id:           `avatar_${String(i + 1).padStart(2, '0')}`,
+      role:         roles[i] || 'cmd',
+      gender,
+      name:         _defaultName(roles[i] || 'cmd', i),
+      src:          src,           // data URI — works immediately
+      active:       true,
+    }));
+  }
+
+  function _defaultName(role, idx) {
+    const labels = { cmd: 'Comandante', cop: 'Copiloto', tcp: 'Tripulante' };
+    const counts = { cmd: 0, cop: 0, tcp: 0 };
+    return `${labels[role] || 'Piloto'} ${String(++counts[role]).padStart(2, '0')}`;
   }
 
   // ── QUERY ────────────────────────────────────────────────────────────────
@@ -91,7 +108,7 @@ const AvatarManager = (() => {
 
   /**
    * Resolve the display src for an avatar entry.
-   * Returns external src path (file). Data URIs are also supported if present.
+   * Prefers external src (file), falls back to embedded base64.
    */
   function resolveSrc(avatar) {
     if (!avatar) return null;
@@ -191,51 +208,6 @@ const AvatarManager = (() => {
     }
   }
 
-  // ── ADMIN OPERATIONS ─────────────────────────────────────────────────────
-
-  /**
-   * Return ALL avatars including inactive ones (for admin view).
-   */
-  function getAllIncludingInactive() {
-    return [..._avatars];
-  }
-
-  /**
-   * Toggle the active flag of an avatar by id.
-   * Updates the in-memory list immediately.
-   * Persisting to server is out of scope (static JSON) — caller may
-   * snapshot the state via getAllIncludingInactive() if needed.
-   * @param {string} id
-   * @returns {boolean} new active state
-   */
-  function toggleActive(id) {
-    const av = _avatars.find(a => a.id === id);
-    if (!av) return false;
-    av.active = !av.active;
-    return av.active;
-  }
-
-  /**
-   * Add a new avatar to the in-memory list.
-   * Auto-generates an id based on current list length.
-   * @param {{ name, role, gender, src }} fields
-   * @returns {object} the new avatar entry
-   */
-  function addAvatar({ name, role, gender, src }) {
-    const idx  = _avatars.length + 1;
-    const id   = `avatar_${String(idx).padStart(2, '0')}`;
-    const entry = {
-      id,
-      role:   role   || 'cmd',
-      gender: gender || 'male',
-      name:   name   || `Avatar ${idx}`,
-      src:    src    || '',
-      active: true,
-    };
-    _avatars.push(entry);
-    return entry;
-  }
-
   // ── PUBLIC API ───────────────────────────────────────────────────────────
 
   return {
@@ -248,12 +220,6 @@ const AvatarManager = (() => {
     resolveSelection,
     setSelection,
     updateDOM,
-    // Admin
-    getAllIncludingInactive,
-    toggleActive,
-    addAvatar,
-    /** Raw array access for admin panel (same as getAllIncludingInactive) */
-    _getRaw: getAllIncludingInactive,
 
     /** True once init() has completed */
     get loaded() { return _loaded; },

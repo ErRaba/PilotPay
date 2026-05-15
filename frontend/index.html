@@ -1122,12 +1122,12 @@ input, select, textarea {
 .diff-row.err { border-color: var(--red); background: var(--red-dim); }
 .diff-concept { font-size: 12px; color: var(--text2); flex: 1; }
 .diff-vals { display: flex; gap: 10px; align-items: center; }
-.diff-teorico { font-family: var(--mono); font-size: 11px; color: var(--text3); }
-.diff-real { font-family: var(--mono); font-size: 12px; }
+.diff-teorico { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 82px; text-align: right; }
+.diff-real { font-family: var(--mono); font-size: 12px; min-width: 82px; text-align: right; }
 .diff-row.ok .diff-real { color: var(--green); }
 .diff-row.warn .diff-real { color: var(--amber2); }
 .diff-row.err .diff-real { color: var(--red); }
-.diff-delta { font-family: var(--mono); font-size: 11px; min-width: 60px; text-align: right; }
+.diff-delta { font-family: var(--mono); font-size: 11px; min-width: 70px; text-align: right; }
 .diff-row.ok .diff-delta { color: var(--text3); }
 .diff-row.warn .diff-delta { color: var(--amber); }
 .diff-row.err .diff-delta { color: var(--red); }
@@ -1512,7 +1512,7 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="row">
           <div class="field">
             <span class="field-label">Mes nómina</span>
-            <select class="field-input" id="mes-nomina" onchange="varsActualizarMesEsperado()">
+            <select class="field-input" id="mes-nomina" oninput="varsActualizarMesEsperado();recalc();" onchange="varsActualizarMesEsperado();recalc();">
               <option>Enero</option><option>Febrero</option><option>Marzo</option>
               <option selected>Abril</option><option>Mayo</option><option>Junio</option>
               <option>Julio</option><option>Agosto</option><option>Septiembre</option>
@@ -1521,7 +1521,7 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
           <div class="field">
             <span class="field-label">IRPF %</span>
-            <input class="field-input" id="irpf" type="number" value="34.15" step=".01" onchange="recalc()">
+            <input class="field-input" id="irpf" type="number" value="34.15" step=".01" oninput="recalc()" onchange="recalc()">
           </div>
         </div>
         <div style="display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:4px 0">
@@ -1536,6 +1536,59 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
 
+      <!-- VACACIONES -->
+      <div class="card" style="padding-bottom:14px">
+        <div class="card-title"><div class="section-dot blue"></div>🏖 Vacaciones</div>
+
+        <!-- Fila principal: switch + campos inline -->
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:2px 0">
+
+          <!-- Izquierda: label + hint + switch -->
+          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+            <div>
+              <span class="field-label" style="margin-bottom:1px;display:block">Vacaciones este mes</span>
+              <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
+            </div>
+            <label class="ios-toggle" style="flex-shrink:0">
+              <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
+              <span class="ios-slider"></span>
+            </label>
+          </div>
+
+          <!-- Derecha: campos inline (ocultos hasta activar) -->
+          <div id="vac-field" style="display:none;flex-wrap:wrap;align-items:flex-end;gap:14px;flex:1;min-width:0">
+
+            <!-- Días vacaciones -->
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <span class="field-label">Días vacaciones</span>
+              <input class="field-input" id="vac-dias" type="number"
+                     placeholder="ej: 6" min="1" max="31"
+                     oninput="onVacDiasChange()"
+                     style="width:80px;min-width:64px">
+              <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);min-height:14px"></div>
+            </div>
+
+            <!-- Media de Variables -->
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <span class="field-label">Media Variables (€)</span>
+              <input class="field-input" id="media-variables" type="number"
+                     value="0" step="0.01" min="0" placeholder="0"
+                     oninput="recalc()" onchange="recalc()"
+                     style="width:120px;min-width:96px">
+              <div style="min-height:14px"></div>
+            </div>
+
+          </div><!-- /vac-field -->
+        </div><!-- /fila principal -->
+
+        <!-- Nota informativa: aparece solo cuando vac-field está visible (CSS toggle via clase) -->
+        <div id="vac-hint-media" style="display:none;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.5">
+          Media Variables: Tributa IRPF · Suma al devengado · Introducir manualmente cada mes
+        </div>
+
+      </div>
+
+
       <!-- ════════════════════════════════
            PANEL PILOTOS (CMD / COP)
            ════════════════════════════════ -->
@@ -1548,20 +1601,23 @@ input[type=number] { -moz-appearance: textfield; }
             <div class="field">
               <span class="field-label">Total HV (horas vuelo puras)</span>
               <input class="field-input" id="hv-total" type="number" placeholder="ej: 65"
-                     onchange="calcularHB()" onblur="calcularHB()">
+                     oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">
+                Si introduces HB directamente, HV queda como dato informativo (no se monetiza por separado)
+              </div>
             </div>
           </div>
           <div class="row">
             <div class="field">
               <span class="field-label">Imaginarias (uds)</span>
               <input class="field-input" id="imaginarias" type="number" placeholder="0"
-                     onchange="calcularHB()" onblur="calcularHB()">
+                     oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 3 HB c/u</div>
             </div>
             <div class="field">
               <span class="field-label">Francos (uds)</span>
               <input class="field-input" id="francos" type="number" placeholder="0"
-                     onchange="calcularHB()" onblur="calcularHB()">
+                     oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 2 HB c/u</div>
             </div>
           </div>
@@ -1602,22 +1658,22 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="tramo-grid">
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t1">T1 · h61–70</div>
-              <input class="tramo-input" id="hv1" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
+              <input class="tramo-input" id="hv1" type="number" placeholder="0" oninput="recalc()" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t1">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t2">T2 · h71–80</div>
-              <input class="tramo-input" id="hv2" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
+              <input class="tramo-input" id="hv2" type="number" placeholder="0" oninput="recalc()" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t2">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t3">T3 · h81–90</div>
-              <input class="tramo-input" id="hv3" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
+              <input class="tramo-input" id="hv3" type="number" placeholder="0" oninput="recalc()" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t3">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="label-t4">T4 · &gt;90h</div>
-              <input class="tramo-input" id="hv4" type="number" placeholder="0" onchange="recalc()" oninput="clearHBTotal()">
+              <input class="tramo-input" id="hv4" type="number" placeholder="0" oninput="recalc()" onchange="recalc()" oninput="clearHBTotal()">
               <div class="tramo-rate" id="rate-t4">—</div>
             </div>
           </div>
@@ -1628,15 +1684,15 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">&lt;24h (uds)</span>
-              <input class="field-input" id="lv1" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="lv1" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">24–72h (uds)</span>
-              <input class="field-input" id="lv2" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="lv2" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">&gt;72h (uds)</span>
-              <input class="field-input" id="lv3" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="lv3" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
         </div>
@@ -1647,7 +1703,7 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Manutención NAC (períodos)</span>
-              <input class="field-input" id="d-mant-nac" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="d-mant-nac" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Art. 53 Convenio · ${(DIETAS.mant_nac.total).toFixed(2)} €/período (${(DIETAS.mant_nac.exenta).toFixed(2)} € exento)</div>
             </div>
             <div class="field"></div>
@@ -1656,33 +1712,33 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
-              <input class="field-input" id="d-nac-sp" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="d-nac-sp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Con pernocta (días)</span>
-              <input class="field-input" id="d-nac-cp" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="d-nac-cp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
           <div class="dieta-section-label">🌍 Compensatorio por Desplazamiento Internacional</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
-              <input class="field-input" id="d-int-sp" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="d-int-sp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Con pernocta (días)</span>
-              <input class="field-input" id="d-int-cp" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="d-int-cp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
           <div class="dieta-section-label">📍 Compensatorio por Destacamento</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Nacional (días)</span>
-              <input class="field-input" id="dest-nac" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="dest-nac" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Internacional (días)</span>
-              <input class="field-input" id="dest-int" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="dest-int" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
         </div>
@@ -1694,11 +1750,11 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">DPO mensual (€)</span>
-              <input class="field-input" id="dpo" type="number" value="" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="dpo" type="number" value="" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field" id="comp-mad-field">
               <span class="field-label">Comp. Base MAD (€)</span>
-              <input class="field-input" id="comp-mad" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="comp-mad" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
 
@@ -1710,12 +1766,12 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Amortización préstamo (€)</span>
-              <input class="field-input" id="type-rating" type="number" placeholder="0" step="0.01" onchange="recalc()">
+              <input class="field-input" id="type-rating" type="number" placeholder="0" step="0.01" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Se descuenta del líquido</div>
             </div>
             <div class="field">
               <span class="field-label">Intereses préstamo (€)</span>
-              <input class="field-input" id="type-rating-interest" type="number" placeholder="0" step="0.01" onchange="recalc()">
+              <input class="field-input" id="type-rating-interest" type="number" placeholder="0" step="0.01" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Sujeto a SS e IRPF</div>
             </div>
           </div>
@@ -1751,7 +1807,7 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
             <div class="field" id="pp-amount-field" style="display:none">
               <span class="field-label">Importe mensual (€)</span>
-              <input class="field-input" id="pp-amount" type="number" value="29.74" onchange="recalc()">
+              <input class="field-input" id="pp-amount" type="number" value="29.74" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
 
@@ -1836,22 +1892,22 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="tramo-grid" style="margin-bottom:14px">
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t1o">T1-O</div>
-              <input class="tramo-input" id="tcp-hv1o" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('ord')">
+              <input class="tramo-input" id="tcp-hv1o" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('ord')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t1o">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t2o">T2-O</div>
-              <input class="tramo-input" id="tcp-hv2o" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('ord')">
+              <input class="tramo-input" id="tcp-hv2o" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('ord')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t2o">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t3o">T3-O</div>
-              <input class="tramo-input" id="tcp-hv3o" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('ord')">
+              <input class="tramo-input" id="tcp-hv3o" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('ord')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t3o">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t4o">T4-O</div>
-              <input class="tramo-input" id="tcp-hv4o" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('ord')">
+              <input class="tramo-input" id="tcp-hv4o" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('ord')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t4o">—</div>
             </div>
           </div>
@@ -1870,22 +1926,22 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="tramo-grid" style="margin-bottom:12px">
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t1r">T1-R</div>
-              <input class="tramo-input" id="tcp-hv1r" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('rel')">
+              <input class="tramo-input" id="tcp-hv1r" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('rel')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t1r">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t2r">T2-R</div>
-              <input class="tramo-input" id="tcp-hv2r" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('rel')">
+              <input class="tramo-input" id="tcp-hv2r" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('rel')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t2r">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t3r">T3-R</div>
-              <input class="tramo-input" id="tcp-hv3r" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('rel')">
+              <input class="tramo-input" id="tcp-hv3r" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('rel')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t3r">—</div>
             </div>
             <div class="tramo-cell">
               <div class="tramo-label" id="tcp-label-t4r">T4-R</div>
-              <input class="tramo-input" id="tcp-hv4r" type="number" placeholder="0" step="0.25" onchange="recalc()" oninput="tcpClearTotal('rel')">
+              <input class="tramo-input" id="tcp-hv4r" type="number" placeholder="0" step="0.25" oninput="recalc();tcpClearTotal('rel')" onchange="recalc()">
               <div class="tramo-rate" id="tcp-rate-t4r">—</div>
             </div>
           </div>
@@ -1897,12 +1953,12 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row mt-8">
             <div class="field">
               <span class="field-label">Imaginarias (uds)</span>
-              <input class="field-input" id="tcp-imaginarias" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-imaginarias" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">= 3 HB T1-O por unidad</div>
             </div>
             <div class="field">
               <span class="field-label">Francos (uds)</span>
-              <input class="field-input" id="tcp-francos" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-francos" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">= 2 HB T1-O por unidad</div>
             </div>
           </div>
@@ -1914,7 +1970,7 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Días ejerciendo función SCC</span>
-              <input class="field-input" id="tcp-dias-scc" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-dias-scc" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Tarifa/día</span>
@@ -1932,7 +1988,7 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Complemento MAD (€/mes)</span>
-              <input class="field-input" id="tcp-comp-mad" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-comp-mad" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
         </div>
@@ -1943,17 +1999,17 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">&lt;24h (uds)</span>
-              <input class="field-input" id="tcp-lv1" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-lv1" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div id="tcp-rate-lv1" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">—</div>
             </div>
             <div class="field">
               <span class="field-label">24–72h (uds)</span>
-              <input class="field-input" id="tcp-lv2" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-lv2" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div id="tcp-rate-lv2" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">—</div>
             </div>
             <div class="field">
               <span class="field-label">&gt;72h (uds)</span>
-              <input class="field-input" id="tcp-lv3" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-lv3" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
               <div id="tcp-rate-lv3" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">—</div>
             </div>
           </div>
@@ -1969,21 +2025,21 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Destacamento NAC (días)</span>
-              <input class="field-input" id="tcp-dest-nac" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-dest-nac" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Destacamento INT (días)</span>
-              <input class="field-input" id="tcp-dest-int" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-dest-int" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
           <div class="row mt-8">
             <div class="field">
               <span class="field-label">Pernocta NAC (días)</span>
-              <input class="field-input" id="tcp-pernoc-nac" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-pernoc-nac" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
             <div class="field">
               <span class="field-label">Pernocta INT (días)</span>
-              <input class="field-input" id="tcp-pernoc-int" type="number" placeholder="0" onchange="recalc()">
+              <input class="field-input" id="tcp-pernoc-int" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
         </div>
@@ -2010,30 +2066,6 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
 
       </div><!-- /panel-tcp -->
-
-      <!-- VACACIONES -->
-      <div class="card">
-        <div class="card-title"><div class="section-dot blue"></div>🏖 Vacaciones</div>
-        <div style="display:flex;align-items:center;justify-content:flex-start;gap:14px;padding:4px 0">
-          <div>
-            <span class="field-label" style="margin-bottom:2px;display:block">Vacaciones este mes</span>
-            <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
-          </div>
-          <label class="ios-toggle" style="flex-shrink:0">
-            <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
-            <span class="ios-slider"></span>
-          </label>
-        </div>
-        <div id="vac-field" style="display:none;margin-top:10px">
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Días de vacaciones</span>
-              <input class="field-input" id="vac-dias" type="number" placeholder="ej: 6" min="1" max="31" oninput="onVacDiasChange()">
-              <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px"></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- BAJAS (común) -->
       <div class="card" id="card-bajas">
@@ -2075,7 +2107,7 @@ input[type=number] { -moz-appearance: textfield; }
           <div class="row">
             <div class="field">
               <span class="field-label">Base reguladora diaria (€)</span>
-              <input class="field-input" id="baja-base-reg" type="number" step="0.01" placeholder="Se calcula del salario base" onchange="recalcBaja()">
+              <input class="field-input" id="baja-base-reg" type="number" step="0.01" placeholder="Auto: SB nivel actual × 12 ÷ 365" oninput="_bajaBaseManual=true;recalcBaja();" onchange="_bajaBaseManual=true;recalcBaja();">
             </div>
             <div class="field" style="align-self:flex-end">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);line-height:1.5">Si no la conoces se estima como SB×12÷365</div>
@@ -4724,6 +4756,11 @@ function resetCalculadora() {
     toggleVacaciones();
   }
   document.getElementById('vac-dias').value = '';
+  // Clear media variables field
+  const mvEl = document.getElementById('media-variables');
+  if (mvEl) mvEl.value = '0';
+  // Clear baja manual flag
+  _bajaBaseManual = false;
   setCurrentMonth();
   recalc();
 }
@@ -4766,6 +4803,8 @@ function setNivel(n) {
   currentNivel = n;
   highlightNivel();
   updateRates();
+  _bajaBaseManual = false;  // reset manual flag on nivel change
+  autoFillBaseReg();
   recalc();
 }
 function highlightNivel() {
@@ -4958,6 +4997,8 @@ function onFuncionChange() {
   }
 
   updateRates();
+  _bajaBaseManual = false;  // reset manual flag on function change
+  autoFillBaseReg();
   recalc();
 }
 
@@ -5152,7 +5193,10 @@ function getVacParams() {
 
 function toggleVacaciones() {
   const on = document.getElementById('toggle-vac').checked;
-  document.getElementById('vac-field').style.display = on ? 'block' : 'none';
+  const vf = document.getElementById('vac-field');
+  if (vf) vf.style.display = on ? 'flex' : 'none';
+  const hm = document.getElementById('vac-hint-media');
+  if (hm) hm.style.display = on ? 'block' : 'none';
   document.getElementById('vac-hint').textContent = on ? 'Con vacaciones' : 'Sin vacaciones';
   if (!on) {
     document.getElementById('vac-dias').value = '';
@@ -5263,6 +5307,8 @@ function recalc() {
   const dpo = parseFloat(document.getElementById('dpo').value) || 0;
   const compMad = parseFloat(document.getElementById('comp-mad').value) || 0;
   const ppImporte = ppActivo ? (parseFloat(document.getElementById('pp-amount').value) || 29.74) : 0;
+  // Media de Variables: suma al devengado, tributa IRPF, nunca exenta
+  const mediaVariables = parseFloat(document.getElementById('media-variables')?.value) || 0;
 
   // PAGAS EXTRA
   // PAGAS EXTRA — lógica correcta:
@@ -5347,7 +5393,7 @@ function recalc() {
 
   // DEVENGADO TOTAL — solo devengos monetarios, sin especies
   // Seg. Vida y Seg. Médico aparecen en Especies/Info pero NO en Total Devengado
-  const dev_salarial = Math.round((sb + plus_tr + extras_devengados + hvTotal + im + fr + lv1 + lv2 + lv3 + dpo + compMad + interesesPrestamo) * 100) / 100;
+  const dev_salarial = Math.round((sb + plus_tr + extras_devengados + hvTotal + im + fr + lv1 + lv2 + lv3 + dpo + compMad + interesesPrestamo + mediaVariables) * 100) / 100;
   const totalDevengado = Math.round((dev_salarial + totalDietas) * 100) / 100;
 
   // BASE IRPF = total devengado - dietas exentas
@@ -5407,7 +5453,7 @@ function recalc() {
     sb, plus_tr, extra1, extra2, extra1_dev, extra2_dev, extras_devengados, extras_label,
     hv1, hv2, hv3, hv4, hv1_imp, hv2_imp, hv3_imp, hv4_imp,
     hv_t1_rate, hv_t2_rate, hv_t3_rate, hv_t4_rate,
-    hvTotal, im, fr, lv1, lv2, lv3, dpo, compMad, interesesPrestamo, ppImporte,
+    hvTotal, im, fr, lv1, lv2, lv3, dpo, compMad, interesesPrestamo, ppImporte, mediaVariables,
     nMantNac, nNacSp, nNacCp, nIntSp, nIntCp, nDestNac, nDestInt,
     dMantNac_ex, dMantNac_suj, dNacSp_ex, dNacSp_suj,
     dNacCp_ex, dNacCp_suj, dIntSp_ex, dIntSp_suj,
@@ -5611,6 +5657,7 @@ function renderNomina() {
   if (r.lv2 > 0) addR(null, null, 'Libre Volado 24-72h', r.lv2, '');
   if (r.lv3 > 0) addR(null, null, 'Libre Volado >72h', r.lv3, '');
   if (r.dpo > 0) addR(null, null, 'Otros Conceptos (DPO)', r.dpo, '');
+  if (r.mediaVariables > 0) addR(null, null, 'Media de Variables', r.mediaVariables, '');
   if (r.compMad > 0) addR(null, null, 'Complemento de base', r.compMad, '');
   if (r.interesesPrestamo > 0) addR(null, null, 'Intereses Préstamo', r.interesesPrestamo, '');
   // Dietas — desglosadas exenta/sujeta como en nómina real
@@ -5728,6 +5775,7 @@ function toggleBaja(on) {
   document.getElementById('tog-baja-no').classList.toggle('active', !on);
   document.getElementById('baja-fields').style.display = on ? 'block' : 'none';
   document.getElementById('baja-tipo').disabled = !on;
+  if (on) autoFillBaseReg();  // fill BR when baja is activated
   if (!on) {
     document.getElementById('baja-resultado').style.display = 'none';
   } else {
@@ -6207,14 +6255,73 @@ function parseBinterNomina(text) {
   if (!liquido)         liquido         = findNum(/L[IÍ]QUIDO\s+TOTAL\s+A\s+PERCIBIR\s+([\d.,]+)/i);
 
   // ── ACUMULADOS ──
-  // Formato típico: "Acum. Base IRPF  12.345,67"
-  const acum_base_irpf   = findNum(/Acum\.?\s+Base\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
-  const acum_irpf        = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
-  const acum_cotiz_ss    = findNum(/Acum\.?\s+Cotiz(?:aci[oó]n)?\.?\s+S\.?\s*S\.?\s+([\d.,]+)/i);
-  const acum_base_esp_rep   = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_irpf_esp_rep   = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_base_esp_norep = findNum(/Acum\.?\s+Base\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
-  const acum_irpf_esp_norep = findNum(/Acum\.?\s+I\.?R\.?P\.?F\.?\s+Esp(?:\.|ecies?)?\s+No\s+Rep(?:\.|ercutidas?)?\s+([\d.,]+)/i);
+  // Layout real nómina Binter (analizado con pdfplumber, Marzo 2026):
+  // PDF.js agrupa por coord. Y → los valores aparecen en líneas anteriores a su etiqueta.
+  // Puede haber texto intercalado ("FIRMA Y SELLO...") entre valor y etiqueta.
+  // Hay líneas con 2 etiquetas Acum. (la 1ª toma valor anterior, la 2ª toma inline).
+  //
+  // Estructura observada:
+  // [15] "Acum.  Base  Esp.  Rep  129,99"                             ← inline
+  // [17] "30.501,12"                                                  ← valor de Base IRPF
+  // [18] "Acum.  Base  IRPF"                                         ← etiqueta sola
+  // [19] "Acum.  IRPF  Esp.  Rep  44,57"                             ← inline
+  // [20] "10.456,83"                                                  ← valor de IRPF retenido
+  // [21] "Acum.  IRPF"                                               ← etiqueta sola
+  // [22] "Acum.  Base  Esp.  No  Rep  0,00"                          ← inline
+  // [23] "FIRMA  Y  SELLO  DE  LA  EMPRESA"                          ← texto intercalado
+  // [24] "1.034,26"                                                  ← valor de Cotiz. S.S.
+  // [25] "Acum.  Cotiz.  S.S.  Acum.  IRPF  Esp.  No  Rep  0,00"   ← línea compuesta
+
+  const _RN_ACM    = '[\\d]{1,3}(?:\\.\\d{3})*,\\d{2}';
+  const _RN_ACM_RE = new RegExp('^' + _RN_ACM + '$');
+
+  function _findAcum(lns, labelRe) {
+    for (let _i = 0; _i < lns.length; _i++) {
+      const _line = lns[_i];
+      if (!labelRe.test(_line)) continue;
+
+      const _nAcum      = (_line.match(/Acum\./g) || []).length;
+      const _inlineNums = _line.match(new RegExp(_RN_ACM, 'g')) || [];
+      const _firstAcumIdx = _line.indexOf('Acum.');
+      const _thisMatch    = labelRe.exec(_line);
+      const _isFirst      = _thisMatch && (_thisMatch.index === _firstAcumIdx);
+
+      // Función: buscar número hacia atrás (hasta 4 líneas, sin cruzar otra etiqueta Acum.)
+      const _scanBack = () => {
+        for (let _j = _i - 1; _j >= Math.max(0, _i - 4); _j--) {
+          if (_RN_ACM_RE.test(lns[_j])) return n(lns[_j]);
+          if (lns[_j] && /Acum\./i.test(lns[_j])) break;
+        }
+        return null;
+      };
+
+      if (_nAcum <= 1) {
+        // Etiqueta única: inline > buscar atrás
+        if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        const _back = _scanBack();
+        if (_back !== null) return _back;
+      } else {
+        // Línea compuesta: 1ª etiqueta ← atrás; 2ª ← inline
+        if (_isFirst) {
+          const _back = _scanBack();
+          if (_back !== null) return _back;
+        } else {
+          if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        }
+      }
+    }
+    return null;
+  }
+
+  const _lns_acm = text.split('\n').map(l => l.trim());
+
+  const acum_base_irpf     = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
+  const acum_irpf          = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
+  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.\s+Cotiz/i);
+  const acum_base_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
+  const acum_irpf_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
+  const acum_base_esp_norep= _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
+  const acum_irpf_esp_norep= _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
 
   // ── TIRA DE DÍAS (pie de nómina) ──
   // Formato: "1 2 3 ... 31" con porcentajes debajo (100.0 = día normal, 60/75 = baja)
@@ -6502,8 +6609,13 @@ function renderComparativa(nomData) {
   addDiff('Líquido neto', r.liquidoReal, t.liquido, 2);
 
   const errores = diffs.filter(d => d.status === 'err');
-  const avisos = diffs.filter(d => d.status === 'warn');
-  const totalDelta = errores.reduce((s, d) => s + d.delta, 0);
+  const avisos  = diffs.filter(d => d.status === 'warn');
+  // Diferencia total = impacto neto real = diferencia directa del Líquido neto.
+  // NO se suman el resto de conceptos (HV, DPO, Base IRPF, Retención, etc.)
+  // porque son causas o consecuencias y acumularlos duplicaría el efecto.
+  const _liqDiff  = diffs.find(d => d.concept === 'Líquido neto');
+  const totalDelta = _liqDiff ? _liqDiff.delta : null;
+  const _totalFmt  = totalDelta !== null ? fmtD(totalDelta) : 'No disponible';
 
   let alertHTML = '';
   if (errores.length > 0) {
@@ -6512,7 +6624,10 @@ function renderComparativa(nomData) {
         <div class="alert-icon">⚠️</div>
         <div class="alert-content">
           <div class="alert-title">${errores.length} discrepancia${errores.length>1?'s':''} detectada${errores.length>1?'s':''}</div>
-          <div class="alert-text">Diferencia total: <strong style="color:var(--amber2)">${fmtD(totalDelta)}</strong> respecto al cálculo teórico según convenio BCSA 2026.</div>
+          <div class="alert-text">
+            Impacto neto real: <strong style="color:var(--amber2)">${_totalFmt}</strong> respecto al cálculo teórico según convenio BCSA 2026.<br>
+            <span style="font-size:10px;color:var(--text3)">La diferencia corresponde al Líquido neto. Los demás conceptos son causas o consecuencias y no se suman entre sí.</span>
+          </div>
         </div>
       </div>
     `;
@@ -6540,16 +6655,23 @@ function renderComparativa(nomData) {
 
   let trabajadorHTML = '';
   if (nomData.trabajador) {
-    const t2 = nomData.trabajador;
+    const t2  = nomData.trabajador;
+    const ac2 = nomData.acumulados || {};
+    const fmt2b = v => v != null
+      ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+      : null;
+
     trabajadorHTML = `
       <div class="card" style="margin-bottom:12px">
         <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
         <div class="profile-data">
-          ${t2.nombre ? `<div class="profile-item"><div class="profile-item-label">Nombre</div><div class="profile-item-val" style="font-size:12px">${t2.nombre}</div></div>` : ''}
-          ${t2.nif ? `<div class="profile-item"><div class="profile-item-label">NIF</div><div class="profile-item-val">${t2.nif}</div></div>` : ''}
-          ${t2.nss ? `<div class="profile-item"><div class="profile-item-label">Nº SS</div><div class="profile-item-val" style="font-size:11px">${t2.nss}</div></div>` : ''}
+          ${t2.nombre       ? `<div class="profile-item"><div class="profile-item-label">Nombre</div><div class="profile-item-val" style="font-size:12px">${t2.nombre}</div></div>` : ''}
+          ${t2.nif          ? `<div class="profile-item"><div class="profile-item-label">NIF</div><div class="profile-item-val">${t2.nif}</div></div>` : ''}
+          ${t2.nss          ? `<div class="profile-item"><div class="profile-item-label">Nº SS</div><div class="profile-item-val" style="font-size:11px">${t2.nss}</div></div>` : ''}
           ${t2.fecha_ingreso ? `<div class="profile-item"><div class="profile-item-label">Fecha ingreso</div><div class="profile-item-val">${t2.fecha_ingreso}</div></div>` : ''}
           ${nomData.irpf_pct ? `<div class="profile-item"><div class="profile-item-label">IRPF</div><div class="profile-item-val">${nomData.irpf_pct}%</div></div>` : ''}
+          ${fmt2b(ac2.base_irpf) ? `<div class="profile-item"><div class="profile-item-label">Acum. Base IRPF</div><div class="profile-item-val">${fmt2b(ac2.base_irpf)}</div></div>` : ''}
+          ${fmt2b(ac2.irpf)      ? `<div class="profile-item"><div class="profile-item-label">Acum. IRPF retenido</div><div class="profile-item-val">${fmt2b(ac2.irpf)}</div></div>` : ''}
         </div>
         <div class="alert info" style="margin-top:10px;margin-bottom:0">
           <div class="alert-icon">💾</div>
@@ -6631,9 +6753,13 @@ function renderComparativa(nomData) {
     ${trabajadorHTML}
     <div class="card">
       <div class="card-title"><div class="section-dot"></div>Comparativa concepto por concepto</div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;padding:0 12px">
-        <span>Concepto</span>
-        <span>Teórico · Real · Dif.</span>
+      <div style="display:flex;align-items:center;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;padding:0 12px">
+        <span style="flex:1">Concepto</span>
+        <div style="display:flex;gap:10px">
+          <span style="min-width:82px;text-align:right">Teórico</span>
+          <span style="min-width:82px;text-align:right">Real</span>
+          <span style="min-width:70px;text-align:right">Dif.</span>
+        </div>
       </div>
       ${diffsHTML}
     </div>
@@ -7326,6 +7452,26 @@ function simRecalc() {
 }
 
 // ── RESET BAJA ──
+// ── IT: autocompletar Base Reguladora Diaria ──
+let _bajaBaseManual = false;  // true si el usuario la ha editado manualmente
+
+function autoFillBaseReg() {
+  if (_bajaBaseManual) return;  // respetar edición manual
+  const fn = document.getElementById('funcion')?.value;
+  const t = TABLAS[fn];
+  if (!t) return;
+  const n = Math.min(currentNivel - 1, t.salbase.length - 1);
+  const sb = t.salbase[n];
+  const brEstimada = Math.round(sb * 12 / 365 * 100) / 100;
+  const el = document.getElementById('baja-base-reg');
+  if (el && !_bajaBaseManual) {
+    el.value = brEstimada;
+    el.placeholder = `Auto: ${brEstimada.toLocaleString('es-ES',{minimumFractionDigits:2})} €/día`;
+  }
+  // If baja is active, recalc
+  if (bajaActiva) recalcBaja();
+}
+
 function resetBaja() {
   bajaActiva = false;
   document.getElementById('tog-baja-si').classList.remove('active');
@@ -7336,6 +7482,7 @@ function resetBaja() {
   document.getElementById('baja-dia-inicio').value = '';
   document.getElementById('baja-dia-fin').value = '';
   document.getElementById('baja-base-reg').value = '';
+  _bajaBaseManual = false;  // clear manual flag on reset
   document.getElementById('baja-resultado').style.display = 'none';
   document.getElementById('baja-desglose').innerHTML = '';
   document.getElementById('baja-nota').innerHTML = '';
