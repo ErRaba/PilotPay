@@ -6324,21 +6324,74 @@ function parseBinterNomina(text) {
   const acum_irpf_esp_norep= _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
 
   // ── TIRA DE DÍAS (pie de nómina) ──
-  // Formato: "1 2 3 ... 31" con porcentajes debajo (100.0 = día normal, 60/75 = baja)
-  // Extraer todos los valores de la tira
-  const diasStrip = [];
-  const stripLines = text.match(/(?:100\.0\s+){5,}/g); // detectar línea de días
-  const pctLine = text.match(/(\d{1,3}\.\d\s+){10,}/g); // línea de porcentajes
-  if (pctLine && pctLine.length > 0) {
-    const vals = pctLine[0].trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
-    vals.forEach((v, i) => { if (v > 0) diasStrip.push({ dia: i+1, pct: v }); });
-  }
-  const bajaDias = diasStrip.filter(d => d.pct < 100);
-  const bajaInfo = bajaDias.length > 0 ? {
-    detectada: true,
-    dias: bajaDias,
-    resumen: `Baja detectada: días ${bajaDias.map(d => `${d.dia}(${d.pct}%)`).join(', ')}`
-  } : { detectada: false };
+  // Formato real Binter (verificado con pdfplumber en Feb/Mar/Abr 2026):
+  //   Y=778: "100.0100.0100.0100.0100.0100.0100.0100.0  100.0100.0100.0100.0  ..."
+  //   Los porcentajes están CONCATENADOS sin espacio dentro de cada grupo.
+  //   Los grupos se separan con doble espacio (artefacto de columnas PDF).
+  //   NO hay una fila separada con números 1-31.
+  //
+  // Estrategia: buscar la línea que contiene ≥10 ocurrencias de \d{1,3}\.\d
+  // y extraer todos los valores con regex independientemente de los espacios.
+
+  const _CODIGOS_DIAS = {
+    EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
+    VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia'
+  };
+
+  // Buscar la línea de la tira de días.
+  // Los valores están concatenados: "100.0100.0100.0..." sin espacios.
+  // Hay que separarlos insertando espacios en las uniones: /(\d\.\d)(\d)/ → '$1 $2'
+  // Se aplica 4 veces para cubrir cadenas largas de cualquier longitud.
+  const _tiraLine = text.split('\n').find(l => {
+    // Detectar línea con ≥10 ocurrencias de dígito.dígito (puede estar concatenada)
+    return (l.match(/\d\.\d/g) || []).length >= 10;
+  }) || '';
+
+  // Separar valores concatenados (ej: "100.0100.0" → "100.0 100.0")
+  let _tiraSep = _tiraLine;
+  for (let _k = 0; _k < 5; _k++) _tiraSep = _tiraSep.replace(/(\d\.\d)(\d)/g, '$1 $2');
+
+  // Extraer valores ya separados: formato N.D (un solo decimal en Binter)
+  const _tiraVals = (_tiraSep.match(/\b\d{1,3}\.\d\b/g) || []).map(Number);
+
+  // Construir diasInfo
+  const _diasConInc = [];
+  const _codigosRes = {};
+  let _diasTrabajados = 0;
+
+  _tiraVals.forEach((v, i) => {
+    if (v === 100) {
+      _diasTrabajados++;
+    } else if (v > 0 && v < 100) {
+      // Porcentaje parcial — contar como incidencia sin código específico
+      _diasConInc.push({ dia: i + 1, cod: 'IT', nombre: 'Baja/Incidencia', pct: v });
+      _codigosRes['IT'] = (_codigosRes['IT'] || 0) + 1;
+    }
+  });
+
+  // Detectar también códigos en la línea de porcentajes (si los hay mezclados)
+  // Los códigos (EN, VA, etc.) aparecerían como tokens en esa misma línea
+  (_tiraLine.split(/\s+/) || []).forEach((tok, i) => {
+    const cod = tok.toUpperCase();
+    if (_CODIGOS_DIAS[cod]) {
+      _diasConInc.push({ dia: i + 1, cod, nombre: _CODIGOS_DIAS[cod] });
+      _codigosRes[cod] = (_codigosRes[cod] || 0) + 1;
+      if (_tiraVals[i] === 100) _diasTrabajados--; // corregir si se contó como trabajado
+    }
+  });
+
+  const diasInfo = {
+    diasTrabajados:     _tiraVals.length > 0 ? _diasTrabajados : null,
+    totalDias:          _tiraVals.length,
+    totalConIncidencia: _diasConInc.length,
+    diasConCodigo:      _diasConInc,
+    codigosResumen:     _codigosRes,
+  };
+
+  // Compatibilidad con código anterior que usa bajaInfo
+  const bajaInfo = diasInfo.totalConIncidencia > 0
+    ? { detectada: true, resumen: Object.entries(_codigosRes).map(([c,n])=>`${c}:${n}`).join(', ') }
+    : { detectada: false };
 
   return {
     trabajador: { nombre, nif, nss, fecha_ingreso, funcion, nivel, base },
@@ -6364,7 +6417,8 @@ function parseBinterNomina(text) {
       base_esp_norep:  acum_base_esp_norep,
       irpf_esp_norep:  acum_irpf_esp_norep,
     },
-    bajaInfo
+    bajaInfo,
+    diasInfo,
   };
 }
 
@@ -6661,6 +6715,13 @@ function renderComparativa(nomData) {
       ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
       : null;
 
+    const _di = nomData.diasInfo || {};
+    const _CODS = { EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
+      VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia', IT:'Baja' };
+    const _badgesHTML = Object.entries(_di.codigosResumen || {})
+      .map(([cod, n]) => `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px;font-family:var(--mono);color:var(--amber2)">${cod} <span style="color:var(--text3)">${_CODS[cod]||cod}</span> ×${n}</span>`)
+      .join(' ');
+
     trabajadorHTML = `
       <div class="card" style="margin-bottom:12px">
         <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
@@ -6672,7 +6733,10 @@ function renderComparativa(nomData) {
           ${nomData.irpf_pct ? `<div class="profile-item"><div class="profile-item-label">IRPF</div><div class="profile-item-val">${nomData.irpf_pct}%</div></div>` : ''}
           ${fmt2b(ac2.base_irpf) ? `<div class="profile-item"><div class="profile-item-label">Acum. Base IRPF</div><div class="profile-item-val">${fmt2b(ac2.base_irpf)}</div></div>` : ''}
           ${fmt2b(ac2.irpf)      ? `<div class="profile-item"><div class="profile-item-label">Acum. IRPF retenido</div><div class="profile-item-val">${fmt2b(ac2.irpf)}</div></div>` : ''}
+          ${_di.diasTrabajados != null ? `<div class="profile-item"><div class="profile-item-label">Días trabajados</div><div class="profile-item-val" style="color:var(--green);font-weight:600">${_di.diasTrabajados} / ${_di.totalDias}</div></div>` : ''}
+          ${_di.totalConIncidencia > 0 ? `<div class="profile-item"><div class="profile-item-label">Con incidencia</div><div class="profile-item-val" style="color:var(--amber2);font-weight:600">${_di.totalConIncidencia}</div></div>` : ''}
         </div>
+        ${_badgesHTML ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${_badgesHTML}</div>` : ''}
         <div class="alert info" style="margin-top:10px;margin-bottom:0">
           <div class="alert-icon">💾</div>
           <div class="alert-content">
