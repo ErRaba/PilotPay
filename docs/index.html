@@ -7021,11 +7021,8 @@ async function processNomina(file) {
       propuestas.push({ campo: 'Baja detectada', clave: 'baja', actual: '—', nuevo: nomData.bajaInfo.resumen, tipo: 'baja' });
     }
 
-    // Mostrar panel de confirmación si hay propuestas
-    if (propuestas.length > 0) {
-      mostrarPropuestasActualizacion(propuestas, nomData);
-    }
-
+    // Las propuestas se muestran dentro de renderComparativa (tarjeta "Datos extraídos")
+    // NO se activan aquí automáticamente — el usuario las revisa y aplica manualmente.
     nomDataCached = nomData;
     document.getElementById('comparativa-result').style.display = 'block';
     document.getElementById('comp-action-btns').style.display = 'block';
@@ -7091,6 +7088,54 @@ function mostrarPropuestasActualizacion(propuestas, nomData) {
   // Insertar antes del comp-output
   const compOut = document.getElementById('comp-output');
   if (compOut) compOut.parentNode.insertBefore(card, compOut);
+}
+
+// ── Aplicar propuestas desde la tarjeta integrada (checkboxes en trabajadorHTML) ──
+function aplicarPropuestasInline() {
+  // Lee propuestas desde variable global (evita JSON en atributos HTML)
+  const propuestas = window._nominaPropuestas || [];
+  let updatedPerfil = 0, updatedSim = 0;
+
+  propuestas.forEach((p, i) => {
+    const cb = document.getElementById(`_pd_${i}`);
+    if (!cb?.checked) return;
+
+    if (p.tipo === 'historico') {
+      // → Simulador: histórico acumulados por mes
+      const mesKey = p.mes;
+      if (!profileData.simHistorico) profileData.simHistorico = {};
+      if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
+      if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
+      if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
+      updatedSim++;
+    } else {
+      // → Perfil
+      profileData[p.clave] = p.nuevo;
+      if (p.clave === 'irpf') {
+        const el = document.getElementById('irpf');
+        if (el) { el.value = p.nuevo; recalc(); }
+      }
+      updatedPerfil++;
+    }
+  });
+
+  if (currentUser) saveUserData(currentUser);
+  if (updatedPerfil > 0) renderPerfil();
+  if (updatedSim > 0 && typeof loadSimulatorData === 'function') loadSimulatorData();
+
+  // Feedback visual inline
+  const fb = document.getElementById('_upd_feedback');
+  if (fb) {
+    const parts = [];
+    if (updatedPerfil > 0) parts.push(`${updatedPerfil} en Perfil`);
+    if (updatedSim > 0)    parts.push(`${updatedSim} en Simulador`);
+    fb.textContent = parts.length > 0
+      ? '✓ Actualizado: ' + parts.join(' · ')
+      : '✗ Nada seleccionado';
+    fb.style.color = parts.length > 0 ? 'var(--green)' : 'var(--amber2)';
+    fb.style.display = 'inline';
+    setTimeout(() => { fb.style.display = 'none'; }, 4000);
+  }
 }
 
 function aplicarPropuestas(propuestas) {
@@ -7251,43 +7296,134 @@ function renderComparativa(nomData) {
     `;
   }
 
-  let trabajadorHTML = '';
-  if (nomData.trabajador) {
-    const t2  = nomData.trabajador;
-    const ac2 = nomData.acumulados || {};
-    const fmt2b = v => v != null
-      ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-      : null;
+  // ── Construir propuestas para la tarjeta integrada ─────────────────────────
+  let _propuestas = [];
+  const t2  = nomData.trabajador || {};
+  const ac2 = nomData.acumulados || {};
+  const _di = nomData.diasInfo   || {};
+  const _mesNom = nomData.periodo?.mes || null;
 
-    const _di = nomData.diasInfo || {};
+  // Datos personales — solo si difieren del perfil actual
+  if (t2.nombre && t2.nombre !== profileData.fullName)
+    _propuestas.push({ campo:'Nombre', clave:'fullName', nuevo: t2.nombre, tipo:'perfil',
+      actual: profileData.fullName || '—' });
+  if (t2.nif && t2.nif !== profileData.nif)
+    _propuestas.push({ campo:'NIF', clave:'nif', nuevo: t2.nif, tipo:'perfil',
+      actual: profileData.nif || '—' });
+  if (t2.nss && t2.nss !== profileData.nss)
+    _propuestas.push({ campo:'Nº SS', clave:'nss', nuevo: t2.nss, tipo:'perfil',
+      actual: profileData.nss || '—' });
+  if (t2.fecha_ingreso && t2.fecha_ingreso !== profileData.ingreso_display)
+    _propuestas.push({ campo:'Fecha ingreso', clave:'ingreso_display', nuevo: t2.fecha_ingreso,
+      tipo:'perfil', actual: profileData.ingreso_display || '—' });
+
+  // Acumulados — si se detectaron correctamente
+  if (ac2.base_irpf != null && _mesNom) {
+    const _cur = profileData.simHistorico?.[_mesNom]?.bruto;
+    _propuestas.push({ campo:`Acum. Base IRPF (${_mesNom})`, clave:'acum_base_irpf',
+      nuevo: ac2.base_irpf, tipo:'historico', mes: _mesNom,
+      actual: _cur != null ? _cur : '—',
+      checked: _cur == null || _cur !== ac2.base_irpf });
+  }
+  if (ac2.irpf != null && _mesNom) {
+    const _cur = profileData.simHistorico?.[_mesNom]?.irpf;
+    _propuestas.push({ campo:`Acum. IRPF retenido (${_mesNom})`, clave:'acum_irpf',
+      nuevo: ac2.irpf, tipo:'historico', mes: _mesNom,
+      actual: _cur != null ? _cur : '—',
+      checked: _cur == null || _cur !== ac2.irpf });
+  }
+
+  // ── Construir HTML de la tarjeta ─────────────────────────────────────────────
+  let trabajadorHTML = '';
+  if (nomData.trabajador || Object.keys(ac2).length > 0) {
     const _CODS = { EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
       VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia', IT:'Baja' };
     const _badgesHTML = Object.entries(_di.codigosResumen || {})
       .map(([cod, n]) => `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px;font-family:var(--mono);color:var(--amber2)">${cod} <span style="color:var(--text3)">${_CODS[cod]||cod}</span> ×${n}</span>`)
       .join(' ');
+    const _fmt2b = v => v != null
+      ? v.toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €' : '—';
 
-    trabajadorHTML = `
-      <div class="card" style="margin-bottom:12px">
-        <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
-        <div class="profile-data">
-          ${t2.nombre       ? `<div class="profile-item"><div class="profile-item-label">Nombre</div><div class="profile-item-val" style="font-size:12px">${t2.nombre}</div></div>` : ''}
-          ${t2.nif          ? `<div class="profile-item"><div class="profile-item-label">NIF</div><div class="profile-item-val">${t2.nif}</div></div>` : ''}
-          ${t2.nss          ? `<div class="profile-item"><div class="profile-item-label">Nº SS</div><div class="profile-item-val" style="font-size:11px">${t2.nss}</div></div>` : ''}
-          ${t2.fecha_ingreso ? `<div class="profile-item"><div class="profile-item-label">Fecha ingreso</div><div class="profile-item-val">${t2.fecha_ingreso}</div></div>` : ''}
-          ${nomData.irpf_pct ? `<div class="profile-item"><div class="profile-item-label">IRPF</div><div class="profile-item-val">${nomData.irpf_pct}%</div></div>` : ''}
-          ${fmt2b(ac2.base_irpf) ? `<div class="profile-item"><div class="profile-item-label">Acum. Base IRPF</div><div class="profile-item-val">${fmt2b(ac2.base_irpf)}</div></div>` : ''}
-          ${fmt2b(ac2.irpf)      ? `<div class="profile-item"><div class="profile-item-label">Acum. IRPF retenido</div><div class="profile-item-val">${fmt2b(ac2.irpf)}</div></div>` : ''}
-          ${_di.diasTrabajados != null ? `<div class="profile-item"><div class="profile-item-label">Días trabajados</div><div class="profile-item-val" style="color:var(--green);font-weight:600">${_di.diasTrabajados} / ${_di.totalDias}</div></div>` : ''}
-          ${_di.totalConIncidencia > 0 ? `<div class="profile-item"><div class="profile-item-label">Con incidencia</div><div class="profile-item-val" style="color:var(--amber2);font-weight:600">${_di.totalConIncidencia}</div></div>` : ''}
-        </div>
-        ${_badgesHTML ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${_badgesHTML}</div>` : ''}
-        <div class="alert info" style="margin-top:10px;margin-bottom:0">
-          <div class="alert-icon">💾</div>
-          <div class="alert-content">
-            <div class="alert-title">Perfil actualizado</div>
-            <div class="alert-text">Datos extraídos guardados en la pestaña Perfil.</div>
+    // Filas de datos sin checkbox (informativos)
+    const _infoRows = [
+      t2.nombre       ? ['Nombre',         t2.nombre]                               : null,
+      t2.nif          ? ['NIF',             t2.nif]                                  : null,
+      t2.nss          ? ['Nº SS',           t2.nss]                                  : null,
+      t2.fecha_ingreso? ['Fecha ingreso',   t2.fecha_ingreso]                        : null,
+      nomData.irpf_pct? ['IRPF',            nomData.irpf_pct + '%']                  : null,
+      _di.diasTrabajados != null ? ['Días trabajados', `${_di.diasTrabajados} / ${_di.totalDias}`] : null,
+      _di.totalConIncidencia > 0 ? ['Con incidencia',  String(_di.totalConIncidencia)] : null,
+    ].filter(Boolean);
+
+    const _infoHTML = _infoRows.map(([l,v]) =>
+      `<div class="profile-item"><div class="profile-item-label">${l}</div><div class="profile-item-val" style="font-size:11px">${v}</div></div>`
+    ).join('');
+
+    // Filas con checkbox (actualizables)
+    const _checkRows = _propuestas.map((p, i) => {
+      const isChecked = p.checked !== false;
+      const isHistorico = p.tipo === 'historico';
+      const valStr = typeof p.nuevo === 'number'
+        ? _fmt2b(p.nuevo)
+        : String(p.nuevo);
+      return `
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <input type="checkbox" id="_pd_${i}" ${isChecked ? 'checked' : ''}
+          style="flex-shrink:0;width:14px;height:14px;accent-color:var(--blue);cursor:pointer">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${p.campo}</div>
+          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">${valStr}
+            ${isHistorico ? '<span style="font-size:9px;color:var(--text3);margin-left:4px">→ Simulador</span>' : '<span style="font-size:9px;color:var(--text3);margin-left:4px">→ Perfil</span>'}
           </div>
         </div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-align:right;max-width:80px;overflow:hidden;text-overflow:ellipsis">
+          actual: ${String(p.actual).slice(0,20)}
+        </div>
+      </div>`;
+    }).join('');
+
+    // Guardar propuestas en variable global — el botón las lee sin JSON inline
+    window._nominaPropuestas = _propuestas;
+
+    trabajadorHTML = `
+      <div class="card" style="margin-bottom:12px" id="card-datos-nomina">
+        <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
+
+        <div class="profile-data" style="margin-bottom:8px">
+          ${_infoHTML}
+        </div>
+        ${_badgesHTML ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--border)">${_badgesHTML}</div>` : ''}
+
+        ${_propuestas.length > 0 ? `
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px;letter-spacing:.05em">
+            ACTUALIZAR DATOS — selecciona y confirma
+          </div>
+          <div id="_checkrows_container">
+            ${_checkRows}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+            <button
+              onclick="aplicarPropuestasInline()"
+              style="display:inline-flex;align-items:center;gap:5px;
+                     background:transparent;border:1px solid var(--blue2);
+                     color:var(--blue2);border-radius:6px;
+                     font-size:11px;font-family:var(--mono);
+                     padding:5px 14px;cursor:pointer;letter-spacing:.02em;
+                     transition:background .15s"
+              onmouseover="this.style.background='var(--blue-dim)'"
+              onmouseout="this.style.background='transparent'">
+              ✓ Actualizar datos seleccionados
+            </button>
+            <span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none">
+              ✓ Datos actualizados
+            </span>
+          </div>
+        </div>` : `
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
+          border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+          Los datos del perfil ya están actualizados con esta nómina.
+        </div>`}
       </div>
     `;
   }
