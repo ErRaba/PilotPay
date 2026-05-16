@@ -6661,7 +6661,7 @@ function parseBinterNomina(text) {
   const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   let mes = null, anio = null;
-  const periodoM = text.match(/(\d{2})\/(\d{2})\/(\d{4})\s*[-–]\s*\d{2}\/\d{2}\/(\d{4})/);
+  const periodoM = text.match(/(\d{2})\/(\d{2})\/(\d{4})\s*[-–]?\s*\d{2}\/\d{2}\/(\d{4})/);
   if (periodoM) {
     mes = MESES[parseInt(periodoM[2]) - 1];
     anio = parseInt(periodoM[4]);
