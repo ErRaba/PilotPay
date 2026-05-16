@@ -1418,6 +1418,49 @@ input[type=number] { -moz-appearance: textfield; }
   border-radius: 50%;
   display: block;
 }
+
+/* ── User dropdown menu ─────────────────────────── */
+#user-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 160px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+  overflow: hidden;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(-6px) scale(.97);
+  pointer-events: none;
+  transition: opacity .15s, transform .15s;
+}
+#user-dropdown.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.user-drop-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-family: var(--sans);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.user-drop-item:hover { background: var(--bg3); color: var(--text1); }
+.user-drop-item.danger { color: var(--red); }
+.user-drop-item.danger:hover { background: rgba(255,59,48,.08); }
+.user-drop-sep { height: 1px; background: var(--border); margin: 3px 0; }
+#user-pill { position: relative; cursor: pointer; }
 </style>
   <!-- jsPDF para generación de nómina PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1455,9 +1498,16 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="logo">PILOT<span>PAY</span></div>
     <div id="header-badge" class="badge badge-blue" style="font-size:10px"></div>
     <div id="online-indicator" style="font-size:9px;font-family:var(--mono);color:var(--green);margin-left:auto;padding-right:4px;transition:color .3s;white-space:nowrap"></div>
-    <div class="user-pill" id="user-pill" onclick="doLogout()" style="padding:0;overflow:hidden;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center">
+    <div class="user-pill" id="user-pill" onclick="toggleUserDropdown(event)" title="Menú de usuario" style="padding:0;overflow:hidden;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center">
       <img id="user-avatar-header" src="" alt="" style="width:36px;height:36px;border-radius:50%;display:none;object-fit:cover">
-      <span id="user-initials-header">ESH ↩</span>
+      <span id="user-initials-header">ESH</span>
+    </div>
+    <div id="user-dropdown">
+      <button class="user-drop-item" onclick="userMenuGo('perfil')">👤 &nbsp;Perfil</button>
+      <button class="user-drop-item" onclick="userMenuGo('config')">⚙️ &nbsp;Configuración</button>
+      <button class="user-drop-item" id="drop-admin" style="display:none" onclick="userMenuGo('admin')">🛡 &nbsp;Admin</button>
+      <div class="user-drop-sep"></div>
+      <button class="user-drop-item danger" onclick="userMenuLogout()">↩ &nbsp;Cerrar sesión</button>
     </div>
   </header>
 
@@ -1467,9 +1517,10 @@ input[type=number] { -moz-appearance: textfield; }
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
-    <button class="tab" onclick="showTab('perfil')"><span class="tab-icon">👤</span>Perfil</button>
-    <button class="tab" onclick="showTab('config')"><span class="tab-icon">⚙️</span>Config</button>
-    <button class="tab" id="tab-admin" style="display:none" onclick="showTab('admin')"><span class="tab-icon">🛡</span>Admin</button>
+    <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
+    <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
+    <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
+    <button class="tab" id="tab-admin"  style="display:none" onclick="showTab('admin')"></button>
   </div>
 
   <main>
@@ -2702,28 +2753,6 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
         </div>
 
-        <!-- SOLICITAR CAMBIO -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Solicitar cambio de datos</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.6">
-            Para cambiar tu base o cargo (CMD/COP) es necesario solicitarlo al administrador.
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Tipo de solicitud</span>
-              <select class="field-input" id="solicitud-tipo">
-                <option value="base">Cambio de base</option>
-                <option value="cargo">Cambio de cargo</option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="field-label">Nuevo valor</span>
-              <input class="field-input" id="solicitud-valor" type="text" placeholder="Ej: Tenerife / COP">
-            </div>
-          </div>
-          <button class="btn-secondary" onclick="generarEmailSolicitud()">✉️ Generar email de solicitud</button>
-        </div>
-
       </div>
       <!-- AVATAR -->
       <div class="card" id="avatar-selector-card">
@@ -3677,6 +3706,34 @@ function enterApp() {
   }
 }
 
+// ── Dropdown menú de usuario ─────────────────────────────────────────────────
+function toggleUserDropdown(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('user-dropdown');
+  // Mostrar admin solo si corresponde
+  const dropAdmin = document.getElementById('drop-admin');
+  if (dropAdmin) dropAdmin.style.display = (currentUser === ADMIN_CODE) ? 'flex' : 'none';
+  dd.classList.toggle('open');
+}
+
+function userMenuGo(tab) {
+  document.getElementById('user-dropdown').classList.remove('open');
+  showTab(tab);
+}
+
+function userMenuLogout() {
+  document.getElementById('user-dropdown').classList.remove('open');
+  doLogout();
+}
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('user-dropdown');
+  if (dd && !document.getElementById('user-pill').contains(e.target)) {
+    dd.classList.remove('open');
+  }
+});
+
 function doLogout() {
   if (confirm('¿Cerrar sesión?')) {
     document.getElementById('app').style.display = 'none';
@@ -3697,7 +3754,9 @@ function initApp() {
   const isAdmin = currentUser === ADMIN_CODE;
   const baseLabel = parseFloat(profileData.base || u.base) > 1 ? 'MAD' : 'CAN';
   const fnBadge = { CMD:'CMD', COP:'COP', SCC:'SCC', CC:'CC' };
-  document.getElementById('user-pill').textContent = currentUser + ' ↩';
+  // Solo actualizar el span de iniciales, NO sobreescribir el pill completo
+  const _pillInitials = document.getElementById('user-initials-header');
+  if (_pillInitials) _pillInitials.textContent = currentUser;
   document.getElementById('header-badge').textContent =
     `${fnBadge[u.funcion]||u.funcion} · NVL${profileData.nivel || u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
 
@@ -3732,8 +3791,10 @@ function initApp() {
 
   // Show admin tab only for ESH
   const adminTab = document.getElementById('tab-admin');
+  const dropAdmin = document.getElementById('drop-admin');
   if (currentUser === 'ESH') {
     adminTab.style.display = 'inline-flex';
+    if (dropAdmin) dropAdmin.style.display = 'flex';
   } else {
     adminTab.style.display = 'none';
   }
@@ -3762,6 +3823,14 @@ function initApp() {
   setCurrentMonth();
   // Apply permissions after UI is ready
   setTimeout(applyUserPerms, 150);
+
+  // Render avatar in header pill (needs AvatarManager to be initialised first)
+  if (typeof AvatarManager !== 'undefined' && AvatarManager.loaded) {
+    AvatarManager.updateDOM(currentUser);
+  } else if (typeof AvatarManager !== 'undefined') {
+    // Not yet loaded — init then render
+    AvatarManager.init().then(() => AvatarManager.updateDOM(currentUser)).catch(() => {});
+  }
 }
 
 // ── TABS ──
