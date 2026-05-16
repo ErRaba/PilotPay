@@ -7092,51 +7092,71 @@ function mostrarPropuestasActualizacion(propuestas, nomData) {
 
 // ── Aplicar propuestas desde la tarjeta integrada (checkboxes en trabajadorHTML) ──
 function aplicarPropuestasInline() {
-  // Lee propuestas desde variable global (evita JSON en atributos HTML)
   const propuestas = window._nominaPropuestas || [];
   let updatedPerfil = 0, updatedSim = 0;
 
-  propuestas.forEach((p, i) => {
-    const cb = document.getElementById(`_pd_${i}`);
-    if (!cb?.checked) return;
+  propuestas.forEach(function(p, i) {
+    const cb = document.getElementById('_pd_' + i);
+    if (!cb || !cb.checked) return;
 
     if (p.tipo === 'historico') {
-      // → Simulador: histórico acumulados por mes
-      const mesKey = p.mes;
+      // Clave numérica (1-12) que usa el histórico del simulador
+      const mesKey = p.mesIdx;
+      if (!mesKey) {
+        // Sin mes detectado — avisar al usuario
+        alert('No se pudo detectar el mes de la nómina. Introduce el valor manualmente en el Simulador → Histórico.');
+        return;
+      }
       if (!profileData.simHistorico) profileData.simHistorico = {};
       if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
       if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
       if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
+      // Sincronizar simHistoricoData (variable local del simulador)
+      if (typeof simHistoricoData !== 'undefined') {
+        if (!simHistoricoData[mesKey]) simHistoricoData[mesKey] = {};
+        if (p.clave === 'acum_base_irpf') simHistoricoData[mesKey].bruto = p.nuevo;
+        if (p.clave === 'acum_irpf')      simHistoricoData[mesKey].irpf  = p.nuevo;
+      }
+      // Actualizar los inputs del DOM del histórico si están visibles
+      const elBruto = document.getElementById('simh-bruto-' + mesKey);
+      const elIrpf  = document.getElementById('simh-irpf-'  + mesKey);
+      if (p.clave === 'acum_base_irpf' && elBruto) elBruto.value = p.nuevo;
+      if (p.clave === 'acum_irpf'      && elIrpf)  elIrpf.value  = p.nuevo;
       updatedSim++;
     } else {
-      // → Perfil
+      // Actualizar campo de perfil
       profileData[p.clave] = p.nuevo;
       if (p.clave === 'irpf') {
         const el = document.getElementById('irpf');
-        if (el) { el.value = p.nuevo; recalc(); }
+        if (el) { el.value = p.nuevo; if (typeof recalc === 'function') recalc(); }
       }
       updatedPerfil++;
     }
   });
 
-  if (currentUser) saveUserData(currentUser);
-  if (updatedPerfil > 0) renderPerfil();
-  if (updatedSim > 0 && typeof loadSimulatorData === 'function') loadSimulatorData();
+  // Guardar — profileData ya actualizado, simHistoricoData ya sincronizado
+  if (updatedPerfil > 0 || updatedSim > 0) {
+    if (currentUser) saveUserData(currentUser);
+    if (updatedPerfil > 0 && typeof renderPerfil === 'function') renderPerfil();
+    // Refrescar el histórico visual sin navegar al simulador
+    if (updatedSim > 0 && typeof renderHistoricoHTML === 'function') renderHistoricoHTML();
+  }
 
-  // Feedback visual inline
+  // Feedback inline
   const fb = document.getElementById('_upd_feedback');
   if (fb) {
     const parts = [];
-    if (updatedPerfil > 0) parts.push(`${updatedPerfil} en Perfil`);
-    if (updatedSim > 0)    parts.push(`${updatedSim} en Simulador`);
+    if (updatedPerfil > 0) parts.push(updatedPerfil + ' campo' + (updatedPerfil>1?'s':'') + ' en Perfil');
+    if (updatedSim > 0)    parts.push(updatedSim + ' acumulado' + (updatedSim>1?'s':'') + ' en Simulador');
     fb.textContent = parts.length > 0
       ? '✓ Actualizado: ' + parts.join(' · ')
       : '✗ Nada seleccionado';
-    fb.style.color = parts.length > 0 ? 'var(--green)' : 'var(--amber2)';
+    fb.style.color  = parts.length > 0 ? 'var(--green)' : 'var(--amber2)';
     fb.style.display = 'inline';
-    setTimeout(() => { fb.style.display = 'none'; }, 4000);
+    setTimeout(function() { fb.style.display = 'none'; }, 5000);
   }
 }
+
 
 function aplicarPropuestas(propuestas) {
   propuestas.forEach((p, i) => {
@@ -7209,6 +7229,10 @@ function resetComparativa() {
   const fi = document.getElementById('file-input');
   if (fi) fi.value = '';
 }
+
+// Mapa nombre de mes → índice numérico (clave del histórico del Simulador)
+const _MESES_IDX = { Enero:1, Febrero:2, Marzo:3, Abril:4, Mayo:5, Junio:6,
+  Julio:7, Agosto:8, Septiembre:9, Octubre:10, Noviembre:11, Diciembre:12 };
 
 function renderComparativa(nomData) {
   const r = calcResult;
@@ -7296,136 +7320,142 @@ function renderComparativa(nomData) {
     `;
   }
 
-  // ── Construir propuestas para la tarjeta integrada ─────────────────────────
-  let _propuestas = [];
-  const t2  = nomData.trabajador || {};
-  const ac2 = nomData.acumulados || {};
-  const _di = nomData.diasInfo   || {};
-  const _mesNom = nomData.periodo?.mes || null;
+  // ── Tarjeta "Datos extraídos" con checkboxes manuales ───────────────────────
+  // Siempre se muestran todos los datos extraídos.
+  // Los checkboxes aparecen en TODOS los campos actualizables,
+  // marcados por defecto solo si el dato difiere del perfil/histórico actual.
+  const _t2     = nomData.trabajador || {};
+  const _ac2    = nomData.acumulados || {};
+  const _di     = nomData.diasInfo   || {};
+  // mes como string ('Marzo') y como índice numérico (3)
+  // Normalizar mes: trim + capitalizar primera letra para tolerar variantes
+  const _mesRaw = (nomData.periodo && nomData.periodo.mes) ? nomData.periodo.mes.trim() : null;
+  const _mesStr = _mesRaw ? (_mesRaw.charAt(0).toUpperCase() + _mesRaw.slice(1).toLowerCase()) : null;
+  const _mesIdx = _mesStr ? (_MESES_IDX[_mesStr] || null) : null;
 
-  // Datos personales — solo si difieren del perfil actual
-  if (t2.nombre && t2.nombre !== profileData.fullName)
-    _propuestas.push({ campo:'Nombre', clave:'fullName', nuevo: t2.nombre, tipo:'perfil',
-      actual: profileData.fullName || '—' });
-  if (t2.nif && t2.nif !== profileData.nif)
-    _propuestas.push({ campo:'NIF', clave:'nif', nuevo: t2.nif, tipo:'perfil',
-      actual: profileData.nif || '—' });
-  if (t2.nss && t2.nss !== profileData.nss)
-    _propuestas.push({ campo:'Nº SS', clave:'nss', nuevo: t2.nss, tipo:'perfil',
-      actual: profileData.nss || '—' });
-  if (t2.fecha_ingreso && t2.fecha_ingreso !== profileData.ingreso_display)
-    _propuestas.push({ campo:'Fecha ingreso', clave:'ingreso_display', nuevo: t2.fecha_ingreso,
-      tipo:'perfil', actual: profileData.ingreso_display || '—' });
+  // ── Construir propuestas — SOLO las que difieren del perfil/histórico ───────
+  const _props = [];
 
-  // Acumulados — si se detectaron correctamente
-  if (ac2.base_irpf != null && _mesNom) {
-    const _cur = profileData.simHistorico?.[_mesNom]?.bruto;
-    _propuestas.push({ campo:`Acum. Base IRPF (${_mesNom})`, clave:'acum_base_irpf',
-      nuevo: ac2.base_irpf, tipo:'historico', mes: _mesNom,
-      actual: _cur != null ? _cur : '—',
-      checked: _cur == null || _cur !== ac2.base_irpf });
+  // Datos personales
+  if (_t2.nombre && _t2.nombre !== profileData.fullName)
+    _props.push({ campo:'Nombre', clave:'fullName', nuevo:_t2.nombre,
+      tipo:'perfil', actual: profileData.fullName||'—', checked:true });
+  if (_t2.nif && _t2.nif !== profileData.nif)
+    _props.push({ campo:'NIF', clave:'nif', nuevo:_t2.nif,
+      tipo:'perfil', actual: profileData.nif||'—', checked:true });
+  if (_t2.nss && _t2.nss !== profileData.nss)
+    _props.push({ campo:'Nº SS', clave:'nss', nuevo:_t2.nss,
+      tipo:'perfil', actual: profileData.nss||'—', checked:true });
+  if (_t2.fecha_ingreso && _t2.fecha_ingreso !== profileData.ingreso_display)
+    _props.push({ campo:'Fecha ingreso', clave:'ingreso_display', nuevo:_t2.fecha_ingreso,
+      tipo:'perfil', actual: profileData.ingreso_display||'—', checked:true });
+
+  // Acumulados — comparar contra histórico numérico
+  if (_ac2.base_irpf != null && _mesIdx) {
+    const _curB = (profileData.simHistorico && profileData.simHistorico[_mesIdx])
+      ? profileData.simHistorico[_mesIdx].bruto : null;
+    if (_curB == null || _curB !== _ac2.base_irpf)
+      _props.push({ campo:'Acum. Base IRPF (' + _mesStr + ')',
+        clave:'acum_base_irpf', nuevo:_ac2.base_irpf,
+        tipo:'historico', mesIdx:_mesIdx, mesStr:_mesStr,
+        actual: _curB != null ? _curB : '—', checked:true });
   }
-  if (ac2.irpf != null && _mesNom) {
-    const _cur = profileData.simHistorico?.[_mesNom]?.irpf;
-    _propuestas.push({ campo:`Acum. IRPF retenido (${_mesNom})`, clave:'acum_irpf',
-      nuevo: ac2.irpf, tipo:'historico', mes: _mesNom,
-      actual: _cur != null ? _cur : '—',
-      checked: _cur == null || _cur !== ac2.irpf });
+  if (_ac2.irpf != null && _mesIdx) {
+    const _curI = (profileData.simHistorico && profileData.simHistorico[_mesIdx])
+      ? profileData.simHistorico[_mesIdx].irpf : null;
+    if (_curI == null || _curI !== _ac2.irpf)
+      _props.push({ campo:'Acum. IRPF retenido (' + _mesStr + ')',
+        clave:'acum_irpf', nuevo:_ac2.irpf,
+        tipo:'historico', mesIdx:_mesIdx, mesStr:_mesStr,
+        actual: _curI != null ? _curI : '—', checked:true });
   }
+  // Acumulados sin mes detectado — mostrar desmarcados para que el usuario decida
+  if (_ac2.base_irpf != null && !_mesIdx)
+    _props.push({ campo:'Acum. Base IRPF (mes no detectado)', clave:'acum_base_irpf',
+      nuevo:_ac2.base_irpf, tipo:'historico', mesIdx:null, mesStr:null,
+      actual:'—', checked:false });
+  if (_ac2.irpf != null && !_mesIdx)
+    _props.push({ campo:'Acum. IRPF retenido (mes no detectado)', clave:'acum_irpf',
+      nuevo:_ac2.irpf, tipo:'historico', mesIdx:null, mesStr:null,
+      actual:'—', checked:false });
 
-  // ── Construir HTML de la tarjeta ─────────────────────────────────────────────
+  // Guardar en global — botón las lee sin JSON en onclick
+  window._nominaPropuestas = _props;
+
+  // ── HTML tarjeta "Datos extraídos" ─────────────────────────────────────────
   let trabajadorHTML = '';
-  if (nomData.trabajador || Object.keys(ac2).length > 0) {
+  {
     const _CODS = { EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
-      VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia', IT:'Baja' };
-    const _badgesHTML = Object.entries(_di.codigosResumen || {})
-      .map(([cod, n]) => `<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px;font-family:var(--mono);color:var(--amber2)">${cod} <span style="color:var(--text3)">${_CODS[cod]||cod}</span> ×${n}</span>`)
+      VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia' };
+    const _badges = Object.entries(_di.codigosResumen || {})
+      .map(([cod, n]) => '<span style="display:inline-flex;align-items:center;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 7px;font-size:10px;font-family:var(--mono);color:var(--amber2)">'
+        + cod + ' <span style="color:var(--text3)">' + (_CODS[cod]||cod) + '</span> ×' + n + '</span>')
       .join(' ');
-    const _fmt2b = v => v != null
-      ? v.toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €' : '—';
 
-    // Filas de datos sin checkbox (informativos)
-    const _infoRows = [
-      t2.nombre       ? ['Nombre',         t2.nombre]                               : null,
-      t2.nif          ? ['NIF',             t2.nif]                                  : null,
-      t2.nss          ? ['Nº SS',           t2.nss]                                  : null,
-      t2.fecha_ingreso? ['Fecha ingreso',   t2.fecha_ingreso]                        : null,
-      nomData.irpf_pct? ['IRPF',            nomData.irpf_pct + '%']                  : null,
-      _di.diasTrabajados != null ? ['Días trabajados', `${_di.diasTrabajados} / ${_di.totalDias}`] : null,
-      _di.totalConIncidencia > 0 ? ['Con incidencia',  String(_di.totalConIncidencia)] : null,
-    ].filter(Boolean);
+    const _fmtV = function(v) {
+      return typeof v === 'number'
+        ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'
+        : String(v);
+    };
 
-    const _infoHTML = _infoRows.map(([l,v]) =>
-      `<div class="profile-item"><div class="profile-item-label">${l}</div><div class="profile-item-val" style="font-size:11px">${v}</div></div>`
-    ).join('');
+    // Datos informativos (sin checkbox)
+    const _infoItems = [];
+    if (_t2.nombre)        _infoItems.push(['Nombre',       _t2.nombre,       '']);
+    if (_t2.nif)           _infoItems.push(['NIF',          _t2.nif,          '']);
+    if (_t2.nss)           _infoItems.push(['Nº SS',     _t2.nss,          '']);
+    if (_t2.fecha_ingreso) _infoItems.push(['Fecha ingreso',_t2.fecha_ingreso,'']);
+    if (nomData.irpf_pct)  _infoItems.push(['IRPF',         nomData.irpf_pct+'%','']);
+    if (_ac2.base_irpf != null) _infoItems.push(['Acum. Base IRPF', _fmtV(_ac2.base_irpf),'']);
+    if (_ac2.irpf != null)      _infoItems.push(['Acum. IRPF retenido', _fmtV(_ac2.irpf),'']);
+    if (_di.diasTrabajados != null)
+      _infoItems.push(['Días trabajados', _di.diasTrabajados+' / '+_di.totalDias, 'var(--green)']);
+    if (_di.totalConIncidencia > 0)
+      _infoItems.push(['Con incidencia', String(_di.totalConIncidencia), 'var(--amber2)']);
 
-    // Filas con checkbox (actualizables)
-    const _checkRows = _propuestas.map((p, i) => {
-      const isChecked = p.checked !== false;
-      const isHistorico = p.tipo === 'historico';
-      const valStr = typeof p.nuevo === 'number'
-        ? _fmt2b(p.nuevo)
-        : String(p.nuevo);
-      return `
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)">
-        <input type="checkbox" id="_pd_${i}" ${isChecked ? 'checked' : ''}
-          style="flex-shrink:0;width:14px;height:14px;accent-color:var(--blue);cursor:pointer">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${p.campo}</div>
-          <div style="font-size:11px;color:var(--text2);font-family:var(--mono)">${valStr}
-            ${isHistorico ? '<span style="font-size:9px;color:var(--text3);margin-left:4px">→ Simulador</span>' : '<span style="font-size:9px;color:var(--text3);margin-left:4px">→ Perfil</span>'}
-          </div>
-        </div>
-        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-align:right;max-width:80px;overflow:hidden;text-overflow:ellipsis">
-          actual: ${String(p.actual).slice(0,20)}
-        </div>
-      </div>`;
+    const _infoHTML = _infoItems.map(function(x) {
+      return '<div class="profile-item">'
+        + '<div class="profile-item-label">' + x[0] + '</div>'
+        + '<div class="profile-item-val" style="font-size:11px;'+(x[2]?'color:'+x[2]+';font-weight:600':'')+'">' + x[1] + '</div>'
+        + '</div>';
     }).join('');
 
-    // Guardar propuestas en variable global — el botón las lee sin JSON inline
-    window._nominaPropuestas = _propuestas;
+    // Checkboxes — solo los que tienen diferencias
+    const _checkHTML = _props.map(function(p, i) {
+      var dest = p.tipo === 'historico'
+        ? '→ Simulador' + (p.mesStr ? ' / ' + p.mesStr : ' (indica mes)')
+        : '→ Perfil';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
+        + '<input type="checkbox" id="_pd_' + i + '" ' + (p.checked ? 'checked' : '')
+        + ' style="flex-shrink:0;width:14px;height:14px;accent-color:var(--blue);cursor:pointer">'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:10px;color:var(--text3);font-family:var(--mono)">'
+        + p.campo + ' <span style="opacity:.55;font-size:9px">' + dest + '</span></div>'
+        + '<div style="font-size:11px;color:var(--text2);font-family:var(--mono);font-weight:500">' + _fmtV(p.nuevo) + '</div>'
+        + '</div>'
+        + '<div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-align:right;flex-shrink:0;line-height:1.4">'
+        + 'actual:<br>' + String(p.actual).slice(0, 22) + '</div>'
+        + '</div>';
+    }).join('');
 
-    trabajadorHTML = `
-      <div class="card" style="margin-bottom:12px" id="card-datos-nomina">
-        <div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>
+    const _updateSection = _props.length > 0
+      ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
+          + '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.04em">ACTUALIZAR — selecciona y confirma</div>'
+          + _checkHTML
+          + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'
+          + '<button onclick="aplicarPropuestasInline()" '
+          + 'style="display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--blue2);color:var(--blue2);border-radius:6px;font-size:11px;font-family:var(--mono);padding:5px 14px;cursor:pointer;white-space:nowrap">'
+          + '✓ Actualizar datos seleccionados</button>'
+          + '<span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none"></span>'
+          + '</div></div>'
+      : '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
+          + 'Los datos del perfil ya están actualizados con esta nómina.</div>';
 
-        <div class="profile-data" style="margin-bottom:8px">
-          ${_infoHTML}
-        </div>
-        ${_badgesHTML ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;padding-top:6px;border-top:1px solid var(--border)">${_badgesHTML}</div>` : ''}
-
-        ${_propuestas.length > 0 ? `
-        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px;letter-spacing:.05em">
-            ACTUALIZAR DATOS — selecciona y confirma
-          </div>
-          <div id="_checkrows_container">
-            ${_checkRows}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-            <button
-              onclick="aplicarPropuestasInline()"
-              style="display:inline-flex;align-items:center;gap:5px;
-                     background:transparent;border:1px solid var(--blue2);
-                     color:var(--blue2);border-radius:6px;
-                     font-size:11px;font-family:var(--mono);
-                     padding:5px 14px;cursor:pointer;letter-spacing:.02em;
-                     transition:background .15s"
-              onmouseover="this.style.background='var(--blue-dim)'"
-              onmouseout="this.style.background='transparent'">
-              ✓ Actualizar datos seleccionados
-            </button>
-            <span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none">
-              ✓ Datos actualizados
-            </span>
-          </div>
-        </div>` : `
-        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
-          border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-          Los datos del perfil ya están actualizados con esta nómina.
-        </div>`}
-      </div>
-    `;
+    trabajadorHTML = '<div class="card" style="margin-bottom:12px" id="card-datos-nomina">'
+      + '<div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>'
+      + '<div class="profile-data" style="margin-bottom:8px">' + _infoHTML + '</div>'
+      + (_badges ? '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">' + _badges + '</div>' : '')
+      + _updateSection
+      + '</div>';
   }
 
   const diffsHTML = diffs.map(d => `
