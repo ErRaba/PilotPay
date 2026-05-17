@@ -1478,7 +1478,7 @@ input[type=number] { -moz-appearance: textfield; }
     <input class="form-input" id="login-pass" type="password" placeholder="••••">
     <button class="btn-primary" onclick="doLogin()">Entrar</button>
     <p id="login-err" style="display:none;text-align:center;margin-top:10px;font-size:12px;color:#ef4444;font-family:var(--mono)">Credenciales incorrectas</p>
-    <div style="text-align:center;margin-top:14px;font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);letter-spacing:.08em">PILOTPAY BETA 2.2</div>
+    <div style="text-align:center;margin-top:14px;font-size:10px;font-family:var(--mono);color:rgba(255,255,255,0.3);letter-spacing:.08em">PILOTPAY BETA 2.3</div>
   </div>
 </div>
 
@@ -1518,6 +1518,7 @@ input[type=number] { -moz-appearance: textfield; }
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
     <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
+    <button class="tab" id="tab-historial" onclick="showTab('historial')"><span class="tab-icon">🗂</span>Historial</button>
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
@@ -3252,433 +3253,734 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ══════════ TAB: CONVENIO ══════════ -->
     <div class="page" id="page-convenio">
 
-      <!-- ── ESTILOS PROPIOS DE CONVENIO ── -->
+      <!-- ══ ESTILOS CONVENIO ══ -->
       <style>
-        /* Grid de tarjetas Convenio */
-        .conv-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-top: 0;
+        /* ─ Hero ─ */
+        .cvn-hero {
+          padding: 24px 20px 20px;
+          border-bottom: 1px solid var(--border);
         }
-        @media (max-width: 540px) {
-          .conv-grid { grid-template-columns: 1fr; }
+        .cvn-hero-eyebrow {
+          font-size: 10px; font-family: var(--mono); letter-spacing: .1em;
+          color: var(--text3); text-transform: uppercase; margin-bottom: 6px;
+        }
+        .cvn-hero-title {
+          font-size: 22px; font-weight: 700; color: var(--text);
+          letter-spacing: -.01em; line-height: 1.15;
+        }
+        .cvn-hero-sub {
+          font-size: 12px; color: var(--text2); margin-top: 6px; line-height: 1.55;
+          max-width: 480px;
         }
 
-        /* Tarjeta individual */
-        .conv-card {
+        /* ─ Aviso principal ─ */
+        .cvn-notice {
+          display: flex; gap: 14px; align-items: flex-start;
+          padding: 16px 18px;
+          background: var(--bg3);
+          border: 1px solid var(--border2);
+          border-left: 4px solid var(--amber);
+          border-radius: var(--r);
+        }
+        .cvn-notice-icon {
+          font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px;
+        }
+        .cvn-notice-title {
+          font-size: 12px; font-weight: 700; color: var(--amber2);
+          font-family: var(--mono); letter-spacing: .04em; margin-bottom: 5px;
+        }
+        .cvn-notice-body {
+          font-size: 12px; color: var(--text2); line-height: 1.6;
+        }
+
+        /* ─ Grid de funciones próximas ─ */
+        .cvn-feat-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        @media (max-width: 500px) { .cvn-feat-grid { grid-template-columns: 1fr; } }
+
+        .cvn-feat-card {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--r);
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          transition: border-color .18s, box-shadow .18s;
+          padding: 14px 14px 14px 16px;
           position: relative;
           overflow: hidden;
+          display: flex;
+          gap: 11px;
+          align-items: flex-start;
         }
-        .conv-card:hover {
-          border-color: var(--blue);
-          box-shadow: 0 0 0 1px var(--blue-dim), 0 4px 16px rgba(0,0,0,.18);
-        }
-        .conv-card.hidden-by-search {
-          display: none;
-        }
-
-        /* Franja de color lateral */
-        .conv-card::before {
+        .cvn-feat-card::before {
           content: '';
-          position: absolute;
-          left: 0; top: 0; bottom: 0;
-          width: 3px;
-          background: var(--conv-accent, var(--blue));
+          position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+          background: var(--blue-dim);
           border-radius: var(--r) 0 0 var(--r);
         }
-        .conv-card.accent-amber::before { background: var(--amber); }
-        .conv-card.accent-green::before  { background: var(--green); }
-        .conv-card.accent-blue::before   { background: var(--blue); }
-        .conv-card.accent-dim::before    { background: var(--text3); }
-
-        /* Icono + título */
-        .conv-card-head {
-          display: flex;
-          align-items: center;
-          gap: 9px;
+        .cvn-feat-icon {
+          font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: 1px;
         }
-        .conv-card-icon {
-          font-size: 20px;
-          line-height: 1;
-          flex-shrink: 0;
+        .cvn-feat-label {
+          font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.25;
         }
-        .conv-card-title {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--text);
-          line-height: 1.25;
+        .cvn-feat-desc {
+          font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4;
         }
 
-        /* Tags de referencia */
-        .conv-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 4px;
+        /* ─ Tabla de estado ─ */
+        .cvn-status-table {
+          width: 100%; border-collapse: collapse;
         }
-        .conv-tag {
-          font-size: 10px;
-          font-family: var(--mono);
-          background: var(--bg3);
-          color: var(--text3);
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          padding: 2px 6px;
+        .cvn-status-table tr {
+          border-bottom: 1px solid var(--border);
+        }
+        .cvn-status-table tr:last-child { border-bottom: none; }
+        .cvn-status-table td {
+          padding: 9px 4px;
+          font-size: 12px;
+          vertical-align: middle;
+        }
+        .cvn-status-table td:first-child {
+          color: var(--text2);
+          width: 60%;
+        }
+        .cvn-status-table td:last-child {
+          text-align: right;
+        }
+        .cvn-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          font-size: 10px; font-family: var(--mono); font-weight: 600;
+          padding: 3px 8px; border-radius: 20px;
           white-space: nowrap;
         }
-
-        /* Descripción */
-        .conv-card-desc {
-          font-size: 12px;
-          color: var(--text2);
-          line-height: 1.55;
-          flex: 1;
+        .cvn-pill.no {
+          background: var(--bg3); color: var(--text3); border: 1px solid var(--border2);
         }
-
-        /* Botón Ver detalles */
-        .conv-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          margin-top: 4px;
-          font-size: 11px;
-          font-family: var(--mono);
-          font-weight: 700;
-          color: var(--blue2);
-          background: var(--blue-dim);
-          border: 1px solid var(--blue);
-          border-radius: 6px;
-          padding: 5px 10px;
-          cursor: default;
-          opacity: 0.75;
-          align-self: flex-start;
-          transition: opacity .15s;
+        .cvn-pill.pending {
+          background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber);
         }
-        .conv-btn:hover { opacity: 1; }
-        .conv-btn.amber {
-          color: var(--amber2);
-          background: var(--amber-dim);
-          border-color: var(--amber);
+        .cvn-pill.ok {
+          background: var(--green-dim); color: var(--green); border: 1px solid var(--green);
         }
-        .conv-btn.green {
-          color: var(--green);
-          background: var(--green-dim);
-          border-color: var(--green);
-        }
-        .conv-btn.dim {
-          color: var(--text3);
-          background: var(--bg3);
-          border-color: var(--border2);
-        }
-
-        /* Badge "Próximamente" */
-        .conv-soon {
-          font-size: 9px;
-          font-family: var(--mono);
-          background: var(--bg3);
-          color: var(--text3);
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          padding: 1px 5px;
-          margin-left: auto;
-          align-self: flex-start;
+        .cvn-pill-dot {
+          width: 6px; height: 6px; border-radius: 50%; background: currentColor;
           flex-shrink: 0;
         }
 
-        /* Buscador */
-        .conv-search-wrap {
-          position: relative;
-          margin-bottom: 2px;
-        }
-        .conv-search-wrap .conv-search-icon {
-          position: absolute;
-          left: 12px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 14px;
-          pointer-events: none;
-          z-index: 1;
-        }
-        .conv-search-wrap .conv-search-clear {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 13px;
-          cursor: pointer;
-          color: var(--text3);
-          background: none;
-          border: none;
-          padding: 4px;
-          display: none;
-          z-index: 1;
-        }
-        .conv-search-wrap .conv-search-clear.visible { display: block; }
-        #conv-search-input {
-          width: 100%;
-          box-sizing: border-box;
-          padding-left: 36px;
-          padding-right: 30px;
-        }
-        #conv-no-results {
-          display: none;
-          text-align: center;
-          padding: 24px 16px;
-          color: var(--text3);
-          font-family: var(--mono);
-          font-size: 12px;
-        }
-
-        /* Cabecera hero Convenio */
-        .conv-hero {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          padding: 18px 16px 16px;
-        }
-        .conv-hero-icon {
-          font-size: 32px;
-          line-height: 1;
-          flex-shrink: 0;
-        }
-        .conv-hero-text {}
-        .conv-hero-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: var(--text);
-          letter-spacing: 0.01em;
-        }
-        .conv-hero-sub {
-          font-size: 12px;
-          color: var(--text2);
-          margin-top: 2px;
-          line-height: 1.4;
-        }
-        .conv-hero-ref {
-          font-size: 10px;
-          color: var(--text3);
-          font-family: var(--mono);
-          margin-top: 3px;
+        /* ─ Section label ─ */
+        .cvn-section-label {
+          font-size: 10px; font-family: var(--mono); letter-spacing: .08em;
+          color: var(--text3); text-transform: uppercase;
+          padding: 0 2px 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
         }
       </style>
 
-      <!-- Hero -->
+      <!-- ── HERO ── -->
       <div class="card" style="padding:0">
-        <div class="conv-hero">
-          <div class="conv-hero-icon">📘</div>
-          <div class="conv-hero-text">
-            <div class="conv-hero-title">Convenio BCSA 2026</div>
-            <div class="conv-hero-sub">Referencia rápida de tablas, conceptos y criterios aplicados por PilotPay</div>
-            <div class="conv-hero-ref">Convenio Colectivo BCSA 2026 · BOE 18/03/2026 · Vigencia 01/01/2026 – 31/12/2027</div>
+        <div class="cvn-hero">
+          <div class="cvn-hero-eyebrow">📘 &nbsp;Módulo documental</div>
+          <div class="cvn-hero-title">Convenio BCSA</div>
+          <div class="cvn-hero-sub">
+            Módulo documental en preparación. Las referencias normativas se integrarán únicamente desde fuentes verificadas.
           </div>
         </div>
       </div>
 
-      <!-- Buscador funcional -->
-      <div class="card" style="padding:12px 14px">
-        <div class="conv-search-wrap">
-          <span class="conv-search-icon">🔍</span>
-          <input
-            id="conv-search-input"
-            class="field-input"
-            type="text"
-            placeholder="Buscar concepto, artículo o tabla..."
-            oninput="convSearch(this.value)"
-            autocomplete="off"
-            spellcheck="false"
-          >
-          <button class="conv-search-clear" id="conv-search-clear" onclick="convSearchClear()" title="Limpiar búsqueda">✕</button>
+      <!-- ── AVISO PRINCIPAL ── -->
+      <div class="cvn-notice">
+        <div class="cvn-notice-icon">⚠️</div>
+        <div>
+          <div class="cvn-notice-title">CONTENIDO NORMATIVO NO DISPONIBLE</div>
+          <div class="cvn-notice-body">
+            Este módulo no contiene todavía contenido normativo validado. PilotPay no mostrará interpretaciones del convenio, cotización, IRPF, IT, seguros ni conceptos salariales hasta que estén vinculadas a una fuente documental revisada.
+          </div>
         </div>
-        <div id="conv-search-status" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;min-height:16px"></div>
       </div>
 
-      <!-- Sin resultados -->
-      <div id="conv-no-results">
-        Sin resultados para esa búsqueda.<br>Prueba con "tramo", "dieta", "IRPF" o "pagas".
+      <!-- ── PRÓXIMAS FUNCIONES ── -->
+      <div class="card">
+        <div class="cvn-section-label">Próximas funciones</div>
+        <div class="cvn-feat-grid">
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">🔍</span>
+            <div>
+              <div class="cvn-feat-label">Buscador por artículos y conceptos</div>
+              <div class="cvn-feat-desc">Localización directa en el texto del convenio cargado</div>
+            </div>
+          </div>
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">💰</span>
+            <div>
+              <div class="cvn-feat-label">Tablas salariales validadas</div>
+              <div class="cvn-feat-desc">Por cargo y nivel, vinculadas al Anexo I verificado</div>
+            </div>
+          </div>
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">⚙️</span>
+            <div>
+              <div class="cvn-feat-label">Referencias del motor de cálculo</div>
+              <div class="cvn-feat-desc">Qué fuente normativa respalda cada concepto calculado</div>
+            </div>
+          </div>
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">🔗</span>
+            <div>
+              <div class="cvn-feat-label">Trazabilidad concepto → convenio</div>
+              <div class="cvn-feat-desc">Enlace directo entre nómina calculada y artículo fuente</div>
+            </div>
+          </div>
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">🚧</span>
+            <div>
+              <div class="cvn-feat-label">Conceptos pendientes de validación</div>
+              <div class="cvn-feat-desc">Inventario de elementos aún sin respaldo documental revisado</div>
+            </div>
+          </div>
+
+          <div class="cvn-feat-card">
+            <span class="cvn-feat-icon">📐</span>
+            <div>
+              <div class="cvn-feat-label">Comparación cálculo vs. fuente</div>
+              <div class="cvn-feat-desc">Contraste entre el resultado de PilotPay y la norma aplicada</div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- Grid de tarjetas -->
-      <div class="conv-grid" id="conv-grid">
-
-        <!-- 1. Tablas salariales -->
-        <div class="conv-card accent-blue" data-conv-keywords="tabla salarial salario base cmd cop tcp nivel nvl grupo anexo i incremento 2026 sueldo bruto">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">💰</span>
-            <span class="conv-card-title">Tablas salariales</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">Anexo I</span>
-            <span class="conv-tag">CMD · COP · TCP</span>
-            <span class="conv-tag">NVL 1–6</span>
-          </div>
-          <div class="conv-card-desc">
-            Salario base mensual por función y nivel según Anexo I. Referencia directa de los valores
-            que usa PilotPay en cada cálculo, incluyendo el extra de paga que cotiza a SS.
-          </div>
-          <button class="conv-btn" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-        <!-- 2. Horas de vuelo y tramos -->
-        <div class="conv-card accent-blue" data-conv-keywords="horas vuelo tramo t1 t2 t3 t4 hb productividad variable vacaciones imaginarias francos calculo vuelo piloto">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">✈️</span>
-            <span class="conv-card-title">Horas de vuelo y tramos</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">Art. 47</span>
-            <span class="conv-tag">T1 · T2 · T3 · T4</span>
-            <span class="conv-tag">HB</span>
-          </div>
-          <div class="conv-card-desc">
-            Consulta de tramos T1–T4, cálculo sobre HB y repercusión de vacaciones, imaginarias y francos.
-            Tarifas por tramo aplicadas por PilotPay según nivel y función.
-          </div>
-          <button class="conv-btn" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-        <!-- 3. Dietas -->
-        <div class="conv-card accent-amber" data-conv-keywords="dieta manutención nacional internacional pernocta exento irpf rirpf art 9 destino especial compensación">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">🍽️</span>
-            <span class="conv-card-title">Dietas</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">Art. 53</span>
-            <span class="conv-tag">RIRPF Art. 9</span>
-            <span class="conv-tag">Exento / Sujeto</span>
-          </div>
-          <div class="conv-card-desc">
-            Importes de manutención nacional e internacional, pernoctas y destinos especiales.
-            Qué parte computa como renta sujeta a IRPF y cuál queda exenta según el RIRPF.
-          </div>
-          <button class="conv-btn amber" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-        <!-- 4. Pagas extra -->
-        <div class="conv-card accent-green" data-conv-keywords="paga extra extraordinaria junio diciembre prorrateo devengo composicion base calculo">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">🎁</span>
-            <span class="conv-card-title">Pagas extra</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">Art. 42</span>
-            <span class="conv-tag">Junio · Diciembre</span>
-            <span class="conv-tag">Prorrateo</span>
-          </div>
-          <div class="conv-card-desc">
-            Dos pagas extraordinarias: composición de conceptos, base de cálculo y devengo proporcional.
-            Efecto en nómina mensual con prorrateo activo vs. abono en mes de devengo.
-          </div>
-          <button class="conv-btn green" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-        <!-- 5. IT y vacaciones -->
-        <div class="conv-card accent-amber" data-conv-keywords="it incapacidad temporal baja complemento 100 vacaciones dpo transporte dias periodo retribucion">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">🏥</span>
-            <span class="conv-card-title">IT y vacaciones</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">Art. 55</span>
-            <span class="conv-tag">DPO</span>
-            <span class="conv-tag">Plus Transporte</span>
-          </div>
-          <div class="conv-card-desc">
-            Referencia rápida sobre reducción de variables en IT, complemento de empresa y efectos
-            sobre DPO y transporte. Retribución durante vacaciones y francos disfrutados.
-          </div>
-          <button class="conv-btn amber" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-        <!-- 6. Conceptos cotizables / IRPF -->
-        <div class="conv-card accent-dim" data-conv-keywords="cotizacion seguridad social irpf base cotizacion tope retención concepto sujeto excluido ss deduccion retencion">
-          <div class="conv-card-head">
-            <span class="conv-card-icon">📊</span>
-            <span class="conv-card-title">Conceptos cotizables e IRPF</span>
-            <span class="conv-soon">próximamente</span>
-          </div>
-          <div class="conv-tags">
-            <span class="conv-tag">RGC</span>
-            <span class="conv-tag">LIRPF</span>
-            <span class="conv-tag">Base SS</span>
-          </div>
-          <div class="conv-card-desc">
-            Resumen de conceptos sujetos a cotización y retención utilizados en el cálculo de PilotPay.
-            Qué entra en base SS, qué se retiene a efectos de IRPF y qué queda fuera.
-          </div>
-          <button class="conv-btn dim" title="Disponible en próxima versión">📋 Ver detalles</button>
-        </div>
-
-      </div><!-- /conv-grid -->
-
-      <!-- Footer de sección -->
-      <div style="text-align:center;padding:16px 16px 28px;font-size:11px;color:var(--text3);font-family:var(--mono)">
-        PilotPay Beta 2.3 · Contenido de detalle en desarrollo · Los valores usados en el motor ya son correctos
+      <!-- ── ESTADO DEL MÓDULO ── -->
+      <div class="card">
+        <div class="cvn-section-label">Estado del módulo</div>
+        <table class="cvn-status-table">
+          <tr>
+            <td>Convenio cargado</td>
+            <td><span class="cvn-pill no"><span class="cvn-pill-dot"></span>No</span></td>
+          </tr>
+          <tr>
+            <td>Referencias validadas</td>
+            <td><span class="cvn-pill no"><span class="cvn-pill-dot"></span>No</span></td>
+          </tr>
+          <tr>
+            <td>Tablas salariales conectadas</td>
+            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
+          </tr>
+          <tr>
+            <td>Buscador documental</td>
+            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
+          </tr>
+          <tr>
+            <td>Trazabilidad concepto → fuente</td>
+            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
+          </tr>
+          <tr>
+            <td>Comparación PilotPay vs. norma</td>
+            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
+          </tr>
+        </table>
       </div>
 
-      <!-- Script del buscador -->
-      <script>
-      (function(){
-        function convSearch(val) {
-          const q = (val || '').trim().toLowerCase();
-          const cards = document.querySelectorAll('#conv-grid .conv-card');
-          const clearBtn = document.getElementById('conv-search-clear');
-          const status  = document.getElementById('conv-search-status');
-          const noRes   = document.getElementById('conv-no-results');
-
-          if (clearBtn) clearBtn.classList.toggle('visible', q.length > 0);
-
-          let visible = 0;
-          cards.forEach(function(card) {
-            const keywords = (card.dataset.convKeywords || '').toLowerCase();
-            const title    = (card.querySelector('.conv-card-title')?.textContent || '').toLowerCase();
-            const desc     = (card.querySelector('.conv-card-desc')?.textContent  || '').toLowerCase();
-            const match    = !q || keywords.includes(q) || title.includes(q) || desc.includes(q);
-            card.classList.toggle('hidden-by-search', !match);
-            if (match) visible++;
-          });
-
-          if (!q) {
-            status.textContent = '';
-            noRes.style.display = 'none';
-          } else if (visible === 0) {
-            status.textContent = '0 secciones coinciden';
-            noRes.style.display = 'block';
-          } else {
-            status.textContent = visible + ' sección' + (visible > 1 ? 'es' : '') + ' coincide' + (visible > 1 ? 'n' : '');
-            noRes.style.display = 'none';
-          }
-        }
-
-        function convSearchClear() {
-          const inp = document.getElementById('conv-search-input');
-          if (inp) { inp.value = ''; inp.focus(); }
-          convSearch('');
-        }
-
-        // Exponer globalmente para el oninput inline
-        window.convSearch      = convSearch;
-        window.convSearchClear = convSearchClear;
-      })();
-      </script>
+      <!-- ── FOOTER ── -->
+      <div style="text-align:center;padding:14px 16px 28px;font-size:11px;color:var(--text3);font-family:var(--mono)">
+        PilotPay Beta 2.3 · Módulo Convenio en preparación · Sin contenido normativo activo
+      </div>
 
     </div><!-- /page-convenio -->
 
+    <!-- ══════════════════════════════════════════════
+         TAB: HISTORIAL DE AUDITORÍAS
+    ══════════════════════════════════════════════ -->
+    <div class="page" id="page-historial">
+
+      <style>
+        /* ─── Historial: estilos scoped ─── */
+
+        /* Cabecera de sección */
+        .hst-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0 2px 10px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 14px;
+        }
+        .hst-header-left { display: flex; align-items: center; gap: 10px; }
+        .hst-header-title {
+          font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2;
+        }
+        .hst-header-count {
+          font-size: 11px; font-family: var(--mono); color: var(--text3);
+          background: var(--bg3); border: 1px solid var(--border);
+          border-radius: 10px; padding: 2px 8px;
+        }
+        .hst-clear-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--red); background: none;
+          border: 1px solid var(--red); border-radius: 6px;
+          padding: 4px 10px; cursor: pointer; opacity: .75;
+          transition: opacity .15s;
+        }
+        .hst-clear-btn:hover { opacity: 1; }
+
+        /* Estado vacío */
+        .hst-empty {
+          text-align: center; padding: 40px 20px;
+          color: var(--text3); font-size: 13px; line-height: 1.6;
+        }
+        .hst-empty-icon { font-size: 36px; margin-bottom: 10px; }
+        .hst-empty-sub { font-size: 11px; font-family: var(--mono); margin-top: 6px; }
+
+        /* Fila de auditoría */
+        .hst-row {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--r);
+          overflow: hidden;
+          margin-bottom: 8px;
+          transition: border-color .15s;
+        }
+        .hst-row:hover { border-color: var(--border2); }
+
+        /* Barra de resumen (siempre visible) */
+        .hst-row-summary {
+          display: flex; align-items: center; gap: 10px;
+          padding: 11px 14px;
+          cursor: pointer;
+          user-select: none; -webkit-user-select: none;
+        }
+        .hst-row-summary:hover { background: var(--bg2); }
+
+        /* Badge estado */
+        .hst-badge {
+          flex-shrink: 0; display: inline-flex; align-items: center;
+          gap: 4px; font-size: 10px; font-family: var(--mono); font-weight: 700;
+          padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+        }
+        .hst-badge.ok     { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green); }
+        .hst-badge.aviso  { background: var(--amber-dim);  color: var(--amber2); border: 1px solid var(--amber); }
+        .hst-badge.alerta { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red);   }
+
+        /* Metadatos rápidos */
+        .hst-meta { flex: 1; min-width: 0; }
+        .hst-meta-top {
+          font-size: 12px; font-weight: 600; color: var(--text);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hst-meta-sub {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+          margin-top: 2px;
+        }
+
+        /* Importes compactos */
+        .hst-amounts {
+          flex-shrink: 0; text-align: right;
+        }
+        .hst-amounts-liq {
+          font-size: 12px; font-family: var(--mono); color: var(--text);
+          font-weight: 600;
+        }
+        .hst-amounts-diff {
+          font-size: 10px; font-family: var(--mono); margin-top: 2px;
+        }
+        .hst-amounts-diff.pos { color: var(--green); }
+        .hst-amounts-diff.neg { color: var(--red); }
+        .hst-amounts-diff.neu { color: var(--text3); }
+
+        /* Chevron */
+        .hst-chevron {
+          flex-shrink: 0; font-size: 11px; color: var(--text3);
+          transition: transform .2s; display: inline-block;
+        }
+        .hst-row.open .hst-chevron { transform: rotate(90deg); }
+
+        /* Panel de detalle */
+        .hst-detail {
+          display: none;
+          border-top: 1px solid var(--border);
+          padding: 14px 14px 16px;
+          animation: hstFadeIn .15s ease;
+        }
+        .hst-row.open .hst-detail { display: block; }
+        @keyframes hstFadeIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+
+        /* Sub-secciones del detalle */
+        .hst-det-label {
+          font-size: 10px; font-family: var(--mono); letter-spacing: .07em;
+          color: var(--text3); text-transform: uppercase; margin: 12px 0 6px;
+        }
+        .hst-det-label:first-child { margin-top: 0; }
+
+        /* Mini tabla de conceptos */
+        .hst-diff-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 5px 0; border-bottom: 1px solid var(--border);
+          font-size: 11px;
+        }
+        .hst-diff-row:last-child { border-bottom: none; }
+        .hst-diff-concept { color: var(--text2); flex: 1; }
+        .hst-diff-vals {
+          display: flex; gap: 10px; align-items: center;
+          font-family: var(--mono); flex-shrink: 0;
+        }
+        .hst-diff-v { min-width: 70px; text-align: right; color: var(--text2); }
+        .hst-diff-d { min-width: 60px; text-align: right; font-weight: 600; }
+        .hst-diff-d.ok     { color: var(--green); }
+        .hst-diff-d.warn   { color: var(--amber2); }
+        .hst-diff-d.err    { color: var(--red); }
+
+        /* Datos extraídos en detalle */
+        .hst-kv { display: flex; justify-content: space-between; align-items: baseline;
+          padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+        .hst-kv:last-child { border-bottom: none; }
+        .hst-kv-k { color: var(--text3); font-family: var(--mono); }
+        .hst-kv-v { color: var(--text2); font-family: var(--mono); text-align: right; }
+
+        /* Acciones del detalle */
+        .hst-actions {
+          display: flex; gap: 8px; margin-top: 14px;
+          padding-top: 12px; border-top: 1px solid var(--border);
+        }
+        .hst-del-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--red); background: var(--red-dim);
+          border: 1px solid var(--red); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; opacity: .8; transition: opacity .15s;
+        }
+        .hst-del-btn:hover { opacity: 1; }
+      </style>
+
+      <!-- Cabecera -->
+      <div class="card">
+        <div class="hst-header">
+          <div class="hst-header-left">
+            <div class="hst-header-title">🗂 Historial de auditorías</div>
+            <span class="hst-header-count" id="hst-count">0</span>
+          </div>
+          <button class="hst-clear-btn" onclick="hstClearAll()">🗑 Borrar todo</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.5">
+          Registro automático de cada comparativa PDF completada en esta sesión o anteriores.
+          Los datos se guardan solo en este dispositivo.
+        </div>
+      </div>
+
+      <!-- Lista de auditorías -->
+      <div id="hst-list"></div>
+
+    </div><!-- /page-historial -->
+
   </main>
 </div><!-- /app -->
+
+<!-- ══════════════════════════════════════════
+     MÓDULO: HISTORIAL DE AUDITORÍAS
+     Guardado automático en localStorage
+     Clave: pilotpay_audit_history_v1
+══════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ── Constantes ── */
+  const LS_KEY = 'pilotpay_audit_history_v1';
+  const MAX_RECORDS = 100;
+
+  /* ── Acceso a localStorage ── */
+  function hstLoad() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+  function hstSave(list) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch(e) {}
+  }
+
+  /* ─────────────────────────────────────────────────
+     GUARDADO: se llama desde renderComparativa()
+     Recibe los objetos ya calculados por la comparativa
+  ───────────────────────────────────────────────── */
+  window.saveAuditRecord = function saveAuditRecord(nomData, diffs, totalDelta, errores, avisos) {
+    try {
+      const r   = window.calcResult || {};
+      const t   = nomData.totales    || {};
+      const tra = nomData.trabajador  || {};
+      const per = nomData.periodo     || {};
+
+      /* Datos del trabajador */
+      const nombre  = tra.nombre || (window.profileData && window.profileData.fullName) || '';
+      const cargo   = (window.currentUser && window.USERS && window.USERS[window.currentUser])
+                      ? (window.USERS[window.currentUser].funcion || '') : '';
+      const nivel   = window.currentNivel || '';
+
+      /* Mes/año */
+      const mesStr  = per.mes  ? (per.mes.charAt(0).toUpperCase() + per.mes.slice(1).toLowerCase()) : '';
+      const anyo    = per.anyo || per.año || '';
+
+      /* Líquidos */
+      const liqTeorico = typeof r.liquidoReal === 'number' ? r.liquidoReal : null;
+      const liqReal    = (t.liquido != null) ? t.liquido : null;
+      const diff       = (totalDelta != null) ? totalDelta : null;
+
+      /* Estado visual */
+      let estado = 'ok';
+      if (errores && errores.length > 0) estado = 'alerta';
+      else if (avisos && avisos.length > 0) estado = 'aviso';
+
+      /* Discrepancias — solo las que tienen delta significativo */
+      const discrepancias = (diffs || [])
+        .filter(d => d.status !== 'ok')
+        .map(d => ({
+          concept : d.concept,
+          teorico : d.teorico,
+          real    : d.real,
+          delta   : d.delta,
+          status  : d.status
+        }));
+
+      /* Datos extraídos relevantes del PDF */
+      const ac = nomData.acumulados || {};
+      const di = nomData.diasInfo   || {};
+      const datosExtraidos = {};
+      if (tra.nif)           datosExtraidos.nif           = tra.nif;
+      if (tra.nss)           datosExtraidos.nss           = tra.nss;
+      if (tra.fecha_ingreso) datosExtraidos.fecha_ingreso = tra.fecha_ingreso;
+      if (nomData.irpf_pct)  datosExtraidos.irpf_pct      = nomData.irpf_pct;
+      if (t.total_devengado) datosExtraidos.total_devengado = t.total_devengado;
+      if (t.base_irpf)       datosExtraidos.base_irpf     = t.base_irpf;
+      if (t.base_ss)         datosExtraidos.base_ss       = t.base_ss;
+      if (ac.base_irpf)      datosExtraidos.acum_base_irpf = ac.base_irpf;
+      if (ac.irpf)           datosExtraidos.acum_irpf     = ac.irpf;
+      if (di.diasTrabajados) datosExtraidos.dias_trabajados = di.diasTrabajados;
+
+      const record = {
+        id             : Date.now() + '_' + Math.random().toString(36).slice(2,7),
+        fechaAuditoria : new Date().toISOString(),
+        mes            : mesStr,
+        anyo           : anyo,
+        nombre         : nombre,
+        cargo          : cargo,
+        nivel          : nivel,
+        liqTeorico     : liqTeorico,
+        liqReal        : liqReal,
+        diff           : diff,
+        estado         : estado,
+        nDiscrepancias : discrepancias.length,
+        discrepancias  : discrepancias,
+        datosExtraidos : datosExtraidos
+      };
+
+      const list = hstLoad();
+      list.unshift(record);               // más reciente primero
+      if (list.length > MAX_RECORDS) list.splice(MAX_RECORDS);
+      hstSave(list);
+
+      /* Actualizar badge de count si la pestaña existe */
+      const countEl = document.getElementById('hst-count');
+      if (countEl) countEl.textContent = list.length;
+
+    } catch(e) {
+      console.warn('PilotPay Historial: error al guardar', e);
+    }
+  };
+
+  /* ─────────────────────────────────────────────────
+     RENDER: dibuja la lista completa
+  ───────────────────────────────────────────────── */
+  window.renderHistorial = function renderHistorial() {
+    const list    = hstLoad();
+    const listEl  = document.getElementById('hst-list');
+    const countEl = document.getElementById('hst-count');
+    if (!listEl) return;
+
+    if (countEl) countEl.textContent = list.length;
+
+    if (list.length === 0) {
+      listEl.innerHTML = `
+        <div class="hst-empty">
+          <div class="hst-empty-icon">🗂</div>
+          <div>Todavía no hay auditorías registradas.</div>
+          <div class="hst-empty-sub">Sube una nómina en la pestaña Comparativa<br>y el resultado se guardará automáticamente aquí.</div>
+        </div>`;
+      return;
+    }
+
+    listEl.innerHTML = list.map(function(rec, idx) {
+      return hstRowHtml(rec, idx);
+    }).join('');
+  };
+
+  /* ─────────────────────────────────────────────────
+     HTML de una fila de auditoría
+  ───────────────────────────────────────────────── */
+  function hstRowHtml(rec, idx) {
+    const fmt = function(v) {
+      if (v == null) return '—';
+      return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+    };
+    const fmtD = function(v) {
+      if (v == null) return '—';
+      const s = v >= 0 ? '+' : '';
+      return s + Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+    };
+
+    /* Fecha legible */
+    const fecha = rec.fechaAuditoria
+      ? new Date(rec.fechaAuditoria).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '—';
+
+    /* Badge estado */
+    const badgeMap = {
+      ok    : ['OK',     'ok'],
+      aviso : ['AVISO',  'aviso'],
+      alerta: ['ALERTA', 'alerta']
+    };
+    const [badgeTxt, badgeCls] = badgeMap[rec.estado] || ['—','ok'];
+
+    /* Clase de color diferencia */
+    const diffCls = (rec.diff == null) ? 'neu'
+                  : (Math.abs(rec.diff) < 1) ? 'neu'
+                  : (rec.diff > 0)           ? 'pos'
+                  : 'neg';
+
+    /* Mes + año */
+    const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
+
+    /* Metadatos cabecera */
+    const meta2Parts = [];
+    if (rec.cargo) meta2Parts.push(rec.cargo);
+    if (rec.nivel) meta2Parts.push('NVL ' + rec.nivel);
+    if (fecha)     meta2Parts.push(fecha);
+    const meta2 = meta2Parts.join(' · ');
+
+    /* Discrepancias en detalle */
+    const discHTML = (rec.discrepancias && rec.discrepancias.length > 0)
+      ? rec.discrepancias.map(function(d) {
+          const dCls = d.status === 'err' ? 'err' : d.status === 'warn' ? 'warn' : 'ok';
+          return `<div class="hst-diff-row">
+            <div class="hst-diff-concept">${d.concept}</div>
+            <div class="hst-diff-vals">
+              <div class="hst-diff-v">${fmt(d.teorico)}</div>
+              <div class="hst-diff-v">${fmt(d.real)}</div>
+              <div class="hst-diff-d ${dCls}">${fmtD(d.delta)}</div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div style="font-size:11px;color:var(--text3);font-family:var(--mono);padding:4px 0">Sin discrepancias registradas</div>';
+
+    /* Datos extraídos */
+    const kvLabels = {
+      nif:'NIF', nss:'Nº SS', fecha_ingreso:'Ingreso', irpf_pct:'IRPF %',
+      total_devengado:'Total devengado', base_irpf:'Base IRPF', base_ss:'Base SS',
+      acum_base_irpf:'Acum. Base IRPF', acum_irpf:'Acum. IRPF', dias_trabajados:'Días trabajados'
+    };
+    const de = rec.datosExtraidos || {};
+    const kvHTML = Object.keys(kvLabels)
+      .filter(function(k) { return de[k] != null; })
+      .map(function(k) {
+        const v = typeof de[k] === 'number'
+          ? (k === 'irpf_pct' || k === 'dias_trabajados'
+              ? de[k]
+              : fmt(de[k]))
+          : de[k];
+        return `<div class="hst-kv"><span class="hst-kv-k">${kvLabels[k]}</span><span class="hst-kv-v">${v}</span></div>`;
+      }).join('') || '<div style="font-size:11px;color:var(--text3);font-family:var(--mono);padding:4px 0">Sin datos extraídos</div>';
+
+    /* Resumen económico en detalle */
+    const econHTML = `
+      <div class="hst-diff-row">
+        <div class="hst-diff-concept">Líquido teórico</div>
+        <div class="hst-diff-vals"><div class="hst-diff-v">${fmt(rec.liqTeorico)}</div></div>
+      </div>
+      <div class="hst-diff-row">
+        <div class="hst-diff-concept">Líquido real (nómina)</div>
+        <div class="hst-diff-vals"><div class="hst-diff-v">${fmt(rec.liqReal)}</div></div>
+      </div>
+      <div class="hst-diff-row" style="background:var(--bg2)">
+        <div class="hst-diff-concept" style="font-weight:600;color:var(--text)">Diferencia neta</div>
+        <div class="hst-diff-vals">
+          <div class="hst-diff-d ${diffCls}" style="font-size:13px">${fmtD(rec.diff)}</div>
+        </div>
+      </div>`;
+
+    return `
+      <div class="hst-row" id="hst-row-${idx}">
+        <div class="hst-row-summary" onclick="hstToggle(${idx})">
+          <span class="hst-badge ${badgeCls}">${badgeTxt}</span>
+          <div class="hst-meta">
+            <div class="hst-meta-top">${rec.nombre || 'Empleado'} &nbsp;·&nbsp; ${periodo}</div>
+            <div class="hst-meta-sub">${meta2}</div>
+          </div>
+          <div class="hst-amounts">
+            <div class="hst-amounts-liq">${fmt(rec.liqReal)}</div>
+            <div class="hst-amounts-diff ${diffCls}">${fmtD(rec.diff)}</div>
+          </div>
+          <span class="hst-chevron">▶</span>
+        </div>
+        <div class="hst-detail">
+          <div class="hst-det-label">Resumen económico</div>
+          ${econHTML}
+          <div class="hst-det-label">Discrepancias concepto por concepto
+            <span style="font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:400;margin-left:6px">(${rec.nDiscrepancias} detectada${rec.nDiscrepancias !== 1 ? 's' : ''})</span>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:10px;font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;padding-right:2px">
+            <span style="min-width:70px;text-align:right">Teórico</span>
+            <span style="min-width:70px;text-align:right">Real</span>
+            <span style="min-width:60px;text-align:right">Dif.</span>
+          </div>
+          ${discHTML}
+          <div class="hst-det-label">Datos extraídos de la nómina</div>
+          ${kvHTML}
+          <div class="hst-actions">
+            <button class="hst-del-btn" onclick="hstDelete('${rec.id}')">🗑 Eliminar este registro</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* ─────────────────────────────────────────────────
+     Acordeón individual
+  ───────────────────────────────────────────────── */
+  window.hstToggle = function hstToggle(idx) {
+    const row = document.getElementById('hst-row-' + idx);
+    if (!row) return;
+    const wasOpen = row.classList.contains('open');
+    document.querySelectorAll('#hst-list .hst-row').forEach(function(r) { r.classList.remove('open'); });
+    if (!wasOpen) row.classList.add('open');
+  };
+
+  /* ─────────────────────────────────────────────────
+     Eliminar un registro
+  ───────────────────────────────────────────────── */
+  window.hstDelete = function hstDelete(id) {
+    let list = hstLoad();
+    list = list.filter(function(r) { return r.id !== id; });
+    hstSave(list);
+    renderHistorial();
+  };
+
+  /* ─────────────────────────────────────────────────
+     Borrar todo (con confirmación)
+  ───────────────────────────────────────────────── */
+  window.hstClearAll = function hstClearAll() {
+    const list = hstLoad();
+    if (list.length === 0) return;
+    if (!confirm('¿Eliminar las ' + list.length + ' auditorías guardadas? Esta acción no se puede deshacer.')) return;
+    hstSave([]);
+    renderHistorial();
+  };
+
+  /* ─────────────────────────────────────────────────
+     Inicialización: actualizar el count al arrancar
+  ───────────────────────────────────────────────── */
+  document.addEventListener('DOMContentLoaded', function() {
+    const countEl = document.getElementById('hst-count');
+    if (countEl) countEl.textContent = hstLoad().length;
+  });
+
+})();
+</script>
 
 <!-- ══════════ EMBRAER SVG FALLBACK ══════════ -->
 <script>
@@ -4910,7 +5212,7 @@ function renderConfig() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const tabs = ['calcular','variables','nomina','comparar','simulador','convenio','perfil','config','admin'];
+  const tabs = ['calcular','variables','nomina','comparar','simulador','convenio','historial','perfil','config','admin'];
   const idx = tabs.indexOf(name);
   const tabEls = document.querySelectorAll('.tab');
   if (tabEls[idx]) tabEls[idx].classList.add('active');
@@ -4922,6 +5224,7 @@ function showTab(name) {
   if (name === 'config')    renderConfig();
   if (name === 'admin')     { adminTab('alta'); renderAdmin(); }
   if (name === 'variables') varsActualizarMesEsperado();
+  if (name === 'historial') renderHistorial();
 }
 
 // ── THEMES ──
@@ -8041,6 +8344,9 @@ function renderComparativa(nomData) {
 
   // Refresh perfil tab
   renderPerfil();
+
+  // ── Guardar en historial de auditorías ──
+  saveAuditRecord(nomData, diffs, totalDelta, errores, avisos);
 }
 
 function enviarAcumuladosAlSimulador(brutoAcum, irpfAcum) {
