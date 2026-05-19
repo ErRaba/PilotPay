@@ -8147,6 +8147,8 @@ function aplicarPropuestasInline() {
     if (updatedPerfil > 0 && typeof renderPerfil === 'function') renderPerfil();
     // Refrescar el histórico visual sin navegar al simulador
     if (updatedSim > 0 && typeof renderHistoricoHTML === 'function') renderHistoricoHTML();
+    // Refrescar campos del simulador si el histórico ha cambiado
+    if (updatedSim > 0) actualizarSimuladorDesdeHistorico();
   }
 
   // Feedback inline
@@ -8200,6 +8202,8 @@ function aplicarPropuestas(propuestas) {
 
   if (currentUser) saveUserData(currentUser);
   document.getElementById('propuestas-card')?.remove();
+  // Refrescar campos del simulador por si se actualizó el histórico
+  actualizarSimuladorDesdeHistorico();
 
   // Confirmación visual
   const out = document.getElementById('comp-output');
@@ -8994,26 +8998,51 @@ function loadSimulatorData() {
 }
 
 function actualizarSimuladorDesdeHistorico() {
-  const mes = document.getElementById('sim-mes')?.value;
+  const mesEl = document.getElementById('sim-mes');
+  if (!mesEl) return;
+
+  // Si no hay mes seleccionado, usar el mes natural actual
+  let mesActual = parseInt(mesEl.value) || 0;
+  if (mesActual < 1) {
+    mesActual = new Date().getMonth() + 1;
+    mesEl.value = String(mesActual);
+  }
+
   const hist = profileData.simHistorico || {};
-  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const mesIdx = MESES.indexOf(mes);
 
-  // Sumar acumulados hasta el mes seleccionado
+  // ── Bruto e IRPF acumulados ──
+  // Los valores en simHistorico son ACUMULADOS del año (no deltas mensuales).
+  // Se toma el último mes con datos reales <= mesActual.
   let brutoAcum = 0, irpfAcum = 0;
-  MESES.slice(0, mesIdx + 1).forEach(m => {
-    const entry = hist[m];
-    if (entry) {
-      brutoAcum += parseFloat(entry.bruto) || 0;
-      irpfAcum  += parseFloat(entry.irpf)  || 0;
+  for (let m = mesActual; m >= 1; m--) {
+    const e = hist[m];
+    if (e && (parseFloat(e.bruto) > 0 || parseFloat(e.irpf) > 0)) {
+      brutoAcum = parseFloat(e.bruto) || 0;
+      irpfAcum  = parseFloat(e.irpf)  || 0;
+      break;
     }
-  });
+  }
 
+  // ── Media mensual estimada para "bruto meses restantes" ──
+  // Fórmula: ultimo_acumulado / mes_de_ese_acumulado
+  // Equivale a "€/mes promedio desde enero hasta el último mes con datos".
+  // Ignora meses a 0 o vacíos; no divide entre 12 si faltan meses.
+  let mediaEstimada = 0;
+  for (let m = mesActual; m >= 1; m--) {
+    const e = hist[m];
+    if (e && parseFloat(e.bruto) > 0) {
+      mediaEstimada = Math.round((parseFloat(e.bruto) / m) * 100) / 100;
+      break;
+    }
+  }
+
+  // ── Escribir en los inputs ──
   const brutoEl = document.getElementById('sim-bruto-acum');
   const irpfEl  = document.getElementById('sim-irpf-acum');
-  if (brutoEl) brutoEl.value = brutoAcum > 0 ? brutoAcum.toFixed(2) : '';
-  if (irpfEl)  irpfEl.value  = irpfAcum  > 0 ? irpfAcum.toFixed(2)  : '';
+  const restoEl = document.getElementById('sim-bruto-resto');
+  if (brutoEl) brutoEl.value = brutoAcum    > 0 ? brutoAcum.toFixed(2)    : '';
+  if (irpfEl)  irpfEl.value  = irpfAcum     > 0 ? irpfAcum.toFixed(2)     : '';
+  if (restoEl && mediaEstimada > 0) restoEl.value = mediaEstimada.toFixed(2);
 }
 
 function simSyncFromPerfil() {
@@ -9341,6 +9370,8 @@ function guardarHistorico() {
     profileData.simHistorico = simHistoricoData;
     if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
   }
+  // Refrescar campos del simulador desde el histórico recién guardado
+  actualizarSimuladorDesdeHistorico();
   const statusEl = document.getElementById('sim-hist-save-status');
   if (statusEl) { statusEl.textContent = '✓ Guardado'; statusEl.style.color = 'var(--green)'; }
   setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 2000);
