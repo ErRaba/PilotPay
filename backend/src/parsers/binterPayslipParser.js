@@ -169,6 +169,7 @@ function extractDiasInfo(lines) {
 
 export function parseBinterPayslipText(text = '') {
   const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const joined = lines.join('\n');
   const result = {
     trabajador: {},
     periodo: {},

@@ -7601,8 +7601,31 @@ function parseBinterNomina(text) {
     || findTxt(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/)
     || findTxt(/Estimado\/a\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúña-z\s]+?)(?:\n|Se adelantan)/i);
 
-  const nif = findTxt(/N\.?I\.?F\.?\s*([A-Z0-9]{8,9})/i)
-    || findTxt(/([A-Z]\d{7}[A-Z0-9])\s/);
+  // NIF trabajador: solo formato persona física (8 dígitos + 1 letra).
+  // No buscar por etiqueta "N.I.F." — la empresa aparece primero en el doc.
+  // Anclar al Nº SS para distinguir trabajador de empresa cuando hay varios.
+  const _NIF_RE = /\b(\d{8}[A-HJ-NP-TV-Z])\b/g;
+  const _nssAnchorM = text.match(/\b(\d{2}[\/-]\d{8}[\/-]\d{2})\b/);
+  const _nssAnchorPos = _nssAnchorM ? text.indexOf(_nssAnchorM[0]) : -1;
+  const _nifCands = [];
+  let _nifTmp;
+  while ((_nifTmp = _NIF_RE.exec(text)) !== null) {
+    _nifCands.push({ nif: _nifTmp[1], pos: _nifTmp.index });
+  }
+  let nif = null;
+  if (_nifCands.length === 1) {
+    nif = _nifCands[0].nif;
+  } else if (_nifCands.length > 1 && _nssAnchorPos >= 0) {
+    const _antes = _nifCands.filter(c => c.pos < _nssAnchorPos);
+    if (_antes.length > 0) {
+      const _cercano = _antes.reduce((a, b) => b.pos > a.pos ? b : a);
+      if (_nssAnchorPos - _cercano.pos < 600) nif = _cercano.nif;
+    }
+    if (!nif) {
+      const _despues = _nifCands.filter(c => c.pos > _nssAnchorPos && c.pos - _nssAnchorPos < 200);
+      if (_despues.length > 0) nif = _despues[0].nif;
+    }
+  }
 
   const nss = findTxt(/N[ºo°]?\s*(?:AFILIACI[ÓO]N|INS\.?\s*SEG\.?\s*SOC\.?|SS)\.?\s*(\d{11,12})/i)
     || findTxt(/(\d{11,12})\s+(?:\d{8}[A-Z]|[A-Z]\d{7})/);
