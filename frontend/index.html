@@ -2901,9 +2901,9 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
         </div>
 
-        <!-- VARIABLES PERSONALES (para simulador IRPF) -->
+        <!-- CONFIGURACIÓN FISCAL PERMANENTE -->
         <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Variables personales — IRPF</div>
+          <div class="card-title"><div class="section-dot amber"></div>Configuración fiscal</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Estado civil</span>
@@ -2937,19 +2937,22 @@ Complemento de Base MAD: 1500"></textarea>
               </select>
             </div>
             <div class="field">
-              <span class="field-label">Cambio residencia</span>
+              <span class="field-label">Cambio de residencia</span>
               <select class="field-input" id="prf-residencia" onchange="saveProfile()">
                 <option value="no">No</option>
                 <option value="si">Sí (año en curso)</option>
               </select>
             </div>
           </div>
-          <div style="border-top:1px solid var(--border);margin:10px 0 12px"></div>
-          <div class="card-title" style="margin-bottom:10px"><div class="section-dot"></div>Datos fiscales actuales</div>
           <div class="row">
             <div class="field">
-              <span class="field-label">% IRPF actual</span>
-              <input class="field-input" id="prf-irpf-input" type="number" value="34.15" step=".01" onchange="updateProfileFromInput()">
+              <span class="field-label">Comunidad autónoma</span>
+              <select class="field-input" id="prf-ccaa" onchange="saveProfile()">
+                <option value="can">Canarias</option>
+                <option value="mad">Madrid</option>
+                <option value="and">Andalucía</option>
+                <option value="val">C. Valenciana</option>
+              </select>
             </div>
             <div class="field">
               <span class="field-label">Paga extra por defecto</span>
@@ -2961,41 +2964,10 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
           <div class="row">
             <div class="field">
-              <span class="field-label">Bruto acumulado (€)</span>
-              <input class="field-input" id="prf-bruto-acum" type="number" placeholder="0" onchange="saveProfile()">
-            </div>
-            <div class="field">
-              <span class="field-label">IRPF retenido acumulado (€)</span>
-              <input class="field-input" id="prf-irpf-acum" type="number" placeholder="0" onchange="saveProfile()">
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Mes actual</span>
-              <select class="field-input" id="prf-mes-acum" onchange="saveProfile()">
-                <option>Enero</option><option>Febrero</option><option>Marzo</option>
-                <option>Abril</option><option>Mayo</option><option>Junio</option>
-                <option>Julio</option><option>Agosto</option><option>Septiembre</option>
-                <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
-              </select>
+              <span class="field-label">% IRPF actual en nómina</span>
+              <input class="field-input" id="prf-irpf-input" type="number" value="34.15" step=".01" onchange="updateProfileFromInput()">
             </div>
             <div class="field"></div>
-          </div>
-          <div id="acum-fecha-display" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:-4px;margin-bottom:8px"></div>
-          <div class="alert info" style="margin-bottom:0;margin-top:4px">
-            <div class="alert-icon">🔮</div>
-            <div class="alert-content">
-              <div class="alert-title">Simulador dinámico — próximamente</div>
-              <div class="alert-text">Con estos datos la app calculará el % de retención ajustado mes a mes según el bruto acumulado anual y tu situación personal.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="alert info">
-          <div class="alert-icon">📋</div>
-          <div class="alert-content">
-            <div class="alert-title">¿Perfil incompleto?</div>
-            <div class="alert-text">Sube una nómina en Comparativa para que la app rellene automáticamente tu NIF, Nº SS, fecha de ingreso y datos fiscales.</div>
           </div>
         </div>
 
@@ -5815,39 +5787,8 @@ function resetCalculadora() {
   recalc();
 }
 
-function acumularSimulador() {
-  if (!calcResult) { recalc(); }
-  const r = calcResult;
-  const brutoAcum = parseFloat(document.getElementById('prf-bruto-acum')?.value) || 0;
-  const irpfAcum  = parseFloat(document.getElementById('prf-irpf-acum')?.value) || 0;
-  const mesAcum   = document.getElementById('prf-mes-acum')?.value;
-  const statusEl  = document.getElementById('acum-status');
-
-  if (!mesAcum) {
-    statusEl.textContent = '⚠️ Ve al Perfil y completa el mes actual antes de acumular';
-    statusEl.style.color = 'var(--amber)'; return;
-  }
-  const nuevoBruto = Math.round((brutoAcum + r.baseIRPF) * 100) / 100;
-  const nuevoIRPF  = Math.round((irpfAcum + r.retencionIRPF) * 100) / 100;
-  const ahora = new Date();
-  const fechaStr = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
-  profileData.brutoAcum = nuevoBruto;
-  profileData.irpfAcum  = nuevoIRPF;
-  profileData.acumFecha = fechaStr;
-  profileData.acumTipo  = 'auto';
-  if (document.getElementById('prf-bruto-acum')) {
-    document.getElementById('prf-bruto-acum').value = nuevoBruto;
-    document.getElementById('prf-irpf-acum').value  = nuevoIRPF;
-  }
-  if (document.getElementById('sim-bruto-acum')) {
-    document.getElementById('sim-bruto-acum').value = nuevoBruto;
-    document.getElementById('sim-irpf-acum').value  = nuevoIRPF;
-  }
-  if (currentUser) saveUserData(currentUser);
-  const fmt = v => v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-  statusEl.textContent = `✓ ${fechaStr} · Base IRPF acum: ${fmt(nuevoBruto)}€ · IRPF ret: ${fmt(nuevoIRPF)}€`;
-  statusEl.style.color = 'var(--green)';
-}
+// acumularSimulador() eliminado — los acumulados se gestionan desde el
+// Histórico del Simulador IRPF. Ver actualizarSimuladorDesdeHistorico().
 
 function setNivel(n) {
   currentNivel = n;
@@ -8628,12 +8569,6 @@ function enviarAcumuladosAlSimulador(brutoAcum, irpfAcum) {
   const irpfEl  = document.getElementById('sim-irpf-acum');
   if (brutoEl) brutoEl.value = brutoAcum.toFixed(2);
   if (irpfEl)  irpfEl.value  = irpfAcum.toFixed(2);
-  // Save to profile
-  if (profileData) {
-    profileData.brutoAcum = brutoAcum.toFixed(2);
-    profileData.irpfAcum  = irpfAcum.toFixed(2);
-    if (currentUser) saveUserData(currentUser);
-  }
   // Navigate to simulador and recalc
   showTab('simulador');
   setTimeout(() => simRecalc(), 200);
@@ -8787,22 +8722,8 @@ function renderPerfil() {
   if (profileData.hijos)        document.getElementById('prf-hijos').value          = profileData.hijos;
   if (profileData.discapacidad) document.getElementById('prf-discapacidad').value   = profileData.discapacidad;
   if (profileData.residencia)   document.getElementById('prf-residencia').value     = profileData.residencia;
-  if (profileData.brutoAcum)    document.getElementById('prf-bruto-acum').value     = profileData.brutoAcum;
-  if (profileData.irpfAcum)     document.getElementById('prf-irpf-acum').value      = profileData.irpfAcum;
-  if (profileData.mesAcum)      document.getElementById('prf-mes-acum').value       = profileData.mesAcum;
-
-  // Show accumulation date
-  const acumEl = document.getElementById('acum-fecha-display');
-  if (acumEl) {
-    if (profileData.acumFecha) {
-      const tipoLabel = profileData.acumTipo === 'manual' ? 'Actualización manual' : 'Actualizado';
-      acumEl.textContent = `${tipoLabel}: ${profileData.acumFecha}`;
-      acumEl.style.color = profileData.acumTipo === 'manual' ? 'var(--amber)' : 'var(--green)';
-    } else {
-      acumEl.textContent = 'Sin acumulados todavía — usa el botón en Calcular';
-      acumEl.style.color = 'var(--text3)';
-    }
-  }
+  const ccaaEl = document.getElementById('prf-ccaa');
+  if (ccaaEl) ccaaEl.value = profileData.ccaa || profileData.sim_ccaa || 'can';
 }
 
 function saveProfile() {
@@ -8825,16 +8746,8 @@ function saveProfile() {
       recalc();
     }
   }
-  const nuevoBruto = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
-  const nuevoIRPF  = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
-  if (nuevoBruto !== profileData.brutoAcum || nuevoIRPF !== profileData.irpfAcum) {
-    const ahora = new Date();
-    profileData.acumFecha = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
-    profileData.acumTipo = 'manual';
-  }
-  profileData.brutoAcum = nuevoBruto;
-  profileData.irpfAcum  = nuevoIRPF;
-  profileData.mesAcum   = document.getElementById('prf-mes-acum').value;
+  const ccaaEl2 = document.getElementById('prf-ccaa');
+  if (ccaaEl2) profileData.ccaa = ccaaEl2.value;
   const aliasEl = document.getElementById('prf-alias');
   if (aliasEl) profileData.alias = aliasEl.value.trim();
   const nombreEl = document.getElementById('prf-nombre-edit');
@@ -9112,22 +9025,30 @@ function actualizarSimuladorDesdeHistorico() {
 
 function simSyncFromPerfil() {
   const u = USERS[currentUser] || {};
-  const mes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  if (profileData.estadoCivil) document.getElementById('sim-civil').value = profileData.estadoCivil === 'casado' ? 'casado_sep' : (profileData.estadoCivil || 'soltero');
-  if (profileData.hijos) document.getElementById('sim-hijos').value = profileData.hijos;
-  if (profileData.discapacidad) document.getElementById('sim-discap').value = profileData.discapacidad;
-  if (profileData.residencia) document.getElementById('sim-residencia').value = profileData.residencia;
-  if (profileData.brutoAcum) document.getElementById('sim-bruto-acum').value = profileData.brutoAcum;
-  if (profileData.irpfAcum) document.getElementById('sim-irpf-acum').value = profileData.irpfAcum;
-  if (profileData.mesAcum) {
-    const idx = mes.indexOf(profileData.mesAcum) + 1;
-    if (idx > 0) document.getElementById('sim-mes').value = idx;
+
+  // Situación personal — desde configuración fiscal del perfil
+  if (profileData.estadoCivil) {
+    document.getElementById('sim-civil').value =
+      profileData.estadoCivil === 'casado' ? 'casado_sep' : (profileData.estadoCivil || 'soltero');
   }
-  if (!profileData.sim_ccaa) {
+  if (profileData.hijos)        document.getElementById('sim-hijos').value     = profileData.hijos;
+  if (profileData.discapacidad) document.getElementById('sim-discap').value    = profileData.discapacidad;
+  if (profileData.residencia)   document.getElementById('sim-residencia').value = profileData.residencia;
+
+  // CCAA — usar la del perfil si existe, sino la guardada en simulador, sino derivar de la base
+  const ccaaPerfil = profileData.ccaa || profileData.sim_ccaa;
+  if (ccaaPerfil) {
+    document.getElementById('sim-ccaa').value = ccaaPerfil;
+  } else {
     document.getElementById('sim-ccaa').value = (parseFloat(u.base||1) > 1) ? 'mad' : 'can';
   }
+
+  // % IRPF
   document.getElementById('sim-irpf-actual').value = profileData.irpf || u.irpf || 34.15;
+
+  // Acumulados — siempre desde el histórico (fuente de verdad), no desde profileData legacy
+  actualizarSimuladorDesdeHistorico();
+
   simRecalc();
 }
 
@@ -10626,16 +10547,11 @@ window.PILOTPAY_BACKEND_READY = true;
      TARJETA: SIMULADOR IRPF
   ───────────────────────────────────────── */
   function renderSimCard(pd) {
-    /* Datos del simulador en profileData */
-    const brutoAcum = pd.brutoAcum || pd.sim_brutoAcum || '';
-    const irpfAcum  = pd.irpfAcum  || pd.sim_irpfAcum  || '';
-    const acumFecha = pd.acumFecha  || '';
-
-    /* También leer desde los inputs del DOM si existen */
-    const brutoEl = el('sim-bruto-acum');
-    const irpfEl  = el('sim-irpf-acum');
-    const brutoVal = (brutoEl && brutoEl.value) ? parseFloat(brutoEl.value) : (brutoAcum ? parseFloat(brutoAcum) : null);
-    const irpfVal  = (irpfEl  && irpfEl.value)  ? parseFloat(irpfEl.value)  : (irpfAcum  ? parseFloat(irpfAcum)  : null);
+    /* Fuente de verdad: inputs del simulador (cargados desde simHistorico) */
+    const brutoEl  = el('sim-bruto-acum');
+    const irpfEl   = el('sim-irpf-acum');
+    const brutoVal = brutoEl ? (parseFloat(brutoEl.value) || null) : null;
+    const irpfVal  = irpfEl  ? (parseFloat(irpfEl.value)  || null) : null;
 
     const hasData = brutoVal > 0 || irpfVal > 0;
 
@@ -10665,12 +10581,7 @@ window.PILOTPAY_BACKEND_READY = true;
       : '';
 
     let fechaLabel = '—';
-    if (acumFecha) {
-      try {
-        const d = new Date(acumFecha);
-        fechaLabel = MESES_ES[d.getMonth() + 1] + ' ' + d.getFullYear();
-      } catch(e) { fechaLabel = acumFecha; }
-    } else if (mesesConDatos > 0) {
+    if (mesesConDatos > 0) {
       const maxMes = Math.max(...Object.keys(hist).map(Number).filter(Boolean));
       fechaLabel = MESES_ES[maxMes] || '—';
     }
@@ -10773,18 +10684,45 @@ window.PILOTPAY_BACKEND_READY = true;
     const brutoEl = el('sim-bruto-acum');
     const brutoVal = brutoEl ? parseFloat(brutoEl.value) : 0;
     if (!brutoVal && mesesHist === 0) {
-      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Actualiza el acumulado desde el Simulador IRPF o desde la Comparativa.' });
+      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Registra los acumulados en el histórico del Simulador IRPF o súbelos desde Comparativa.' });
+    } else if (mesesHist > 0) {
+      const mesActualNum = new Date().getMonth() + 1;
+      const tieneMesActual = hist[mesActualNum] && (hist[mesActualNum].bruto || hist[mesActualNum].irpf);
+      if (!tieneMesActual) {
+        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
+      }
     }
 
-    /* 4. Perfil incompleto */
     const u = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
+
+    /* 4. Situación familiar no configurada */
+    if (!pd.estadoCivil || pd.estadoCivil === 'soltero') {
+      // Solo alertar si no hay ningún dato de configuración fiscal guardado (primera vez)
+      const tieneConfig = pd.ccaa || pd.sim_ccaa || pd.irpf;
+      if (!tieneConfig) {
+        alerts.push({ cls:'amber', icon:'👤', msg:'<strong>Completa tu configuración fiscal.</strong> Ve a Perfil e indica tu estado civil, CCAA y % de retención para mejorar la simulación.' });
+      }
+    }
+
+    /* 5. CCAA no confirmada */
+    if (!pd.ccaa && !pd.sim_ccaa) {
+      alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
+    }
+
+    /* 6. % IRPF no indicado */
+    if (!pd.irpf) {
+      alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
+    }
+
+    /* 7. Perfil sin nombre o NIF */
     const nombre = pd.fullName || pd.name || u.name || '';
     const nif    = pd.nif || '';
     if (!nombre || !nif) {
-      alerts.push({ cls:'amber', icon:'👤', msg:'<strong>Perfil incompleto.</strong> Completa tu nombre y NIF en el menú de usuario → Perfil.' });
+      alerts.push({ cls:'amber', icon:'🪪', msg:'<strong>Perfil incompleto.</strong> Sube una nómina en Comparativa para completar tu nombre, NIF y Nº de SS automáticamente.' });
     }
 
-    /* 5. Todo OK */
+    /* 8. Todo OK */
     if (alerts.length === 0) {
       alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay alertas pendientes.' });
     }
