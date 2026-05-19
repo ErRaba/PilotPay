@@ -184,17 +184,116 @@ export function parseBinterPayslipText(text = '') {
     audit: [],
   };
 
-  const joined = lines.join('\n');
-  const nifMatch = joined.match(/(?:^|\n)(\d{8}[A-Z])\n([A-ZÁÉÍÓÚÑ ]+)\n(\d{2}\/\d{2}\/\d{4})\s+([^\n]+)\n([^\n]+)/);
-  if (nifMatch) {
-    result.trabajador.nif           = nifMatch[1];
-    result.trabajador.nombre        = nifMatch[2].trim();
-    result.trabajador.fechaIngreso  = nifMatch[3];
-    result.trabajador.categoriaRaw  = nifMatch[4].trim();
-    result.trabajador.funcionRaw    = nifMatch[5].trim();
-    result.trabajador.esCopiloto    = /copiloto/i.test(result.trabajador.funcionRaw);
-    result.trabajador.esComandante  = /comandante/i.test(result.trabajador.funcionRaw);
+  // ── Extracción de datos del trabajador ──────────────────────────────────────
+  // Estrategia: buscar el NIF (8 dígitos + letra) que está asociado a los datos
+  // del trabajador. El NIF/CIF de empresa (letra + 8 chars o A-W + 8 dígitos)
+  // se excluye explícitamente. Se usan tres estrategias en orden de fiabilidad:
+  //
+  // E1 — Bloque estructurado: NIF en línea propia, seguido de nombre en mayúsculas,
+  //      fecha de ingreso y descripción de puesto. Típico en nóminas Binter.
+  //
+  // E2 — Ancla por Nº SS: buscar el Nº SS (formato NN-NNNNNNNN-NN) y extraer
+  //      el NIF de las líneas próximas anteriores. Si hay varios NIF en el
+  //      documento, el que esté más cerca del Nº SS es el del trabajador.
+  //
+  // E3 — Fallback: no asignar NIF. Es preferible devolver vacío a devolver
+  //      el NIF de la empresa.
+  //
+  // CIF de empresa típico Binter: empieza por letra (A, B, …) seguida de dígitos,
+  // o tiene formato X-NNNNNNN-Y (distinto al NIF persona ≡ 8 dígitos + letra).
+
+  // Regex NIF persona física: exactamente 8 dígitos seguidos de 1 letra mayúscula.
+  // Excluye NIE (X/Y/Z) y CIF (letra inicial).
+  const NIF_PERSONA_RE = /\b(\d{8}[A-HJ-NP-TV-Z])\b/g;
+  // Regex Nº SS: NN/NNNNNNNN/NN o NN-NNNNNNNN-NN
+  const NSS_RE = /\b(\d{2}[\/-]\d{8}[\/-]\d{2})\b/;
+  // Nombre en MAYÚSCULAS: al menos dos palabras, solo letras y espacios
+  const NOMBRE_MAYUS_RE = /^[A-ZÁÉÍÓÚÑÜ]{2,}(?:\s+[A-ZÁÉÍÓÚÑÜ]{2,})+$/;
+  // Fecha ingreso: DD/MM/AAAA
+  const FECHA_RE = /\b(\d{2}\/\d{2}\/\d{4})\b/;
+
+  // Recoger todos los NIF persona encontrados en el documento con su posición
+  const nifCandidates = [];
+  let _m;
+  while ((_m = NIF_PERSONA_RE.exec(joined)) !== null) {
+    nifCandidates.push({ nif: _m[1], pos: _m.index });
   }
+
+  // Posición del Nº SS en el texto (ancla del trabajador)
+  const nssRawMatch = joined.match(NSS_RE);
+  const nssPos = nssRawMatch ? joined.indexOf(nssRawMatch[0]) : -1;
+  if (nssRawMatch) result.trabajador.nss = nssRawMatch[1];
+
+  // E1: bloque estructurado — NIF en línea propia + nombre mayúsculas + fecha ingreso
+  let nifEncontrado = null;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\d{8}[A-HJ-NP-TV-Z]$/.test(lines[i])) {
+      // Línea siguiente debe ser nombre en mayúsculas
+      if (i + 1 < lines.length && NOMBRE_MAYUS_RE.test(lines[i + 1])) {
+        // Dentro de las 3 líneas siguientes debe aparecer una fecha
+        const ventana = lines.slice(i + 1, i + 5).join(' ');
+        if (FECHA_RE.test(ventana)) {
+          nifEncontrado = lines[i];
+          result.trabajador.nombre       = lines[i + 1].trim();
+          const fechaM = ventana.match(FECHA_RE);
+          if (fechaM) result.trabajador.fecha_ingreso = fechaM[1];
+          // Categoría y función: líneas i+3 e i+4 si existen y no son números
+          if (lines[i + 3] && !/^\d/.test(lines[i + 3]))
+            result.trabajador.categoriaRaw = lines[i + 3].trim();
+          if (lines[i + 4] && !/^\d/.test(lines[i + 4]))
+            result.trabajador.funcionRaw  = lines[i + 4].trim();
+          break;
+        }
+      }
+    }
+  }
+
+  // E2: ancla por Nº SS — el NIF del trabajador es el más cercano al Nº SS
+  if (!nifEncontrado && nssPos >= 0 && nifCandidates.length > 0) {
+    // Buscar el NIF que aparece ANTES del Nº SS y más próximo a él
+    const antes = nifCandidates.filter(c => c.pos < nssPos);
+    if (antes.length > 0) {
+      const masCercano = antes.reduce((a, b) => (b.pos > a.pos ? b : a));
+      // Distancia razonable: menos de 600 caracteres antes del Nº SS
+      if (nssPos - masCercano.pos < 600) {
+        nifEncontrado = masCercano.nif;
+      }
+    }
+    // Si no hay ninguno antes, buscar el inmediatamente después (máx 200 chars)
+    if (!nifEncontrado) {
+      const despues = nifCandidates.filter(c => c.pos > nssPos && c.pos - nssPos < 200);
+      if (despues.length > 0) nifEncontrado = despues[0].nif;
+    }
+  }
+
+  // E3: fallback — si solo hay un NIF persona en el documento, puede ser el trabajador;
+  //     si hay varios (empresa también aparece como NIF), no asignamos nada.
+  if (!nifEncontrado && nifCandidates.length === 1) {
+    nifEncontrado = nifCandidates[0].nif;
+  }
+
+  // Asignar NIF solo si se ha identificado con seguridad
+  if (nifEncontrado) {
+    result.trabajador.nif = nifEncontrado;
+  }
+  // Si no: result.trabajador.nif permanece undefined → en la UI se mostrará '—'
+  // y NO se propondrá como actualización del perfil.
+
+  // Nombre y fecha de ingreso si no los capturó E1 (intentar con regex original)
+  if (!result.trabajador.nombre) {
+    const nifMatch = joined.match(/(?:^|\n)(\d{8}[A-HJ-NP-TV-Z])\n([A-ZÁÉÍÓÚÑ ]+)\n(\d{2}\/\d{2}\/\d{4})\s+([^\n]+)\n([^\n]+)/);
+    if (nifMatch && nifMatch[1] === nifEncontrado) {
+      result.trabajador.nombre        = nifMatch[2].trim();
+      result.trabajador.fecha_ingreso = nifMatch[3];
+      result.trabajador.categoriaRaw  = nifMatch[4].trim();
+      result.trabajador.funcionRaw    = nifMatch[5].trim();
+    }
+  }
+  if (result.trabajador.funcionRaw) {
+    result.trabajador.esCopiloto  = /copiloto/i.test(result.trabajador.funcionRaw);
+    result.trabajador.esComandante= /comandante/i.test(result.trabajador.funcionRaw);
+  }
+
   const periodoMatch = joined.match(/(\d{2}\/\d{2}\/\d{4})\s*[-–]\s*(\d{2}\/\d{2}\/\d{4})/);
   if (periodoMatch) {
     result.periodo.desde = periodoMatch[1];
