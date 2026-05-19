@@ -8892,7 +8892,6 @@ const TRAMOS_AND = [
   { hasta: 12450,    tipo: 0.095 },
   { hasta: 20200,    tipo: 0.12  },
   { hasta: 35200,    tipo: 0.15  },
-  { hasta: 50000,    tipo: 0.185 },
   { hasta: 60000,    tipo: 0.185 },
   { hasta: Infinity, tipo: 0.225 },
 ];
@@ -9066,102 +9065,140 @@ function simSyncFromPerfil() {
   simRecalc();
 }
 
-function simRecalc() {
-  saveSimulator();
-  const mesActual   = parseInt(document.getElementById('sim-mes').value) || 4;
-  const ccaa        = document.getElementById('sim-ccaa').value;
-  const brutoAcum   = parseFloat(document.getElementById('sim-bruto-acum').value) || 0;
-  const irpfAcum    = parseFloat(document.getElementById('sim-irpf-acum').value) || 0;
-  const brutoResto  = parseFloat(document.getElementById('sim-bruto-resto').value) || 0;
-  const irpfActual  = parseFloat(document.getElementById('sim-irpf-actual').value) || 34.15;
-  const estadoCivil = document.getElementById('sim-civil').value;
-  const nHijos      = parseInt(document.getElementById('sim-hijos').value) || 0;
-  const discap      = document.getElementById('sim-discap').value;
-  const residencia  = document.getElementById('sim-residencia').value;
+// ── Lee todos los inputs del simulador del DOM
+function recogerInputsSimulador() {
+  return {
+    mesActual  : parseInt(document.getElementById('sim-mes').value) || 4,
+    ccaa       : document.getElementById('sim-ccaa').value,
+    brutoAcum  : parseFloat(document.getElementById('sim-bruto-acum').value) || 0,
+    irpfAcum   : parseFloat(document.getElementById('sim-irpf-acum').value) || 0,
+    brutoResto : parseFloat(document.getElementById('sim-bruto-resto').value) || 0,
+    irpfActual : parseFloat(document.getElementById('sim-irpf-actual').value) || 34.15,
+    estadoCivil: document.getElementById('sim-civil').value,
+    nHijos     : parseInt(document.getElementById('sim-hijos').value) || 0,
+    discap     : document.getElementById('sim-discap').value,
+    residencia : document.getElementById('sim-residencia').value,
+  };
+}
+
+// ── Cálculo IRPF puro — sin efectos DOM. Devuelve null si no hay datos suficientes.
+function computarIRPF(inp) {
+  const { mesActual, ccaa, brutoAcum, irpfAcum, brutoResto, irpfActual,
+          estadoCivil, nHijos, discap, residencia } = inp;
 
   const mesesRestantes = 12 - mesActual;
   const brutoAnualEst  = brutoAcum + brutoResto * mesesRestantes;
+  if (brutoAnualEst <= 0) return null;
 
-  if (brutoAnualEst <= 0) {
-    document.getElementById('sim-resultado').innerHTML = `
+  // SS obrero estimada (contingencias 4,7% + desempleo 1,55% + FP 0,1%), tope mensual 5.101,20€
+  const ssAnual   = Math.min(5101.20, brutoAnualEst / 12) * 12 * (0.047 + 0.0155 + 0.001);
+
+  // Rendimiento neto del trabajo: bruto − SS − gastos fijos deducibles (art. 19.2.f LIRPF)
+  const gastosDed = 2000;
+  const rtoNeto   = Math.max(0, brutoAnualEst - ssAnual - gastosDed);
+
+  // Reducción por rendimientos del trabajo (art. 20 LIRPF)
+  // +2.000€ adicionales por movilidad geográfica (art. 20.3 LIRPF) si residencia === 'si'
+  const reduccionMov = residencia === 'si' ? 2000 : 0;
+  const reducRto     = reduccionRendTrabajo(rtoNeto) + reduccionMov;
+
+  // Base imponible general (art. 48 LIRPF)
+  const baseImponible = Math.max(0, rtoNeto - reducRto);
+
+  // Reducción por tributación conjunta (art. 84.2.1º LIRPF): −3.400€ en decl. conjunta matrimonial
+  const reduccDeclConj = estadoCivil === 'casado_conj' ? 3400 : 0;
+  const baseLiquidable = Math.max(0, baseImponible - reduccDeclConj);
+
+  // Mínimos personales y familiares (arts. 56–61 LIRPF)
+  const minPersonal = MINIMOS.personal;
+  const minHijos    = minimoDescendientes(nHijos);
+  const minDiscap   = MINIMOS.discapacidad[discap] || 0;
+  const minTotal    = minPersonal + minHijos + minDiscap;
+
+  // Cuotas IRPF: método cuota(base liquidable) − cuota(mínimos), arts. 63 y 74 LIRPF
+  const cuotaEstBase = calcCuotaTramos(baseLiquidable, TRAMOS_ESTATAL);
+  const cuotaEstMin  = calcCuotaTramos(minTotal, TRAMOS_ESTATAL);
+  const cuotaEstNeta = Math.max(0, cuotaEstBase - cuotaEstMin);
+
+  const tramosAut    = { mad: TRAMOS_MAD, can: TRAMOS_CAN, and: TRAMOS_AND, val: TRAMOS_VAL }[ccaa] || TRAMOS_CAN;
+  const cuotaAutBase = calcCuotaTramos(baseLiquidable, tramosAut);
+  const cuotaAutMin  = calcCuotaTramos(minTotal, tramosAut);
+  const cuotaAutNeta = Math.max(0, cuotaAutBase - cuotaAutMin);
+
+  const cuotaTotal   = Math.round((cuotaEstNeta + cuotaAutNeta) * 100) / 100;
+
+  // Tipo efectivo real sobre bruto anual estimado
+  const tipoEfectivo = Math.round(cuotaTotal / brutoAnualEst * 10000) / 100;
+
+  // Comparativa acumulada: lo proporcional que debería llevarse vs lo retenido
+  const debiaMeses      = mesActual - 1;
+  const cuotaProporAcum = Math.round(cuotaTotal * debiaMeses / 12 * 100) / 100;
+
+  // Retención óptima para los meses que quedan
+  const cuotaRestante      = Math.max(0, cuotaTotal - irpfAcum);
+  const brutoRestanteTotal = brutoResto * mesesRestantes;
+  const retOptimaPct       = brutoRestanteTotal > 0
+    ? Math.round(cuotaRestante / brutoRestanteTotal * 10000) / 100 : 0;
+
+  // Resultado estimado si el % de retención NO cambia — proyección realista
+  // irpfTotalEstimado = lo ya retenido + lo que se retendrá al % actual
+  const irpfRestanteEstimado = brutoResto * mesesRestantes * (irpfActual / 100);
+  const irpfTotalEstimado    = irpfAcum + irpfRestanteEstimado;
+  // Positivo → a devolver / Negativo → a pagar
+  const saldoSiSigues = Math.round((irpfTotalEstimado - cuotaTotal) * 100) / 100;
+
+  return {
+    brutoAnualEst, ssAnual, gastosDed, rtoNeto,
+    reducRto, reduccionMov, baseImponible, reduccDeclConj, baseLiquidable,
+    minTotal, cuotaEstNeta, cuotaAutNeta, cuotaTotal,
+    tipoEfectivo, debiaMeses, cuotaProporAcum,
+    cuotaRestante, brutoRestanteTotal, retOptimaPct,
+    irpfTotalEstimado, saldoSiSigues, mesesRestantes,
+  };
+}
+
+// ── Renderiza el bloque #sim-resultado con los datos calculados
+function renderSimResultado(inp, r) {
+  const el = document.getElementById('sim-resultado');
+  if (!r) {
+    el.innerHTML = `
       <div class="card" style="text-align:center;padding:24px;color:var(--text3)">
         Introduce el bruto acumulado y la estimación mensual para calcular.
       </div>`;
     return;
   }
 
-  // SS estimada anual (usando tope mensual × 12)
-  const ssAnual = Math.min(5101.20, brutoAnualEst / 12) * 12 * (0.047 + 0.0015 + 0.0165);
+  const { ccaa, irpfActual, irpfAcum } = inp;
+  const {
+    brutoAnualEst, ssAnual, gastosDed, reducRto, reduccionMov,
+    reduccDeclConj, baseLiquidable, minTotal,
+    cuotaEstNeta, cuotaAutNeta, cuotaTotal,
+    tipoEfectivo, cuotaProporAcum,
+    cuotaRestante, retOptimaPct,
+    saldoSiSigues, mesesRestantes,
+  } = r;
 
-  // Rendimiento neto del trabajo = bruto - SS - gastos deducibles (2.000€ fijos)
-  const gastosDed = 2000;
-  const rtoNeto = Math.max(0, brutoAnualEst - ssAnual - gastosDed);
-
-  // Reducción rendimientos del trabajo
-  const reducRto = reduccionRendTrabajo(rtoNeto);
-
-  // Base imponible general = rto neto - reducción rto trabajo
-  const baseImponible = Math.max(0, rtoNeto - reducRto);
-
-  // Mínimos personales y familiares
-  const minPersonal = MINIMOS.personal;
-  const minHijos = minimoDescendientes(nHijos);
-  const minDiscap = MINIMOS.discapacidad[discap] || 0;
-  const minTotal = minPersonal + minHijos + minDiscap;
-
-  // Base liquidable = base imponible (sin aplicar mínimos todavía — los mínimos reducen la cuota)
-  const baseLiquidable = baseImponible;
-
-  // Cuota íntegra estatal sobre base liquidable
-  const cuotaEstBase  = calcCuotaTramos(baseLiquidable, TRAMOS_ESTATAL);
-  // Cuota reducción mínimos (estatal) = aplicar tramos estatales al mínimo
-  const cuotaEstMin   = calcCuotaTramos(minTotal, TRAMOS_ESTATAL);
-  const cuotaEstNeta  = Math.max(0, cuotaEstBase - cuotaEstMin);
-
-  // Cuota autonómica
-  const tramosAut = { mad: TRAMOS_MAD, can: TRAMOS_CAN, and: TRAMOS_AND, val: TRAMOS_VAL }[ccaa] || TRAMOS_CAN;
-  const cuotaAutBase  = calcCuotaTramos(baseLiquidable, tramosAut);
-  const cuotaAutMin   = calcCuotaTramos(minTotal, tramosAut);
-  const cuotaAutNeta  = Math.max(0, cuotaAutBase - cuotaAutMin);
-
-  // Cuota total anual estimada
-  const cuotaTotal = Math.round((cuotaEstNeta + cuotaAutNeta) * 100) / 100;
-
-  // Tipo efectivo anual
-  const tipoEfectivo = brutoAnualEst > 0 ? Math.round(cuotaTotal / brutoAnualEst * 10000) / 100 : 0;
-
-  // Retención ya hecha vs lo que debería ser
-  const debiaMeses = mesActual - 1; // meses ya cobrados
-  const cuotaProporAcum = Math.round(cuotaTotal * debiaMeses / 12 * 100) / 100;
-  const desviacion = Math.round((irpfAcum - cuotaProporAcum) * 100) / 100;
-
-  // Retención óptima para los meses restantes
-  // cuota_restante = cuota_total - irpf_ya_retenido
-  const cuotaRestante = Math.max(0, cuotaTotal - irpfAcum);
-  const brutoRestanteTotal = brutoResto * mesesRestantes;
-  const retOptimaPct = brutoRestanteTotal > 0
-    ? Math.round(cuotaRestante / brutoRestanteTotal * 10000) / 100
-    : 0;
-
-  // Resultado declaración estimado
-  const saldoFinal = Math.round((irpfAcum + cuotaRestante - cuotaTotal) * 100) / 100;
-  // Si retención = cuota total → saldo = 0
-
-  const fmt = v => v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmt       = v => v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
   const ccaaLabel = { mad: 'Madrid', can: 'Canarias', and: 'Andalucía', val: 'C. Valenciana' }[ccaa] || ccaa;
 
-  // Semáforo
+  // Semáforo acumulado
   const diffAcum = irpfAcum - cuotaProporAcum;
-  let alertaColor = 'success', alertaIcon = '✅', alertaTitle = 'Retención ajustada', alertaText = 'La retención acumulada está en línea con lo que corresponde pagar.';
+  let alertaColor = 'success', alertaIcon = '✅', alertaTitle = 'Retención ajustada';
+  let alertaText  = 'La retención acumulada está en línea con lo que corresponde pagar.';
   if (diffAcum > 200) {
     alertaColor = 'info'; alertaIcon = '💙'; alertaTitle = 'Reteniendo de más';
-    alertaText = `Llevas ${fmt(diffAcum)}€ más retenidos de lo que corresponde. La declaración probablemente te saldrá a devolver.`;
+    alertaText  = `Llevas ${fmt(diffAcum)}€ más retenidos de lo que corresponde. La declaración probablemente te saldrá a devolver.`;
   } else if (diffAcum < -200) {
     alertaColor = 'warning'; alertaIcon = '⚠️'; alertaTitle = 'Retención insuficiente';
-    alertaText = `Llevas ${fmt(Math.abs(diffAcum))}€ menos retenidos de lo que corresponde. Ajusta el % ahora para evitar una factura en junio.`;
+    alertaText  = `Llevas ${fmt(Math.abs(diffAcum))}€ menos retenidos de lo que corresponde. Ajusta el % ahora para evitar una factura en junio.`;
   }
 
-  document.getElementById('sim-resultado').innerHTML = `
+  // Fila extra para reducción declaración conjunta (solo si aplica)
+  const filaConj = reduccDeclConj > 0
+    ? `<div class="nomina-row"><span class="nomina-concept">Reducción decl. conjunta <span onclick="mostrarInfoTooltip('Reducción decl. conjunta')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reduccDeclConj)} €</span></div>`
+    : '';
+
+  el.innerHTML = `
     <div class="alert ${alertaColor}">
       <div class="alert-icon">${alertaIcon}</div>
       <div class="alert-content">
@@ -9176,7 +9213,8 @@ function simRecalc() {
         <div class="nomina-row"><span class="nomina-concept">Bruto anual estimado <span onclick="mostrarInfoTooltip('Bruto anual estimado')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(brutoAnualEst)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">SS estimada anual <span onclick="mostrarInfoTooltip('SS estimada anual')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(ssAnual)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">Gastos deducibles <span onclick="mostrarInfoTooltip('Gastos deducibles')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
+        <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo${reduccionMov > 0 ? ' + movilidad' : ''} <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
+        ${filaConj}
         <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar <span onclick="mostrarInfoTooltip('Mínimo personal + familiar')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
         <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable <span onclick="mostrarInfoTooltip('Base liquidable')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">Cuota estatal <span onclick="mostrarInfoTooltip('Cuota estatal')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
@@ -9203,9 +9241,9 @@ function simRecalc() {
         <div class="result-val">${fmt(cuotaRestante)} €</div>
       </div>
       <div class="result-cell full">
-        <div class="result-label">Resultado declaración estimado</div>
-        <div class="result-val ${Math.abs(saldoFinal) < 50 ? 'green' : (saldoFinal > 0 ? 'green' : 'red')}" style="font-size:22px">
-          ${saldoFinal >= 0 ? '✅ A devolver ' : '⚠️ A pagar '}${fmt(Math.abs(saldoFinal))} €
+        <div class="result-label">Resultado estimado si sigues al ${irpfActual}%</div>
+        <div class="result-val ${Math.abs(saldoSiSigues) < 50 ? 'green' : (saldoSiSigues > 0 ? 'green' : 'red')}" style="font-size:22px">
+          ${saldoSiSigues >= 0 ? '✅ A devolver ' : '⚠️ A pagar '}${fmt(Math.abs(saldoSiSigues))} €
         </div>
       </div>
     </div>
@@ -9221,10 +9259,16 @@ function simRecalc() {
         }
       </div>
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px">
-        Cálculo orientativo. Tramos IRPF 2026 estatal + ${ccaaLabel}. No incluye otras rentas ni deducciones específicas.
+        Estimación orientativa. Tramos IRPF 2026 estatal + ${ccaaLabel}. Solo considera rendimientos del trabajo. No incluye otras rentas, deducciones específicas ni datos adicionales del Modelo 145.
       </div>
     </div>
   `;
+}
+
+function simRecalc() {
+  saveSimulator();
+  const inp = recogerInputsSimulador();
+  renderSimResultado(inp, computarIRPF(inp));
 }
 
 // ── RESET BAJA ──
