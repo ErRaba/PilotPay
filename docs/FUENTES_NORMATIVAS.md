@@ -59,3 +59,134 @@ Limitaciones declaradas:
 Clave: `IRPF_PORCENTAJE_INFORMADO`.
 
 Sigue disponible como modo de respaldo: aplica el porcentaje informado por el usuario o extraído de la nómina.
+---
+
+# Reglas de auditoría y clasificación de conceptos
+
+## Filosofía de auditoría
+
+PilotPay distingue entre:
+
+- causas raíz,
+- consecuencias derivadas,
+- impacto neto real.
+
+El objetivo es evitar:
+- duplicidad de discrepancias,
+- sobreestimación de diferencias,
+- interpretación incorrecta del impacto económico.
+
+---
+
+## Causas raíz
+
+Conceptos origen de discrepancia real.
+
+Ejemplos:
+- Horas de vuelo
+- DPO
+- salario base
+- variables
+- dietas sujetas
+
+---
+
+## Derivados automáticos
+
+Conceptos consecuencia de otros importes.
+
+Ejemplos:
+- Base IRPF
+- Retención IRPF
+- Total devengado
+- Líquido neto
+
+Los derivados NO deben sumarse múltiples veces como impacto independiente.
+
+---
+
+# Conceptos especiales
+
+## Préstamos
+
+### Amortización préstamo
+Clasificación:
+- deducción privada neta.
+
+Reglas:
+- reduce líquido,
+- NO reduce Base SS,
+- NO reduce Base IRPF.
+
+---
+
+### Intereses préstamo
+Clasificación:
+- concepto sujeto.
+
+Puede:
+- afectar bases,
+- afectar IRPF,
+- afectar cotización según configuración.
+
+---
+
+## Retribución en especie
+
+PilotPay permite conceptos en especie parametrizados.
+
+Reglas:
+- pueden computar en SS,
+- pueden computar en IRPF,
+- deben distinguirse de deducciones netas.
+
+---
+
+# Validación parser
+
+## NIF trabajador
+
+Nunca utilizar:
+- CIF empresa,
+- NIF empresa
+
+como:
+- NIF trabajador.
+
+Si no existe certeza:
+- no actualizar automáticamente,
+- devolver valor vacío o no detectado.
+
+---
+
+## Actualización controlada
+
+Los datos extraídos desde nómina:
+- NO deben sobrescribir automáticamente perfil o simulador,
+- requieren validación manual,
+- requieren confirmación explícita.
+
+---
+
+# Limitaciones declaradas
+
+## IRPF
+
+El cálculo actual:
+- NO sustituye completamente programa oficial AEAT,
+- NO implementa todavía todos los escenarios complejos modelo 145,
+- puede requerir ajuste manual en regularizaciones intraanuales complejas.
+
+---
+
+## Parser PDF
+
+El parser sigue siendo dependiente de:
+- estructura PDF,
+- calidad extracción textual,
+- formato real nómina.
+
+PilotPay prioriza:
+- precisión,
+- trazabilidad,
+- evitar inferencias inseguras.
