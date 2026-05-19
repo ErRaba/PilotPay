@@ -3893,15 +3893,20 @@ Complemento de Base MAD: 1500"></textarea>
   /* ── Constantes ── */
   const LS_KEY = 'pilotpay_audit_history_v1';
   const MAX_RECORDS = 100;
+  function _key() { return LS_KEY + '_' + (window.currentUser || ''); }
 
   /* ── Acceso a localStorage ── */
   function hstLoad() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+    try { return JSON.parse(localStorage.getItem(_key()) || '[]'); }
     catch(e) { return []; }
   }
   function hstSave(list) {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch(e) {}
+    try { localStorage.setItem(_key(), JSON.stringify(list)); } catch(e) {}
   }
+  window.hstRefreshCount = function() {
+    const c = document.getElementById('hst-count');
+    if (c) c.textContent = hstLoad().length;
+  };
 
   /* ─────────────────────────────────────────────────
      GUARDADO: se llama desde renderComparativa()
@@ -4572,6 +4577,7 @@ function enterApp() {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   initApp();
+  if (typeof hstRefreshCount === 'function') hstRefreshCount();
 
   // Primer acceso → resetear simulador y redirigir a Perfil
   if (profileData.firstAccess) {
@@ -7604,8 +7610,8 @@ function parseBinterNomina(text) {
   // NIF trabajador: solo formato persona física (8 dígitos + 1 letra).
   // No buscar por etiqueta "N.I.F." — la empresa aparece primero en el doc.
   // Anclar al Nº SS para distinguir trabajador de empresa cuando hay varios.
-  const _NIF_RE = /\b(\d{8}[A-HJ-NP-TV-Z])\b/g;
-  const _nssAnchorM = text.match(/\b(\d{2}[\/-]\d{8}[\/-]\d{2})\b/);
+  const _NIF_RE = /\b(\d{8}[A-Z])\b/g;
+  const _nssAnchorM = text.match(/\b\d{11,12}\b/) || text.match(/\d{2}[\/-]\d{8}[\/-]\d{2}/);
   const _nssAnchorPos = _nssAnchorM ? text.indexOf(_nssAnchorM[0]) : -1;
   const _nifCands = [];
   let _nifTmp;
@@ -7837,7 +7843,7 @@ function parseBinterNomina(text) {
 
   const acum_base_irpf     = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
   const acum_irpf          = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
-  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.\s+Cotiz/i);
+  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.?\s*Cotiz/i);
   const acum_base_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
   const acum_irpf_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
   const acum_base_esp_norep= _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
@@ -8550,8 +8556,8 @@ function enviarAcumuladosAlSimulador(brutoAcum, irpfAcum) {
   if (irpfEl)  irpfEl.value  = irpfAcum.toFixed(2);
   // Save to profile
   if (profileData) {
-    profileData.sim_brutoAcum = brutoAcum.toFixed(2);
-    profileData.sim_irpfAcum  = irpfAcum.toFixed(2);
+    profileData.brutoAcum = brutoAcum.toFixed(2);
+    profileData.irpfAcum  = irpfAcum.toFixed(2);
     if (currentUser) saveUserData(currentUser);
   }
   // Navigate to simulador and recalc
@@ -8599,7 +8605,14 @@ function renderPerfil() {
   const ingreso = profileData.ingreso_display
     ? profileData.ingreso_display
     : (u.ingreso ? formatDate(u.ingreso) : '—');
-  const ingresoDate = u.ingreso ? new Date(u.ingreso) : null;
+  let ingresoDate = null;
+  if (profileData.ingreso_display && /^\d{2}\/\d{2}\/\d{4}$/.test(profileData.ingreso_display)) {
+    const [_dd, _mm, _yyyy] = profileData.ingreso_display.split('/');
+    ingresoDate = new Date(+_yyyy, +_mm - 1, +_dd);
+  } else if (u.ingreso) {
+    const [_yyyy, _mm, _dd] = u.ingreso.split('-');
+    ingresoDate = new Date(+_yyyy, +_mm - 1, +_dd);
+  }
   const nombreCompleto = `${profileData.name || u.name || ''} ${profileData.apellidos || u.apellidos || ''}`.trim();
   const aliasDisplay = profileData.alias || u.alias || '';
 
@@ -8623,9 +8636,10 @@ function renderPerfil() {
   // Antigüedad
   if (ingresoDate) {
     const now = new Date();
-    const months = (now.getFullYear() - ingresoDate.getFullYear()) * 12 + now.getMonth() - ingresoDate.getMonth();
-    const years = Math.floor(months / 12);
-    const remMonths = months % 12;
+    let totalMonths = (now.getFullYear() - ingresoDate.getFullYear()) * 12 + (now.getMonth() - ingresoDate.getMonth());
+    if (now.getDate() < ingresoDate.getDate()) totalMonths--;
+    const years = Math.floor(totalMonths / 12);
+    const remMonths = totalMonths % 12;
     document.getElementById('prf-antiguedad').textContent = `${years}a ${remMonths}m`;
   }
 
@@ -10201,7 +10215,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
   /* ── Leer historial de auditorías ── */
   function loadAuditHistory() {
-    try { return JSON.parse(localStorage.getItem(LS_AUDIT) || '[]'); }
+    try { return JSON.parse(localStorage.getItem(LS_AUDIT + '_' + (window.currentUser || '')) || '[]'); }
     catch(e) { return []; }
   }
 
