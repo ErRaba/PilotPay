@@ -2763,6 +2763,26 @@ Complemento de Base MAD: 1500"></textarea>
             </select>
           </div>
         </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Hijos menores de 3 años</span>
+            <input class="field-input" id="sim-hijos3" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+          </div>
+          <div class="field">
+            <span class="field-label">Ascendientes a cargo</span>
+            <input class="field-input" id="sim-ascendientes" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <span class="field-label">Ascendientes mayores de 75</span>
+            <input class="field-input" id="sim-asc75" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+          </div>
+          <div class="field">
+            <span class="field-label">Pensión compensatoria al cónyuge (€/año)</span>
+            <input class="field-input" id="sim-pension" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+          </div>
+        </div>
         <button class="btn-secondary" style="margin-top:4px" onclick="simSyncFromPerfil()">↓ Cargar datos del Perfil</button>
       </div>
 
@@ -8916,10 +8936,14 @@ const TRAMOS_VAL = [
 
 const MINIMOS = {
   personal: 5550,
-  // Por descendientes (hijos a cargo)
+  // Por descendientes (hijos a cargo) — art. 58 LIRPF
   descendientes: [0, 2400, 2700, 4000, 4500], // índice = nº hijos (último es por hijo adicional)
-  descendiente_add: 4500, // 4º hijo en adelante
-  // Por discapacidad del contribuyente
+  descendiente_add: 4500,    // 4º hijo en adelante
+  descendiente_menor3: 2800, // adicional por cada hijo menor de 3 años — art. 58.2 LIRPF
+  // Por ascendientes (padres/abuelos a cargo) — art. 59 LIRPF
+  ascendiente: 1150,         // por cada ascendiente
+  ascendiente_75: 1400,      // adicional por ascendiente mayor de 75 años
+  // Por discapacidad del contribuyente — art. 60 LIRPF
   discapacidad: { '0': 0, '33': 3000, '65': 9000, '65m': 12000 },
   // Reducción por rendimientos del trabajo 2026
   // Hasta 14.047,5€ rto neto: 7.302€ de reducción
@@ -8960,16 +8984,20 @@ function minimoDescendientes(nHijos) {
 }
 
 function saveSimulator() {
-  profileData.sim_mes       = document.getElementById('sim-mes').value;
-  profileData.sim_ccaa      = document.getElementById('sim-ccaa').value;
-  profileData.sim_brutoAcum = document.getElementById('sim-bruto-acum').value;
-  profileData.sim_irpfAcum  = document.getElementById('sim-irpf-acum').value;
-  profileData.sim_brutoResto= document.getElementById('sim-bruto-resto').value;
-  profileData.sim_irpfActual= document.getElementById('sim-irpf-actual').value;
-  profileData.sim_civil     = document.getElementById('sim-civil').value;
-  profileData.sim_hijos     = document.getElementById('sim-hijos').value;
-  profileData.sim_discap    = document.getElementById('sim-discap').value;
-  profileData.sim_residencia= document.getElementById('sim-residencia').value;
+  profileData.sim_mes          = document.getElementById('sim-mes').value;
+  profileData.sim_ccaa         = document.getElementById('sim-ccaa').value;
+  profileData.sim_brutoAcum    = document.getElementById('sim-bruto-acum').value;
+  profileData.sim_irpfAcum     = document.getElementById('sim-irpf-acum').value;
+  profileData.sim_brutoResto   = document.getElementById('sim-bruto-resto').value;
+  profileData.sim_irpfActual   = document.getElementById('sim-irpf-actual').value;
+  profileData.sim_civil        = document.getElementById('sim-civil').value;
+  profileData.sim_hijos        = document.getElementById('sim-hijos').value;
+  profileData.sim_discap       = document.getElementById('sim-discap').value;
+  profileData.sim_residencia   = document.getElementById('sim-residencia').value;
+  profileData.sim_hijos3       = document.getElementById('sim-hijos3').value;
+  profileData.sim_ascendientes = document.getElementById('sim-ascendientes').value;
+  profileData.sim_asc75        = document.getElementById('sim-asc75').value;
+  profileData.sim_pension      = document.getElementById('sim-pension').value;
   if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
 }
 
@@ -8980,16 +9008,20 @@ function loadSimulatorData() {
     const e = document.getElementById(id);
     if (e) e.value = val != null ? val : '';
   };
-  _sv('sim-mes',        profileData.sim_mes        || '');
-  _sv('sim-ccaa',       profileData.sim_ccaa       || 'can');
-  _sv('sim-civil',      profileData.sim_civil      || 'soltero');
-  _sv('sim-hijos',      profileData.sim_hijos      || '0');
-  _sv('sim-discap',     profileData.sim_discap     || '0');
-  _sv('sim-residencia', profileData.sim_residencia || '');
-  _sv('sim-bruto-acum', '');
-  _sv('sim-irpf-acum',  '');
-  _sv('sim-bruto-resto', profileData.sim_brutoResto || '');
-  _sv('sim-irpf-actual', profileData.sim_irpfActual || '');
+  _sv('sim-mes',          profileData.sim_mes          || '');
+  _sv('sim-ccaa',         profileData.sim_ccaa         || 'can');
+  _sv('sim-civil',        profileData.sim_civil        || 'soltero');
+  _sv('sim-hijos',        profileData.sim_hijos        || '0');
+  _sv('sim-discap',       profileData.sim_discap       || '0');
+  _sv('sim-residencia',   profileData.sim_residencia   || '');
+  _sv('sim-hijos3',       profileData.sim_hijos3       || '0');
+  _sv('sim-ascendientes', profileData.sim_ascendientes || '0');
+  _sv('sim-asc75',        profileData.sim_asc75        || '0');
+  _sv('sim-pension',      profileData.sim_pension      || '0');
+  _sv('sim-bruto-acum',  '');
+  _sv('sim-irpf-acum',   '');
+  _sv('sim-bruto-resto',  profileData.sim_brutoResto  || '');
+  _sv('sim-irpf-actual',  profileData.sim_irpfActual  || '');
 
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
@@ -9067,6 +9099,13 @@ function simSyncFromPerfil() {
 
 // ── Lee todos los inputs del simulador del DOM
 function recogerInputsSimulador() {
+  const nHijos = parseInt(document.getElementById('sim-hijos').value) || 0;
+  const nAsc   = Math.max(0, parseInt(document.getElementById('sim-ascendientes').value) || 0);
+  // Validaciones cruzadas: hijos<3 no puede superar nHijos; asc75 no puede superar nAsc
+  const hijos3  = Math.min(Math.max(0, parseInt(document.getElementById('sim-hijos3').value) || 0), nHijos);
+  const asc75   = Math.min(Math.max(0, parseInt(document.getElementById('sim-asc75').value) || 0), nAsc);
+  const pension = Math.max(0, parseFloat(document.getElementById('sim-pension').value) || 0);
+
   return {
     mesActual  : parseInt(document.getElementById('sim-mes').value) || 4,
     ccaa       : document.getElementById('sim-ccaa').value,
@@ -9075,16 +9114,21 @@ function recogerInputsSimulador() {
     brutoResto : parseFloat(document.getElementById('sim-bruto-resto').value) || 0,
     irpfActual : parseFloat(document.getElementById('sim-irpf-actual').value) || 34.15,
     estadoCivil: document.getElementById('sim-civil').value,
-    nHijos     : parseInt(document.getElementById('sim-hijos').value) || 0,
+    nHijos,
     discap     : document.getElementById('sim-discap').value,
     residencia : document.getElementById('sim-residencia').value,
+    hijos3,
+    nAsc,
+    asc75,
+    pension,
   };
 }
 
 // ── Cálculo IRPF puro — sin efectos DOM. Devuelve null si no hay datos suficientes.
 function computarIRPF(inp) {
   const { mesActual, ccaa, brutoAcum, irpfAcum, brutoResto, irpfActual,
-          estadoCivil, nHijos, discap, residencia } = inp;
+          estadoCivil, nHijos, hijos3, discap, residencia,
+          nAsc, asc75, pension } = inp;
 
   const mesesRestantes = 12 - mesActual;
   const brutoAnualEst  = brutoAcum + brutoResto * mesesRestantes;
@@ -9107,13 +9151,17 @@ function computarIRPF(inp) {
 
   // Reducción por tributación conjunta (art. 84.2.1º LIRPF): −3.400€ en decl. conjunta matrimonial
   const reduccDeclConj = estadoCivil === 'casado_conj' ? 3400 : 0;
-  const baseLiquidable = Math.max(0, baseImponible - reduccDeclConj);
+  // Pensiones compensatorias al cónyuge por resolución judicial (art. 55 LIRPF): reducen base imponible
+  const baseLiquidable = Math.max(0, baseImponible - reduccDeclConj - pension);
 
   // Mínimos personales y familiares (arts. 56–61 LIRPF)
   const minPersonal = MINIMOS.personal;
   const minHijos    = minimoDescendientes(nHijos);
+  const minHijos3   = MINIMOS.descendiente_menor3 * hijos3;  // art. 58.2 LIRPF
+  const minAsc      = MINIMOS.ascendiente * nAsc;            // art. 59 LIRPF
+  const minAsc75    = MINIMOS.ascendiente_75 * asc75;        // art. 59.2 LIRPF
   const minDiscap   = MINIMOS.discapacidad[discap] || 0;
-  const minTotal    = minPersonal + minHijos + minDiscap;
+  const minTotal    = minPersonal + minHijos + minHijos3 + minAsc + minAsc75 + minDiscap;
 
   // Cuotas IRPF: método cuota(base liquidable) − cuota(mínimos), arts. 63 y 74 LIRPF
   const cuotaEstBase = calcCuotaTramos(baseLiquidable, TRAMOS_ESTATAL);
@@ -9154,6 +9202,7 @@ function computarIRPF(inp) {
     tipoEfectivo, debiaMeses, cuotaProporAcum,
     cuotaRestante, brutoRestanteTotal, retOptimaPct,
     irpfTotalEstimado, saldoSiSigues, mesesRestantes,
+    minHijos3, minAsc, minAsc75,
   };
 }
 
@@ -9168,10 +9217,11 @@ function renderSimResultado(inp, r) {
     return;
   }
 
-  const { ccaa, irpfActual, irpfAcum } = inp;
+  const { ccaa, irpfActual, irpfAcum, hijos3, nAsc, asc75, pension } = inp;
   const {
     brutoAnualEst, ssAnual, gastosDed, reducRto, reduccionMov,
     reduccDeclConj, baseLiquidable, minTotal,
+    minHijos3, minAsc, minAsc75,
     cuotaEstNeta, cuotaAutNeta, cuotaTotal,
     tipoEfectivo, cuotaProporAcum,
     cuotaRestante, retOptimaPct,
@@ -9193,9 +9243,21 @@ function renderSimResultado(inp, r) {
     alertaText  = `Llevas ${fmt(Math.abs(diffAcum))}€ menos retenidos de lo que corresponde. Ajusta el % ahora para evitar una factura en junio.`;
   }
 
-  // Fila extra para reducción declaración conjunta (solo si aplica)
+  // Filas condicionales — se muestran solo cuando el valor aplica
   const filaConj = reduccDeclConj > 0
     ? `<div class="nomina-row"><span class="nomina-concept">Reducción decl. conjunta <span onclick="mostrarInfoTooltip('Reducción decl. conjunta')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reduccDeclConj)} €</span></div>`
+    : '';
+  const filaPension = pension > 0
+    ? `<div class="nomina-row"><span class="nomina-concept">Pensión compensatoria cónyuge <span onclick="mostrarInfoTooltip('Pensión compensatoria')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(pension)} €</span></div>`
+    : '';
+  const filaHijos3 = hijos3 > 0
+    ? `<div class="nomina-row" style="padding-left:12px;font-size:11px;color:var(--text3)"><span class="nomina-concept">↳ Adicional hijos &lt;3 años (${hijos3}×${fmt(MINIMOS.descendiente_menor3)}€)</span><span class="nomina-amount">+${fmt(minHijos3)} €</span></div>`
+    : '';
+  const filaAsc = nAsc > 0
+    ? `<div class="nomina-row" style="padding-left:12px;font-size:11px;color:var(--text3)"><span class="nomina-concept">↳ Mínimo ascendientes (${nAsc}×${fmt(MINIMOS.ascendiente)}€)</span><span class="nomina-amount">+${fmt(minAsc)} €</span></div>`
+    : '';
+  const filaAsc75 = asc75 > 0
+    ? `<div class="nomina-row" style="padding-left:12px;font-size:11px;color:var(--text3)"><span class="nomina-concept">↳ Adicional asc. >75 años (${asc75}×${fmt(MINIMOS.ascendiente_75)}€)</span><span class="nomina-amount">+${fmt(minAsc75)} €</span></div>`
     : '';
 
   el.innerHTML = `
@@ -9215,7 +9277,11 @@ function renderSimResultado(inp, r) {
         <div class="nomina-row"><span class="nomina-concept">Gastos deducibles <span onclick="mostrarInfoTooltip('Gastos deducibles')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo${reduccionMov > 0 ? ' + movilidad' : ''} <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
         ${filaConj}
+        ${filaPension}
         <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar <span onclick="mostrarInfoTooltip('Mínimo personal + familiar')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
+        ${filaHijos3}
+        ${filaAsc}
+        ${filaAsc75}
         <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable <span onclick="mostrarInfoTooltip('Base liquidable')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">Cuota estatal <span onclick="mostrarInfoTooltip('Cuota estatal')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
         <div class="nomina-row"><span class="nomina-concept">Cuota autonómica (${ccaaLabel}) <span onclick="mostrarInfoTooltip('Cuota autonómica')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaAutNeta)} €</span></div>
@@ -9259,7 +9325,7 @@ function renderSimResultado(inp, r) {
         }
       </div>
       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px">
-        Estimación orientativa. Tramos IRPF 2026 estatal + ${ccaaLabel}. Solo considera rendimientos del trabajo. No incluye otras rentas, deducciones específicas ni datos adicionales del Modelo 145.
+        Estimación orientativa. Tramos IRPF 2026 estatal + ${ccaaLabel}. Solo considera rendimientos del trabajo. No incluye otras rentas, hipoteca, varios pagadores ni deducciones autonómicas específicas. No sustituye al cálculo oficial de la AEAT.
       </div>
     </div>
   `;
