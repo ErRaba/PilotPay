@@ -922,6 +922,24 @@ main { flex: 1; overflow-y: auto; }
 .row { display: flex; gap: 10px; margin-bottom: 10px; }
 .field { flex: 1; }
 .field-label { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; display: block; }
+.sim-info-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--text3); color: var(--bg);
+  font-size: 8px; font-weight: 700; font-style: normal;
+  cursor: pointer; opacity: 0.6; vertical-align: middle;
+  margin-left: 3px; user-select: none; transition: opacity 0.15s;
+  line-height: 1; flex-shrink: 0;
+}
+.sim-info-icon:hover { opacity: 1; }
+.sim-avanzado-toggle {
+  background: none; border: none; color: var(--text3);
+  font-size: 11px; font-family: var(--mono); cursor: pointer;
+  padding: 6px 0 2px; display: flex; align-items: center; gap: 5px;
+  opacity: 0.7; transition: opacity 0.15s; margin-top: 4px; width: 100%;
+}
+.sim-avanzado-toggle:hover { opacity: 1; color: var(--text2); }
+#sim-avanzado-wrap { border-top: 1px solid var(--border2); margin-top: 8px; padding-top: 8px; }
 .field-input {
   width: 100%; padding: 9px 12px;
   background: var(--bg3); border: 1px solid var(--border2);
@@ -2680,7 +2698,7 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="card-title"><div class="section-dot amber"></div>Situación actual del año</div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Mes actual</span>
+            <span class="field-label">Mes actual <span class="sim-info-icon" onclick="mostrarInfoTooltip('Mes actual',event)">i</span></span>
             <select class="field-input" id="sim-mes" onchange="actualizarSimuladorDesdeHistorico();simRecalc()">
               <option value="1">Enero</option><option value="2">Febrero</option>
               <option value="3">Marzo</option><option value="4" selected>Abril</option>
@@ -2691,7 +2709,7 @@ Complemento de Base MAD: 1500"></textarea>
             </select>
           </div>
           <div class="field">
-            <span class="field-label">CCAA residencia</span>
+            <span class="field-label">CCAA residencia <span class="sim-info-icon" onclick="mostrarInfoTooltip('CCAA residencia',event)">i</span></span>
             <select class="field-input" id="sim-ccaa" onchange="simRecalc()">
               <option value="mad">Madrid</option>
               <option value="can">Canarias</option>
@@ -2702,21 +2720,21 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Bruto acumulado (€)</span>
+            <span class="field-label">Bruto acumulado (€) <span class="sim-info-icon" onclick="mostrarInfoTooltip('Bruto acumulado',event)">i</span></span>
             <input class="field-input" id="sim-bruto-acum" type="number" placeholder="0" oninput="simRecalc()">
           </div>
           <div class="field">
-            <span class="field-label">IRPF retenido acumulado (€)</span>
+            <span class="field-label">IRPF retenido acumulado (€) <span class="sim-info-icon" onclick="mostrarInfoTooltip('IRPF retenido acumulado',event)">i</span></span>
             <input class="field-input" id="sim-irpf-acum" type="number" placeholder="0" oninput="simRecalc()">
           </div>
         </div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Bruto estimado meses restantes (€/mes)</span>
+            <span class="field-label">Bruto est. meses restantes (€/mes) <span class="sim-info-icon" onclick="mostrarInfoTooltip('Bruto estimado meses restantes',event)">i</span></span>
             <input class="field-input" id="sim-bruto-resto" type="number" placeholder="Ej: 8700" oninput="simRecalc()">
           </div>
           <div class="field">
-            <span class="field-label">% IRPF actual en nómina</span>
+            <span class="field-label">% IRPF actual en nómina <span class="sim-info-icon" onclick="mostrarInfoTooltip('% IRPF actual',event)">i</span></span>
             <input class="field-input" id="sim-irpf-actual" type="number" placeholder="34.15" step="0.01" oninput="simRecalc()">
           </div>
         </div>
@@ -2727,7 +2745,7 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="card-title"><div class="section-dot"></div>Situación personal</div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Estado civil</span>
+            <span class="field-label">Estado civil <span class="sim-info-icon" onclick="mostrarInfoTooltip('Estado civil',event)">i</span></span>
             <select class="field-input" id="sim-civil" onchange="simRecalc()">
               <option value="soltero">Soltero/a</option>
               <option value="casado_sep">Casado/a (decl. separada)</option>
@@ -2735,7 +2753,7 @@ Complemento de Base MAD: 1500"></textarea>
             </select>
           </div>
           <div class="field">
-            <span class="field-label">Hijos a cargo</span>
+            <span class="field-label">Hijos a cargo <span class="sim-info-icon" onclick="mostrarInfoTooltip('Hijos a cargo',event)">i</span></span>
             <select class="field-input" id="sim-hijos" onchange="simRecalc()">
               <option value="0">0 hijos</option>
               <option value="1">1 hijo</option>
@@ -2747,7 +2765,7 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Discapacidad</span>
+            <span class="field-label">Discapacidad contribuyente <span class="sim-info-icon" onclick="mostrarInfoTooltip('Discapacidad contribuyente',event)">i</span></span>
             <select class="field-input" id="sim-discap" onchange="simRecalc()">
               <option value="0">Ninguna</option>
               <option value="33">33%–64%</option>
@@ -2756,34 +2774,41 @@ Complemento de Base MAD: 1500"></textarea>
             </select>
           </div>
           <div class="field">
-            <span class="field-label">Cambio residencia</span>
+            <span class="field-label">Cambio de residencia <span class="sim-info-icon" onclick="mostrarInfoTooltip('Cambio de residencia',event)">i</span></span>
             <select class="field-input" id="sim-residencia" onchange="simRecalc()">
               <option value="no">No</option>
               <option value="si">Sí (este año)</option>
             </select>
           </div>
         </div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Hijos menores de 3 años</span>
-            <input class="field-input" id="sim-hijos3" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+        <!-- Toggle modo avanzado -->
+        <button class="sim-avanzado-toggle" id="sim-avanzado-btn" onclick="toggleSimAvanzado()">
+          <span>⚙</span><span id="sim-avanzado-btn-label">Ajustes fiscales avanzados</span><span id="sim-avanzado-arrow" style="margin-left:auto;font-size:10px">▼</span>
+        </button>
+        <!-- Campos avanzados — ocultos por defecto -->
+        <div id="sim-avanzado-wrap" style="display:none">
+          <div class="row" style="margin-top:8px">
+            <div class="field">
+              <span class="field-label">Hijos menores de 3 años <span class="sim-info-icon" onclick="mostrarInfoTooltip('Hijos menores de 3 años',event)">i</span></span>
+              <input class="field-input" id="sim-hijos3" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+            </div>
+            <div class="field">
+              <span class="field-label">Ascendientes a cargo <span class="sim-info-icon" onclick="mostrarInfoTooltip('Ascendientes a cargo',event)">i</span></span>
+              <input class="field-input" id="sim-ascendientes" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+            </div>
           </div>
-          <div class="field">
-            <span class="field-label">Ascendientes a cargo</span>
-            <input class="field-input" id="sim-ascendientes" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Ascendientes mayores de 75 <span class="sim-info-icon" onclick="mostrarInfoTooltip('Ascendientes mayores de 75',event)">i</span></span>
+              <input class="field-input" id="sim-asc75" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+            </div>
+            <div class="field">
+              <span class="field-label">Pensión compensatoria cónyuge (€/año) <span class="sim-info-icon" onclick="mostrarInfoTooltip('Pensión compensatoria',event)">i</span></span>
+              <input class="field-input" id="sim-pension" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
+            </div>
           </div>
         </div>
-        <div class="row">
-          <div class="field">
-            <span class="field-label">Ascendientes mayores de 75</span>
-            <input class="field-input" id="sim-asc75" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
-          </div>
-          <div class="field">
-            <span class="field-label">Pensión compensatoria al cónyuge (€/año)</span>
-            <input class="field-input" id="sim-pension" type="number" min="0" value="0" placeholder="0" oninput="simRecalc()">
-          </div>
-        </div>
-        <button class="btn-secondary" style="margin-top:4px" onclick="simSyncFromPerfil()">↓ Cargar datos del Perfil</button>
+        <button class="btn-secondary" style="margin-top:8px" onclick="simSyncFromPerfil()">↓ Cargar datos del Perfil</button>
       </div>
 
       <!-- RESULTADOS -->
@@ -9023,6 +9048,15 @@ function loadSimulatorData() {
   _sv('sim-bruto-resto',  profileData.sim_brutoResto  || '');
   _sv('sim-irpf-actual',  profileData.sim_irpfActual  || '');
 
+  // Restaurar preferencia modo avanzado
+  const _wrap  = document.getElementById('sim-avanzado-wrap');
+  const _arrow = document.getElementById('sim-avanzado-arrow');
+  if (_wrap && _arrow) {
+    const avanzado = !!profileData.sim_avanzado;
+    _wrap.style.display  = avanzado ? '' : 'none';
+    _arrow.textContent   = avanzado ? '▲' : '▼';
+  }
+
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
   cargarHistorico();
@@ -9491,23 +9525,104 @@ function cargarHistorico() {
   simHistoricoData = profileData?.simHistorico || {};
 }
 
-// ── INFO TOOLTIPS PROYECCIÓN ──
+// ── INFO TOOLTIPS — inputs y proyección ──
 const SIM_TOOLTIPS = {
-  'Bruto anual estimado':       'Suma del bruto acumulado hasta este mes más la estimación de los meses restantes.',
-  'SS estimada anual':          'Cotización a la Seguridad Social: 4,70% CC + 0,15% MEI + 1,65% Desempleo+FP, sobre base máxima 2026.',
-  'Gastos deducibles':          'Reducción fija de 2.000 € aplicable a todos los trabajadores por cuenta ajena (art. 19 LIRPF).',
-  'Reducción rto. trabajo':     'Reducción adicional para rentas bajas según art. 20 LIRPF. Decrece a medida que sube el sueldo.',
-  'Mínimo personal + familiar': 'Importe exento de tributación por circunstancias personales y familiares (hijos, discapacidad).',
-  'Base liquidable':            'Base sobre la que se aplican los tramos de IRPF, tras restar reducciones y gastos.',
-  'Cuota estatal':              'Parte del IRPF que corresponde al Estado (tramos estatales 2026, deducido el mínimo).',
-  'Cuota autonómica':           'Parte del IRPF que corresponde a tu comunidad autónoma (tramos autonómicos vigentes 2026).',
-  'Cuota IRPF total estimada':  'Suma de cuota estatal + autonómica. Es lo que deberías pagar en total en la declaración anual.',
+  // ── Situación actual
+  'Mes actual':                    'Mes de referencia del cálculo. Determina cuántos meses quedan hasta final de año para proyectar el bruto anual.',
+  'CCAA residencia':               'Comunidad autónoma usada para aplicar la escala autonómica del IRPF. Cada CCAA tiene sus propios tramos.',
+  'Bruto acumulado':               'Retribución bruta total percibida desde enero hasta el mes seleccionado. Puede cargarse desde el histórico de nóminas.',
+  'IRPF retenido acumulado':       'Total de IRPF retenido en nómina hasta el mes seleccionado. Se compara con la cuota anual estimada para detectar desviaciones.',
+  'Bruto estimado meses restantes':'Estimación del bruto mensual que cobrarás en los meses pendientes del año. Puede ajustarse manualmente si prevés cambios.',
+  '% IRPF actual':                 'Porcentaje de retención que aparece actualmente en tu nómina. Se usa para proyectar cuánto se retendrá si no cambia.',
+  // ── Situación personal
+  'Estado civil':                  'Situación familiar para la declaración. La declaración conjunta reduce la base liquidable en 3.400 € (art. 84 LIRPF).',
+  'Hijos a cargo':                 'Número de descendientes que generan mínimo familiar: 2.400 € el 1.º, 2.700 € el 2.º, 4.000 € el 3.º, 4.500 € el 4.º en adelante.',
+  'Discapacidad contribuyente':    'Grado de discapacidad del propio contribuyente. Genera un mínimo adicional de 3.000 €, 9.000 € o 12.000 € según grado.',
+  'Cambio de residencia':          'Movilidad geográfica por trabajo este año. Añade 2.000 € a la reducción por rendimientos del trabajo (art. 20.3 LIRPF).',
+  // ── Campos avanzados
+  'Hijos menores de 3 años':       'Número de hijos incluidos en "Hijos a cargo" que además son menores de 3 años. Añade 2.800 € adicionales al mínimo familiar por cada uno (art. 58.2 LIRPF).',
+  'Ascendientes a cargo':          'Padres, abuelos u otros ascendientes que conviven y generan derecho al mínimo. Añade 1.150 € al mínimo familiar por cada uno (art. 59 LIRPF).',
+  'Ascendientes mayores de 75':    'Ascendientes incluidos antes que además superen los 75 años. Añade 1.400 € adicionales por cada uno (art. 59.2 LIRPF).',
+  'Pensión compensatoria':         'Importe anual satisfecho al cónyuge por resolución judicial. Reduce directamente la base liquidable (art. 55 LIRPF).',
+  // ── Proyección anual
+  'Bruto anual estimado':          'Suma del bruto acumulado más la estimación de los meses restantes.',
+  'SS estimada anual':             'Cotización obrero: 4,70% CC + 0,10% FP + 1,55% Desempleo, sobre base máxima mensual 5.101,20 € (2026).',
+  'Gastos deducibles':             'Reducción fija de 2.000 € para todos los trabajadores por cuenta ajena (art. 19.2.f LIRPF).',
+  'Reducción rto. trabajo':        'Reducción por rendimientos del trabajo (art. 20 LIRPF). Decrece al subir el sueldo. Incluye +2.000 € por movilidad geográfica si aplica.',
+  'Reducción decl. conjunta':      'Reducción de 3.400 € en base liquidable por optar a declaración conjunta matrimonial (art. 84.2.1º LIRPF).',
+  'Pensión compensatoria cónyuge': 'Importe anual de pensión al cónyuge que reduce la base liquidable (art. 55 LIRPF).',
+  'Mínimo personal + familiar':    'Importe total exento de tributación por circunstancias personales y familiares (hijos, discapacidad, ascendientes).',
+  'Base liquidable':               'Base sobre la que se aplican los tramos de IRPF, tras restar todas las reducciones.',
+  'Cuota estatal':                 'Parte del IRPF que corresponde al Estado (tramos estatales 2026, deducido el mínimo).',
+  'Cuota autonómica':              'Parte del IRPF que corresponde a tu comunidad autónoma (tramos autonómicos vigentes 2026).',
+  'Cuota IRPF total estimada':     'Suma de cuota estatal + autonómica. Es la cuota anual que deberías pagar en la declaración.',
 };
 
-function mostrarInfoTooltip(concepto) {
+function mostrarInfoTooltip(concepto, evt) {
   const texto = SIM_TOOLTIPS[concepto];
   if (!texto) return;
-  alert(`ℹ️ ${concepto}\n\n${texto}`);
+
+  // Crear el elemento tooltip si no existe aún
+  let el = document.getElementById('sim-info-tooltip');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'sim-info-tooltip';
+    Object.assign(el.style, {
+      display: 'none', position: 'fixed', zIndex: '9999',
+      maxWidth: '260px', padding: '10px 12px',
+      background: 'var(--card-bg)', border: '1px solid var(--border)',
+      borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+      fontSize: '12px', color: 'var(--text2)', lineHeight: '1.55',
+      pointerEvents: 'auto',
+    });
+    document.body.appendChild(el);
+    // Cerrar al pulsar fuera
+    document.addEventListener('click', function(e) {
+      if (el && !el.contains(e.target)) el.style.display = 'none';
+    });
+  }
+
+  // Toggle si ya está abierto con el mismo concepto
+  if (el.style.display !== 'none' && el.dataset.concepto === concepto) {
+    el.style.display = 'none';
+    return;
+  }
+
+  el.innerHTML = `<div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px">${concepto}</div>${texto}`;
+  el.dataset.concepto = concepto;
+  el.style.display = 'block';
+  el.style.transform = '';
+
+  if (evt) {
+    evt.stopPropagation();
+    const r   = evt.target.getBoundingClientRect();
+    const vw  = window.innerWidth;
+    const vh  = window.innerHeight;
+    const top = r.bottom + 6;
+    const left = Math.max(8, Math.min(r.left, vw - 276));
+    el.style.top  = Math.min(top, vh - 130) + 'px';
+    el.style.left = left + 'px';
+  } else {
+    // Fallback sin evento (llamadas desde template renderizado)
+    el.style.top  = '110px';
+    el.style.left = '50%';
+    el.style.transform = 'translateX(-50%)';
+  }
+}
+
+// ── Modo simple / avanzado ──────────────────────────────
+function toggleSimAvanzado() {
+  const wrap  = document.getElementById('sim-avanzado-wrap');
+  const arrow = document.getElementById('sim-avanzado-arrow');
+  if (!wrap) return;
+  const show = wrap.style.display === 'none';
+  wrap.style.display = show ? '' : 'none';
+  if (arrow) arrow.textContent = show ? '▲' : '▼';
+  // Persistir preferencia en profileData
+  if (typeof profileData !== 'undefined') {
+    profileData.sim_avanzado = show;
+    if (currentUser) saveUserData(currentUser);
+  }
 }
 
 // ══════════════════════════════════════════════════════
