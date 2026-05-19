@@ -9563,7 +9563,7 @@ function varsParseText(text) {
   // Desplazamiento/Dieta NAC con pernocta
   // "Dieta Desplaz. Nac. Pernocta Exenta"
   data.dieta_nac_cp = parseVal(
-    /(?:desplazamiento\s*nac(?:ional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*pernoct|dieta\s*nac(?:ional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*nac(?:ional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*pernoct(?:a\s*(?:exenta\s*)?)?|dieta\s*nac(?:ional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
   // Desplazamiento/Dieta INT sin pernocta
@@ -9575,7 +9575,7 @@ function varsParseText(text) {
   // Desplazamiento/Dieta INT con pernocta
   // "Dieta Desplaz. Inter. Pernocta Exenta"
   data.dieta_int_cp = parseVal(
-    /(?:desplazamiento\s*int(?:ernacional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*int(?:er)?\.?\s*pernoct|dieta\s*int(?:ernacional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*int(?:ernacional)?\s*con\s*pernoct|dieta\s*desplaz\.?\s*int(?:er)?\.?\s*pernoct(?:a\s*(?:exenta\s*)?)?|dieta\s*int(?:ernacional)?\s*con\s*pernoct)\s*:?\s*([\d.,]+)/i
   );
 
   // DPO
