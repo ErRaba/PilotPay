@@ -1572,7 +1572,9 @@ input[type=number] { -moz-appearance: textfield; }
         .dsh-greeting {
           padding: 20px 20px 16px;
           border-bottom: 1px solid var(--border);
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
         }
+        .dsh-greeting-left { flex: 1; min-width: 0; }
         .dsh-greeting-name {
           font-size: 16px; font-weight: 600; color: var(--text);
           letter-spacing: .01em; line-height: 1.3;
@@ -1584,6 +1586,24 @@ input[type=number] { -moz-appearance: textfield; }
           font-size: 11px; color: var(--text3); font-family: var(--mono);
           margin-top: 4px; line-height: 1.5;
         }
+        /* Widget METAR compacto en cabecera */
+        .dsh-metar-widget {
+          display: flex; flex-direction: column; align-items: flex-end;
+          padding-top: 2px; flex-shrink: 0;
+        }
+        .dsh-metar-icao {
+          font-family: var(--mono); font-size: 12px; font-weight: 700;
+          color: var(--blue); letter-spacing: .07em;
+        }
+        .dsh-metar-line {
+          font-family: var(--mono); font-size: 10px; color: var(--text3);
+          margin-top: 3px; text-align: right; max-width: 220px; line-height: 1.4;
+        }
+        .dsh-metar-obs {
+          font-family: var(--mono); font-size: 9px; color: var(--text3);
+          opacity: .5; margin-top: 2px; text-align: right;
+        }
+        @media (max-width: 420px) { .dsh-metar-widget { display: none; } }
 
         /* Grid 2 columnas */
         .dsh-grid {
@@ -1612,11 +1632,6 @@ input[type=number] { -moz-appearance: textfield; }
         /* accent-red → neutralizado a ámbar para menor agresividad */
         .dsh-card.accent-red::after   { background: var(--amber);  opacity: .4;  }
         .dsh-card.full-width { grid-column: 1 / -1; }
-        .dsh-metar-raw {
-          font-size: 10px; font-family: var(--mono); color: var(--text3);
-          padding: 6px 0; word-break: break-all;
-          border-top: 1px solid var(--border); margin-top: 8px; line-height: 1.5;
-        }
 
         /* Cabecera de tarjeta */
         .dsh-card-head {
@@ -1695,9 +1710,16 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Cabecera panel -->
       <div class="card" style="padding:0">
         <div class="dsh-greeting">
-          <div class="dsh-greeting-name">Centro de control financiero</div>
-          <div class="dsh-greeting-sub" id="dsh-sub">Resumen operativo, auditoría y simulación financiera · PilotPay Beta 2.3</div>
-          <div class="dsh-greeting-date" id="dsh-date"></div>
+          <div class="dsh-greeting-left">
+            <div class="dsh-greeting-name">Centro de control financiero</div>
+            <div class="dsh-greeting-sub" id="dsh-sub">Resumen operativo, auditoría y simulación financiera · PilotPay Beta 2.3</div>
+            <div class="dsh-greeting-date" id="dsh-date"></div>
+          </div>
+          <div class="dsh-metar-widget" id="dsh-metar-widget">
+            <span class="dsh-metar-icao" id="dsh-metar-icao">—</span>
+            <span class="dsh-metar-line" id="dsh-metar-line">—</span>
+            <span class="dsh-metar-obs"  id="dsh-metar-obs"></span>
+          </div>
         </div>
       </div>
 
@@ -1745,17 +1767,6 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
           <div class="dsh-card-body" id="dsh-alerts-body">
             <div class="dsh-empty">Calculando…</div>
-          </div>
-        </div>
-
-        <!-- ── METAR base ── -->
-        <div class="dsh-card full-width accent-blue" id="dsh-metar-card">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">🌤</span>METAR · Base</span>
-            <span class="dsh-status dim" id="dsh-metar-status">—</span>
-          </div>
-          <div class="dsh-card-body" id="dsh-metar-body">
-            <div class="dsh-empty">Cargando…</div>
           </div>
         </div>
 
@@ -8024,10 +8035,13 @@ async function processNomina(file) {
     // Acumulados — preguntar si actualizar en histórico
     const ac = nomData.acumulados;
     const mesNom = nomData.periodo?.mes;
+    // Resolver índice numérico (1-12) para simHistorico; _MESES_IDX definido más abajo
+    const _mesNomNorm = mesNom ? (mesNom.charAt(0).toUpperCase() + mesNom.slice(1).toLowerCase()) : null;
+    const _mesIdxProp = _mesNomNorm ? (_MESES_IDX[_mesNomNorm] || null) : null;
     if (ac.base_irpf && mesNom)
-      propuestas.push({ campo: `Acum. Base IRPF (${mesNom})`, clave: 'acum_base_irpf', actual: '—', nuevo: ac.base_irpf, tipo: 'historico', mes: mesNom });
+      propuestas.push({ campo: `Acum. Base IRPF (${mesNom})`, clave: 'acum_base_irpf', actual: '—', nuevo: ac.base_irpf, tipo: 'historico', mes: mesNom, mesIdx: _mesIdxProp });
     if (ac.irpf && mesNom)
-      propuestas.push({ campo: `Acum. IRPF retenido (${mesNom})`, clave: 'acum_irpf', actual: '—', nuevo: ac.irpf, tipo: 'historico', mes: mesNom });
+      propuestas.push({ campo: `Acum. IRPF retenido (${mesNom})`, clave: 'acum_irpf', actual: '—', nuevo: ac.irpf, tipo: 'historico', mes: mesNom, mesIdx: _mesIdxProp });
 
     // Baja detectada
     if (nomData.bajaInfo?.detectada) {
@@ -8188,12 +8202,20 @@ function aplicarPropuestas(propuestas) {
     }
 
     if (p.tipo === 'historico') {
-      // Actualizar acumulado en el histórico del mes correspondiente
-      const mesKey = p.mes;
+      // Usar clave numérica (1-12); p.mesIdx es preferida; fallback desde p.mes string
+      const _mesNorm = p.mes ? (p.mes.charAt(0).toUpperCase() + p.mes.slice(1).toLowerCase()) : null;
+      const mesKey = p.mesIdx || (_mesNorm ? (_MESES_IDX[_mesNorm] || null) : null);
+      if (!mesKey) { console.warn('[aplicarPropuestas] mesKey no detectado:', p); return; }
       if (!profileData.simHistorico) profileData.simHistorico = {};
       if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
       if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
       if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
+      // Sincronizar simHistoricoData local
+      if (typeof simHistoricoData !== 'undefined') {
+        if (!simHistoricoData[mesKey]) simHistoricoData[mesKey] = {};
+        if (p.clave === 'acum_base_irpf') simHistoricoData[mesKey].bruto = p.nuevo;
+        if (p.clave === 'acum_irpf')      simHistoricoData[mesKey].irpf  = p.nuevo;
+      }
       return;
     }
 
@@ -9463,7 +9485,26 @@ function guardarHistorico() {
 }
 
 function cargarHistorico() {
-  simHistoricoData = profileData?.simHistorico || {};
+  const raw = profileData?.simHistorico || {};
+  // Migración silenciosa: claves string ('Marzo') → numéricas (3)
+  const migrated = {};
+  let didMigrate = false;
+  Object.entries(raw).forEach(function([k, v]) {
+    const num = parseInt(k, 10);
+    if (!isNaN(num) && num >= 1 && num <= 12) {
+      migrated[num] = v;
+    } else {
+      const norm = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+      const idx = _MESES_IDX[norm];
+      if (idx) { migrated[idx] = v; didMigrate = true; }
+    }
+  });
+  simHistoricoData = migrated;
+  if (didMigrate && profileData) {
+    console.info('[cargarHistorico] Migradas claves string → numeric en simHistorico');
+    profileData.simHistorico = migrated;
+    if (window.currentUser) saveUserData(window.currentUser);
+  }
 }
 
 // ── INFO TOOLTIPS — inputs y proyección ──
@@ -10481,21 +10522,44 @@ window.PILOTPAY_BACKEND_READY = true;
     };
   }
 
+  /* ── Normalizar base numérica → ICAO ── */
+  function normalizeBaseToICAO(baseValue) {
+    const v = parseFloat(baseValue);
+    if (isNaN(v)) return null;
+    return v > 1 ? 'LEMD' : 'GCXO'; // MAD→LEMD, CAN→GCXO (hub principal Binter)
+  }
+
   /* ── Fuente de verdad centralizada del dashboard ── */
   function getDashboardData() {
-    const u    = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
-    const pd   = window.profileData || {};
-    const calc = readCalcFields();
-    const hist = loadAuditHistory();
-    const base = pd.base || u.base || '';
-    return { u, pd, calc, hist, base };
+    const u       = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
+    const pd      = window.profileData || {};
+    const calc    = readCalcFields();
+    const hist    = loadAuditHistory();
+    const baseNum = pd.base || u.base;
+    const baseICAO = normalizeBaseToICAO(baseNum);
+    // CCAA: prioridad perfil > simulador > derivado de base
+    const ccaa = pd.ccaa || pd.sim_ccaa || (parseFloat(baseNum || 1) > 1 ? 'mad' : 'can');
+    // IRPF: prioridad perfil > USERS
+    const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf };
   }
 
   /* ══════════════════════════════════════════
      RENDER PRINCIPAL
   ══════════════════════════════════════════ */
   window.renderDashboard = function renderDashboard() {
-    const { u, pd, calc, hist, base } = getDashboardData();
+    const derived = getDashboardData();
+    const { u, pd, calc, hist, baseICAO } = derived;
+
+    console.log('[Dashboard] profileData snapshot:', {
+      name: pd.name || pd.fullName || u.name,
+      nif: pd.nif,
+      ccaa: pd.ccaa, sim_ccaa: pd.sim_ccaa, ccaaDerived: derived.ccaa,
+      irpf: pd.irpf, irpfUser: u.irpf, irpfDerived: derived.irpf,
+      estadoCivil: pd.estadoCivil,
+      baseNum: derived.baseNum, baseICAO,
+      simHistoricoKeys: Object.keys(pd.simHistorico || {})
+    });
 
     /* ── Subtítulo contextual ── */
     const fn  = pd.funcion || u.funcion || '';
@@ -10513,8 +10577,8 @@ window.PILOTPAY_BACKEND_READY = true;
     renderAuditCard(hist);
     renderSimCard(pd);
     renderCalcCard(calc);
-    renderAlertsCard(hist, pd, calc);
-    renderMetarCard(base);
+    renderAlertsCard(hist, pd, calc, derived);
+    renderMetarWidget(baseICAO);
   };
 
   /* ─────────────────────────────────────────
@@ -10591,7 +10655,7 @@ window.PILOTPAY_BACKEND_READY = true;
     /* Cuántos meses tiene el histórico y rango */
     const hist = pd.simHistorico || {};
     const ABREV_M = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const mesesNums = Object.keys(hist).map(Number).filter(k => k > 0 && hist[k] && (hist[k].bruto || hist[k].irpf)).sort((a, b) => a - b);
+    const mesesNums = Object.keys(hist).map(Number).filter(k => k > 0 && hist[k] && (parseFloat(hist[k].bruto) > 0 || parseFloat(hist[k].irpf) > 0)).sort((a, b) => a - b);
     const mesesConDatos = mesesNums.length;
 
     if (!hasData) {
@@ -10680,7 +10744,8 @@ window.PILOTPAY_BACKEND_READY = true;
      TARJETA: ALERTAS
      Detecta situaciones que merecen atención
   ───────────────────────────────────────── */
-  function renderAlertsCard(list, pd, calc) {
+  function renderAlertsCard(list, pd, calc, derived) {
+    derived = derived || {};
     const alerts = [];
 
     /* 1. No hay auditorías */
@@ -10713,18 +10778,24 @@ window.PILOTPAY_BACKEND_READY = true;
       }
     }
 
-    const u = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
+    const u = derived.u || ((window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {});
 
-    /* 4–6. Configuración fiscal */
-    const sinEstadoCivil = !pd.estadoCivil;
-    const sinCCAA        = !pd.ccaa && !pd.sim_ccaa;
-    const sinIRPF        = pd.irpf == null;
+    /* 4–6. Configuración fiscal
+     * CCAA se considera configurada si hay valor explícito O se puede derivar del base.
+     * derived.ccaa siempre tiene un valor (derivado de base como fallback).
+     * Solo alertamos si el usuario no ha confirmado explícitamente su CCAA.
+     */
+    const sinEstadoCivil  = !pd.estadoCivil;
+    const ccaaExplicita   = !!(pd.ccaa || pd.sim_ccaa);
+    const irpfEfectivo    = derived.irpf;      // ya resuelto con fallback a u.irpf
+    const sinIRPF         = irpfEfectivo == null;
 
-    if (sinEstadoCivil && sinCCAA && sinIRPF) {
-      /* Usuario nuevo: un único aviso general */
+    if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
+      /* Usuario nuevo: aviso general único */
       alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
     } else {
-      if (sinCCAA) {
+      /* Avisos específicos solo si hay config parcial */
+      if (!ccaaExplicita) {
         alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
       }
       if (sinIRPF) {
@@ -10732,13 +10803,9 @@ window.PILOTPAY_BACKEND_READY = true;
       }
     }
 
-    /* 7. Perfil sin nombre o NIF — solo si ya existe alguna auditoría */
-    if (list && list.length > 0) {
-      const nombre = pd.fullName || pd.name || u.name || '';
-      const nif    = pd.nif || '';
-      if (!nombre || !nif) {
-        alerts.push({ cls:'amber', icon:'🪪', msg:'<strong>Perfil incompleto.</strong> Sube una nómina en Comparativa para completar tu nombre, NIF y Nº de SS automáticamente.' });
-      }
+    /* 7. NIF ausente — solo si ya existe alguna auditoría (usuario que ya subió nómina) */
+    if (list && list.length > 0 && !pd.nif) {
+      alerts.push({ cls:'amber', icon:'🪪', msg:'<strong>NIF no detectado.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.' });
     }
 
     /* 8. Todo OK */
@@ -10763,16 +10830,10 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ─────────────────────────────────────────
-     TARJETA: METAR BASE
+     WIDGET: METAR COMPACTO (cabecera)
   ───────────────────────────────────────── */
-  const BASE_TO_ICAO = {
-    MAD: 'LEMD', TFN: 'GCXO', LPA: 'GCLP', ACE: 'GCRR',
-    FUE: 'GCFV', SPC: 'GCLA', VDE: 'GCHI', GMZ: 'GCGM', TFS: 'GCTS'
-  };
 
-  async function fetchMetarForBase(baseCode) {
-    const icao = BASE_TO_ICAO[(baseCode || '').toUpperCase()];
-    if (!icao) return null;
+  async function _fetchMetar(icao) {
     try {
       const res = await fetch(
         `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json&taf=false&hours=2`,
@@ -10786,62 +10847,77 @@ window.PILOTPAY_BACKEND_READY = true;
     }
   }
 
-  async function renderMetarCard(baseCode) {
-    const icao = BASE_TO_ICAO[(baseCode || '').toUpperCase()];
+  async function renderMetarWidget(icao) {
+    const w  = document.getElementById('dsh-metar-widget');
+    const ei = document.getElementById('dsh-metar-icao');
+    const el = document.getElementById('dsh-metar-line');
+    const eo = document.getElementById('dsh-metar-obs');
+    if (!w || !ei || !el) return;
 
     if (!icao) {
-      setAttr('dsh-metar-status', 'dim');
-      setText('dsh-metar-status', '—');
-      setHTML('dsh-metar-body', '<div class="dsh-empty">Base no configurada.<br>Ve a Perfil e indica tu base.</div>');
+      w.style.opacity = '0.35';
+      ei.textContent = '—';
+      el.textContent = 'base no configurada';
+      if (eo) eo.textContent = '';
       return;
     }
 
-    setAttr('dsh-metar-status', 'info');
-    setText('dsh-metar-status', icao);
-    setHTML('dsh-metar-body', '<div class="dsh-empty">Obteniendo METAR…</div>');
+    w.style.opacity = '1';
+    ei.textContent = icao;
+    el.textContent = 'cargando…';
+    if (eo) eo.textContent = '';
 
-    const m = await fetchMetarForBase(baseCode);
+    const m = await _fetchMetar(icao);
 
     if (!m) {
-      setHTML('dsh-metar-body',
-        `<div class="dsh-empty">Sin datos METAR para ${icao}.<br><span style="font-family:var(--mono);font-size:10px;opacity:.6">aviationweather.gov</span></div>`
-      );
+      el.textContent = 'sin METAR';
       return;
     }
 
-    const tempC  = m.temp  != null ? m.temp  + ' °C' : '—';
-    const dewpC  = m.dewp  != null ? m.dewp  + ' °C' : '—';
-    const wdir   = m.wdir  != null ? m.wdir  + '°'   : '—';
-    const wspd   = m.wspd  != null ? m.wspd  + ' kt'  : '—';
-    const wgst   = m.wgst  != null ? '(ráfaga ' + m.wgst + ' kt)' : '';
-    const vis    = m.visib != null ? m.visib + ' SM'  : '—';
-    const qnh    = m.altim != null ? m.altim + ' hPa' : '—';
+    // Construir línea compacta estilo aviation: WIND · VIS/CLOUDS · TEMP · QNH
+    const parts = [];
 
-    const layers = m.skyLayers || m.clouds || [];
-    const nubes  = layers.length
-      ? layers.map(c => `${c.cover || c.sky}${c.base != null ? '@' + c.base + 'ft' : ''}`).join(' · ')
-      : (m.wxString || '—');
+    // Viento
+    if (m.wdir != null && m.wspd != null) {
+      const dir  = String(Math.round(m.wdir)).padStart(3, '0');
+      const spd  = String(Math.round(m.wspd)).padStart(2, '0');
+      const gust = m.wgst != null ? 'G' + Math.round(m.wgst) : '';
+      parts.push(dir + spd + gust + 'KT');
+    }
 
-    const obsLabel = m.obsTime
-      ? new Date(m.obsTime * 1000).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', timeZone:'UTC' }) + ' UTC'
-      : '—';
+    // Visibilidad o CAVOK
+    const layers = (m.skyLayers || m.clouds || []);
+    const hasSig = (m.wxString && m.wxString.trim()) ||
+                   layers.some(function(l) { return l.cover !== 'SKC' && l.cover !== 'CLR' && l.cover !== 'NSC'; });
+    if (!hasSig) {
+      parts.push('CAVOK');
+    } else {
+      if (m.visib != null) {
+        parts.push(parseFloat(m.visib) >= 9999 ? '9999' : m.visib + ' SM');
+      }
+      if (layers.length) {
+        const cld = layers.slice(0,2).map(function(c) {
+          return (c.cover || c.sky) + (c.base != null ? c.base : '');
+        }).join(' ');
+        parts.push(cld);
+      }
+    }
 
-    const kvHtml = `<div class="dsh-kv-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0">
-      <div class="dsh-kv"><span class="dsh-kv-k">Temperatura</span><span class="dsh-kv-v">${tempC}</span></div>
-      <div class="dsh-kv"><span class="dsh-kv-k">Punto de rocío</span><span class="dsh-kv-v">${dewpC}</span></div>
-      <div class="dsh-kv"><span class="dsh-kv-k">Viento</span><span class="dsh-kv-v">${wdir} / ${wspd} ${wgst}</span></div>
-      <div class="dsh-kv"><span class="dsh-kv-k">Visibilidad</span><span class="dsh-kv-v">${vis}</span></div>
-      <div class="dsh-kv"><span class="dsh-kv-k">QNH</span><span class="dsh-kv-v">${qnh}</span></div>
-      <div class="dsh-kv"><span class="dsh-kv-k">Nubes</span><span class="dsh-kv-v">${nubes}</span></div>
-    </div>`;
+    // Temperatura
+    if (m.temp != null) parts.push(m.temp + '°C');
 
-    const rawHtml = m.rawOb
-      ? `<div class="dsh-metar-raw">${m.rawOb}</div>`
-      : '';
+    // QNH
+    if (m.altim != null) parts.push('Q' + Math.round(m.altim));
 
-    const obsHtml = `<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px">Observación: ${obsLabel}</div>`;
+    el.textContent = parts.join(' · ') || '—';
 
-    setHTML('dsh-metar-body', kvHtml + obsHtml + rawHtml);
+    // Hora observación
+    if (eo && m.obsTime) {
+      const t = new Date(m.obsTime * 1000);
+      const hh = String(t.getUTCHours()).padStart(2,'0');
+      const mm = String(t.getUTCMinutes()).padStart(2,'0');
+      eo.textContent = 'OBS ' + hh + mm + 'Z';
+    }
   }
 
 })();
