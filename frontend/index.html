@@ -3891,9 +3891,12 @@ Complemento de Base MAD: 1500"></textarea>
   'use strict';
 
   /* ── Constantes ── */
-  const LS_KEY = 'pilotpay_audit_history_v1';
   const MAX_RECORDS = 100;
-  function _key() { return LS_KEY + '_' + (window.currentUser || ''); }
+  function _key() {
+    return window.storageKey
+      ? window.storageKey('audit_history_v1')
+      : 'pilotpay:' + (window.currentUser || '_') + ':audit_history_v1';
+  }
 
   /* ── Acceso a localStorage ── */
   function hstLoad() {
@@ -4562,6 +4565,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 let currentUser = null;
 let currentNivel = 3;
 let pagasMode = 'prorr';
+
+// ── HELPER CENTRALIZADO DE CLAVES LOCALSTORAGE ──
+// Todas las claves de datos personales pasan por aquí.
+// Formato: pilotpay:<userId>:<nombre>
+function storageKey(name) {
+  return 'pilotpay:' + (currentUser || '_') + ':' + name;
+}
 let pagaEste = false;
 let segmedActivo = true;
 let seglicActivo = false;
@@ -4624,15 +4634,30 @@ document.addEventListener('click', function(e) {
 
 function doLogout() {
   if (confirm('¿Cerrar sesión?')) {
+    // 1) Estado en memoria — borrar todo lo que pertenece al usuario saliente
+    nomDataCached            = null;
+    calcResult               = null;
+    window._calcResultBackup = null;
+    if (typeof simHistoricoData !== 'undefined') simHistoricoData = {};
+
+    // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
+    const compResult = document.getElementById('comparativa-result');
+    if (compResult) { compResult.style.display = 'none'; compResult.innerHTML = ''; }
+    const nominaOut = document.getElementById('nomina-output');
+    if (nominaOut) nominaOut.innerHTML = '';
+
+    // 3) Identidad
+    currentUser = null;
+    profileData = {};
+
+    // 4) UI de login
     document.getElementById('app').style.display = 'none';
     const loginEl = document.getElementById('login-screen');
     loginEl.style.display = 'flex';
-    loginEl.setAttribute('data-theme', '');   // forzar oscuro
+    loginEl.setAttribute('data-theme', '');
     document.getElementById('welcome-screen').setAttribute('data-theme', '');
     document.getElementById('login-pass').value = '';
     document.getElementById('login-err').style.display = 'none';
-    currentUser = null;
-    profileData = {};
   }
 }
 
@@ -8946,13 +8971,22 @@ function saveSimulator() {
 }
 
 function loadSimulatorData() {
-  // Cargar mes y ccaa
-  if (profileData.sim_mes)        document.getElementById('sim-mes').value        = profileData.sim_mes;
-  if (profileData.sim_ccaa)       document.getElementById('sim-ccaa').value       = profileData.sim_ccaa;
-  if (profileData.sim_civil)      document.getElementById('sim-civil').value      = profileData.sim_civil;
-  if (profileData.sim_hijos)      document.getElementById('sim-hijos').value      = profileData.sim_hijos;
-  if (profileData.sim_discap)     document.getElementById('sim-discap').value     = profileData.sim_discap;
-  if (profileData.sim_residencia) document.getElementById('sim-residencia').value = profileData.sim_residencia;
+  // Siempre escribir todos los valores (sin guards truthy) para evitar que inputs
+  // del usuario anterior persistan cuando el nuevo usuario tiene campos vacíos.
+  const _sv = function(id, val) {
+    const e = document.getElementById(id);
+    if (e) e.value = val != null ? val : '';
+  };
+  _sv('sim-mes',        profileData.sim_mes        || '');
+  _sv('sim-ccaa',       profileData.sim_ccaa       || 'can');
+  _sv('sim-civil',      profileData.sim_civil      || 'soltero');
+  _sv('sim-hijos',      profileData.sim_hijos      || '0');
+  _sv('sim-discap',     profileData.sim_discap     || '0');
+  _sv('sim-residencia', profileData.sim_residencia || '');
+  _sv('sim-bruto-acum', '');
+  _sv('sim-irpf-acum',  '');
+  _sv('sim-bruto-resto', profileData.sim_brutoResto || '');
+  _sv('sim-irpf-actual', profileData.sim_irpfActual || '');
 
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
@@ -10186,7 +10220,6 @@ window.PILOTPAY_BACKEND_READY = true;
 (function(){
   'use strict';
 
-  const LS_AUDIT = 'pilotpay_audit_history_v1';
   const MESES_ES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                     'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -10215,7 +10248,10 @@ window.PILOTPAY_BACKEND_READY = true;
 
   /* ── Leer historial de auditorías ── */
   function loadAuditHistory() {
-    try { return JSON.parse(localStorage.getItem(LS_AUDIT + '_' + (window.currentUser || '')) || '[]'); }
+    const key = window.storageKey
+      ? window.storageKey('audit_history_v1')
+      : 'pilotpay:' + (window.currentUser || '_') + ':audit_history_v1';
+    try { return JSON.parse(localStorage.getItem(key) || '[]'); }
     catch(e) { return []; }
   }
 
