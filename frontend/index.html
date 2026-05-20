@@ -3932,7 +3932,7 @@ Complemento de Base MAD: 1500"></textarea>
 <!-- ══════════════════════════════════════════
      MÓDULO: HISTORIAL DE AUDITORÍAS
      Guardado automático en localStorage
-     Clave: pilotpay_audit_history_v1
+     Clave: pilotpay:{userId}:audit_history_v1
 ══════════════════════════════════════════ -->
 <script>
 (function(){
@@ -4383,12 +4383,23 @@ window.addEventListener('unhandledrejection', function(e) {
   console.error('PilotPay async error:', e.reason);
 });
 
-// Cola de cambios offline — persiste en localStorage hasta sincronizar
+// Cola de cambios offline — persiste en localStorage hasta sincronizar.
+// Escopada por userId para evitar que la cola de un usuario se ejecute en sesión de otro.
+// Guard defensivo: si no hay sesión activa (pre-login), no opera sobre localStorage.
+function _queueKey() {
+  return typeof currentUser !== 'undefined' && currentUser
+    ? storageKey('offline_queue')
+    : null;
+}
 function _getQueue() {
-  try { return JSON.parse(localStorage.getItem('pilotpay_offline_queue') || '{}'); } catch(e) { return {}; }
+  const k = _queueKey();
+  if (!k) return {};
+  try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch(e) { return {}; }
 }
 function _setQueue(q) {
-  try { localStorage.setItem('pilotpay_offline_queue', JSON.stringify(q)); } catch(e) {}
+  const k = _queueKey();
+  if (!k) return;
+  try { localStorage.setItem(k, JSON.stringify(q)); } catch(e) {}
 }
 function _enqueue(path, data) {
   const q = _getQueue();
@@ -4451,6 +4462,26 @@ async function saveUserData(user) {
 // ── CARGAR: Firebase primero, localStorage como fallback offline ──
 async function loadUserData(user) {
   if (!user) return;
+
+  // 0) Migración única: cola offline global → cola escopada por usuario
+  // No destructiva: solo elimina la clave global si la migración tiene éxito.
+  try {
+    const _legacyQueueKey = 'pilotpay_offline_queue';
+    const _legacyRaw = localStorage.getItem(_legacyQueueKey);
+    if (_legacyRaw) {
+      const _legacyQueue = JSON.parse(_legacyRaw);
+      if (_legacyQueue && Object.keys(_legacyQueue).length > 0) {
+        const _scopedKey = 'pilotpay:' + user + ':offline_queue';
+        const _existing = JSON.parse(localStorage.getItem(_scopedKey) || '{}');
+        const _merged = { ..._legacyQueue, ..._existing };
+        localStorage.setItem(_scopedKey, JSON.stringify(_merged));
+        localStorage.removeItem(_legacyQueueKey);
+        console.log('[PilotPay] Cola offline migrada a clave escopada:', _scopedKey);
+      } else {
+        localStorage.removeItem(_legacyQueueKey);
+      }
+    }
+  } catch(_e) { /* migración fallida — no tocar nada */ }
 
   // 1) Intentar cargar desde Firebase
   if (_online) {
