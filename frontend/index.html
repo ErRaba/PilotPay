@@ -5873,6 +5873,20 @@ function resetCalculadora() {
   if (mvEl) mvEl.value = '0';
   // Clear baja manual flag
   _bajaBaseManual = false;
+
+  // TCP fields — cleared para evitar filtrado entre usuarios TCP consecutivos
+  const _tcpClear = function(id) { const e = document.getElementById(id); if (e) e.value = ''; };
+  _tcpClear('tcp-hv-ord-total'); _tcpClear('tcp-hv-rel-total'); _tcpClear('tcp-hv-noct');
+  _tcpClear('tcp-hv1o'); _tcpClear('tcp-hv2o'); _tcpClear('tcp-hv3o'); _tcpClear('tcp-hv4o');
+  _tcpClear('tcp-hv1r'); _tcpClear('tcp-hv2r'); _tcpClear('tcp-hv3r'); _tcpClear('tcp-hv4r');
+  _tcpClear('tcp-vac-dias');
+  const _tcpVac = document.getElementById('tcp-toggle-vac');
+  if (_tcpVac && _tcpVac.checked) { _tcpVac.checked = false; tcpToggleVac(); }
+  const _tcpNoct = document.getElementById('tcp-toggle-noct');
+  if (_tcpNoct && _tcpNoct.checked) { _tcpNoct.checked = false; tcpToggleNoct(); }
+  tcpToggleSegmed(true);
+  tcpToggleSegLic(false);
+
   setCurrentMonth();
   recalc();
 }
