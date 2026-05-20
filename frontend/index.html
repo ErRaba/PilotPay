@@ -4732,8 +4732,7 @@ function doLogout() {
     if (_varsUploadZone) _varsUploadZone.classList.remove('drag', 'has-file');
 
     // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
-    const compResult = document.getElementById('comparativa-result');
-    if (compResult) { compResult.style.display = 'none'; compResult.innerHTML = ''; }
+    if (typeof resetComparativa === 'function') resetComparativa();
     const nominaOut = document.getElementById('nomina-output');
     if (nominaOut) nominaOut.innerHTML = '';
 
