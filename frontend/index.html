@@ -10700,7 +10700,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     renderAuditCard(hist);
     renderSimCard(pd);
-    renderCalcCard(calc);
+    renderCalcCard(calc, derived.storeSummary);
     renderAlertsCard(hist, pd, calc, derived);
     renderMetarWidget(baseICAO);
   };
@@ -10834,9 +10834,11 @@ window.PILOTPAY_BACKEND_READY = true;
   /* ─────────────────────────────────────────
      TARJETA: ACTIVIDAD DEL MES
   ───────────────────────────────────────── */
-  function renderCalcCard(c) {
-    const hasCalc = window.calcResult != null;
-    const hasHV   = c.hvTotal > 0 || c.hbTotal > 0;
+  function renderCalcCard(c, storeSummary) {
+    // Datos financieros: store como fuente preferida, window.calcResult como fallback
+    const _calcData  = (storeSummary && storeSummary.currentCalc) || window.calcResult;
+    const hasCalc    = _calcData != null;
+    const hasHV      = c.hvTotal > 0 || c.hbTotal > 0;
 
     if (!hasCalc && !hasHV) {
       setAttr('dsh-calc-status', 'dim');
@@ -10845,12 +10847,17 @@ window.PILOTPAY_BACKEND_READY = true;
       return;
     }
 
-    setAttr('dsh-calc-status', 'info');
-    setText('dsh-calc-status', c.mes || 'Calculado');
+    // Label y estado del mes: store como fuente preferida, DOM como fallback
+    const _mesLabel = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado';
+    const _estado   = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.estado) || null;
 
-    const bigHtml = hasCalc && window.calcResult.liquidoReal
-      ? `<div class="dsh-val-big green">${fmt(window.calcResult.liquidoReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${c.mes || ''}</div>`
+    setAttr('dsh-calc-status', 'info');
+    setText('dsh-calc-status', _mesLabel);
+
+    const _liquidoReal = _calcData ? _calcData.liquidoReal : null;
+    const bigHtml = hasCalc && _liquidoReal
+      ? `<div class="dsh-val-big green">${fmt(_liquidoReal)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${_mesLabel}${_estado ? ' · ' + _estado : ''}</div>`
       : '';
 
     const rows = [];
