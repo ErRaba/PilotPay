@@ -7674,7 +7674,17 @@ function readFileAsArrayBuffer(file) {
 }
 
 async function extractPdfText(file) {
-  if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js no cargado. Comprueba la conexión a internet.');
+  if (typeof pdfjsLib === 'undefined') {
+    // PDF.js puede estar aún cargándose desde CDN — esperar hasta 5s antes de fallar
+    await new Promise(function(resolve, reject) {
+      var _waited = 0;
+      var _check = setInterval(function() {
+        if (typeof pdfjsLib !== 'undefined') { clearInterval(_check); resolve(); return; }
+        _waited += 100;
+        if (_waited >= 5000) { clearInterval(_check); reject(new Error('PDF.js no cargado. Comprueba la conexión a internet.')); }
+      }, 100);
+    });
+  }
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
