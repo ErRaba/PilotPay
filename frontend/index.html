@@ -3928,6 +3928,7 @@ Complemento de Base MAD: 1500"></textarea>
      Debe cargarse antes del historial y de renderComparativa.
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js"></script>
+<script src="js/pilotPayStore.js"></script>
 
 <!-- ══════════════════════════════════════════
      MÓDULO: HISTORIAL DE AUDITORÍAS
@@ -4719,6 +4720,7 @@ function doLogout() {
     window._calcResultBackup = null;
     if (typeof simHistoricoData !== 'undefined') simHistoricoData = {};
     if (typeof varsData       !== 'undefined') varsData = {};
+    if (typeof PilotPayStore  !== 'undefined') PilotPayStore.clear();
 
     // 1b) DOM — Calculadora y Variables: limpiar campos del usuario saliente
     if (typeof resetCalculadora === 'function') resetCalculadora();
@@ -4834,6 +4836,18 @@ function initApp() {
     // Not yet loaded — init then render
     AvatarManager.init().then(() => AvatarManager.updateDOM(currentUser)).catch(() => {});
   }
+
+  // ── PilotPayStore: registrar getters live e inicializar ──
+  // Los getters cierran sobre las variables let de este scope, garantizando
+  // lecturas en tiempo real sin exponer las variables directamente en window.
+  window.PP_getters = {
+    profileData      : function() { return profileData; },
+    calcResult       : function() { return calcResult; },
+    currentUser      : function() { return currentUser; },
+    currentNivel     : function() { return currentNivel; },
+    simHistoricoData : function() { return typeof simHistoricoData !== 'undefined' ? simHistoricoData : {}; }
+  };
+  if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
 }
 
 // ── TABS ──
