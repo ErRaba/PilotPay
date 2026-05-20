@@ -4718,6 +4718,18 @@ function doLogout() {
     calcResult               = null;
     window._calcResultBackup = null;
     if (typeof simHistoricoData !== 'undefined') simHistoricoData = {};
+    if (typeof varsData       !== 'undefined') varsData = {};
+
+    // 1b) DOM — Calculadora y Variables: limpiar campos del usuario saliente
+    if (typeof resetCalculadora === 'function') resetCalculadora();
+    const _varsResult = document.getElementById('vars-result');
+    if (_varsResult) { _varsResult.style.display = 'none'; _varsResult.innerHTML = ''; }
+    const _varsPaste = document.getElementById('vars-paste-area');
+    if (_varsPaste) _varsPaste.value = '';
+    const _varsUploadTxt = document.getElementById('vars-upload-text');
+    if (_varsUploadTxt) _varsUploadTxt.textContent = 'Toca para subir PDF de Variables';
+    const _varsUploadZone = document.getElementById('vars-upload-zone');
+    if (_varsUploadZone) _varsUploadZone.classList.remove('drag', 'has-file');
 
     // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
     const compResult = document.getElementById('comparativa-result');
