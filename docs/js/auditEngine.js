@@ -279,6 +279,7 @@
     return {
       id             : Date.now() + '_' + Math.random().toString(36).slice(2, 7),
       fechaAuditoria : new Date().toISOString(),
+      userId         : (ctx && ctx.currentUser) || null,
       mes            : mesStr,
       anyo           : anyo,
       nombre         : nombre,
