@@ -1572,15 +1572,38 @@ input[type=number] { -moz-appearance: textfield; }
         .dsh-greeting {
           padding: 20px 20px 16px;
           border-bottom: 1px solid var(--border);
+          display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
         }
+        .dsh-greeting-left { flex: 1; min-width: 0; }
         .dsh-greeting-name {
           font-size: 16px; font-weight: 600; color: var(--text);
           letter-spacing: .01em; line-height: 1.3;
+        }
+        .dsh-greeting-date {
+          font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 4px; opacity: .6;
         }
         .dsh-greeting-sub {
           font-size: 11px; color: var(--text3); font-family: var(--mono);
           margin-top: 4px; line-height: 1.5;
         }
+        /* Widget METAR compacto en cabecera */
+        .dsh-metar-widget {
+          display: flex; flex-direction: column; align-items: flex-end;
+          padding-top: 2px; flex-shrink: 0;
+        }
+        .dsh-metar-icao {
+          font-family: var(--mono); font-size: 12px; font-weight: 700;
+          color: var(--blue); letter-spacing: .07em;
+        }
+        .dsh-metar-line {
+          font-family: var(--mono); font-size: 10px; color: var(--text3);
+          margin-top: 3px; text-align: right; max-width: 220px; line-height: 1.4;
+        }
+        .dsh-metar-obs {
+          font-family: var(--mono); font-size: 9px; color: var(--text3);
+          opacity: .5; margin-top: 2px; text-align: right;
+        }
+        @media (max-width: 420px) { .dsh-metar-widget { display: none; } }
 
         /* Grid 2 columnas */
         .dsh-grid {
@@ -1687,8 +1710,16 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Cabecera panel -->
       <div class="card" style="padding:0">
         <div class="dsh-greeting">
-          <div class="dsh-greeting-name">Centro de control financiero</div>
-          <div class="dsh-greeting-sub" id="dsh-sub">Resumen operativo, auditoría y simulación financiera · PilotPay Beta 2.3</div>
+          <div class="dsh-greeting-left">
+            <div class="dsh-greeting-name">Centro de control financiero</div>
+            <div class="dsh-greeting-sub" id="dsh-sub">Resumen operativo, auditoría y simulación financiera · PilotPay Beta 2.3</div>
+            <div class="dsh-greeting-date" id="dsh-date"></div>
+          </div>
+          <div class="dsh-metar-widget" id="dsh-metar-widget">
+            <span class="dsh-metar-icao" id="dsh-metar-icao">—</span>
+            <span class="dsh-metar-line" id="dsh-metar-line">—</span>
+            <span class="dsh-metar-obs"  id="dsh-metar-obs"></span>
+          </div>
         </div>
       </div>
 
@@ -2901,9 +2932,9 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
         </div>
 
-        <!-- VARIABLES PERSONALES (para simulador IRPF) -->
+        <!-- CONFIGURACIÓN FISCAL PERMANENTE -->
         <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Variables personales — IRPF</div>
+          <div class="card-title"><div class="section-dot amber"></div>Configuración fiscal</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Estado civil</span>
@@ -2937,19 +2968,22 @@ Complemento de Base MAD: 1500"></textarea>
               </select>
             </div>
             <div class="field">
-              <span class="field-label">Cambio residencia</span>
+              <span class="field-label">Cambio de residencia</span>
               <select class="field-input" id="prf-residencia" onchange="saveProfile()">
                 <option value="no">No</option>
                 <option value="si">Sí (año en curso)</option>
               </select>
             </div>
           </div>
-          <div style="border-top:1px solid var(--border);margin:10px 0 12px"></div>
-          <div class="card-title" style="margin-bottom:10px"><div class="section-dot"></div>Datos fiscales actuales</div>
           <div class="row">
             <div class="field">
-              <span class="field-label">% IRPF actual</span>
-              <input class="field-input" id="prf-irpf-input" type="number" value="34.15" step=".01" onchange="updateProfileFromInput()">
+              <span class="field-label">Comunidad autónoma</span>
+              <select class="field-input" id="prf-ccaa" onchange="saveProfile()">
+                <option value="can">Canarias</option>
+                <option value="mad">Madrid</option>
+                <option value="and">Andalucía</option>
+                <option value="val">C. Valenciana</option>
+              </select>
             </div>
             <div class="field">
               <span class="field-label">Paga extra por defecto</span>
@@ -2961,41 +2995,10 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
           <div class="row">
             <div class="field">
-              <span class="field-label">Bruto acumulado (€)</span>
-              <input class="field-input" id="prf-bruto-acum" type="number" placeholder="0" onchange="saveProfile()">
-            </div>
-            <div class="field">
-              <span class="field-label">IRPF retenido acumulado (€)</span>
-              <input class="field-input" id="prf-irpf-acum" type="number" placeholder="0" onchange="saveProfile()">
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Mes actual</span>
-              <select class="field-input" id="prf-mes-acum" onchange="saveProfile()">
-                <option>Enero</option><option>Febrero</option><option>Marzo</option>
-                <option>Abril</option><option>Mayo</option><option>Junio</option>
-                <option>Julio</option><option>Agosto</option><option>Septiembre</option>
-                <option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
-              </select>
+              <span class="field-label">% IRPF actual en nómina</span>
+              <input class="field-input" id="prf-irpf-input" type="number" value="34.15" step=".01" onchange="updateProfileFromInput()">
             </div>
             <div class="field"></div>
-          </div>
-          <div id="acum-fecha-display" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:-4px;margin-bottom:8px"></div>
-          <div class="alert info" style="margin-bottom:0;margin-top:4px">
-            <div class="alert-icon">🔮</div>
-            <div class="alert-content">
-              <div class="alert-title">Simulador dinámico — próximamente</div>
-              <div class="alert-text">Con estos datos la app calculará el % de retención ajustado mes a mes según el bruto acumulado anual y tu situación personal.</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="alert info">
-          <div class="alert-icon">📋</div>
-          <div class="alert-content">
-            <div class="alert-title">¿Perfil incompleto?</div>
-            <div class="alert-text">Sube una nómina en Comparativa para que la app rellene automáticamente tu NIF, Nº SS, fecha de ingreso y datos fiscales.</div>
           </div>
         </div>
 
@@ -3366,9 +3369,9 @@ Complemento de Base MAD: 1500"></textarea>
             <div class="field">
               <span class="field-label">Base</span>
               <select class="field-input" id="adm-base">
-                <option value="1">Gran Canaria</option>
-                <option value="1">Tenerife</option>
-                <option value="1.2" selected>Madrid</option>
+                <option value="GC" selected>Gran Canaria</option>
+                <option value="TFN">Tenerife</option>
+                <option value="MAD">Madrid</option>
               </select>
             </div>
             <div class="field">
@@ -3925,11 +3928,12 @@ Complemento de Base MAD: 1500"></textarea>
      Debe cargarse antes del historial y de renderComparativa.
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js"></script>
+<script src="js/pilotPayStore.js"></script>
 
 <!-- ══════════════════════════════════════════
      MÓDULO: HISTORIAL DE AUDITORÍAS
      Guardado automático en localStorage
-     Clave: pilotpay_audit_history_v1
+     Clave: pilotpay:{userId}:audit_history_v1
 ══════════════════════════════════════════ -->
 <script>
 (function(){
@@ -3964,7 +3968,7 @@ Complemento de Base MAD: 1500"></textarea>
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
-        calcResult  : window.calcResult,
+        calcResult  : (window.PP_getters && window.PP_getters.calcResult) ? window.PP_getters.calcResult() : null,
         profileData : window.profileData,
         currentUser : window.currentUser,
         currentNivel: window.currentNivel,
@@ -4380,12 +4384,23 @@ window.addEventListener('unhandledrejection', function(e) {
   console.error('PilotPay async error:', e.reason);
 });
 
-// Cola de cambios offline — persiste en localStorage hasta sincronizar
+// Cola de cambios offline — persiste en localStorage hasta sincronizar.
+// Escopada por userId para evitar que la cola de un usuario se ejecute en sesión de otro.
+// Guard defensivo: si no hay sesión activa (pre-login), no opera sobre localStorage.
+function _queueKey() {
+  return typeof currentUser !== 'undefined' && currentUser
+    ? storageKey('offline_queue')
+    : null;
+}
 function _getQueue() {
-  try { return JSON.parse(localStorage.getItem('pilotpay_offline_queue') || '{}'); } catch(e) { return {}; }
+  const k = _queueKey();
+  if (!k) return {};
+  try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch(e) { return {}; }
 }
 function _setQueue(q) {
-  try { localStorage.setItem('pilotpay_offline_queue', JSON.stringify(q)); } catch(e) {}
+  const k = _queueKey();
+  if (!k) return;
+  try { localStorage.setItem(k, JSON.stringify(q)); } catch(e) {}
 }
 function _enqueue(path, data) {
   const q = _getQueue();
@@ -4448,6 +4463,26 @@ async function saveUserData(user) {
 // ── CARGAR: Firebase primero, localStorage como fallback offline ──
 async function loadUserData(user) {
   if (!user) return;
+
+  // 0) Migración única: cola offline global → cola escopada por usuario
+  // No destructiva: solo elimina la clave global si la migración tiene éxito.
+  try {
+    const _legacyQueueKey = 'pilotpay_offline_queue';
+    const _legacyRaw = localStorage.getItem(_legacyQueueKey);
+    if (_legacyRaw) {
+      const _legacyQueue = JSON.parse(_legacyRaw);
+      if (_legacyQueue && Object.keys(_legacyQueue).length > 0) {
+        const _scopedKey = 'pilotpay:' + user + ':offline_queue';
+        const _existing = JSON.parse(localStorage.getItem(_scopedKey) || '{}');
+        const _merged = { ..._legacyQueue, ..._existing };
+        localStorage.setItem(_scopedKey, JSON.stringify(_merged));
+        localStorage.removeItem(_legacyQueueKey);
+        console.log('[PilotPay] Cola offline migrada a clave escopada:', _scopedKey);
+      } else {
+        localStorage.removeItem(_legacyQueueKey);
+      }
+    }
+  } catch(_e) { /* migración fallida — no tocar nada */ }
 
   // 1) Intentar cargar desde Firebase
   if (_online) {
@@ -4684,10 +4719,22 @@ function doLogout() {
     calcResult               = null;
     window._calcResultBackup = null;
     if (typeof simHistoricoData !== 'undefined') simHistoricoData = {};
+    if (typeof varsData       !== 'undefined') varsData = {};
+    if (typeof PilotPayStore  !== 'undefined') PilotPayStore.clear();
+
+    // 1b) DOM — Calculadora y Variables: limpiar campos del usuario saliente
+    if (typeof resetCalculadora === 'function') resetCalculadora();
+    const _varsResult = document.getElementById('vars-result');
+    if (_varsResult) _varsResult.style.display = 'none';
+    const _varsPaste = document.getElementById('vars-paste-area');
+    if (_varsPaste) _varsPaste.value = '';
+    const _varsUploadTxt = document.getElementById('vars-upload-text');
+    if (_varsUploadTxt) _varsUploadTxt.textContent = 'Toca para subir PDF de Variables';
+    const _varsUploadZone = document.getElementById('vars-upload-zone');
+    if (_varsUploadZone) _varsUploadZone.classList.remove('drag', 'has-file');
 
     // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
-    const compResult = document.getElementById('comparativa-result');
-    if (compResult) { compResult.style.display = 'none'; compResult.innerHTML = ''; }
+    if (typeof resetComparativa === 'function') resetComparativa();
     const nominaOut = document.getElementById('nomina-output');
     if (nominaOut) nominaOut.innerHTML = '';
 
@@ -4710,7 +4757,7 @@ function doLogout() {
 function initApp() {
   const u = USERS[currentUser];
   const isAdmin = currentUser === ADMIN_CODE;
-  const baseLabel = parseFloat(profileData.base || u.base) > 1 ? 'MAD' : 'CAN';
+  const baseLabel = getBaseLabelShort(profileData.base || u.base);
   const fnBadge = { CMD:'CMD', COP:'COP', SCC:'SCC', CC:'CC' };
   // Solo actualizar el span de iniciales, NO sobreescribir el pill completo
   const _pillInitials = document.getElementById('user-initials-header');
@@ -4722,7 +4769,7 @@ function initApp() {
   const funcEl = document.getElementById('funcion');
   const baseEl = document.getElementById('base');
   funcEl.value = profileData.funcion || u.funcion;
-  baseEl.value = profileData.base || u.base;
+  baseEl.value = getBaseFactor(profileData.base || u.base);
 
   // Admin has full access — no locking
   if (isAdmin) {
@@ -4789,6 +4836,18 @@ function initApp() {
     // Not yet loaded — init then render
     AvatarManager.init().then(() => AvatarManager.updateDOM(currentUser)).catch(() => {});
   }
+
+  // ── PilotPayStore: registrar getters live e inicializar ──
+  // Los getters cierran sobre las variables let de este scope, garantizando
+  // lecturas en tiempo real sin exponer las variables directamente en window.
+  window.PP_getters = {
+    profileData      : function() { return profileData; },
+    calcResult       : function() { return calcResult; },
+    currentUser      : function() { return currentUser; },
+    currentNivel     : function() { return currentNivel; },
+    simHistoricoData : function() { return typeof simHistoricoData !== 'undefined' ? simHistoricoData : {}; }
+  };
+  if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
 }
 
 // ── TABS ──
@@ -5172,7 +5231,7 @@ function generarAltaUsuario() {
   const pass   = document.getElementById('adm-pass').value.trim();
   const funcion= document.getElementById('adm-funcion').value;
   const base   = document.getElementById('adm-base').value;
-  const baseLabel = parseFloat(base) > 1 ? 'Madrid' : 'Canarias';
+  const baseLabel = getBaseLabel(base);
 
   if (!nombre || !codigo || !pass) {
     alert('Rellena nombre, código y contraseña para generar la plantilla'); return;
@@ -5201,14 +5260,30 @@ Eloy (ESH)`;
   window.location.href = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
 }
 
-// Helper: convert base factor to code
-function getBaseCode(baseFactor) {
-  return parseFloat(baseFactor) > 1 ? 'MAD' : 'GC'; // default Canarias to GC
+// Helper: convert base value (string code or legacy numeric) to standard code GC/TFN/MAD
+function getBaseCode(base) {
+  if (base === 'GC' || base === 'TFN' || base === 'MAD') return base;
+  return parseFloat(base) > 1 ? 'MAD' : 'GC'; // legacy numeric fallback
 }
 
-// Helper: convert base code to factor for calculations
-function getBaseFactor(baseCode) {
-  return baseCode === 'MAD' ? '1.2' : '1';
+// Helper: convert base code to salary factor (1 = Canarias, 1.2 = Madrid)
+function getBaseFactor(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return '1.2';
+  return '1';
+}
+
+// Helper: human-readable label
+function getBaseLabel(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return 'Madrid';
+  if (base === 'TFN') return 'Tenerife';
+  return 'Gran Canaria';
+}
+
+// Helper: short code for badges/UI
+function getBaseLabelShort(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return 'MAD';
+  if (base === 'TFN') return 'TFN';
+  return 'GC';
 }
 function loadAdminCreatedUsers() {
   // Users are already loaded from Firebase in loadUsersFromFirebase()
@@ -5316,9 +5391,9 @@ function editarUsuario(code) {
     <div class="field" style="margin-bottom:14px">
       <span class="field-label">Base</span>
       <select class="field-input" id="edit-base">
-        <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Gran Canaria</option>
-        <option value="1" >Tenerife</option>
-        <option value="1.2" ${parseFloat(u.base||1)>1?'selected':''}>Madrid</option>
+        <option value="GC"  ${getBaseCode(u.base||'GC')==='GC' ?'selected':''}>Gran Canaria</option>
+        <option value="TFN" ${getBaseCode(u.base||'GC')==='TFN'?'selected':''}>Tenerife</option>
+        <option value="MAD" ${getBaseCode(u.base||'GC')==='MAD'?'selected':''}>Madrid</option>
       </select>
     </div>
     <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
@@ -5712,7 +5787,7 @@ function showWelcome() {
   const isSCC   = funcion === 'SCC';
   const alias   = profileData.alias || u.alias || '';
   const nombre  = alias || (profileData.name || u.name || 'Tripulante').split(' ')[0];
-  const baseLabel = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
+  const baseLabel = getBaseLabel(profileData.base || u.base);
 
   document.getElementById('welcome-name').textContent = nombre;
 
@@ -5811,43 +5886,26 @@ function resetCalculadora() {
   if (mvEl) mvEl.value = '0';
   // Clear baja manual flag
   _bajaBaseManual = false;
+
+  // TCP fields — cleared para evitar filtrado entre usuarios TCP consecutivos
+  const _tcpClear = function(id) { const e = document.getElementById(id); if (e) e.value = ''; };
+  _tcpClear('tcp-hv-ord-total'); _tcpClear('tcp-hv-rel-total'); _tcpClear('tcp-hv-noct');
+  _tcpClear('tcp-hv1o'); _tcpClear('tcp-hv2o'); _tcpClear('tcp-hv3o'); _tcpClear('tcp-hv4o');
+  _tcpClear('tcp-hv1r'); _tcpClear('tcp-hv2r'); _tcpClear('tcp-hv3r'); _tcpClear('tcp-hv4r');
+  _tcpClear('tcp-vac-dias');
+  const _tcpVac = document.getElementById('tcp-toggle-vac');
+  if (_tcpVac && _tcpVac.checked) { _tcpVac.checked = false; tcpToggleVac(); }
+  const _tcpNoct = document.getElementById('tcp-toggle-noct');
+  if (_tcpNoct && _tcpNoct.checked) { _tcpNoct.checked = false; tcpToggleNoct(); }
+  tcpToggleSegmed(true);
+  tcpToggleSegLic(false);
+
   setCurrentMonth();
   recalc();
 }
 
-function acumularSimulador() {
-  if (!calcResult) { recalc(); }
-  const r = calcResult;
-  const brutoAcum = parseFloat(document.getElementById('prf-bruto-acum')?.value) || 0;
-  const irpfAcum  = parseFloat(document.getElementById('prf-irpf-acum')?.value) || 0;
-  const mesAcum   = document.getElementById('prf-mes-acum')?.value;
-  const statusEl  = document.getElementById('acum-status');
-
-  if (!mesAcum) {
-    statusEl.textContent = '⚠️ Ve al Perfil y completa el mes actual antes de acumular';
-    statusEl.style.color = 'var(--amber)'; return;
-  }
-  const nuevoBruto = Math.round((brutoAcum + r.baseIRPF) * 100) / 100;
-  const nuevoIRPF  = Math.round((irpfAcum + r.retencionIRPF) * 100) / 100;
-  const ahora = new Date();
-  const fechaStr = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
-  profileData.brutoAcum = nuevoBruto;
-  profileData.irpfAcum  = nuevoIRPF;
-  profileData.acumFecha = fechaStr;
-  profileData.acumTipo  = 'auto';
-  if (document.getElementById('prf-bruto-acum')) {
-    document.getElementById('prf-bruto-acum').value = nuevoBruto;
-    document.getElementById('prf-irpf-acum').value  = nuevoIRPF;
-  }
-  if (document.getElementById('sim-bruto-acum')) {
-    document.getElementById('sim-bruto-acum').value = nuevoBruto;
-    document.getElementById('sim-irpf-acum').value  = nuevoIRPF;
-  }
-  if (currentUser) saveUserData(currentUser);
-  const fmt = v => v.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2});
-  statusEl.textContent = `✓ ${fechaStr} · Base IRPF acum: ${fmt(nuevoBruto)}€ · IRPF ret: ${fmt(nuevoIRPF)}€`;
-  statusEl.style.color = 'var(--green)';
-}
+// acumularSimulador() eliminado — los acumulados se gestionan desde el
+// Histórico del Simulador IRPF. Ver actualizarSimuladorDesdeHistorico().
 
 function setNivel(n) {
   currentNivel = n;
@@ -7616,7 +7674,17 @@ function readFileAsArrayBuffer(file) {
 }
 
 async function extractPdfText(file) {
-  if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js no cargado. Comprueba la conexión a internet.');
+  if (typeof pdfjsLib === 'undefined') {
+    // PDF.js puede estar aún cargándose desde CDN — esperar hasta 5s antes de fallar
+    await new Promise(function(resolve, reject) {
+      var _waited = 0;
+      var _check = setInterval(function() {
+        if (typeof pdfjsLib !== 'undefined') { clearInterval(_check); resolve(); return; }
+        _waited += 100;
+        if (_waited >= 5000) { clearInterval(_check); reject(new Error('PDF.js no cargado. Comprueba la conexión a internet.')); }
+      }, 100);
+    });
+  }
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
@@ -8063,10 +8131,13 @@ async function processNomina(file) {
     // Acumulados — preguntar si actualizar en histórico
     const ac = nomData.acumulados;
     const mesNom = nomData.periodo?.mes;
+    // Resolver índice numérico (1-12) para simHistorico; _MESES_IDX definido más abajo
+    const _mesNomNorm = mesNom ? (mesNom.charAt(0).toUpperCase() + mesNom.slice(1).toLowerCase()) : null;
+    const _mesIdxProp = _mesNomNorm ? (_MESES_IDX[_mesNomNorm] || null) : null;
     if (ac.base_irpf && mesNom)
-      propuestas.push({ campo: `Acum. Base IRPF (${mesNom})`, clave: 'acum_base_irpf', actual: '—', nuevo: ac.base_irpf, tipo: 'historico', mes: mesNom });
+      propuestas.push({ campo: `Acum. Base IRPF (${mesNom})`, clave: 'acum_base_irpf', actual: '—', nuevo: ac.base_irpf, tipo: 'historico', mes: mesNom, mesIdx: _mesIdxProp });
     if (ac.irpf && mesNom)
-      propuestas.push({ campo: `Acum. IRPF retenido (${mesNom})`, clave: 'acum_irpf', actual: '—', nuevo: ac.irpf, tipo: 'historico', mes: mesNom });
+      propuestas.push({ campo: `Acum. IRPF retenido (${mesNom})`, clave: 'acum_irpf', actual: '—', nuevo: ac.irpf, tipo: 'historico', mes: mesNom, mesIdx: _mesIdxProp });
 
     // Baja detectada
     if (nomData.bajaInfo?.detectada) {
@@ -8227,12 +8298,20 @@ function aplicarPropuestas(propuestas) {
     }
 
     if (p.tipo === 'historico') {
-      // Actualizar acumulado en el histórico del mes correspondiente
-      const mesKey = p.mes;
+      // Usar clave numérica (1-12); p.mesIdx es preferida; fallback desde p.mes string
+      const _mesNorm = p.mes ? (p.mes.charAt(0).toUpperCase() + p.mes.slice(1).toLowerCase()) : null;
+      const mesKey = p.mesIdx || (_mesNorm ? (_MESES_IDX[_mesNorm] || null) : null);
+      if (!mesKey) { console.warn('[aplicarPropuestas] mesKey no detectado:', p); return; }
       if (!profileData.simHistorico) profileData.simHistorico = {};
       if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
       if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
       if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
+      // Sincronizar simHistoricoData local
+      if (typeof simHistoricoData !== 'undefined') {
+        if (!simHistoricoData[mesKey]) simHistoricoData[mesKey] = {};
+        if (p.clave === 'acum_base_irpf') simHistoricoData[mesKey].bruto = p.nuevo;
+        if (p.clave === 'acum_irpf')      simHistoricoData[mesKey].irpf  = p.nuevo;
+      }
       return;
     }
 
@@ -8628,12 +8707,6 @@ function enviarAcumuladosAlSimulador(brutoAcum, irpfAcum) {
   const irpfEl  = document.getElementById('sim-irpf-acum');
   if (brutoEl) brutoEl.value = brutoAcum.toFixed(2);
   if (irpfEl)  irpfEl.value  = irpfAcum.toFixed(2);
-  // Save to profile
-  if (profileData) {
-    profileData.brutoAcum = brutoAcum.toFixed(2);
-    profileData.irpfAcum  = irpfAcum.toFixed(2);
-    if (currentUser) saveUserData(currentUser);
-  }
   // Navigate to simulador and recalc
   showTab('simulador');
   setTimeout(() => simRecalc(), 200);
@@ -8645,7 +8718,7 @@ function generarInformeReclamacion(causasRaiz, totalDeltaLiq, nombresDerivados) 
   const nif     = profileData.nif || u.nif || '___________';
   const fn      = profileData.funcion || u.funcion || 'CMD';
   const nivel   = currentNivel;
-  const base    = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
+  const base    = getBaseLabel(profileData.base || u.base);
   // ── DOM: lectura del mes (única dependencia del DOM en esta función) ──
   const mes     = document.getElementById('mes-nomina')?.value || '___';
   const año     = new Date().getFullYear();
@@ -8694,7 +8767,7 @@ function renderPerfil() {
   const fnLabels = { CMD:'COMANDANTE', COP:'COPILOTO', SCC:'SOBRECARGO (SCC)', CC:'TRIPULANTE DE CABINA (CC)' };
   document.getElementById('prf-nombre').textContent = nombreCompleto || `${u.name || ''} — ${currentUser}`;
   document.getElementById('prf-role').textContent =
-    `${fnLabels[fn]||fn} · NIVEL ${currentNivel} · ${parseFloat(u.base||1)>1?'BASE MADRID':'BASE CANARIAS'}`;
+    `${fnLabels[fn]||fn} · NIVEL ${currentNivel} · BASE ${getBaseLabel(u.base || profileData.base).toUpperCase()}`;
   document.getElementById('prf-ingreso').textContent = ingreso;
   document.getElementById('prf-nif').textContent = profileData.nif || '—';
   document.getElementById('prf-nss').textContent = profileData.nss || '—';
@@ -8787,22 +8860,29 @@ function renderPerfil() {
   if (profileData.hijos)        document.getElementById('prf-hijos').value          = profileData.hijos;
   if (profileData.discapacidad) document.getElementById('prf-discapacidad').value   = profileData.discapacidad;
   if (profileData.residencia)   document.getElementById('prf-residencia').value     = profileData.residencia;
-  if (profileData.brutoAcum)    document.getElementById('prf-bruto-acum').value     = profileData.brutoAcum;
-  if (profileData.irpfAcum)     document.getElementById('prf-irpf-acum').value      = profileData.irpfAcum;
-  if (profileData.mesAcum)      document.getElementById('prf-mes-acum').value       = profileData.mesAcum;
+  const ccaaEl = document.getElementById('prf-ccaa');
+  if (ccaaEl) ccaaEl.value = profileData.ccaa || profileData.sim_ccaa || 'can';
 
-  // Show accumulation date
-  const acumEl = document.getElementById('acum-fecha-display');
-  if (acumEl) {
-    if (profileData.acumFecha) {
-      const tipoLabel = profileData.acumTipo === 'manual' ? 'Actualización manual' : 'Actualizado';
-      acumEl.textContent = `${tipoLabel}: ${profileData.acumFecha}`;
-      acumEl.style.color = profileData.acumTipo === 'manual' ? 'var(--amber)' : 'var(--green)';
-    } else {
-      acumEl.textContent = 'Sin acumulados todavía — usa el botón en Calcular';
-      acumEl.style.color = 'var(--text3)';
-    }
+  // Persistir defaults en profileData para cualquier campo no guardado aún.
+  // Esto evita que el dashboard muestre falsas alertas para usuarios cuyos valores
+  // por defecto nunca generaron un onchange (p.ej. estado civil = soltero desde el principio).
+  let _defaultsNeedSave = false;
+  if (!profileData.estadoCivil) {
+    const _ecEl = document.getElementById('prf-estado-civil');
+    profileData.estadoCivil = (_ecEl && _ecEl.value) || 'soltero';
+    _defaultsNeedSave = true;
   }
+  if (!profileData.ccaa && !profileData.sim_ccaa) {
+    profileData.ccaa = (ccaaEl && ccaaEl.value) || (getBaseCode(u.base) === 'MAD' ? 'mad' : 'can');
+    _defaultsNeedSave = true;
+  }
+  if (profileData.irpf == null) {
+    const _irpfDefault = u.irpf != null ? u.irpf
+      : (parseFloat(document.getElementById('prf-irpf-input')?.value) || 34.15);
+    profileData.irpf = _irpfDefault;
+    _defaultsNeedSave = true;
+  }
+  if (_defaultsNeedSave && currentUser) saveUserData(currentUser);
 }
 
 function saveProfile() {
@@ -8825,16 +8905,8 @@ function saveProfile() {
       recalc();
     }
   }
-  const nuevoBruto = parseFloat(document.getElementById('prf-bruto-acum').value) || 0;
-  const nuevoIRPF  = parseFloat(document.getElementById('prf-irpf-acum').value) || 0;
-  if (nuevoBruto !== profileData.brutoAcum || nuevoIRPF !== profileData.irpfAcum) {
-    const ahora = new Date();
-    profileData.acumFecha = `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()}`;
-    profileData.acumTipo = 'manual';
-  }
-  profileData.brutoAcum = nuevoBruto;
-  profileData.irpfAcum  = nuevoIRPF;
-  profileData.mesAcum   = document.getElementById('prf-mes-acum').value;
+  const ccaaEl2 = document.getElementById('prf-ccaa');
+  if (ccaaEl2) profileData.ccaa = ccaaEl2.value;
   const aliasEl = document.getElementById('prf-alias');
   if (aliasEl) profileData.alias = aliasEl.value.trim();
   const nombreEl = document.getElementById('prf-nombre-edit');
@@ -8851,7 +8923,7 @@ function generarEmailSolicitud() {
   const nombre = profileData.fullName || u.name || currentUser;
   const tipoLabel = tipo === 'base' ? 'cambio de base' : 'cambio de cargo';
   const campoActual = tipo === 'base'
-    ? (parseFloat(u.base||1) > 1 ? 'Madrid' : 'Canarias')
+    ? getBaseLabel(u.base)
     : (u.funcion || 'CMD');
 
   if (!valor) {
@@ -9112,22 +9184,30 @@ function actualizarSimuladorDesdeHistorico() {
 
 function simSyncFromPerfil() {
   const u = USERS[currentUser] || {};
-  const mes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  if (profileData.estadoCivil) document.getElementById('sim-civil').value = profileData.estadoCivil === 'casado' ? 'casado_sep' : (profileData.estadoCivil || 'soltero');
-  if (profileData.hijos) document.getElementById('sim-hijos').value = profileData.hijos;
-  if (profileData.discapacidad) document.getElementById('sim-discap').value = profileData.discapacidad;
-  if (profileData.residencia) document.getElementById('sim-residencia').value = profileData.residencia;
-  if (profileData.brutoAcum) document.getElementById('sim-bruto-acum').value = profileData.brutoAcum;
-  if (profileData.irpfAcum) document.getElementById('sim-irpf-acum').value = profileData.irpfAcum;
-  if (profileData.mesAcum) {
-    const idx = mes.indexOf(profileData.mesAcum) + 1;
-    if (idx > 0) document.getElementById('sim-mes').value = idx;
+
+  // Situación personal — desde configuración fiscal del perfil
+  if (profileData.estadoCivil) {
+    document.getElementById('sim-civil').value =
+      profileData.estadoCivil === 'casado' ? 'casado_sep' : (profileData.estadoCivil || 'soltero');
   }
-  if (!profileData.sim_ccaa) {
-    document.getElementById('sim-ccaa').value = (parseFloat(u.base||1) > 1) ? 'mad' : 'can';
+  if (profileData.hijos)        document.getElementById('sim-hijos').value     = profileData.hijos;
+  if (profileData.discapacidad) document.getElementById('sim-discap').value    = profileData.discapacidad;
+  if (profileData.residencia)   document.getElementById('sim-residencia').value = profileData.residencia;
+
+  // CCAA — usar la del perfil si existe, sino la guardada en simulador, sino derivar de la base
+  const ccaaPerfil = profileData.ccaa || profileData.sim_ccaa;
+  if (ccaaPerfil) {
+    document.getElementById('sim-ccaa').value = ccaaPerfil;
+  } else {
+    document.getElementById('sim-ccaa').value = getBaseCode(u.base) === 'MAD' ? 'mad' : 'can';
   }
+
+  // % IRPF
   document.getElementById('sim-irpf-actual').value = profileData.irpf || u.irpf || 34.15;
+
+  // Acumulados — siempre desde el histórico (fuente de verdad), no desde profileData legacy
+  actualizarSimuladorDesdeHistorico();
+
   simRecalc();
 }
 
@@ -9522,7 +9602,26 @@ function guardarHistorico() {
 }
 
 function cargarHistorico() {
-  simHistoricoData = profileData?.simHistorico || {};
+  const raw = profileData?.simHistorico || {};
+  // Migración silenciosa: claves string ('Marzo') → numéricas (3)
+  const migrated = {};
+  let didMigrate = false;
+  Object.entries(raw).forEach(function([k, v]) {
+    const num = parseInt(k, 10);
+    if (!isNaN(num) && num >= 1 && num <= 12) {
+      migrated[num] = v;
+    } else {
+      const norm = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+      const idx = _MESES_IDX[norm];
+      if (idx) { migrated[idx] = v; didMigrate = true; }
+    }
+  });
+  simHistoricoData = migrated;
+  if (didMigrate && profileData) {
+    console.info('[cargarHistorico] Migradas claves string → numeric en simHistorico');
+    profileData.simHistorico = migrated;
+    if (window.currentUser) saveUserData(window.currentUser);
+  }
 }
 
 // ── INFO TOOLTIPS — inputs y proyección ──
@@ -10522,13 +10621,16 @@ window.PILOTPAY_BACKEND_READY = true;
       return e ? (e.value || '') : '';
     };
     return {
-      hvTotal  : gv('hv-total'),
-      hv1      : gv('hv1'),
-      hv2      : gv('hv2'),
-      hv3      : gv('hv3'),
-      hv4      : gv('hv4'),
-      lv1      : gv('lv1'),
-      lv2      : gv('lv2'),
+      hvTotal     : gv('hv-total'),
+      hbTotal     : gv('hb-total'),
+      hv1         : gv('hv1'),
+      hv2         : gv('hv2'),
+      hv3         : gv('hv3'),
+      hv4         : gv('hv4'),
+      imaginarias : gv('imaginarias'),
+      francos     : gv('francos'),
+      lv1         : gv('lv1'),
+      lv2         : gv('lv2'),
       lv3      : gv('lv3'),
       dpo      : gv('dpo'),
       vacDias  : gv('vac-dias'),
@@ -10539,48 +10641,99 @@ window.PILOTPAY_BACKEND_READY = true;
     };
   }
 
+  /* ── Normalizar base numérica → ICAO ── */
+  function normalizeBaseToICAO(baseValue) {
+    if (baseValue === 'MAD' || parseFloat(baseValue) > 1) return 'LEMD';
+    if (baseValue === 'TFN') return 'GCXO';
+    return 'GCLP'; // GC o legacy '1'
+  }
+
+  /* ── Fuente de verdad centralizada del dashboard ── */
+  function getDashboardData() {
+    const u       = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
+    const pd      = window.profileData || {};
+    const calc    = readCalcFields();
+    const hist    = loadAuditHistory();
+    const baseNum = pd.base || u.base;
+    const baseICAO = normalizeBaseToICAO(baseNum);
+    // CCAA: prioridad perfil > simulador > derivado de base
+    const ccaa = pd.ccaa || pd.sim_ccaa || (getBaseCode(baseNum) === 'MAD' ? 'mad' : 'can');
+    // IRPF: prioridad perfil > USERS
+    const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
+
+    // PilotPayStore — sincronizar con localStorage antes de leer.
+    // refresh() es barato (relee la misma clave) y garantiza datos frescos
+    // tras borrados o escrituras externas al store.
+    if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      PilotPayStore.refresh();
+    }
+    const storeSummary = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.getDashboardSummary()
+      : null;
+
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary };
+  }
+
   /* ══════════════════════════════════════════
      RENDER PRINCIPAL
   ══════════════════════════════════════════ */
   window.renderDashboard = function renderDashboard() {
+    const derived = getDashboardData();
+    const { u, pd, calc, hist, baseICAO } = derived;
 
-    /* ── Subtítulo contextual (usuario + función + nivel) ── */
-    const u     = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
-    const pd    = window.profileData || {};
-    const fn    = pd.funcion || u.funcion || '';
-    const nvl   = pd.nivel   || u.nivel   || '';
-    const subParts = ['Resumen operativo, auditoría y simulación financiera'];
+    console.log('[Dashboard] profileData snapshot:', {
+      name: pd.name || pd.fullName || u.name,
+      nif: pd.nif,
+      ccaa: pd.ccaa, sim_ccaa: pd.sim_ccaa, ccaaDerived: derived.ccaa,
+      irpf: pd.irpf, irpfUser: u.irpf, irpfDerived: derived.irpf,
+      estadoCivil: pd.estadoCivil,
+      baseNum: derived.baseNum, baseICAO,
+      simHistoricoKeys: Object.keys(pd.simHistorico || {})
+    });
+    if (derived.storeSummary) {
+      console.log('[Dashboard] PilotPayStore connected ✓', {
+        auditorias : derived.storeSummary.auditStats.total,
+        conDifs    : derived.storeSummary.auditStats.conDiferencias,
+        mesActual  : derived.storeSummary.mesActual.label + ' ' + derived.storeSummary.mesActual.estado,
+        expediente : derived.storeSummary.expedition.totalMeses + ' meses indexados'
+      });
+    }
+
+    /* ── Subtítulo contextual ── */
+    const fn  = pd.funcion || u.funcion || '';
+    const nvl = pd.nivel   || u.nivel   || '';
     const userCtx = [];
     if (fn)  userCtx.push(fn);
     if (nvl) userCtx.push('NVL ' + nvl);
     userCtx.push('PilotPay Beta 2.3');
-    setText('dsh-sub', subParts[0] + ' · ' + userCtx.join(' · '));
+    setText('dsh-sub', 'Resumen operativo, auditoría y simulación financiera · ' + userCtx.join(' · '));
 
-    /* ── Tarjeta: Última auditoría ── */
-    renderAuditCard(loadAuditHistory());
+    /* ── Fecha en el encabezado ── */
+    const now = new Date();
+    setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
-    /* ── Tarjeta: Simulador IRPF ── */
+    renderAuditCard(hist, derived.storeSummary);
     renderSimCard(pd);
-
-    /* ── Tarjeta: Actividad del mes ── */
-    renderCalcCard(readCalcFields());
-
-    /* ── Tarjeta: Alertas ── */
-    renderAlertsCard(loadAuditHistory(), pd, readCalcFields());
+    renderCalcCard(calc, derived.storeSummary);
+    renderAlertsCard(hist, pd, calc, derived);
+    renderMetarWidget(baseICAO);
   };
 
   /* ─────────────────────────────────────────
      TARJETA: ÚLTIMA AUDITORÍA
   ───────────────────────────────────────── */
-  function renderAuditCard(list) {
-    if (!list || list.length === 0) {
+  function renderAuditCard(list, storeSummary) {
+    // Datos del registro: store como fuente preferida, list[0] como fallback
+    const _storeReady = storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready();
+    const rec   = _storeReady ? PilotPayStore.audit.getLast() : (list && list[0] || null);
+    const total = _storeReady ? storeSummary.auditStats.total : (list ? list.length : 0);
+
+    if (!rec && total === 0) {
       setAttr('dsh-audit-status', 'dim');
       setText('dsh-audit-status', '—');
       setHTML('dsh-audit-body', '<div class="dsh-empty">Todavía no hay auditorías.<br>Sube una nómina en Comparativa.</div>');
       return;
     }
-
-    const rec = list[0]; // más reciente primero
 
     /* Estado visual */
     const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
@@ -10615,7 +10768,7 @@ window.PILOTPAY_BACKEND_READY = true;
       </div>
       <div class="dsh-kv">
         <span class="dsh-kv-k">Total guardadas</span>
-        <span class="dsh-kv-v">${list.length}</span>
+        <span class="dsh-kv-v">${total}</span>
       </div>
     </div>`;
 
@@ -10626,16 +10779,11 @@ window.PILOTPAY_BACKEND_READY = true;
      TARJETA: SIMULADOR IRPF
   ───────────────────────────────────────── */
   function renderSimCard(pd) {
-    /* Datos del simulador en profileData */
-    const brutoAcum = pd.brutoAcum || pd.sim_brutoAcum || '';
-    const irpfAcum  = pd.irpfAcum  || pd.sim_irpfAcum  || '';
-    const acumFecha = pd.acumFecha  || '';
-
-    /* También leer desde los inputs del DOM si existen */
-    const brutoEl = el('sim-bruto-acum');
-    const irpfEl  = el('sim-irpf-acum');
-    const brutoVal = (brutoEl && brutoEl.value) ? parseFloat(brutoEl.value) : (brutoAcum ? parseFloat(brutoAcum) : null);
-    const irpfVal  = (irpfEl  && irpfEl.value)  ? parseFloat(irpfEl.value)  : (irpfAcum  ? parseFloat(irpfAcum)  : null);
+    /* Fuente de verdad: inputs del simulador (cargados desde simHistorico) */
+    const brutoEl  = el('sim-bruto-acum');
+    const irpfEl   = el('sim-irpf-acum');
+    const brutoVal = brutoEl ? (parseFloat(brutoEl.value) || null) : null;
+    const irpfVal  = irpfEl  ? (parseFloat(irpfEl.value)  || null) : null;
 
     const hasData = brutoVal > 0 || irpfVal > 0;
 
@@ -10645,9 +10793,11 @@ window.PILOTPAY_BACKEND_READY = true;
       tipoEfectivo = (irpfVal / brutoVal * 100).toFixed(2);
     }
 
-    /* Cuántos meses tiene el histórico */
+    /* Cuántos meses tiene el histórico y rango */
     const hist = pd.simHistorico || {};
-    const mesesConDatos = Object.keys(hist).filter(k => hist[k] && (hist[k].bruto || hist[k].irpf)).length;
+    const ABREV_M = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const mesesNums = Object.keys(hist).map(Number).filter(k => k > 0 && hist[k] && (parseFloat(hist[k].bruto) > 0 || parseFloat(hist[k].irpf) > 0)).sort((a, b) => a - b);
+    const mesesConDatos = mesesNums.length;
 
     if (!hasData) {
       setAttr('dsh-sim-status', 'dim');
@@ -10665,14 +10815,15 @@ window.PILOTPAY_BACKEND_READY = true;
       : '';
 
     let fechaLabel = '—';
-    if (acumFecha) {
-      try {
-        const d = new Date(acumFecha);
-        fechaLabel = MESES_ES[d.getMonth() + 1] + ' ' + d.getFullYear();
-      } catch(e) { fechaLabel = acumFecha; }
-    } else if (mesesConDatos > 0) {
-      const maxMes = Math.max(...Object.keys(hist).map(Number).filter(Boolean));
-      fechaLabel = MESES_ES[maxMes] || '—';
+    let rangoLabel = '—';
+    if (mesesConDatos > 0) {
+      const anioSim = new Date().getFullYear();
+      const maxMes  = mesesNums[mesesNums.length - 1];
+      const minMes  = mesesNums[0];
+      fechaLabel = (MESES_ES[maxMes] || '—') + ' ' + anioSim;
+      rangoLabel = mesesConDatos === 1
+        ? ABREV_M[minMes]
+        : mesesConDatos + ' · ' + ABREV_M[minMes] + '–' + ABREV_M[maxMes];
     }
 
     const kvHtml = `<div class="dsh-kv-list">
@@ -10681,7 +10832,7 @@ window.PILOTPAY_BACKEND_READY = true;
         <span class="dsh-kv-v">${fmt(irpfVal)}</span>
       </div>
       ${tipoEfectivo ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">Tipo efectivo est.</span>
+        <span class="dsh-kv-k">Tipo efectivo acumulado</span>
         <span class="dsh-kv-v">${tipoEfectivo} %</span>
       </div>` : ''}
       <div class="dsh-kv">
@@ -10690,7 +10841,7 @@ window.PILOTPAY_BACKEND_READY = true;
       </div>
       <div class="dsh-kv">
         <span class="dsh-kv-k">Meses con histórico</span>
-        <span class="dsh-kv-v">${mesesConDatos > 0 ? mesesConDatos : '—'}</span>
+        <span class="dsh-kv-v">${rangoLabel}</span>
       </div>
     </div>`;
 
@@ -10700,9 +10851,11 @@ window.PILOTPAY_BACKEND_READY = true;
   /* ─────────────────────────────────────────
      TARJETA: ACTIVIDAD DEL MES
   ───────────────────────────────────────── */
-  function renderCalcCard(c) {
-    const hasCalc = window.calcResult != null;
-    const hasHV   = c.hvTotal > 0 || c.hvTramosSum > 0;
+  function renderCalcCard(c, storeSummary) {
+    // Datos financieros: store como fuente preferida, window.calcResult como fallback
+    const _calcData  = (storeSummary && storeSummary.currentCalc) || window.calcResult;
+    const hasCalc    = _calcData != null;
+    const hasHV      = c.hvTotal > 0 || c.hbTotal > 0;
 
     if (!hasCalc && !hasHV) {
       setAttr('dsh-calc-status', 'dim');
@@ -10711,46 +10864,36 @@ window.PILOTPAY_BACKEND_READY = true;
       return;
     }
 
-    setAttr('dsh-calc-status', 'info');
-    setText('dsh-calc-status', c.mes || 'Calculado');
+    // Label y estado del mes: store como fuente preferida, DOM como fallback
+    const _mesLabel = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado';
+    const _estado   = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.estado) || null;
 
-    const hv = c.hvTotal || c.hvTramosSum || 0;
-    const bigHtml = hasCalc && window.calcResult.liquidoReal
-      ? `<div class="dsh-val-big green">${fmt(window.calcResult.liquidoReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${c.mes || ''}</div>`
+    setAttr('dsh-calc-status', 'info');
+    setText('dsh-calc-status', _mesLabel);
+
+    const _liquidoReal = _calcData ? _calcData.liquidoReal : null;
+    const bigHtml = hasCalc && _liquidoReal
+      ? `<div class="dsh-val-big green">${fmt(_liquidoReal)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${_mesLabel}${_estado ? ' · ' + _estado : ''}</div>`
       : '';
 
-    const kvHtml = `<div class="dsh-kv-list">
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">HB / HV</span>
-        <span class="dsh-kv-v">${hv > 0 ? hv + ' h' : '—'}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Imaginarias</span>
-        <span class="dsh-kv-v">${c.lv1 > 0 ? c.lv1 : '—'}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Francos</span>
-        <span class="dsh-kv-v">${c.lv2 > 0 ? c.lv2 : '—'}</span>
-      </div>
-      ${c.vacDias > 0 ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">Vacaciones</span>
-        <span class="dsh-kv-v">${c.vacDias} días</span>
-      </div>` : ''}
-      ${c.dpo > 0 ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">DPO</span>
-        <span class="dsh-kv-v">${fmt(c.dpo)}</span>
-      </div>` : ''}
-    </div>`;
+    const rows = [];
+    if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
+    if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
+    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
+    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
+    if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
+    if (c.dpo > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
 
-    setHTML('dsh-calc-body', bigHtml + kvHtml);
+    setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
   }
 
   /* ─────────────────────────────────────────
      TARJETA: ALERTAS
      Detecta situaciones que merecen atención
   ───────────────────────────────────────── */
-  function renderAlertsCard(list, pd, calc) {
+  function renderAlertsCard(list, pd, calc, derived) {
+    derived = derived || {};
     const alerts = [];
 
     /* 1. No hay auditorías */
@@ -10773,18 +10916,52 @@ window.PILOTPAY_BACKEND_READY = true;
     const brutoEl = el('sim-bruto-acum');
     const brutoVal = brutoEl ? parseFloat(brutoEl.value) : 0;
     if (!brutoVal && mesesHist === 0) {
-      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Actualiza el acumulado desde el Simulador IRPF o desde la Comparativa.' });
+      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Registra los acumulados en el histórico del Simulador IRPF o súbelos desde Comparativa.' });
+    } else if (mesesHist > 0) {
+      const mesActualNum = new Date().getMonth() + 1;
+      const tieneMesActual = hist[mesActualNum] && (hist[mesActualNum].bruto || hist[mesActualNum].irpf);
+      if (!tieneMesActual) {
+        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
+      }
     }
 
-    /* 4. Perfil incompleto */
-    const u = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
-    const nombre = pd.fullName || pd.name || u.name || '';
-    const nif    = pd.nif || '';
-    if (!nombre || !nif) {
-      alerts.push({ cls:'amber', icon:'👤', msg:'<strong>Perfil incompleto.</strong> Completa tu nombre y NIF en el menú de usuario → Perfil.' });
+    const u = derived.u || ((window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {});
+
+    /* 4–6. Configuración fiscal
+     * CCAA se considera configurada si hay valor explícito O se puede derivar del base.
+     * derived.ccaa siempre tiene un valor (derivado de base como fallback).
+     * Solo alertamos si el usuario no ha confirmado explícitamente su CCAA.
+     */
+    const sinEstadoCivil  = !pd.estadoCivil;
+    const ccaaExplicita   = !!(pd.ccaa || pd.sim_ccaa);
+    const irpfEfectivo    = derived.irpf;      // ya resuelto con fallback a u.irpf
+    const sinIRPF         = irpfEfectivo == null;
+
+    if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
+      /* Usuario nuevo: aviso general único */
+      alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
+    } else {
+      /* Avisos específicos solo si hay config parcial */
+      if (!ccaaExplicita) {
+        alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
+      }
+      if (sinIRPF) {
+        alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
+      }
     }
 
-    /* 5. Todo OK */
+    /* 7. NIF ausente — solo si ya existe alguna auditoría (usuario que ya subió nómina) */
+    if (list && list.length > 0 && !pd.nif) {
+      const _lastRec = list[0];
+      const _nifDetectado = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
+      const _msg = _nifDetectado
+        ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
+        : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
+      alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
+    }
+
+    /* 8. Todo OK */
     if (alerts.length === 0) {
       alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay alertas pendientes.' });
     }
@@ -10803,6 +10980,97 @@ window.PILOTPAY_BACKEND_READY = true;
     </div>`;
 
     setHTML('dsh-alerts-body', alertsHTML);
+  }
+
+  /* ─────────────────────────────────────────
+     WIDGET: METAR COMPACTO (cabecera)
+  ───────────────────────────────────────── */
+
+  async function _fetchMetar(icao) {
+    try {
+      const res = await fetch(
+        `https://aviationweather.gov/api/data/metar?ids=${icao}&format=json&taf=false&hours=2`,
+        { cache: 'no-store' }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      return Array.isArray(data) && data.length > 0 ? data[0] : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  async function renderMetarWidget(icao) {
+    const w  = document.getElementById('dsh-metar-widget');
+    const ei = document.getElementById('dsh-metar-icao');
+    const el = document.getElementById('dsh-metar-line');
+    const eo = document.getElementById('dsh-metar-obs');
+    if (!w || !ei || !el) return;
+
+    if (!icao) {
+      w.style.opacity = '0.35';
+      ei.textContent = '—';
+      el.textContent = 'base no configurada';
+      if (eo) eo.textContent = '';
+      return;
+    }
+
+    w.style.opacity = '1';
+    ei.textContent = icao;
+    el.textContent = 'cargando…';
+    if (eo) eo.textContent = '';
+
+    const m = await _fetchMetar(icao);
+
+    if (!m) {
+      el.textContent = 'sin METAR';
+      return;
+    }
+
+    // Construir línea compacta estilo aviation: WIND · VIS/CLOUDS · TEMP · QNH
+    const parts = [];
+
+    // Viento
+    if (m.wdir != null && m.wspd != null) {
+      const dir  = String(Math.round(m.wdir)).padStart(3, '0');
+      const spd  = String(Math.round(m.wspd)).padStart(2, '0');
+      const gust = m.wgst != null ? 'G' + Math.round(m.wgst) : '';
+      parts.push(dir + spd + gust + 'KT');
+    }
+
+    // Visibilidad o CAVOK
+    const layers = (m.skyLayers || m.clouds || []);
+    const hasSig = (m.wxString && m.wxString.trim()) ||
+                   layers.some(function(l) { return l.cover !== 'SKC' && l.cover !== 'CLR' && l.cover !== 'NSC'; });
+    if (!hasSig) {
+      parts.push('CAVOK');
+    } else {
+      if (m.visib != null) {
+        parts.push(parseFloat(m.visib) >= 9999 ? '9999' : m.visib + ' SM');
+      }
+      if (layers.length) {
+        const cld = layers.slice(0,2).map(function(c) {
+          return (c.cover || c.sky) + (c.base != null ? c.base : '');
+        }).join(' ');
+        parts.push(cld);
+      }
+    }
+
+    // Temperatura
+    if (m.temp != null) parts.push(m.temp + '°C');
+
+    // QNH
+    if (m.altim != null) parts.push('Q' + Math.round(m.altim));
+
+    el.textContent = parts.join(' · ') || '—';
+
+    // Hora observación
+    if (eo && m.obsTime) {
+      const t = new Date(m.obsTime * 1000);
+      const hh = String(t.getUTCHours()).padStart(2,'0');
+      const mm = String(t.getUTCMinutes()).padStart(2,'0');
+      eo.textContent = 'OBS ' + hh + mm + 'Z';
+    }
   }
 
 })();
