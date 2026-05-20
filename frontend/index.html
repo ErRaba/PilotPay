@@ -10708,7 +10708,7 @@ window.PILOTPAY_BACKEND_READY = true;
     const now = new Date();
     setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
-    renderAuditCard(hist);
+    renderAuditCard(hist, derived.storeSummary);
     renderSimCard(pd);
     renderCalcCard(calc, derived.storeSummary);
     renderAlertsCard(hist, pd, calc, derived);
@@ -10718,15 +10718,18 @@ window.PILOTPAY_BACKEND_READY = true;
   /* ─────────────────────────────────────────
      TARJETA: ÚLTIMA AUDITORÍA
   ───────────────────────────────────────── */
-  function renderAuditCard(list) {
-    if (!list || list.length === 0) {
+  function renderAuditCard(list, storeSummary) {
+    // Datos del registro: store como fuente preferida, list[0] como fallback
+    const _storeReady = storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready();
+    const rec   = _storeReady ? PilotPayStore.audit.getLast() : (list && list[0] || null);
+    const total = _storeReady ? storeSummary.auditStats.total : (list ? list.length : 0);
+
+    if (!rec && total === 0) {
       setAttr('dsh-audit-status', 'dim');
       setText('dsh-audit-status', '—');
       setHTML('dsh-audit-body', '<div class="dsh-empty">Todavía no hay auditorías.<br>Sube una nómina en Comparativa.</div>');
       return;
     }
-
-    const rec = list[0]; // más reciente primero
 
     /* Estado visual */
     const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
@@ -10761,7 +10764,7 @@ window.PILOTPAY_BACKEND_READY = true;
       </div>
       <div class="dsh-kv">
         <span class="dsh-kv-k">Total guardadas</span>
-        <span class="dsh-kv-v">${list.length}</span>
+        <span class="dsh-kv-v">${total}</span>
       </div>
     </div>`;
 
