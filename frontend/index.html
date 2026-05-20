@@ -10648,7 +10648,16 @@ window.PILOTPAY_BACKEND_READY = true;
     const ccaa = pd.ccaa || pd.sim_ccaa || (getBaseCode(baseNum) === 'MAD' ? 'mad' : 'can');
     // IRPF: prioridad perfil > USERS
     const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
-    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf };
+
+    // PilotPayStore — primer consumidor.
+    // Fallback null garantiza cero regresión si el store no está listo.
+    // Las funciones de render siguen usando {u, pd, calc, hist} por ahora.
+    // La migración completa a store ocurre en Fase 2.
+    const storeSummary = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.getDashboardSummary()
+      : null;
+
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary };
   }
 
   /* ══════════════════════════════════════════
@@ -10667,6 +10676,14 @@ window.PILOTPAY_BACKEND_READY = true;
       baseNum: derived.baseNum, baseICAO,
       simHistoricoKeys: Object.keys(pd.simHistorico || {})
     });
+    if (derived.storeSummary) {
+      console.log('[Dashboard] PilotPayStore connected ✓', {
+        auditorias : derived.storeSummary.auditStats.total,
+        conDifs    : derived.storeSummary.auditStats.conDiferencias,
+        mesActual  : derived.storeSummary.mesActual.label + ' ' + derived.storeSummary.mesActual.estado,
+        expediente : derived.storeSummary.expedition.totalMeses + ' meses indexados'
+      });
+    }
 
     /* ── Subtítulo contextual ── */
     const fn  = pd.funcion || u.funcion || '';
