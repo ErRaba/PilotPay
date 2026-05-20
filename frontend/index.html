@@ -10659,10 +10659,12 @@ window.PILOTPAY_BACKEND_READY = true;
     // IRPF: prioridad perfil > USERS
     const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
 
-    // PilotPayStore — primer consumidor.
-    // Fallback null garantiza cero regresión si el store no está listo.
-    // Las funciones de render siguen usando {u, pd, calc, hist} por ahora.
-    // La migración completa a store ocurre en Fase 2.
+    // PilotPayStore — sincronizar con localStorage antes de leer.
+    // refresh() es barato (relee la misma clave) y garantiza datos frescos
+    // tras borrados o escrituras externas al store.
+    if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      PilotPayStore.refresh();
+    }
     const storeSummary = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
       ? PilotPayStore.getDashboardSummary()
       : null;

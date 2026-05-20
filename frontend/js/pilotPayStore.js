@@ -392,6 +392,18 @@
     }
   }
 
+  function refresh() {
+    if (!_ready || !_userId) return;
+    try {
+      var auditList = _loadAuditList();
+      _audit   = auditList;
+      _monthly = {};
+      _hydrateMonthly(auditList, _cr());
+    } catch (e) {
+      console.warn('[PilotPayStore] refresh error:', e);
+    }
+  }
+
   function clear() {
     _userId  = null;
     _ready   = false;
@@ -409,9 +421,10 @@
     version : VERSION,
 
     // Ciclo de vida
-    init  : init,
-    clear : clear,
-    ready : ready,
+    init    : init,
+    refresh : refresh,
+    clear   : clear,
+    ready   : ready,
 
     // Dominios
     profile    : profile,
