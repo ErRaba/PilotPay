@@ -8766,6 +8766,27 @@ function renderPerfil() {
   if (profileData.residencia)   document.getElementById('prf-residencia').value     = profileData.residencia;
   const ccaaEl = document.getElementById('prf-ccaa');
   if (ccaaEl) ccaaEl.value = profileData.ccaa || profileData.sim_ccaa || 'can';
+
+  // Persistir defaults en profileData para cualquier campo no guardado aún.
+  // Esto evita que el dashboard muestre falsas alertas para usuarios cuyos valores
+  // por defecto nunca generaron un onchange (p.ej. estado civil = soltero desde el principio).
+  let _defaultsNeedSave = false;
+  if (!profileData.estadoCivil) {
+    const _ecEl = document.getElementById('prf-estado-civil');
+    profileData.estadoCivil = (_ecEl && _ecEl.value) || 'soltero';
+    _defaultsNeedSave = true;
+  }
+  if (!profileData.ccaa && !profileData.sim_ccaa) {
+    profileData.ccaa = (ccaaEl && ccaaEl.value) || (parseFloat(u.base || 1) > 1 ? 'mad' : 'can');
+    _defaultsNeedSave = true;
+  }
+  if (profileData.irpf == null) {
+    const _irpfDefault = u.irpf != null ? u.irpf
+      : (parseFloat(document.getElementById('prf-irpf-input')?.value) || 34.15);
+    profileData.irpf = _irpfDefault;
+    _defaultsNeedSave = true;
+  }
+  if (_defaultsNeedSave && currentUser) saveUserData(currentUser);
 }
 
 function saveProfile() {
@@ -10805,7 +10826,12 @@ window.PILOTPAY_BACKEND_READY = true;
 
     /* 7. NIF ausente — solo si ya existe alguna auditoría (usuario que ya subió nómina) */
     if (list && list.length > 0 && !pd.nif) {
-      alerts.push({ cls:'amber', icon:'🪪', msg:'<strong>NIF no detectado.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.' });
+      const _lastRec = list[0];
+      const _nifDetectado = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
+      const _msg = _nifDetectado
+        ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
+        : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
+      alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
     }
 
     /* 8. Todo OK */
