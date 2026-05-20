@@ -3369,9 +3369,9 @@ Complemento de Base MAD: 1500"></textarea>
             <div class="field">
               <span class="field-label">Base</span>
               <select class="field-input" id="adm-base">
-                <option value="1">Gran Canaria</option>
-                <option value="1">Tenerife</option>
-                <option value="1.2" selected>Madrid</option>
+                <option value="GC" selected>Gran Canaria</option>
+                <option value="TFN">Tenerife</option>
+                <option value="MAD">Madrid</option>
               </select>
             </div>
             <div class="field">
@@ -4713,7 +4713,7 @@ function doLogout() {
 function initApp() {
   const u = USERS[currentUser];
   const isAdmin = currentUser === ADMIN_CODE;
-  const baseLabel = parseFloat(profileData.base || u.base) > 1 ? 'MAD' : 'CAN';
+  const baseLabel = getBaseLabelShort(profileData.base || u.base);
   const fnBadge = { CMD:'CMD', COP:'COP', SCC:'SCC', CC:'CC' };
   // Solo actualizar el span de iniciales, NO sobreescribir el pill completo
   const _pillInitials = document.getElementById('user-initials-header');
@@ -4725,7 +4725,7 @@ function initApp() {
   const funcEl = document.getElementById('funcion');
   const baseEl = document.getElementById('base');
   funcEl.value = profileData.funcion || u.funcion;
-  baseEl.value = profileData.base || u.base;
+  baseEl.value = getBaseFactor(profileData.base || u.base);
 
   // Admin has full access — no locking
   if (isAdmin) {
@@ -5175,7 +5175,7 @@ function generarAltaUsuario() {
   const pass   = document.getElementById('adm-pass').value.trim();
   const funcion= document.getElementById('adm-funcion').value;
   const base   = document.getElementById('adm-base').value;
-  const baseLabel = parseFloat(base) > 1 ? 'Madrid' : 'Canarias';
+  const baseLabel = getBaseLabel(base);
 
   if (!nombre || !codigo || !pass) {
     alert('Rellena nombre, código y contraseña para generar la plantilla'); return;
@@ -5204,14 +5204,30 @@ Eloy (ESH)`;
   window.location.href = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
 }
 
-// Helper: convert base factor to code
-function getBaseCode(baseFactor) {
-  return parseFloat(baseFactor) > 1 ? 'MAD' : 'GC'; // default Canarias to GC
+// Helper: convert base value (string code or legacy numeric) to standard code GC/TFN/MAD
+function getBaseCode(base) {
+  if (base === 'GC' || base === 'TFN' || base === 'MAD') return base;
+  return parseFloat(base) > 1 ? 'MAD' : 'GC'; // legacy numeric fallback
 }
 
-// Helper: convert base code to factor for calculations
-function getBaseFactor(baseCode) {
-  return baseCode === 'MAD' ? '1.2' : '1';
+// Helper: convert base code to salary factor (1 = Canarias, 1.2 = Madrid)
+function getBaseFactor(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return '1.2';
+  return '1';
+}
+
+// Helper: human-readable label
+function getBaseLabel(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return 'Madrid';
+  if (base === 'TFN') return 'Tenerife';
+  return 'Gran Canaria';
+}
+
+// Helper: short code for badges/UI
+function getBaseLabelShort(base) {
+  if (base === 'MAD' || parseFloat(base) > 1) return 'MAD';
+  if (base === 'TFN') return 'TFN';
+  return 'GC';
 }
 function loadAdminCreatedUsers() {
   // Users are already loaded from Firebase in loadUsersFromFirebase()
@@ -5319,9 +5335,9 @@ function editarUsuario(code) {
     <div class="field" style="margin-bottom:14px">
       <span class="field-label">Base</span>
       <select class="field-input" id="edit-base">
-        <option value="1" ${parseFloat(u.base||1)<=1?'selected':''}>Gran Canaria</option>
-        <option value="1" >Tenerife</option>
-        <option value="1.2" ${parseFloat(u.base||1)>1?'selected':''}>Madrid</option>
+        <option value="GC"  ${getBaseCode(u.base||'GC')==='GC' ?'selected':''}>Gran Canaria</option>
+        <option value="TFN" ${getBaseCode(u.base||'GC')==='TFN'?'selected':''}>Tenerife</option>
+        <option value="MAD" ${getBaseCode(u.base||'GC')==='MAD'?'selected':''}>Madrid</option>
       </select>
     </div>
     <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
@@ -5715,7 +5731,7 @@ function showWelcome() {
   const isSCC   = funcion === 'SCC';
   const alias   = profileData.alias || u.alias || '';
   const nombre  = alias || (profileData.name || u.name || 'Tripulante').split(' ')[0];
-  const baseLabel = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
+  const baseLabel = getBaseLabel(profileData.base || u.base);
 
   document.getElementById('welcome-name').textContent = nombre;
 
@@ -8622,7 +8638,7 @@ function generarInformeReclamacion(causasRaiz, totalDeltaLiq, nombresDerivados) 
   const nif     = profileData.nif || u.nif || '___________';
   const fn      = profileData.funcion || u.funcion || 'CMD';
   const nivel   = currentNivel;
-  const base    = parseFloat(profileData.base || u.base || 1) > 1 ? 'Madrid' : 'Canarias';
+  const base    = getBaseLabel(profileData.base || u.base);
   // ── DOM: lectura del mes (única dependencia del DOM en esta función) ──
   const mes     = document.getElementById('mes-nomina')?.value || '___';
   const año     = new Date().getFullYear();
@@ -8671,7 +8687,7 @@ function renderPerfil() {
   const fnLabels = { CMD:'COMANDANTE', COP:'COPILOTO', SCC:'SOBRECARGO (SCC)', CC:'TRIPULANTE DE CABINA (CC)' };
   document.getElementById('prf-nombre').textContent = nombreCompleto || `${u.name || ''} — ${currentUser}`;
   document.getElementById('prf-role').textContent =
-    `${fnLabels[fn]||fn} · NIVEL ${currentNivel} · ${parseFloat(u.base||1)>1?'BASE MADRID':'BASE CANARIAS'}`;
+    `${fnLabels[fn]||fn} · NIVEL ${currentNivel} · BASE ${getBaseLabel(u.base || profileData.base).toUpperCase()}`;
   document.getElementById('prf-ingreso').textContent = ingreso;
   document.getElementById('prf-nif').textContent = profileData.nif || '—';
   document.getElementById('prf-nss').textContent = profileData.nss || '—';
@@ -8777,7 +8793,7 @@ function renderPerfil() {
     _defaultsNeedSave = true;
   }
   if (!profileData.ccaa && !profileData.sim_ccaa) {
-    profileData.ccaa = (ccaaEl && ccaaEl.value) || (parseFloat(u.base || 1) > 1 ? 'mad' : 'can');
+    profileData.ccaa = (ccaaEl && ccaaEl.value) || (getBaseCode(u.base) === 'MAD' ? 'mad' : 'can');
     _defaultsNeedSave = true;
   }
   if (profileData.irpf == null) {
@@ -8827,7 +8843,7 @@ function generarEmailSolicitud() {
   const nombre = profileData.fullName || u.name || currentUser;
   const tipoLabel = tipo === 'base' ? 'cambio de base' : 'cambio de cargo';
   const campoActual = tipo === 'base'
-    ? (parseFloat(u.base||1) > 1 ? 'Madrid' : 'Canarias')
+    ? getBaseLabel(u.base)
     : (u.funcion || 'CMD');
 
   if (!valor) {
@@ -9103,7 +9119,7 @@ function simSyncFromPerfil() {
   if (ccaaPerfil) {
     document.getElementById('sim-ccaa').value = ccaaPerfil;
   } else {
-    document.getElementById('sim-ccaa').value = (parseFloat(u.base||1) > 1) ? 'mad' : 'can';
+    document.getElementById('sim-ccaa').value = getBaseCode(u.base) === 'MAD' ? 'mad' : 'can';
   }
 
   // % IRPF
@@ -10545,9 +10561,9 @@ window.PILOTPAY_BACKEND_READY = true;
 
   /* ── Normalizar base numérica → ICAO ── */
   function normalizeBaseToICAO(baseValue) {
-    const v = parseFloat(baseValue);
-    if (isNaN(v)) return null;
-    return v > 1 ? 'LEMD' : 'GCXO'; // MAD→LEMD, CAN→GCXO (hub principal Binter)
+    if (baseValue === 'MAD' || parseFloat(baseValue) > 1) return 'LEMD';
+    if (baseValue === 'TFN') return 'GCXO';
+    return 'GCLP'; // GC o legacy '1'
   }
 
   /* ── Fuente de verdad centralizada del dashboard ── */
@@ -10559,7 +10575,7 @@ window.PILOTPAY_BACKEND_READY = true;
     const baseNum = pd.base || u.base;
     const baseICAO = normalizeBaseToICAO(baseNum);
     // CCAA: prioridad perfil > simulador > derivado de base
-    const ccaa = pd.ccaa || pd.sim_ccaa || (parseFloat(baseNum || 1) > 1 ? 'mad' : 'can');
+    const ccaa = pd.ccaa || pd.sim_ccaa || (getBaseCode(baseNum) === 'MAD' ? 'mad' : 'can');
     // IRPF: prioridad perfil > USERS
     const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
     return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf };
