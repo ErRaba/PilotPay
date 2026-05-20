@@ -4723,7 +4723,7 @@ function doLogout() {
     // 1b) DOM — Calculadora y Variables: limpiar campos del usuario saliente
     if (typeof resetCalculadora === 'function') resetCalculadora();
     const _varsResult = document.getElementById('vars-result');
-    if (_varsResult) { _varsResult.style.display = 'none'; _varsResult.innerHTML = ''; }
+    if (_varsResult) _varsResult.style.display = 'none';
     const _varsPaste = document.getElementById('vars-paste-area');
     if (_varsPaste) _varsPaste.value = '';
     const _varsUploadTxt = document.getElementById('vars-upload-text');
