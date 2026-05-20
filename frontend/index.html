@@ -3968,7 +3968,7 @@ Complemento de Base MAD: 1500"></textarea>
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
-        calcResult  : window.calcResult,
+        calcResult  : (window.PP_getters && window.PP_getters.calcResult) ? window.PP_getters.calcResult() : null,
         profileData : window.profileData,
         currentUser : window.currentUser,
         currentNivel: window.currentNivel,
@@ -10621,14 +10621,16 @@ window.PILOTPAY_BACKEND_READY = true;
       return e ? (e.value || '') : '';
     };
     return {
-      hvTotal  : gv('hv-total'),
-      hbTotal  : gv('hb-total'),
-      hv1      : gv('hv1'),
-      hv2      : gv('hv2'),
-      hv3      : gv('hv3'),
-      hv4      : gv('hv4'),
-      lv1      : gv('lv1'),
-      lv2      : gv('lv2'),
+      hvTotal     : gv('hv-total'),
+      hbTotal     : gv('hb-total'),
+      hv1         : gv('hv1'),
+      hv2         : gv('hv2'),
+      hv3         : gv('hv3'),
+      hv4         : gv('hv4'),
+      imaginarias : gv('imaginarias'),
+      francos     : gv('francos'),
+      lv1         : gv('lv1'),
+      lv2         : gv('lv2'),
       lv3      : gv('lv3'),
       dpo      : gv('dpo'),
       vacDias  : gv('vac-dias'),
@@ -10878,8 +10880,8 @@ window.PILOTPAY_BACKEND_READY = true;
     const rows = [];
     if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
     if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.lv1 > 0 ? c.lv1 : '—'}</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.lv2 > 0 ? c.lv2 : '—'}</span></div>`);
+    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
+    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
     if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
     if (c.dpo > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
 
