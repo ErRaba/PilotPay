@@ -1547,13 +1547,13 @@ input[type=number] { -moz-appearance: textfield; }
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard')"><span class="tab-icon">🏠</span>Dashboard</button>
-    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Variables</button>
+    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
-    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <button class="tab" id="tab-historial" onclick="showTab('historial')"><span class="tab-icon">🗂</span>Historial</button>
+    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
@@ -6583,6 +6583,7 @@ function recalc() {
   document.getElementById('sum-neto').textContent = fmt(liquidoReal);
 
   updateRates();
+  _recalcNotifyStore();
 }
 
 // ── NÓMINA COMPLETA ──
@@ -7653,6 +7654,7 @@ function recalcTCP() {
     segMed_dev, segMed_ded, segLic_ded,
     totalDevengado, liquidoReal
   };
+  _recalcNotifyStore();
 }
 
 // ── COMPARATIVA ──
@@ -10021,11 +10023,38 @@ function varsGetNominaMes(fechaFin) {
                   .replace(/^\w/, c => c.toUpperCase());
 }
 
+// ── Notificaciones al store ──────────────────────────────────────────────────
+// Year/month siempre desde varsData._periodoInicio (fecha PDF), nunca del calendario.
+function _varsNotifyStore() {
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  var d = varsData._periodoInicio;
+  if (!d) return;
+  PilotPayStore.monthly.onVariablesConfirmed(d.getFullYear(), d.getMonth() + 1, varsData);
+}
+
+function _recalcNotifyStore() {
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  var cr = calcResult;
+  if (!cr) return;
+  var d = varsData && varsData._periodoInicio;
+  var year, month;
+  if (d) {
+    year  = d.getFullYear();
+    month = d.getMonth() + 1;
+  } else {
+    var now = new Date();
+    year  = now.getFullYear();
+    month = now.getMonth() + 1;
+  }
+  PilotPayStore.monthly.onCalculationDone(year, month, cr);
+}
+
 function varsConfirmarPeriodo(confirmado) {
   if (confirmado) {
     document.getElementById('vars-periodo-edit').style.display = 'none';
     varsPeriodoConfirmado = true;
     varsMostrarResultado();
+    _varsNotifyStore();
   } else {
     document.getElementById('vars-periodo-edit').style.display = 'block';
     // Pre-rellenar con fechas detectadas si existen
@@ -10053,6 +10082,7 @@ function varsAplicarPeriodoManual() {
   document.getElementById('vars-nomina-mes-display').innerHTML =
     `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${varsGetNominaMes(varsData._periodoFin)}</strong>`;
   varsMostrarResultado();
+  _varsNotifyStore();
 }
 
 function varsEditarPeriodo() {

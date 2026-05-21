@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '1.1.0';
 
   // ── Tabla de meses ──────────────────────────────────────────────────────────
   var MESES_IDX = {
@@ -47,6 +47,38 @@
     return window.storageKey
       ? window.storageKey('audit_history_v1')
       : 'pilotpay:' + (_userId || '_') + ':audit_history_v1';
+  }
+
+  // ── Clave de meses en progreso en localStorage ──────────────────────────────
+  function _monthlyKey() {
+    return window.storageKey
+      ? window.storageKey('monthly_v1')
+      : 'pilotpay:' + (_userId || '_') + ':monthly_v1';
+  }
+
+  // Persiste solo meses que tienen datos intermedios propios (variables PDF cargado).
+  // Los meses puramente derivados de auditorías no se persisten aquí — ya
+  // están cubiertos por audit_history_v1.
+  function _saveMonthly() {
+    try {
+      var k = _monthlyKey();
+      if (!k) return;
+      var toSave = {};
+      Object.keys(_monthly).forEach(function (key) {
+        var mr = _monthly[key];
+        if (mr.variablesData !== null) {
+          toSave[key] = mr;
+        }
+      });
+      localStorage.setItem(k, JSON.stringify(toSave));
+    } catch (e) { console.warn('[PilotPayStore] _saveMonthly error:', e); }
+  }
+
+  function _loadMonthly() {
+    try {
+      var raw = localStorage.getItem(_monthlyKey());
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
   }
 
   // ── Helpers internos ────────────────────────────────────────────────────────
@@ -210,6 +242,37 @@
       }
       var ts = new Date().toISOString();
       Object.assign(_monthly[k], data, { _updatedAt: ts });
+      _saveMonthly();
+    },
+
+    // Llamar desde varsConfirmarPeriodo() cuando el usuario confirma el PDF de variables.
+    // year/month deben venir de varsData._periodoInicio (fecha del PDF, no mes calendario).
+    onVariablesConfirmed: function (year, month, varsData) {
+      var k = _monthKey(year, month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, year, month);
+      var mr = _monthly[k];
+      mr.variablesData = varsData;
+      mr.estado = 'pending_calculation';
+      mr.sourceIntegrity.variablesParsed = true;
+      mr._updatedAt = new Date().toISOString();
+      _saveMonthly();
+    },
+
+    // Llamar desde recalc() cuando se completa un cálculo teórico.
+    // year/month deben coincidir con el mes del PDF cargado en variables.
+    onCalculationDone: function (year, month, calcResult) {
+      var k = _monthKey(year, month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, year, month);
+      var mr = _monthly[k];
+      mr.calculoTeorico = calcResult;
+      if (mr.estado === 'pending_calculation' ||
+          mr.estado === 'pending_variables'   ||
+          mr.estado === 'pendiente') {
+        mr.estado = 'pending_comparison';
+      }
+      mr.sourceIntegrity.simulatorDerived = true;
+      mr._updatedAt = new Date().toISOString();
+      _saveMonthly();
     },
     getEstado: function (year, month) {
       var mr = this.get(year, month);
@@ -372,8 +435,11 @@
     try {
       _userId  = userId;
       _ready   = false;
-      _monthly = {};
       _audit   = [];
+
+      // Cargar meses en progreso primero, luego enriquecer con auditorías.
+      // _hydrateMonthly no sobreescribe auditoria si ya existe.
+      _monthly = _loadMonthly();
 
       var auditList = _loadAuditList();
       _audit = auditList;
@@ -397,7 +463,7 @@
     try {
       var auditList = _loadAuditList();
       _audit   = auditList;
-      _monthly = {};
+      _monthly = _loadMonthly();   // preservar meses en progreso entre refreshes
       _hydrateMonthly(auditList, _cr());
     } catch (e) {
       console.warn('[PilotPayStore] refresh error:', e);

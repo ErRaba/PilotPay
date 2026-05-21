@@ -1547,13 +1547,13 @@ input[type=number] { -moz-appearance: textfield; }
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard')"><span class="tab-icon">🏠</span>Dashboard</button>
-    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Variables</button>
+    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
-    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <button class="tab" id="tab-historial" onclick="showTab('historial')"><span class="tab-icon">🗂</span>Historial</button>
+    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
@@ -3968,9 +3968,9 @@ Complemento de Base MAD: 1500"></textarea>
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
-        calcResult  : (window.PP_getters && window.PP_getters.calcResult) ? window.PP_getters.calcResult() : null,
-        profileData : window.profileData,
-        currentUser : window.currentUser,
+        calcResult  : (window.PP_getters && window.PP_getters.calcResult)   ? window.PP_getters.calcResult()   : null,
+        profileData : (window.PP_getters && window.PP_getters.profileData) ? window.PP_getters.profileData() : null,
+        currentUser : (window.PP_getters && window.PP_getters.currentUser) ? window.PP_getters.currentUser() : null,
         currentNivel: window.currentNivel,
         USERS       : window.USERS
       };
@@ -6583,6 +6583,7 @@ function recalc() {
   document.getElementById('sum-neto').textContent = fmt(liquidoReal);
 
   updateRates();
+  _recalcNotifyStore();
 }
 
 // ── NÓMINA COMPLETA ──
@@ -7653,6 +7654,7 @@ function recalcTCP() {
     segMed_dev, segMed_ded, segLic_ded,
     totalDevengado, liquidoReal
   };
+  _recalcNotifyStore();
 }
 
 // ── COMPARATIVA ──
@@ -10021,11 +10023,38 @@ function varsGetNominaMes(fechaFin) {
                   .replace(/^\w/, c => c.toUpperCase());
 }
 
+// ── Notificaciones al store ──────────────────────────────────────────────────
+// Year/month siempre desde varsData._periodoInicio (fecha PDF), nunca del calendario.
+function _varsNotifyStore() {
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  var d = varsData._periodoInicio;
+  if (!d) return;
+  PilotPayStore.monthly.onVariablesConfirmed(d.getFullYear(), d.getMonth() + 1, varsData);
+}
+
+function _recalcNotifyStore() {
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  var cr = calcResult;
+  if (!cr) return;
+  var d = varsData && varsData._periodoInicio;
+  var year, month;
+  if (d) {
+    year  = d.getFullYear();
+    month = d.getMonth() + 1;
+  } else {
+    var now = new Date();
+    year  = now.getFullYear();
+    month = now.getMonth() + 1;
+  }
+  PilotPayStore.monthly.onCalculationDone(year, month, cr);
+}
+
 function varsConfirmarPeriodo(confirmado) {
   if (confirmado) {
     document.getElementById('vars-periodo-edit').style.display = 'none';
     varsPeriodoConfirmado = true;
     varsMostrarResultado();
+    _varsNotifyStore();
   } else {
     document.getElementById('vars-periodo-edit').style.display = 'block';
     // Pre-rellenar con fechas detectadas si existen
@@ -10053,6 +10082,7 @@ function varsAplicarPeriodoManual() {
   document.getElementById('vars-nomina-mes-display').innerHTML =
     `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${varsGetNominaMes(varsData._periodoFin)}</strong>`;
   varsMostrarResultado();
+  _varsNotifyStore();
 }
 
 function varsEditarPeriodo() {
@@ -10650,8 +10680,13 @@ window.PILOTPAY_BACKEND_READY = true;
 
   /* ── Fuente de verdad centralizada del dashboard ── */
   function getDashboardData() {
-    const u       = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
-    const pd      = window.profileData || {};
+    // PP_getters es la única vía correcta para acceder a variables let de otros scripts.
+    // window.profileData y window.currentUser son siempre undefined (let ≠ var).
+    const _gu     = window.PP_getters;
+    const _userId = _gu ? _gu.currentUser()  : null;
+    const _pdRaw  = _gu ? _gu.profileData()  : null;
+    const u       = (window.USERS && _userId) ? window.USERS[_userId] : {};
+    const pd      = _pdRaw || {};
     const calc    = readCalcFields();
     const hist    = loadAuditHistory();
     const baseNum = pd.base || u.base;
@@ -10896,69 +10931,73 @@ window.PILOTPAY_BACKEND_READY = true;
     derived = derived || {};
     const alerts = [];
 
-    /* 1. No hay auditorías */
-    if (!list || list.length === 0) {
+    // ── Fuente de datos unificada ──────────────────────────────────────────────
+    // Store como fuente preferida; fallback completo a parámetros legacy si no está listo.
+    const _storeReady = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _auditStats = _storeReady ? derived.storeSummary.auditStats : null;
+    // profile.get() normaliza campos vacíos a ''; pd sigue disponible para sim_ccaa
+    const _prof       = _storeReady ? PilotPayStore.profile.get() : pd;
+    // Guard de hydration: si el perfil está completamente vacío, Firebase aún no ha cargado.
+    // Silenciar alertas fiscales para evitar falsos positivos durante la inicialización.
+    const _profileCargado = !!((_prof.nombre || _prof.fullName || _prof.name) || _prof.nif || _prof.base);
+
+    /* 1. Sin auditorías */
+    const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);
+    if (_totalAudits === 0) {
       alerts.push({ cls:'amber', icon:'📂', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
     } else {
-      /* 2. Diferencia relevante en última auditoría */
-      const rec = list[0];
-      if (rec.estado === 'alerta') {
-        const diff = rec.diff != null ? fmtD(rec.diff) : '';
+      /* 2. Estado de la última auditoría */
+      const _ultimoEstado = _auditStats ? _auditStats.ultimoEstado : (list && list[0] ? list[0].estado : null);
+      const _ultimoDiff   = _auditStats ? _auditStats.ultimoDiff   : (list && list[0] ? list[0].diff   : null);
+      if (_ultimoEstado === 'alerta') {
+        const diff = _ultimoDiff != null ? fmtD(_ultimoDiff) : '';
         alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Última auditoría con alerta</strong> — diferencia neta ${diff}. Revisa el Historial.` });
-      } else if (rec.estado === 'aviso') {
+      } else if (_ultimoEstado === 'aviso') {
         alerts.push({ cls:'amber', icon:'ℹ️', msg:`<strong>Última auditoría con aviso</strong> — pequeñas diferencias detectadas. Revisa el Historial.` });
       }
     }
 
-    /* 3. Simulador sin histórico */
-    const hist = pd.simHistorico || {};
-    const mesesHist = Object.keys(hist).filter(k => hist[k] && (hist[k].bruto || hist[k].irpf)).length;
-    const brutoEl = el('sim-bruto-acum');
-    const brutoVal = brutoEl ? parseFloat(brutoEl.value) : 0;
-    if (!brutoVal && mesesHist === 0) {
+    /* 3. Simulador — solo datos persistidos, sin leer DOM de otras pestañas */
+    const _simHist   = pd.simHistorico || {};
+    const _mesesHist = Object.keys(_simHist).filter(k => _simHist[k] && (_simHist[k].bruto || _simHist[k].irpf)).length;
+    if (_mesesHist === 0) {
       alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Registra los acumulados en el histórico del Simulador IRPF o súbelos desde Comparativa.' });
-    } else if (mesesHist > 0) {
-      const mesActualNum = new Date().getMonth() + 1;
-      const tieneMesActual = hist[mesActualNum] && (hist[mesActualNum].bruto || hist[mesActualNum].irpf);
-      if (!tieneMesActual) {
-        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
-      }
-    }
-
-    const u = derived.u || ((window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {});
-
-    /* 4–6. Configuración fiscal
-     * CCAA se considera configurada si hay valor explícito O se puede derivar del base.
-     * derived.ccaa siempre tiene un valor (derivado de base como fallback).
-     * Solo alertamos si el usuario no ha confirmado explícitamente su CCAA.
-     */
-    const sinEstadoCivil  = !pd.estadoCivil;
-    const ccaaExplicita   = !!(pd.ccaa || pd.sim_ccaa);
-    const irpfEfectivo    = derived.irpf;      // ya resuelto con fallback a u.irpf
-    const sinIRPF         = irpfEfectivo == null;
-
-    if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
-      /* Usuario nuevo: aviso general único */
-      alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
     } else {
-      /* Avisos específicos solo si hay config parcial */
-      if (!ccaaExplicita) {
-        alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
-      }
-      if (sinIRPF) {
-        alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
+      const _mesActualNum   = new Date().getMonth() + 1;
+      const _tieneMesActual = _simHist[_mesActualNum] && (_simHist[_mesActualNum].bruto || _simHist[_mesActualNum].irpf);
+      if (!_tieneMesActual) {
+        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[_mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
       }
     }
 
-    /* 7. NIF ausente — solo si ya existe alguna auditoría (usuario que ya subió nómina) */
-    if (list && list.length > 0 && !pd.nif) {
-      const _lastRec = list[0];
-      const _nifDetectado = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
-      const _msg = _nifDetectado
-        ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
-        : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
-      alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
+    /* 4–7. Checks de perfil — solo si el perfil ya ha hidratado desde Firebase */
+    if (_profileCargado) {
+      const sinEstadoCivil = !_prof.estadoCivil;
+      // sim_ccaa viene de profileData directamente (no está en profile.get())
+      const ccaaExplicita  = !!(_prof.ccaa || pd.sim_ccaa);
+      const sinIRPF        = derived.irpf == null;  // ya resuelto con prioridad pd.irpf > u.irpf
+
+      if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
+        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
+      } else {
+        if (!ccaaExplicita) {
+          alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
+        }
+        if (sinIRPF) {
+          alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
+        }
+      }
+
+      /* 7. NIF ausente — solo si ya existe alguna auditoría */
+      if (_totalAudits > 0 && !_prof.nif) {
+        const _lastRec   = list && list[0];
+        const _nifDetect = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
+        const _msg = _nifDetect
+          ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
+          : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
+        alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
+      }
     }
 
     /* 8. Todo OK */
