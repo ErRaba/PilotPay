@@ -56,9 +56,10 @@
       : 'pilotpay:' + (_userId || '_') + ':monthly_v1';
   }
 
-  // Persiste solo meses que tienen datos intermedios propios (variables PDF cargado).
-  // Los meses puramente derivados de auditorías no se persisten aquí — ya
-  // están cubiertos por audit_history_v1.
+  // Persiste solo meses en progreso (pending_*).
+  // Meses auditados viven en audit_history_v1; no necesitan monthly_v1.
+  // Esto garantiza que cuando _hydrateMonthly cierra un pending_comparison,
+  // la siguiente llamada a _saveMonthly lo elimina de monthly_v1 automáticamente.
   function _saveMonthly() {
     try {
       var k = _monthlyKey();
@@ -66,9 +67,12 @@
       var toSave = {};
       Object.keys(_monthly).forEach(function (key) {
         var mr = _monthly[key];
-        if (mr.variablesData !== null) {
-          toSave[key] = mr;
-        }
+        var isPending = mr.variablesData !== null && (
+          mr.estado === 'pending_variables'   ||
+          mr.estado === 'pending_calculation' ||
+          mr.estado === 'pending_comparison'
+        );
+        if (isPending) toSave[key] = mr;
       });
       localStorage.setItem(k, JSON.stringify(toSave));
     } catch (e) { console.warn('[PilotPayStore] _saveMonthly error:', e); }
@@ -151,6 +155,8 @@
 
   // ── Hydration ───────────────────────────────────────────────────────────────
   function _hydrateMonthly(auditList, calcResult) {
+    var _pendingClosed = false;
+
     // Construir MonthRecords desde registros de auditoría existentes.
     auditList.forEach(function (rec) {
       var ym = _inferYearMonth(rec);
@@ -164,6 +170,10 @@
 
       // El registro más reciente del mes gana (auditList ya está en orden inverso)
       if (!mr.auditoria) {
+        // Si tenía previsión pendiente y ahora llega una auditoría, hay que
+        // eliminar el mes de monthly_v1 tras el loop.
+        if (mr.estado === 'pending_comparison') _pendingClosed = true;
+
         mr.auditoria = {
           fechaAuditoria : rec.fechaAuditoria,
           diferenciaNeta : rec.diff,
@@ -183,6 +193,10 @@
         mr._updatedAt = new Date().toISOString();
       }
     });
+
+    // Si algún pending_comparison fue cerrado por una auditoría, persistir
+    // inmediatamente para que ese mes quede eliminado de monthly_v1.
+    if (_pendingClosed) _saveMonthly();
 
     // Mes en curso: añadir calculoTeorico desde live calcResult solo si el mes
     // no tiene ya un snapshot guardado desde monthly_v1 (onCalculationDone).
@@ -296,6 +310,11 @@
         .sort(function (a, b) {
           return (b.year - a.year) || (b.month - a.month);
         });
+    },
+    getPendingComparisons: function () {
+      return Object.values(_monthly)
+        .filter(function (mr) { return mr.estado === 'pending_comparison'; })
+        .sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
     }
   };
 
