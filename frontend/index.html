@@ -7192,6 +7192,12 @@ function renderNomina() {
         <span class="nomina-amount" style="color:var(--text3)">${row.total ? fmt(row.total)+' €' : '—'}</span>
       </div>`;
     }
+    if (row.type === 'info') {
+      return `<div class="nomina-row" style="opacity:.75">
+        <span class="nomina-concept" style="color:var(--text2)">${row.concept}</span>
+        <span class="nomina-amount" style="color:var(--text3)">${fmt(row.total)} ${row.unit || ''}</span>
+      </div>`;
+    }
     // Normal row with units × price
     const hasUnits = row.uds !== null && row.precio !== null;
     return `<div class="nomina-row">
