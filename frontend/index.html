@@ -3974,6 +3974,69 @@ Complemento de Base MAD: 1500"></textarea>
           border: none; border-top: 1px solid var(--border);
           margin: 0 0 18px;
         }
+
+        /* ─── Regularización final ─── */
+        .hst-reg-section {
+          margin-top: 14px; padding-top: 12px;
+          border-top: 1px solid var(--border);
+        }
+        .hst-reg-detail {
+          background: var(--bg2);
+          border: 1px solid var(--border);
+          border-left: 3px solid var(--green);
+          border-radius: 6px;
+          padding: 10px 12px;
+        }
+        .hst-reg-trigger-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--text2); background: none;
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; opacity: .8; transition: opacity .15s;
+        }
+        .hst-reg-trigger-btn:hover { opacity: 1; }
+        .hst-reg-form {
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 6px; padding: 12px 14px; margin-top: 10px;
+        }
+        .hst-reg-form-title {
+          font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 12px;
+        }
+        .hst-reg-field { margin-bottom: 10px; }
+        .hst-reg-label {
+          display: block; font-size: 10px; font-family: var(--mono);
+          color: var(--text3); text-transform: uppercase; letter-spacing: .05em;
+          margin-bottom: 4px;
+        }
+        .hst-reg-input, .hst-reg-textarea {
+          width: 100%; box-sizing: border-box;
+          background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+          color: var(--text); font-size: 12px; font-family: var(--mono);
+          padding: 6px 8px; outline: none; transition: border-color .15s;
+        }
+        .hst-reg-input:focus, .hst-reg-textarea:focus { border-color: var(--border2); }
+        .hst-reg-textarea { resize: vertical; min-height: 52px; }
+        .hst-reg-hint {
+          font-size: 10px; color: var(--text3); font-family: var(--mono);
+          margin-top: 3px; line-height: 1.4;
+        }
+        .hst-reg-form-actions {
+          display: flex; gap: 8px; margin-top: 12px;
+          padding-top: 10px; border-top: 1px solid var(--border);
+        }
+        .hst-reg-save-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--green); background: var(--green-dim);
+          border: 1px solid var(--green); border-radius: 6px;
+          padding: 5px 14px; cursor: pointer; opacity: .85; transition: opacity .15s;
+        }
+        .hst-reg-save-btn:hover { opacity: 1; }
+        .hst-reg-cancel-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--text3); background: none;
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; opacity: .75; transition: opacity .15s;
+        }
+        .hst-reg-cancel-btn:hover { opacity: 1; }
       </style>
 
       <!-- Cabecera -->
@@ -4204,13 +4267,23 @@ Complemento de Base MAD: 1500"></textarea>
       aviso : ['AVISO',  'aviso'],
       alerta: ['ALERTA', 'alerta']
     };
-    const [badgeTxt, badgeCls] = badgeMap[rec.estado] || ['—','ok'];
+    /* Si regularizada, badge visual → 'ok' aunque el estado interno sea 'alerta'/'aviso' */
+    const _rf = rec.regularizacionFinal || null;
+    const _badgeEstado = (_rf && rec.estado !== 'ok') ? 'ok' : rec.estado;
+    const [badgeTxt, badgeCls] = badgeMap[_badgeEstado] || ['—','ok'];
 
     /* Clase de color diferencia */
     const diffCls = (rec.diff == null) ? 'neu'
                   : (Math.abs(rec.diff) < 1) ? 'neu'
                   : (rec.diff > 0)           ? 'pos'
                   : 'neg';
+
+    /* Importes del resumen: si regularizada, mostrar neto ajustado + importe de la regularización */
+    const _liqDisplay     = (_rf && _rf.netoFinalAjustado != null) ? _rf.netoFinalAjustado : rec.liqReal;
+    const _diffDisplay    = _rf ? _rf.importeNeto : rec.diff;
+    const _diffDisplayCls = _rf
+      ? (_rf.importeNeto > 0 ? 'pos' : _rf.importeNeto < 0 ? 'neg' : 'neu')
+      : diffCls;
 
     /* Mes + año */
     const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
@@ -4272,6 +4345,54 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>`;
 
+    /* Sección de regularización final: detalle si ya existe, formulario si no */
+    const regHTML = (function() {
+      const fR = function(v) {
+        if (v == null) return '—';
+        return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+      };
+      const fRD = function(v) {
+        if (v == null) return '—';
+        const s = v >= 0 ? '+' : '';
+        return s + Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+      };
+      if (_rf) {
+        const fechaEvt = _rf.fecha
+          ? new Date(_rf.fecha + 'T12:00:00').toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' })
+          : '—';
+        const fechaReg = _rf.registrado
+          ? new Date(_rf.registrado).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+          : '—';
+        const impCls = _rf.importeNeto >= 0 ? 'pos' : 'neg';
+        const netoRow = _rf.netoFinalAjustado != null
+          ? '<div class="hst-kv" style="border-bottom:none"><span class="hst-kv-k" style="font-weight:600;color:var(--text2)">Neto final ajustado</span><span class="hst-kv-v" style="color:var(--text);font-size:12px;font-weight:700">' + fR(_rf.netoFinalAjustado) + '</span></div>'
+          : '';
+        const notaRow = _rf.nota
+          ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);font-style:italic;line-height:1.4">"' + _rf.nota + '"</div>'
+          : '';
+        const docStr = _rf.docNombre ? ' &nbsp;·&nbsp; ' + _rf.docNombre : '';
+        return '<div class="hst-reg-section">'
+          + '<div class="hst-det-label">Regularización final</div>'
+          + '<div class="hst-reg-detail">'
+          + '<div class="hst-kv"><span class="hst-kv-k">Diferencia original</span><span class="hst-kv-v ' + diffCls + '">' + fRD(rec.diff) + '</span></div>'
+          + '<div class="hst-kv"><span class="hst-kv-k">Importe neto regularizado</span><span class="hst-kv-v ' + impCls + '">' + fRD(_rf.importeNeto) + '</span></div>'
+          + netoRow
+          + notaRow
+          + '<div style="margin-top:6px;font-size:10px;font-family:var(--mono);color:var(--text3)">Fecha evento: ' + fechaEvt + ' &nbsp;·&nbsp; Registrada: ' + fechaReg + docStr + '</div>'
+          + '</div></div>';
+      }
+      if (rec.estado !== 'ok') {
+        const safeId = rec.id;
+        const liqArg = rec.liqReal != null ? rec.liqReal : 'null';
+        return '<div class="hst-reg-section">'
+          + '<div class="hst-det-label">Regularización final</div>'
+          + '<button class="hst-reg-trigger-btn" onclick="hstShowRegForm(' + idx + ', \'' + safeId + '\', ' + liqArg + ')">Registrar regularización →</button>'
+          + '<div id="hst-reg-form-' + idx + '"></div>'
+          + '</div>';
+      }
+      return '';
+    })();
+
     return `
       <div class="hst-row" id="hst-row-${idx}">
         <div class="hst-row-summary" onclick="hstToggle(${idx})">
@@ -4281,8 +4402,8 @@ Complemento de Base MAD: 1500"></textarea>
             <div class="hst-meta-sub">${meta2}</div>
           </div>
           <div class="hst-amounts">
-            <div class="hst-amounts-liq">${fmt(rec.liqReal)}</div>
-            <div class="hst-amounts-diff ${diffCls}">${fmtD(rec.diff)}</div>
+            <div class="hst-amounts-liq">${fmt(_liqDisplay)}</div>
+            <div class="hst-amounts-diff ${_diffDisplayCls}">${fmtD(_diffDisplay)}</div>
           </div>
           <span class="hst-chevron">▶</span>
         </div>
@@ -4303,6 +4424,7 @@ Complemento de Base MAD: 1500"></textarea>
           <div class="hst-actions">
             <button class="hst-del-btn" onclick="hstDelete('${rec.id}')">🗑 Eliminar este registro</button>
           </div>
+          ${regHTML}
         </div>
       </div>`;
   }
@@ -4337,6 +4459,91 @@ Complemento de Base MAD: 1500"></textarea>
     if (!confirm('¿Eliminar las ' + list.length + ' auditorías guardadas? Esta acción no se puede deshacer.')) return;
     hstSave([]);
     renderHistorial();
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: mostrar formulario inline
+  ───────────────────────────────────────────────── */
+  window.hstShowRegForm = function(idx, recId, liqReal) {
+    const container = document.getElementById('hst-reg-form-' + idx);
+    if (!container) return;
+    const today = new Date().toISOString().slice(0, 10);
+    container.innerHTML = `<div class="hst-reg-form">
+      <div class="hst-reg-form-title">Registrar regularización final</div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Importe neto regularizado (€)</label>
+        <input type="number" id="hst-reg-imp-${idx}" step="0.01" placeholder="0.00" class="hst-reg-input">
+        <div class="hst-reg-hint">+ si la empresa abona lo pendiente &nbsp;·&nbsp; − si descuenta &nbsp;·&nbsp; 0 si aceptas sin ajuste económico</div>
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Nota de resolución</label>
+        <textarea id="hst-reg-nota-${idx}" class="hst-reg-textarea" rows="2" placeholder="Describe brevemente cómo se resolvió..."></textarea>
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Fecha de resolución</label>
+        <input type="date" id="hst-reg-fecha-${idx}" class="hst-reg-input" value="${today}">
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Nombre del documento soporte (opcional)</label>
+        <input type="text" id="hst-reg-doc-${idx}" class="hst-reg-input" placeholder="ej: nomina_complementaria_mayo.pdf">
+      </div>
+      <div class="hst-reg-form-actions">
+        <button class="hst-reg-save-btn" onclick="hstRegularizar(${idx}, '${recId}', ${liqReal})">Guardar regularización</button>
+        <button class="hst-reg-cancel-btn" onclick="hstHideRegForm(${idx})">Cancelar</button>
+      </div>
+    </div>`;
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: cancelar / ocultar formulario
+  ───────────────────────────────────────────────── */
+  window.hstHideRegForm = function(idx) {
+    const container = document.getElementById('hst-reg-form-' + idx);
+    if (container) container.innerHTML = '';
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: guardar y persistir
+  ───────────────────────────────────────────────── */
+  window.hstRegularizar = function(idx, recId, liqReal) {
+    const impEl   = document.getElementById('hst-reg-imp-'   + idx);
+    const notaEl  = document.getElementById('hst-reg-nota-'  + idx);
+    const fechaEl = document.getElementById('hst-reg-fecha-' + idx);
+    const docEl   = document.getElementById('hst-reg-doc-'   + idx);
+
+    if (!impEl) return;
+    const importeNeto = parseFloat(impEl.value);
+    if (isNaN(importeNeto)) {
+      alert('Indica un importe neto válido (puede ser 0 si aceptas la diferencia sin ajuste económico).');
+      impEl.focus();
+      return;
+    }
+
+    const netoFinalAjustado = (liqReal != null) ? (Number(liqReal) + importeNeto) : null;
+
+    const reg = {
+      importeNeto       : importeNeto,
+      netoFinalAjustado : netoFinalAjustado,
+      nota              : notaEl  ? notaEl.value.trim()  : '',
+      fecha             : fechaEl ? fechaEl.value        : new Date().toISOString().slice(0, 10),
+      registrado        : new Date().toISOString(),
+      docNombre         : (docEl && docEl.value.trim()) ? docEl.value.trim() : null
+    };
+
+    let list = hstLoad();
+    const recIdx = list.findIndex(function(r) { return r.id === recId; });
+    if (recIdx === -1) {
+      console.warn('[PilotPay] hstRegularizar: registro no encontrado', recId);
+      return;
+    }
+    list[recIdx].regularizacionFinal = reg;
+    hstSave(list);
+    renderHistorial();
+    setTimeout(function() {
+      hstToggle(idx);
+      // Refrescar dashboard si está activo
+      try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+    }, 60);
   };
 
   /* ─────────────────────────────────────────────────
@@ -10939,11 +11146,13 @@ window.PILOTPAY_BACKEND_READY = true;
       return;
     }
 
-    /* Estado visual */
+    /* Estado visual — si regularizada, badge → OK */
     const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
-    const stCls = rec.estado || 'dim';
-    setAttr('dsh-audit-status', stCls);
-    setText('dsh-audit-status', stMap[rec.estado] || '—');
+    const _auditRF    = rec.regularizacionFinal || null;
+    const _auditIsReg = _auditRF != null && rec.estado !== 'ok';
+    const _auditCls   = _auditIsReg ? 'ok' : (rec.estado || 'dim');
+    setAttr('dsh-audit-status', _auditCls);
+    setText('dsh-audit-status', stMap[_auditCls] || '—');
 
     /* Período */
     const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
@@ -10951,11 +11160,16 @@ window.PILOTPAY_BACKEND_READY = true;
     /* Clase de diferencia */
     const diffCls = (rec.diff == null) ? '' : Math.abs(rec.diff) < 1 ? 'pos' : rec.diff > 0 ? 'pos' : 'neg';
 
-    /* Valor grande: líquido real */
-    const bigHtml = rec.liqReal != null
-      ? `<div class="dsh-val-big">${fmt(rec.liqReal)}</div>
+    /* Valor grande: neto ajustado si regularizada, liqReal si no */
+    const _bigLiq = (_auditRF && _auditRF.netoFinalAjustado != null) ? _auditRF.netoFinalAjustado : rec.liqReal;
+    const bigHtml = _bigLiq != null
+      ? `<div class="dsh-val-big">${fmt(_bigLiq)}</div>
          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${periodo} · ${rec.nombre || 'Empleado'}</div>`
       : `<div class="dsh-val-big dim">Sin importe</div>`;
+
+    const _netoAjRow = (_auditRF && _auditRF.netoFinalAjustado != null)
+      ? `<div class="dsh-kv"><span class="dsh-kv-k">Neto ajustado</span><span class="dsh-kv-v pos">${fmt(_auditRF.netoFinalAjustado)}</span></div>`
+      : '';
 
     const kvHtml = `<div class="dsh-kv-list">
       <div class="dsh-kv">
@@ -10966,6 +11180,7 @@ window.PILOTPAY_BACKEND_READY = true;
         <span class="dsh-kv-k">Diferencia neta</span>
         <span class="dsh-kv-v ${diffCls}">${fmtD(rec.diff)}</span>
       </div>
+      ${_netoAjRow}
       <div class="dsh-kv">
         <span class="dsh-kv-k">Discrepancias</span>
         <span class="dsh-kv-v ${rec.nDiscrepancias > 0 ? 'neg' : 'pos'}">${rec.nDiscrepancias}</span>
@@ -11158,10 +11373,14 @@ window.PILOTPAY_BACKEND_READY = true;
       /* 2. Estado de la última auditoría */
       const _ultimoEstado = _auditStats ? _auditStats.ultimoEstado : (list && list[0] ? list[0].estado : null);
       const _ultimoDiff   = _auditStats ? _auditStats.ultimoDiff   : (list && list[0] ? list[0].diff   : null);
-      if (_ultimoEstado === 'alerta') {
+      // Si la última auditoría está regularizada, no genera alerta activa
+      const _lastRec = list && list[0];
+      const _ultimoEstadoEfectivo = (_lastRec && _lastRec.regularizacionFinal != null && _ultimoEstado !== 'ok')
+        ? 'ok' : _ultimoEstado;
+      if (_ultimoEstadoEfectivo === 'alerta') {
         const diff = _ultimoDiff != null ? fmtD(_ultimoDiff) : '';
         alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Última auditoría con alerta</strong> — diferencia neta ${diff}. Revisa el Historial.` });
-      } else if (_ultimoEstado === 'aviso') {
+      } else if (_ultimoEstadoEfectivo === 'aviso') {
         alerts.push({ cls:'amber', icon:'ℹ️', msg:`<strong>Última auditoría con aviso</strong> — pequeñas diferencias detectadas. Revisa el Historial.` });
       }
     }
