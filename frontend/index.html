@@ -10517,34 +10517,19 @@ function varsGetNominaMes(fechaFin) {
 }
 
 // ── Notificaciones al store ──────────────────────────────────────────────────
-// El MonthRecord se identifica por el MES DE NÓMINA, no por el período de variables.
-// Las variables de Abril (periodoFin = 30/04) se cobran en Mayo → clave '2026:5'.
-// Esto garantiza que el matching con AuditRecord (que usa mes/año de la nómina) sea correcto.
-function _getNominaMesAno(varsD) {
-  // Usa _periodoFin del PDF de variables y avanza un mes → mes de nómina
-  var fin = varsD && varsD._periodoFin;
-  if (fin && !isNaN(fin)) {
-    var sig = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
-    return { year: sig.getFullYear(), month: sig.getMonth() + 1 };
-  }
-  // Fallback: mes calendario actual
-  var now = new Date();
-  return { year: now.getFullYear(), month: now.getMonth() + 1 };
-}
-
+// El frontend NO resuelve year/month — esa responsabilidad es del store.
+// PilotPayStore.resolveExpedientePeriod() es la única fuente de verdad temporal.
 function _varsNotifyStore() {
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
   if (!varsData || !varsData._periodoFin) return;
-  var ym = _getNominaMesAno(varsData);
-  PilotPayStore.monthly.onVariablesConfirmed(ym.year, ym.month, varsData);
+  PilotPayStore.monthly.onVariablesConfirmed(varsData);
 }
 
 function _recalcNotifyStore() {
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
   var cr = calcResult;
   if (!cr) return;
-  var ym = _getNominaMesAno(varsData);
-  PilotPayStore.monthly.onCalculationDone(ym.year, ym.month, cr);
+  PilotPayStore.monthly.onCalculationDone(varsData, cr);
 }
 
 // ── Restauración de estado mensual al re-login ──────────────────────────────

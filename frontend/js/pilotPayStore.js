@@ -102,6 +102,48 @@
     return year + ':' + month;
   }
 
+  // ── Resolución canónica del período del expediente ───────────────────────────
+  // Función PURA — sin side effects, sin escritura al store, sin DOM.
+  // TODA creación y búsqueda de MonthRecord debe pasar por aquí.
+  //
+  // El expediente se identifica por el MES DE NÓMINA/COBRO, no por el período operativo.
+  // Ejemplo: variables de Abril (_periodoFin = 30/04/2026) → expediente Mayo 2026.
+  // El período operativo queda como metadata dentro del expediente (variablesData).
+  //
+  // source posibles:
+  //   'periodoFin'        — resolución canónica desde PDF de variables (alta confianza)
+  //   'nominaPDF'         — resolución desde PDF de nómina (alta confianza)
+  //   'calendarioFallback'— sin datos del PDF, usa fecha del sistema (BAJA CONFIANZA)
+  function _resolveExpedientePeriod(varsData) {
+    // _periodoFin puede ser Date (live) o string ISO (desde localStorage)
+    var finRaw = varsData && varsData._periodoFin;
+    var fin    = finRaw ? new Date(finRaw) : null;
+
+    if (fin && !isNaN(fin)) {
+      var nomi = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
+      var yr   = nomi.getFullYear();
+      var mo   = nomi.getMonth() + 1;
+      return {
+        year     : yr,
+        month    : mo,
+        mesLabel : _monthLabel(mo),
+        source   : 'periodoFin'
+      };
+    }
+
+    // Fallback calendario — estado de baja confianza, debe ser excepcional
+    var now = new Date();
+    var yr  = now.getFullYear();
+    var mo  = now.getMonth() + 1;
+    console.warn('[PilotPayStore] resolveExpedientePeriod: _periodoFin no disponible — calendarioFallback para', yr + ':' + mo);
+    return {
+      year     : yr,
+      month    : mo,
+      mesLabel : _monthLabel(mo),
+      source   : 'calendarioFallback'
+    };
+  }
+
   function _inferYearMonth(record) {
     var year  = record.anyo ? parseInt(record.anyo, 10) : null;
     var month = record.mes  ? (MESES_IDX[record.mes]   || null) : null;
@@ -140,6 +182,10 @@
       // Eventos posteriores a la auditoría — capas aditivas, no modifican auditoria
       regularizacion : null,   // { importeNeto, netoFinalAjustado, nota, fecha, docNombre, registrado }
       reclamacion    : null,   // { generada, texto, referencia } — futuro
+
+      // Audit trail de resolución temporal — por qué este expediente es del mes que es
+      // { year, month, mesLabel, source, resolvedAt }
+      resolvedPeriod : null,
 
       // Trazabilidad de fuentes
       sourceIntegrity : {
@@ -203,6 +249,17 @@
         };
         mr.sourceIntegrity.auditoriaCompleta = true;
 
+        // Audit trail: período resuelto desde nómina PDF (si no lo tenía ya)
+        if (!mr.resolvedPeriod) {
+          mr.resolvedPeriod = {
+            year      : ym.year,
+            month     : ym.month,
+            mesLabel  : _monthLabel(ym.month),
+            source    : 'nominaPDF',
+            resolvedAt: new Date().toISOString()
+          };
+        }
+
         // Estado base desde auditoría
         var estadoBase = (rec.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
 
@@ -227,66 +284,49 @@
     });
 
     // ── Limpieza de zombies ─────────────────────────────────────────────────
-    // MonthRecords atascados en pending_comparison cuyo mes de nómina esperado
-    // (variablesData._periodoFin + 1 mes) ya tiene una auditoría en audit_history_v1.
-    // Esto ocurre cuando la clave se creó con _periodoInicio (bug previo) en vez del
-    // mes de nómina, dejando el MonthRecord sin recibir la transición de estado.
+    // MonthRecords en pending_comparison cuyo mes de nómina correcto (calculado via
+    // _resolveExpedientePeriod) ya tiene una auditoría completada.
     var _zombieKeys = [];
     Object.keys(_monthly).forEach(function (key) {
       var mr = _monthly[key];
       if (mr.estado !== 'pending_comparison') return;
-      if (!mr.variablesData || !mr.variablesData._periodoFin) return;
+      if (!mr.variablesData) return;
 
-      // Calcular mes de nómina esperado desde _periodoFin
-      var fin = new Date(mr.variablesData._periodoFin);
-      if (isNaN(fin)) return;
-      var sig = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
-      var nomiYear  = sig.getFullYear();
-      var nomiMonth = sig.getMonth() + 1;
-      var nomiKey   = _monthKey(nomiYear, nomiMonth);
+      var rp = _resolveExpedientePeriod(mr.variablesData);
+      if (rp.source === 'calendarioFallback') return; // sin _periodoFin — no se puede detectar zombie
 
-      // Si el mes de nómina esperado ya tiene MonthRecord auditado → este es zombie
+      var nomiKey = _monthKey(rp.year, rp.month);
+
+      // Si la clave del zombie ya coincide con el expediente correcto, no es zombie
+      if (nomiKey === key) return;
+
+      // Si el mes de nómina tiene MonthRecord auditado → este es zombie
       var nomiMR = _monthly[nomiKey];
       if (nomiMR && (nomiMR.estado === 'auditado' ||
                      nomiMR.estado === 'con_diferencias' ||
                      nomiMR.estado === 'regularizado')) {
         _zombieKeys.push(key);
-        console.log('[PilotPayStore] zombie detectado y eliminado:', key,
-                    '→ nómina en', nomiKey, '(' + nomiMR.estado + ')');
+        console.log('[PilotPayStore] zombie eliminado:', key, '→ nómina ya auditada en', nomiKey, '(' + nomiMR.estado + ')');
         return;
       }
 
-      // Si el mes de nómina tiene AuditRecord en audit_history_v1 pero aún
-      // no tiene MonthRecord, promover el zombie al mes correcto
+      // Si hay AuditRecord para el mes de nómina pero el MonthRecord aún no se creó,
+      // el zombie también se puede eliminar (la hidratación creará el correcto).
       var hasAudit = auditList.some(function (rec) {
         var ym2 = _inferYearMonth(rec);
-        return ym2 && ym2.year === nomiYear && ym2.month === nomiMonth;
+        return ym2 && ym2.year === rp.year && ym2.month === rp.month;
       });
-      if (hasAudit && key !== nomiKey) {
+      if (hasAudit) {
         _zombieKeys.push(key);
-        console.log('[PilotPayStore] zombie con auditoría pendiente de hidratación:', key,
-                    '→ nómina en', nomiKey);
+        console.log('[PilotPayStore] zombie eliminado:', key, '→ AuditRecord existe en', nomiKey);
       }
     });
     _zombieKeys.forEach(function (key) { delete _monthly[key]; });
 
+    // El bloque "calcResult → new Date()" fue eliminado intencionalmente.
+    // El calculoTeorico solo se gestiona via onCalculationDone(varsData, calcResult),
+    // que usa _resolveExpedientePeriod para la clave. El mes calendario nunca es fuente.
     _saveMonthly();
-
-    // Mes en curso: añadir calculoTeorico desde live calcResult solo si el mes
-    // no tiene snapshot guardado (guard: no sobreescribir previsión del usuario).
-    if (calcResult) {
-      var now   = new Date();
-      var year  = now.getFullYear();
-      var month = now.getMonth() + 1;
-      var k     = _monthKey(year, month);
-      if (!_monthly[k]) {
-        _monthly[k] = _makeMonthRecord(_userId, year, month);
-      }
-      if (!_monthly[k].calculoTeorico) {
-        _monthly[k].calculoTeorico = calcResult;
-        _monthly[k].sourceIntegrity.simulatorDerived = true;
-      }
-    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
@@ -336,25 +376,35 @@
       _saveMonthly();
     },
 
-    // Llamar desde varsConfirmarPeriodo() cuando el usuario confirma el PDF de variables.
-    // year/month deben venir de varsData._periodoInicio (fecha del PDF, no mes calendario).
-    onVariablesConfirmed: function (year, month, varsData) {
-      var k = _monthKey(year, month);
-      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, year, month);
-      var mr = _monthly[k];
+    // Llamar desde _varsNotifyStore() cuando el usuario confirma el PDF de variables.
+    // La resolución temporal es interna: usa _resolveExpedientePeriod(varsData).
+    // El frontend NO calcula year/month — solo pasa varsData.
+    onVariablesConfirmed: function (varsData) {
+      var rp  = _resolveExpedientePeriod(varsData);
+      var k   = _monthKey(rp.year, rp.month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
+      var mr  = _monthly[k];
+      var now = new Date().toISOString();
       mr.variablesData = varsData;
       mr.estado = 'pending_calculation';
       mr.sourceIntegrity.variablesParsed = true;
-      mr._updatedAt = new Date().toISOString();
+      if (!mr.resolvedPeriod) {
+        mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
+                              source: rp.source, resolvedAt: now };
+      }
+      mr._updatedAt = now;
       _saveMonthly();
     },
 
-    // Llamar desde recalc() cuando se completa un cálculo teórico.
-    // year/month deben coincidir con el mes del PDF cargado en variables.
-    onCalculationDone: function (year, month, calcResult) {
-      var k = _monthKey(year, month);
-      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, year, month);
-      var mr = _monthly[k];
+    // Llamar desde _recalcNotifyStore() cuando se completa un cálculo teórico.
+    // La resolución temporal es interna: usa _resolveExpedientePeriod(varsData).
+    // El calculoTeorico se congela en este momento — no se regenera nunca.
+    onCalculationDone: function (varsData, calcResult) {
+      var rp  = _resolveExpedientePeriod(varsData);
+      var k   = _monthKey(rp.year, rp.month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
+      var mr  = _monthly[k];
+      var now = new Date().toISOString();
       mr.calculoTeorico = calcResult;
       if (mr.estado === 'pending_calculation' ||
           mr.estado === 'pending_variables'   ||
@@ -362,7 +412,11 @@
         mr.estado = 'pending_comparison';
       }
       mr.sourceIntegrity.simulatorDerived = true;
-      mr._updatedAt = new Date().toISOString();
+      if (!mr.resolvedPeriod) {
+        mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
+                              source: rp.source, resolvedAt: now };
+      }
+      mr._updatedAt = now;
       _saveMonthly();
     },
     getEstado: function (year, month) {
@@ -416,6 +470,17 @@
       };
       mr.sourceIntegrity.auditoriaCompleta = true;
       mr.sourceIntegrity.nominaParsed = true;
+
+      // Audit trail: período resuelto desde nómina PDF (solo si no tenía ya resolvedPeriod)
+      if (!mr.resolvedPeriod) {
+        mr.resolvedPeriod = {
+          year      : ym.year,
+          month     : ym.month,
+          mesLabel  : _monthLabel(ym.month),
+          source    : 'nominaPDF',
+          resolvedAt: new Date().toISOString()
+        };
+      }
 
       if (mr.estado !== 'cerrado' && mr.estado !== 'reclamado') {
         mr.estado = (auditRecord.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
@@ -674,6 +739,9 @@
     refresh : refresh,
     clear   : clear,
     ready   : ready,
+
+    // Resolución temporal canónica — única fuente de verdad del período del expediente
+    resolveExpedientePeriod : function (varsData) { return _resolveExpedientePeriod(varsData); },
 
     // Dominios
     profile    : profile,
