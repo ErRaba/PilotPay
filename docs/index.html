@@ -4732,6 +4732,11 @@ function doLogout() {
     if (_varsUploadTxt) _varsUploadTxt.textContent = 'Toca para subir PDF de Variables';
     const _varsUploadZone = document.getElementById('vars-upload-zone');
     if (_varsUploadZone) _varsUploadZone.classList.remove('drag', 'has-file');
+    // Resetear el input file: sin esto, seleccionar el mismo PDF tras re-login
+    // no dispara onchange porque el navegador no detecta cambio de valor.
+    const _varsFileInput = document.getElementById('vars-file-input');
+    if (_varsFileInput) _varsFileInput.value = '';
+    varsPeriodoConfirmado = false;
 
     // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
     if (typeof resetComparativa === 'function') resetComparativa();
@@ -9946,9 +9951,12 @@ function varsParseText(text) {
   data.dest_int = parseVal(/destacamento\s*int(?:ernacional)?\s*:?\s*([\d.,]+)/i);
 
   // Desplazamiento/Dieta NAC sin pernocta
-  // "Dieta Desplaz. Nac. Exenta" (sin mencionar pernocta = sin pernocta)
+  // Variantes reales del PDF Binter:
+  //   "Dieta Desplaz. Nac.: 1"           (bare, sin calificador = sin pernocta)
+  //   "Dieta Desplaz. Nac. Exenta: ..."  (en nómina, misma semántica)
+  //   "Desplazamiento Nac. sin pernocta: ..."
   data.dieta_nac_sp = parseVal(
-    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?(?!\s*(?:pernoct|exenta|con\s|inter|sujeta)))\s*:?\s*([\d.,]+)/i
   );
 
   // Desplazamiento/Dieta NAC con pernocta
@@ -10887,10 +10895,17 @@ window.PILOTPAY_BACKEND_READY = true;
      TARJETA: ACTIVIDAD DEL MES
   ───────────────────────────────────────── */
   function renderCalcCard(c, storeSummary) {
-    // Datos financieros: store como fuente preferida, window.calcResult como fallback
-    const _calcData  = (storeSummary && storeSummary.currentCalc) || window.calcResult;
-    const hasCalc    = _calcData != null;
-    const hasHV      = c.hvTotal > 0 || c.hbTotal > 0;
+    // pendingComparison: MonthRecord con estado pending_comparison y calculoTeorico guardado.
+    // Puede ser de cualquier mes (no solo el calendario actual) — el usuario puede estar
+    // en junio esperando la nómina de mayo.
+    const _pending  = storeSummary && storeSummary.pendingComparison;
+
+    // Datos financieros: snapshot guardado > store live > calcResult global
+    const _calcData = (_pending && _pending.calculoTeorico)
+      || (storeSummary && storeSummary.currentCalc)
+      || window.calcResult;
+    const hasCalc   = _calcData != null;
+    const hasHV     = c.hvTotal > 0 || c.hbTotal > 0;
 
     if (!hasCalc && !hasHV) {
       setAttr('dsh-calc-status', 'dim');
@@ -10899,26 +10914,50 @@ window.PILOTPAY_BACKEND_READY = true;
       return;
     }
 
-    // Label y estado del mes: store como fuente preferida, DOM como fallback
-    const _mesLabel = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado';
-    const _estado   = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.estado) || null;
+    // Label del mes: pending usa mes del PDF; en otro caso, calendario o DOM
+    const _mesLabel = _pending
+      ? (_pending.mesLabel + ' ' + _pending.year)
+      : ((storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado');
 
-    setAttr('dsh-calc-status', 'info');
+    setAttr('dsh-calc-status', _pending ? 'aviso' : 'info');
     setText('dsh-calc-status', _mesLabel);
 
     const _liquidoReal = _calcData ? _calcData.liquidoReal : null;
+    const _subtitle = _pending
+      ? `Previsión generada · pendiente de nómina oficial · ${_mesLabel}`
+      : `Líquido calculado · ${_mesLabel}`;
+
     const bigHtml = hasCalc && _liquidoReal
       ? `<div class="dsh-val-big green">${fmt(_liquidoReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${_mesLabel}${_estado ? ' · ' + _estado : ''}</div>`
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_subtitle}</div>`
       : '';
 
     const rows = [];
-    if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
-    if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
-    if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
-    if (c.dpo > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
+    if (_pending) {
+      // Modo previsión: datos del snapshot guardado + datos operativos del PDF
+      const _ct = _pending.calculoTeorico || {};
+      const _vd = _pending.variablesData  || {};
+      if (_ct.totalDevengado != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Total devengado</span><span class="dsh-kv-v">${fmt(_ct.totalDevengado)}</span></div>`);
+      if (_ct.baseIRPF       != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Base IRPF</span><span class="dsh-kv-v">${fmt(_ct.baseIRPF)}</span></div>`);
+      if (_ct.retencionIRPF  != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Ret. IRPF</span><span class="dsh-kv-v">-${fmt(_ct.retencionIRPF)}</span></div>`);
+      // Datos operativos desde variablesData (parseados del PDF, sobreviven al logout)
+      const _hvP = _vd.hv_total  != null ? _vd.hv_total  : (_vd.hv_puro != null ? _vd.hv_puro : null);
+      const _hbP = _vd.hb_total  != null ? _vd.hb_total  : null;
+      const _imP = _vd.imaginarias != null ? _vd.imaginarias : null;
+      const _frP = _vd.francos     != null ? _vd.francos     : null;
+      if (_hvP > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${_hvP} h</span></div>`);
+      if (_hbP > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${_hbP} h</span></div>`);
+      if (_imP != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${_imP > 0 ? _imP : '—'}</span></div>`);
+      if (_frP != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${_frP > 0 ? _frP : '—'}</span></div>`);
+    } else {
+      // Modo normal: datos operativos en vivo del DOM
+      if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
+      if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
+      if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
+      if (c.dpo > 0)     rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
+    }
 
     setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
   }
@@ -10940,6 +10979,15 @@ window.PILOTPAY_BACKEND_READY = true;
     // Guard de hydration: si el perfil está completamente vacío, Firebase aún no ha cargado.
     // Silenciar alertas fiscales para evitar falsos positivos durante la inicialización.
     const _profileCargado = !!((_prof.nombre || _prof.fullName || _prof.name) || _prof.nif || _prof.base);
+
+    /* 0. Previsión pendiente de nómina oficial */
+    const _pendingMR = _storeReady ? derived.storeSummary.pendingComparison : null;
+    if (_pendingMR) {
+      const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+                       'Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const _mStr = (MESES_N[_pendingMR.month] || '') + ' ' + _pendingMR.year;
+      alerts.push({ cls:'amber', icon:'⏳', msg:`<strong>Previsión generada para ${_mStr} pendiente de auditoría final.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
+    }
 
     /* 1. Sin auditorías */
     const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);

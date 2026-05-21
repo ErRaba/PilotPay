@@ -184,7 +184,9 @@
       }
     });
 
-    // Mes en curso: añadir calculoTeorico si calcResult está disponible
+    // Mes en curso: añadir calculoTeorico desde live calcResult solo si el mes
+    // no tiene ya un snapshot guardado desde monthly_v1 (onCalculationDone).
+    // Sobreescribir destruiría el cálculo real del usuario con los defaults de login.
     if (calcResult) {
       var now   = new Date();
       var year  = now.getFullYear();
@@ -193,8 +195,10 @@
       if (!_monthly[k]) {
         _monthly[k] = _makeMonthRecord(_userId, year, month);
       }
-      _monthly[k].calculoTeorico = calcResult;
-      _monthly[k].sourceIntegrity.simulatorDerived = true;
+      if (!_monthly[k].calculoTeorico) {
+        _monthly[k].calculoTeorico = calcResult;
+        _monthly[k].sourceIntegrity.simulatorDerived = true;
+      }
     }
   }
 
@@ -385,6 +389,18 @@
     var curMR = monthly.getCurrent();
     var allMR = monthly.getAll();
 
+    // MonthRecord más reciente con estado pending_comparison (puede ser cualquier mes,
+    // no solo el mes calendario actual — el usuario puede estar en junio con Mayo pendiente).
+    var pendingComp = null;
+    allMR.forEach(function (mr) {
+      if (mr.estado === 'pending_comparison') {
+        if (!pendingComp || mr.year > pendingComp.year ||
+            (mr.year === pendingComp.year && mr.month > pendingComp.month)) {
+          pendingComp = mr;
+        }
+      }
+    });
+
     return {
       profile : prof,
 
@@ -396,6 +412,9 @@
         retencionIRPF  : cr.retencionIRPF,
         nivel          : _ni()
       } : null,
+
+      // null si no hay previsión pendiente de nómina oficial para ningún mes
+      pendingComparison : pendingComp,
 
       auditStats : {
         total          : total,
