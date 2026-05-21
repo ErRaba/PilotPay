@@ -472,11 +472,19 @@
       return result.sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
     },
 
-    // Elimina previsiones fantasma sin período temporal fiable.
-    // Un ghost es un MonthRecord pending que:
-    //   - no tiene resolvedPeriod (pre-Fase-A) o tiene source='calendarioFallback'
-    //   - Y no tiene variablesData._periodoFin (ningún PDF de variables confirmado)
-    // Si tiene variablesData._periodoFin pero le falta resolvedPeriod, lo migra en lugar de eliminarlo.
+    // Elimina y migra MonthRecords pending con estado temporal incoherente.
+    //
+    // Patrones detectados:
+    //   Ghost 1 — resolvedPeriod=null + sin variablesData._periodoFin
+    //             (registro pre-Fase-A sin período fiable)
+    //   Ghost 2 — resolvedPeriod.source='calendarioFallback' + sin variablesData._periodoFin
+    //             (creado sin variables cargadas, key por mes calendario)
+    //   Zombie  — resolvedPeriod.source='periodoFin'|'nominaPDF' + sin variablesData._periodoFin
+    //             (variablesData fue sobreescrito con datos incompletos; estado incoherente,
+    //             el expediente no puede cerrarse nunca)
+    //   Migrar  — resolvedPeriod=null o 'calendarioFallback' + variablesData._periodoFin presente
+    //             (recuperar resolvedPeriod desde variablesData en lugar de eliminar)
+    //
     // NUNCA toca registros auditados, regularizados, reclamados ni cerrados.
     cleanupDuplicateMonthRecords: function () {
       var removed  = 0;
@@ -488,49 +496,62 @@
         var mr = _monthly[k];
         if (!mr) return;
 
-        // Nunca tocar expedientes con datos definitivos
+        // Nunca tocar expedientes con datos definitivos consolidados
         if (mr.auditoria || mr.regularizacion || mr.reclamacion) return;
         if (mr.estado === 'cerrado'        || mr.estado === 'reclamado'       ||
             mr.estado === 'auditado'       || mr.estado === 'con_diferencias' ||
             mr.estado === 'regularizado')  return;
 
-        // Un período es fiable si resolvedPeriod existe y no es calendarioFallback
-        var sinPeriodoFiable = !mr.resolvedPeriod ||
-                               mr.resolvedPeriod.source === 'calendarioFallback';
-        if (!sinPeriodoFiable) return; // período correcto → conservar
+        var tieneVariables = !!(mr.variablesData && mr.variablesData._periodoFin);
+        var rp = mr.resolvedPeriod;
+        var source = rp ? rp.source : null;
 
-        // Tiene variablesData con _periodoFin: intentar migración en lugar de eliminar
-        var tieneVariables = mr.variablesData && mr.variablesData._periodoFin;
-        if (tieneVariables) {
-          var rp = _resolveExpedientePeriod(mr.variablesData);
-          if (rp.source !== 'calendarioFallback') {
-            mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
-                                  source: rp.source, resolvedAt: now };
-            mr._updatedAt = now;
-            migrated++;
-            console.log('[PilotPayStore] cleanupDuplicateMonthRecords: migrado', k,
-                        '→ resolvedPeriod', rp.source);
+        // ── Caso: período no fiable (null o calendarioFallback) ─────────────────
+        var sinPeriodoFiable = !rp || source === 'calendarioFallback';
+        if (sinPeriodoFiable) {
+          if (tieneVariables) {
+            // Tiene _periodoFin → migrar resolvedPeriod en lugar de eliminar
+            var resolv = _resolveExpedientePeriod(mr.variablesData);
+            if (resolv.source !== 'calendarioFallback') {
+              mr.resolvedPeriod = { year: resolv.year, month: resolv.month,
+                                    mesLabel: resolv.mesLabel,
+                                    source: resolv.source, resolvedAt: now };
+              mr._updatedAt = now;
+              migrated++;
+              console.log('[PilotPayStore] cleanupDuplicateMonthRecords: migrado', k,
+                          '→ resolvedPeriod', resolv.source);
+            } else {
+              toDelete.push(k); // _periodoFin presente pero inválido → ghost
+            }
           } else {
-            toDelete.push(k); // _periodoFin presente pero inválido → ghost
+            toDelete.push(k); // sin variables → ghost
           }
           return;
         }
 
-        // Sin variablesData._periodoFin → ghost definitivo
-        toDelete.push(k);
+        // ── Caso: período fiable pero variablesData corrupto (zombie incoherente) ─
+        // resolvedPeriod.source='periodoFin'|'nominaPDF' pero variablesData sin _periodoFin.
+        // Root cause: onVariablesConfirmed(varsData_empty) sobreescribió variablesData.
+        // El expediente no puede completar el flujo → zombie permanente → eliminar.
+        if ((source === 'periodoFin' || source === 'nominaPDF') && !tieneVariables) {
+          console.warn('[PilotPayStore] cleanupDuplicateMonthRecords: zombie incoherente', k,
+                       '| source:', source, '| variablesData._periodoFin: undefined');
+          toDelete.push(k);
+          return;
+        }
       });
 
       toDelete.forEach(function (k) {
-        console.log('[PilotPayStore] cleanupDuplicateMonthRecords: eliminando ghost', k,
+        console.log('[PilotPayStore] cleanupDuplicateMonthRecords: eliminando', k,
                     '| estado:', _monthly[k].estado,
-                    '| resolvedPeriod:', JSON.stringify(_monthly[k].resolvedPeriod),
+                    '| source:', (_monthly[k].resolvedPeriod || {}).source,
                     '| variablesData:', _monthly[k].variablesData ? 'present' : 'null');
         delete _monthly[k];
         removed++;
       });
 
       if (removed > 0 || migrated > 0) _saveMonthly();
-      if (removed  > 0) console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', removed,  'ghost(s) eliminado(s)');
+      if (removed  > 0) console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', removed,  'registro(s) eliminado(s)');
       if (migrated > 0) console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', migrated, 'registro(s) migrado(s)');
 
       return { removed: removed, migrated: migrated };
