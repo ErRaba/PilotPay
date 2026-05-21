@@ -5519,10 +5519,9 @@ function renderConfig() {
 function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const tabs = ['dashboard','calcular','variables','nomina','comparar','simulador','convenio','historial','perfil','config','admin'];
-  const idx = tabs.indexOf(name);
-  const tabEls = document.querySelectorAll('.tab');
-  if (tabEls[idx]) tabEls[idx].classList.add('active');
+  // Seleccionar por atributo onclick en lugar de por índice — inmune a reordenaciones.
+  const tabEl = document.querySelector(`.tab[onclick="showTab('${name}')"]`);
+  if (tabEl) tabEl.classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
