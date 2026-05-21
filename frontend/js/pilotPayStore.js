@@ -523,6 +523,28 @@
       var ym = _inferYearMonth(auditRecord);
       if (!ym) return null;
       return _monthly[_monthKey(ym.year, ym.month)] || null;
+    },
+
+    // Eliminar una previsión pendiente del expediente.
+    // Solo opera sobre monthly_v1 — no toca audit_history_v1.
+    // Uso: botón de borrado manual en la sección "Previsiones pendientes".
+    deletePending: function (year, month) {
+      var k  = _monthKey(year, month);
+      var mr = _monthly[k];
+      if (!mr) return false;
+      // Solo eliminar si está en un estado pending — nunca borrar expedientes auditados
+      var isPending = mr.estado === 'pending_comparison' ||
+                      mr.estado === 'pending_calculation' ||
+                      mr.estado === 'pending_variables'   ||
+                      mr.estado === 'pendiente';
+      if (!isPending) {
+        console.warn('[PilotPayStore] deletePending: el expediente', k, 'no está en estado pending —', mr.estado);
+        return false;
+      }
+      delete _monthly[k];
+      _saveMonthly();
+      console.log('[PilotPayStore] previsión pendiente eliminada:', k);
+      return true;
     }
   };
 

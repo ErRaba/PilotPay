@@ -4006,6 +4006,14 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .15s; white-space: nowrap;
         }
         .hst-pend-btn:hover { opacity: 1; }
+        .hst-pend-del-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--red); background: none;
+          border: 1px solid var(--red); border-radius: 6px;
+          padding: 5px 11px; cursor: pointer; opacity: .65;
+          transition: opacity .15s; white-space: nowrap;
+        }
+        .hst-pend-del-btn:hover { opacity: 1; }
         .hst-pend-divider {
           border: none; border-top: 1px solid var(--border);
           margin: 0 0 18px;
@@ -4248,7 +4256,10 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
           <div class="hst-pend-bottom">
             <span class="hst-pend-ts">${ts}</span>
-            <button class="hst-pend-btn" onclick="showTab('comparar')">Finalizar auditoría →</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="hst-pend-del-btn" onclick="hstDeletePending(${mr.year}, ${mr.month}, '${periodo}')">Eliminar previsión</button>
+              <button class="hst-pend-btn" onclick="showTab('comparar')">Finalizar auditoría →</button>
+            </div>
           </div>
         </div>`;
     }).join('');
@@ -4645,6 +4656,27 @@ Complemento de Base MAD: 1500"></textarea>
       // Refrescar dashboard si está activo
       try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
     }, 60);
+  };
+
+  /* ─────────────────────────────────────────────────
+     Eliminar previsión pendiente
+  ───────────────────────────────────────────────── */
+  window.hstDeletePending = function hstDeletePending(year, month, periodo) {
+    _hstConfirm(
+      'Eliminar previsión pendiente',
+      'Se eliminará la previsión de <strong>' + (periodo || (year + '/' + month)) + '</strong>. ' +
+      'Las auditorías ya registradas en el historial no se ven afectadas.',
+      function() {
+        if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+        var ok = PilotPayStore.monthly.deletePending(year, month);
+        if (!ok) {
+          console.warn('[PilotPay] hstDeletePending: no se pudo eliminar', year, month);
+          return;
+        }
+        renderHistorial();
+        try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+      }
+    );
   };
 
   /* ─────────────────────────────────────────────────
