@@ -326,6 +326,10 @@
     // El bloque "calcResult → new Date()" fue eliminado intencionalmente.
     // El calculoTeorico solo se gestiona via onCalculationDone(varsData, calcResult),
     // que usa _resolveExpedientePeriod para la clave. El mes calendario nunca es fuente.
+
+    // Limpiar ghosts calendarioFallback de sesiones anteriores al bug
+    monthly.cleanupDuplicateMonthRecords();
+
     _saveMonthly();
   }
 
@@ -381,6 +385,10 @@
     // El frontend NO calcula year/month — solo pasa varsData.
     onVariablesConfirmed: function (varsData) {
       var rp  = _resolveExpedientePeriod(varsData);
+      if (rp.source === 'calendarioFallback') {
+        console.warn('[PilotPayStore] onVariablesConfirmed: calendarioFallback — expediente no creado sin _periodoFin fiable');
+        return;
+      }
       var k   = _monthKey(rp.year, rp.month);
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
       var mr  = _monthly[k];
@@ -401,6 +409,10 @@
     // El calculoTeorico se congela en este momento — no se regenera nunca.
     onCalculationDone: function (varsData, calcResult) {
       var rp  = _resolveExpedientePeriod(varsData);
+      if (rp.source === 'calendarioFallback') {
+        console.warn('[PilotPayStore] onCalculationDone: calendarioFallback — expediente no creado sin _periodoFin fiable');
+        return;
+      }
       var k   = _monthKey(rp.year, rp.month);
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
       var mr  = _monthly[k];
@@ -439,9 +451,70 @@
         });
     },
     getPendingComparisons: function () {
-      return Object.values(_monthly)
+      var seen    = {};
+      var result  = [];
+      // Ordenar más-reciente-primero para conservar el más nuevo en caso de duplicado legacy
+      var all = Object.values(_monthly)
         .filter(function (mr) { return mr.estado === 'pending_comparison'; })
-        .sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
+        .sort(function (a, b) {
+          return (b._updatedAt || '').localeCompare(a._updatedAt || '');
+        });
+      all.forEach(function (mr) {
+        var uid = mr.userId || _userId;
+        var key = uid + ':' + mr.year + ':' + mr.month;
+        if (seen[key]) {
+          console.warn('[PilotPayStore] getPendingComparisons: duplicado legacy detectado —', key, '— ignorado');
+          return;
+        }
+        seen[key] = true;
+        result.push(mr);
+      });
+      return result.sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
+    },
+
+    // Elimina previsiones fantasma creadas por calendarioFallback cuando _periodoFin no estaba disponible.
+    // NUNCA toca registros auditados, regularizados, reclamados ni cerrados.
+    // Solo elimina MonthRecords pending con resolvedPeriod.source === 'calendarioFallback'.
+    cleanupDuplicateMonthRecords: function () {
+      var removed = 0;
+      var toDelete = [];
+
+      Object.keys(_monthly).forEach(function (k) {
+        var mr = _monthly[k];
+        if (!mr) return;
+
+        // Nunca tocar expedientes con datos definitivos
+        if (mr.auditoria)                                      return;
+        if (mr.regularizacion)                                 return;
+        if (mr.reclamacion)                                    return;
+        if (mr.estado === 'cerrado')                           return;
+        if (mr.estado === 'reclamado')                         return;
+        if (mr.estado === 'auditado')                          return;
+        if (mr.estado === 'con_diferencias')                   return;
+        if (mr.estado === 'regularizado')                      return;
+
+        // Solo eliminar ghosts pendientes originados por calendarioFallback
+        var esGhost = mr.resolvedPeriod &&
+                      mr.resolvedPeriod.source === 'calendarioFallback';
+        if (esGhost) {
+          toDelete.push(k);
+        }
+      });
+
+      toDelete.forEach(function (k) {
+        console.log('[PilotPayStore] cleanupDuplicateMonthRecords: eliminando ghost', k,
+                    '| estado:', _monthly[k].estado,
+                    '| source:', (_monthly[k].resolvedPeriod || {}).source);
+        delete _monthly[k];
+        removed++;
+      });
+
+      if (removed > 0) {
+        _saveMonthly();
+        console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', removed, 'ghost(s) eliminado(s)');
+      }
+
+      return removed;
     },
 
     // Llamar desde saveAuditRecord() en index.html tras guardar en audit_history_v1.
@@ -733,8 +806,8 @@
     try {
       var auditList = _loadAuditList();
       _audit   = auditList;
-      _monthly = _loadMonthly();   // preservar meses en progreso entre refreshes
-      _hydrateMonthly(auditList, _cr());
+      _monthly = _loadMonthly();
+      _hydrateMonthly(auditList, _cr());   // incluye cleanupDuplicateMonthRecords
     } catch (e) {
       console.warn('[PilotPayStore] refresh error:', e);
     }
@@ -773,7 +846,10 @@
     expedition : expedition,
 
     // Agregados
-    getDashboardSummary : getDashboardSummary
+    getDashboardSummary : getDashboardSummary,
+
+    // Mantenimiento
+    cleanupDuplicateMonthRecords : function () { return monthly.cleanupDuplicateMonthRecords(); }
   };
 
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
