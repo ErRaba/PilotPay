@@ -3898,6 +3898,42 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .hst-del-btn:hover { opacity: 1; }
 
+        /* ─── Modal confirmación borrado ─── */
+        .hst-confirm-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,.45);
+          z-index: 9100; display: flex; align-items: center; justify-content: center;
+        }
+        .hst-confirm-box {
+          background: var(--card); border: 1px solid var(--border);
+          border-top: 3px solid var(--red); border-radius: 12px;
+          padding: 24px 28px; max-width: 360px; width: 90%;
+          box-shadow: 0 8px 32px rgba(0,0,0,.28); font-family: var(--mono);
+        }
+        .hst-confirm-title {
+          font-size: 13px; font-weight: 600; color: var(--text1); margin-bottom: 8px;
+        }
+        .hst-confirm-msg {
+          font-size: 11.5px; color: var(--text2); line-height: 1.55; margin-bottom: 6px;
+        }
+        .hst-confirm-warning {
+          font-size: 11px; color: var(--red); opacity: .85; margin-bottom: 20px;
+        }
+        .hst-confirm-actions {
+          display: flex; gap: 8px; justify-content: flex-end;
+        }
+        .hst-confirm-cancel {
+          font-size: 11px; font-family: var(--mono); color: var(--text2);
+          background: none; border: 1px solid var(--border); border-radius: 6px;
+          padding: 6px 14px; cursor: pointer; transition: border-color .15s;
+        }
+        .hst-confirm-cancel:hover { border-color: var(--text2); }
+        .hst-confirm-delete {
+          font-size: 11px; font-family: var(--mono); color: #fff;
+          background: var(--red); border: 1px solid var(--red); border-radius: 6px;
+          padding: 6px 14px; cursor: pointer; opacity: .85; transition: opacity .15s;
+        }
+        .hst-confirm-delete:hover { opacity: 1; }
+
         /* ─── Previsiones pendientes ─── */
         .hst-pend-section { margin-bottom: 20px; }
         .hst-pend-header {
@@ -4441,24 +4477,67 @@ Complemento de Base MAD: 1500"></textarea>
   };
 
   /* ─────────────────────────────────────────────────
+     Modal de confirmación de borrado
+  ───────────────────────────────────────────────── */
+  function _hstConfirm(title, msg, onConfirm) {
+    var existing = document.getElementById('hst-confirm-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'hst-confirm-overlay';
+    overlay.className = 'hst-confirm-overlay';
+    overlay.innerHTML =
+      '<div class="hst-confirm-box">' +
+        '<div class="hst-confirm-title">' + title + '</div>' +
+        '<div class="hst-confirm-msg">' + msg + '</div>' +
+        '<div class="hst-confirm-warning">⚠ Esta acción no se puede deshacer.</div>' +
+        '<div class="hst-confirm-actions">' +
+          '<button class="hst-confirm-cancel" id="hst-confirm-cancel-btn">Cancelar</button>' +
+          '<button class="hst-confirm-delete" id="hst-confirm-delete-btn">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('hst-confirm-cancel-btn').onclick = function() { overlay.remove(); };
+    document.getElementById('hst-confirm-delete-btn').onclick = function() { overlay.remove(); onConfirm(); };
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  }
+
+  /* ─────────────────────────────────────────────────
      Eliminar un registro
   ───────────────────────────────────────────────── */
   window.hstDelete = function hstDelete(id) {
-    let list = hstLoad();
-    list = list.filter(function(r) { return r.id !== id; });
-    hstSave(list);
-    renderHistorial();
+    var list = hstLoad();
+    var rec = list.find(function(r) { return r.id === id; });
+    var periodo = rec ? ([rec.mes, rec.anyo].filter(Boolean).join(' ') || 'este registro') : 'este registro';
+    _hstConfirm(
+      'Eliminar registro de auditoría',
+      'Se eliminará el registro de <strong>' + periodo + '</strong> del historial.',
+      function() {
+        var updated = hstLoad().filter(function(r) { return r.id !== id; });
+        hstSave(updated);
+        renderHistorial();
+        getDashboardData();
+      }
+    );
   };
 
   /* ─────────────────────────────────────────────────
-     Borrar todo (con confirmación)
+     Borrar todo
   ───────────────────────────────────────────────── */
   window.hstClearAll = function hstClearAll() {
-    const list = hstLoad();
+    var list = hstLoad();
     if (list.length === 0) return;
-    if (!confirm('¿Eliminar las ' + list.length + ' auditorías guardadas? Esta acción no se puede deshacer.')) return;
-    hstSave([]);
-    renderHistorial();
+    _hstConfirm(
+      'Eliminar todo el historial',
+      'Se eliminarán los <strong>' + list.length + ' registro' + (list.length !== 1 ? 's' : '') + '</strong> guardados en el historial.',
+      function() {
+        hstSave([]);
+        renderHistorial();
+        getDashboardData();
+      }
+    );
   };
 
   /* ─────────────────────────────────────────────────
