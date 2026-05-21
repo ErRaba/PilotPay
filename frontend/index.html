@@ -4171,6 +4171,14 @@ Complemento de Base MAD: 1500"></textarea>
       const countEl = document.getElementById('hst-count');
       if (countEl) countEl.textContent = list.length;
 
+      // Refrescar UI: el dashboard y el historial deben reflejar el nuevo estado.
+      // La previsión pendiente debe desaparecer en cuanto se completa la comparativa.
+      try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+      const _hstPage = document.getElementById('page-historial');
+      if (_hstPage && _hstPage.style.display !== 'none') {
+        try { if (typeof renderHistorial === 'function') renderHistorial(); } catch(e) {}
+      }
+
     } catch(e) {
       console.warn('PilotPay Historial: error al guardar', e);
     }
@@ -10509,29 +10517,34 @@ function varsGetNominaMes(fechaFin) {
 }
 
 // ── Notificaciones al store ──────────────────────────────────────────────────
-// Year/month siempre desde varsData._periodoInicio (fecha PDF), nunca del calendario.
+// El MonthRecord se identifica por el MES DE NÓMINA, no por el período de variables.
+// Las variables de Abril (periodoFin = 30/04) se cobran en Mayo → clave '2026:5'.
+// Esto garantiza que el matching con AuditRecord (que usa mes/año de la nómina) sea correcto.
+function _getNominaMesAno(varsD) {
+  // Usa _periodoFin del PDF de variables y avanza un mes → mes de nómina
+  var fin = varsD && varsD._periodoFin;
+  if (fin && !isNaN(fin)) {
+    var sig = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
+    return { year: sig.getFullYear(), month: sig.getMonth() + 1 };
+  }
+  // Fallback: mes calendario actual
+  var now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
+
 function _varsNotifyStore() {
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
-  var d = varsData._periodoInicio;
-  if (!d) return;
-  PilotPayStore.monthly.onVariablesConfirmed(d.getFullYear(), d.getMonth() + 1, varsData);
+  if (!varsData || !varsData._periodoFin) return;
+  var ym = _getNominaMesAno(varsData);
+  PilotPayStore.monthly.onVariablesConfirmed(ym.year, ym.month, varsData);
 }
 
 function _recalcNotifyStore() {
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
   var cr = calcResult;
   if (!cr) return;
-  var d = varsData && varsData._periodoInicio;
-  var year, month;
-  if (d) {
-    year  = d.getFullYear();
-    month = d.getMonth() + 1;
-  } else {
-    var now = new Date();
-    year  = now.getFullYear();
-    month = now.getMonth() + 1;
-  }
-  PilotPayStore.monthly.onCalculationDone(year, month, cr);
+  var ym = _getNominaMesAno(varsData);
+  PilotPayStore.monthly.onCalculationDone(ym.year, ym.month, cr);
 }
 
 // ── Restauración de estado mensual al re-login ──────────────────────────────

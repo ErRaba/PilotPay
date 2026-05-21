@@ -226,7 +226,50 @@
       }
     });
 
-    // Calcular tamaño previo a la persistencia y persistir si cambió algo
+    // ── Limpieza de zombies ─────────────────────────────────────────────────
+    // MonthRecords atascados en pending_comparison cuyo mes de nómina esperado
+    // (variablesData._periodoFin + 1 mes) ya tiene una auditoría en audit_history_v1.
+    // Esto ocurre cuando la clave se creó con _periodoInicio (bug previo) en vez del
+    // mes de nómina, dejando el MonthRecord sin recibir la transición de estado.
+    var _zombieKeys = [];
+    Object.keys(_monthly).forEach(function (key) {
+      var mr = _monthly[key];
+      if (mr.estado !== 'pending_comparison') return;
+      if (!mr.variablesData || !mr.variablesData._periodoFin) return;
+
+      // Calcular mes de nómina esperado desde _periodoFin
+      var fin = new Date(mr.variablesData._periodoFin);
+      if (isNaN(fin)) return;
+      var sig = new Date(fin.getFullYear(), fin.getMonth() + 1, 1);
+      var nomiYear  = sig.getFullYear();
+      var nomiMonth = sig.getMonth() + 1;
+      var nomiKey   = _monthKey(nomiYear, nomiMonth);
+
+      // Si el mes de nómina esperado ya tiene MonthRecord auditado → este es zombie
+      var nomiMR = _monthly[nomiKey];
+      if (nomiMR && (nomiMR.estado === 'auditado' ||
+                     nomiMR.estado === 'con_diferencias' ||
+                     nomiMR.estado === 'regularizado')) {
+        _zombieKeys.push(key);
+        console.log('[PilotPayStore] zombie detectado y eliminado:', key,
+                    '→ nómina en', nomiKey, '(' + nomiMR.estado + ')');
+        return;
+      }
+
+      // Si el mes de nómina tiene AuditRecord en audit_history_v1 pero aún
+      // no tiene MonthRecord, promover el zombie al mes correcto
+      var hasAudit = auditList.some(function (rec) {
+        var ym2 = _inferYearMonth(rec);
+        return ym2 && ym2.year === nomiYear && ym2.month === nomiMonth;
+      });
+      if (hasAudit && key !== nomiKey) {
+        _zombieKeys.push(key);
+        console.log('[PilotPayStore] zombie con auditoría pendiente de hidratación:', key,
+                    '→ nómina en', nomiKey);
+      }
+    });
+    _zombieKeys.forEach(function (key) { delete _monthly[key]; });
+
     _saveMonthly();
 
     // Mes en curso: añadir calculoTeorico desde live calcResult solo si el mes
