@@ -472,49 +472,68 @@
       return result.sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
     },
 
-    // Elimina previsiones fantasma creadas por calendarioFallback cuando _periodoFin no estaba disponible.
+    // Elimina previsiones fantasma sin período temporal fiable.
+    // Un ghost es un MonthRecord pending que:
+    //   - no tiene resolvedPeriod (pre-Fase-A) o tiene source='calendarioFallback'
+    //   - Y no tiene variablesData._periodoFin (ningún PDF de variables confirmado)
+    // Si tiene variablesData._periodoFin pero le falta resolvedPeriod, lo migra en lugar de eliminarlo.
     // NUNCA toca registros auditados, regularizados, reclamados ni cerrados.
-    // Solo elimina MonthRecords pending con resolvedPeriod.source === 'calendarioFallback'.
     cleanupDuplicateMonthRecords: function () {
-      var removed = 0;
+      var removed  = 0;
+      var migrated = 0;
       var toDelete = [];
+      var now = new Date().toISOString();
 
       Object.keys(_monthly).forEach(function (k) {
         var mr = _monthly[k];
         if (!mr) return;
 
         // Nunca tocar expedientes con datos definitivos
-        if (mr.auditoria)                                      return;
-        if (mr.regularizacion)                                 return;
-        if (mr.reclamacion)                                    return;
-        if (mr.estado === 'cerrado')                           return;
-        if (mr.estado === 'reclamado')                         return;
-        if (mr.estado === 'auditado')                          return;
-        if (mr.estado === 'con_diferencias')                   return;
-        if (mr.estado === 'regularizado')                      return;
+        if (mr.auditoria || mr.regularizacion || mr.reclamacion) return;
+        if (mr.estado === 'cerrado'        || mr.estado === 'reclamado'       ||
+            mr.estado === 'auditado'       || mr.estado === 'con_diferencias' ||
+            mr.estado === 'regularizado')  return;
 
-        // Solo eliminar ghosts pendientes originados por calendarioFallback
-        var esGhost = mr.resolvedPeriod &&
-                      mr.resolvedPeriod.source === 'calendarioFallback';
-        if (esGhost) {
-          toDelete.push(k);
+        // Un período es fiable si resolvedPeriod existe y no es calendarioFallback
+        var sinPeriodoFiable = !mr.resolvedPeriod ||
+                               mr.resolvedPeriod.source === 'calendarioFallback';
+        if (!sinPeriodoFiable) return; // período correcto → conservar
+
+        // Tiene variablesData con _periodoFin: intentar migración en lugar de eliminar
+        var tieneVariables = mr.variablesData && mr.variablesData._periodoFin;
+        if (tieneVariables) {
+          var rp = _resolveExpedientePeriod(mr.variablesData);
+          if (rp.source !== 'calendarioFallback') {
+            mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
+                                  source: rp.source, resolvedAt: now };
+            mr._updatedAt = now;
+            migrated++;
+            console.log('[PilotPayStore] cleanupDuplicateMonthRecords: migrado', k,
+                        '→ resolvedPeriod', rp.source);
+          } else {
+            toDelete.push(k); // _periodoFin presente pero inválido → ghost
+          }
+          return;
         }
+
+        // Sin variablesData._periodoFin → ghost definitivo
+        toDelete.push(k);
       });
 
       toDelete.forEach(function (k) {
         console.log('[PilotPayStore] cleanupDuplicateMonthRecords: eliminando ghost', k,
                     '| estado:', _monthly[k].estado,
-                    '| source:', (_monthly[k].resolvedPeriod || {}).source);
+                    '| resolvedPeriod:', JSON.stringify(_monthly[k].resolvedPeriod),
+                    '| variablesData:', _monthly[k].variablesData ? 'present' : 'null');
         delete _monthly[k];
         removed++;
       });
 
-      if (removed > 0) {
-        _saveMonthly();
-        console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', removed, 'ghost(s) eliminado(s)');
-      }
+      if (removed > 0 || migrated > 0) _saveMonthly();
+      if (removed  > 0) console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', removed,  'ghost(s) eliminado(s)');
+      if (migrated > 0) console.log('[PilotPayStore] cleanupDuplicateMonthRecords:', migrated, 'registro(s) migrado(s)');
 
-      return removed;
+      return { removed: removed, migrated: migrated };
     },
 
     // Llamar desde saveAuditRecord() en index.html tras guardar en audit_history_v1.
