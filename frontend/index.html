@@ -4161,6 +4161,12 @@ Complemento de Base MAD: 1500"></textarea>
       if (list.length > MAX_RECORDS) list.splice(MAX_RECORDS);
       hstSave(list);
 
+      // Actualizar expediente mensual en monthly_v1.
+      // audit_history_v1 ya se escribió arriba y no se toca más.
+      if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+        PilotPayStore.monthly.onAuditoriaCompletada(record);
+      }
+
       /* Actualizar badge de count si la pestaña existe */
       const countEl = document.getElementById('hst-count');
       if (countEl) countEl.textContent = list.length;
@@ -4303,8 +4309,10 @@ Complemento de Base MAD: 1500"></textarea>
       aviso : ['AVISO',  'aviso'],
       alerta: ['ALERTA', 'alerta']
     };
-    /* Si regularizada, badge visual → 'ok' aunque el estado interno sea 'alerta'/'aviso' */
-    const _rf = rec.regularizacionFinal || null;
+    /* Regularización: leer desde MonthRecord (fuente de verdad); fallback a campo legacy en AuditRecord */
+    const _mr = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
+    const _rf = (_mr && _mr.regularizacion) || rec.regularizacionFinal || null;
     const _badgeEstado = (_rf && rec.estado !== 'ok') ? 'ok' : rec.estado;
     const [badgeTxt, badgeCls] = badgeMap[_badgeEstado] || ['—','ok'];
 
@@ -4609,14 +4617,20 @@ Complemento de Base MAD: 1500"></textarea>
       docNombre         : (docEl && docEl.value.trim()) ? docEl.value.trim() : null
     };
 
-    let list = hstLoad();
-    const recIdx = list.findIndex(function(r) { return r.id === recId; });
-    if (recIdx === -1) {
+    // Obtener el AuditRecord para pasarlo al store (necesita mes/año para identificar el expediente)
+    const auditList = hstLoad();
+    const auditRec  = auditList.find(function(r) { return r.id === recId; });
+    if (!auditRec) {
       console.warn('[PilotPay] hstRegularizar: registro no encontrado', recId);
       return;
     }
-    list[recIdx].regularizacionFinal = reg;
-    hstSave(list);
+
+    // Guardar regularización en el expediente mensual (monthly_v1).
+    // audit_history_v1 permanece inmutable — no se modifica.
+    if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      PilotPayStore.monthly.onRegularizacionDone(auditRec, reg);
+    }
+
     renderHistorial();
     setTimeout(function() {
       hstToggle(idx);
@@ -11369,7 +11383,9 @@ window.PILOTPAY_BACKEND_READY = true;
 
     /* Estado visual — si regularizada, badge → OK */
     const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
-    const _auditRF    = rec.regularizacionFinal || null;
+    const _auditMR    = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
+    const _auditRF    = (_auditMR && _auditMR.regularizacion) || rec.regularizacionFinal || null;
     const _auditIsReg = _auditRF != null && rec.estado !== 'ok';
     const _auditCls   = _auditIsReg ? 'ok' : (rec.estado || 'dim');
     setAttr('dsh-audit-status', _auditCls);
@@ -11596,7 +11612,10 @@ window.PILOTPAY_BACKEND_READY = true;
       const _ultimoDiff   = _auditStats ? _auditStats.ultimoDiff   : (list && list[0] ? list[0].diff   : null);
       // Si la última auditoría está regularizada, no genera alerta activa
       const _lastRec = list && list[0];
-      const _ultimoEstadoEfectivo = (_lastRec && _lastRec.regularizacionFinal != null && _ultimoEstado !== 'ok')
+      const _lastMR  = (_lastRec && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+        ? PilotPayStore.monthly.getByAuditRecord(_lastRec) : null;
+      const _lastReg = (_lastMR && _lastMR.regularizacion) || (_lastRec && _lastRec.regularizacionFinal) || null;
+      const _ultimoEstadoEfectivo = (_lastReg != null && _ultimoEstado !== 'ok')
         ? 'ok' : _ultimoEstado;
       if (_ultimoEstadoEfectivo === 'alerta') {
         const diff = _ultimoDiff != null ? fmtD(_ultimoDiff) : '';

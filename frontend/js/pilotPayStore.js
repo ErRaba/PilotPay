@@ -15,7 +15,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.1.0';
+  var VERSION = '2.0.0';
 
   // ── Tabla de meses ──────────────────────────────────────────────────────────
   var MESES_IDX = {
@@ -56,10 +56,9 @@
       : 'pilotpay:' + (_userId || '_') + ':monthly_v1';
   }
 
-  // Persiste solo meses en progreso (pending_*).
-  // Meses auditados viven en audit_history_v1; no necesitan monthly_v1.
-  // Esto garantiza que cuando _hydrateMonthly cierra un pending_comparison,
-  // la siguiente llamada a _saveMonthly lo elimina de monthly_v1 automáticamente.
+  // Persiste todos los meses con datos significativos.
+  // monthly_v1 es el expediente vivo — incluye meses auditados, regularizados, etc.
+  // audit_history_v1 es el log de eventos de auditoría (append-only, no se toca aquí).
   function _saveMonthly() {
     try {
       var k = _monthlyKey();
@@ -67,14 +66,23 @@
       var toSave = {};
       Object.keys(_monthly).forEach(function (key) {
         var mr = _monthly[key];
-        var isPending = mr.variablesData !== null && (
-          mr.estado === 'pending_variables'   ||
-          mr.estado === 'pending_calculation' ||
-          mr.estado === 'pending_comparison'
-        );
-        if (isPending) toSave[key] = mr;
+        // Guardar si hay alguna fuente de datos relevante
+        var hasData = mr.variablesData !== null ||
+                      mr.calculoTeorico !== null ||
+                      mr.auditoria !== null ||
+                      mr.regularizacion !== null;
+        if (hasData) toSave[key] = mr;
       });
-      localStorage.setItem(k, JSON.stringify(toSave));
+      var json = JSON.stringify(toSave);
+      localStorage.setItem(k, json);
+
+      // Monitoring de tamaño — warning si supera 500 KB
+      var kb = Math.round(json.length / 1024);
+      if (kb > 500) {
+        console.warn('[PilotPayStore] monthly_v1 tamaño:', kb, 'KB —', Object.keys(toSave).length, 'meses');
+      } else {
+        console.log('[PilotPayStore] monthly_v1 guardado:', kb, 'KB —', Object.keys(toSave).length, 'meses');
+      }
     } catch (e) { console.warn('[PilotPayStore] _saveMonthly error:', e); }
   }
 
@@ -102,42 +110,48 @@
   }
 
   // ── MonthRecord factory ─────────────────────────────────────────────────────
+  // Estado del expediente mensual:
+  // 'pendiente' → 'pending_variables' → 'pending_calculation' → 'pending_comparison'
+  //   → 'auditado' | 'con_diferencias' → 'regularizado' → 'reclamado' → 'cerrado'
+  // 'cerrado' SOLO se establece de forma explícita, nunca automática.
   function _makeMonthRecord(userId, year, month) {
     return {
       // Identidad
-      userId   : userId,
-      year     : year,
-      month    : month,
-      mesLabel : _monthLabel(month),
+      schemaVersion : '3.0',
+      userId        : userId,
+      year          : year,
+      month         : month,
+      mesLabel      : _monthLabel(month),
 
       // Máquina de estados
-      // 'pendiente' → 'auditado' | 'con_diferencias' → 'reclamado' → 'corregido'
       estado : 'pendiente',
 
-      // Fuentes de datos (pobladas incrementalmente, null hasta que llegan)
-      nominaData     : null,   // extraído del PDF de nómina
-      variablesData  : null,   // extraído del PDF de variables
-      calculoTeorico : null,   // snapshot de calcResult en momento de auditoría
+      // Fuentes de datos (pobladas incrementalmente)
+      nominaData     : null,   // snapshot acotado del PDF de nómina (datos financieros clave)
+      variablesData  : null,   // snapshot del PDF de variables
+      calculoTeorico : null,   // snapshot CONGELADO de calcResult — nunca regenerar
 
       // Resultado de auditoría
+      // { fechaAuditoria, liqTeorico, liqReal, diferenciaNeta, nDiscrepancias,
+      //   discrepancias[], totalDevengado, baseIRPF, baseSS, irpf_pct,
+      //   acumulados: {baseIRPF, irpf}, diasTrabajados }
       auditoria : null,
-      // { fechaAuditoria, diferenciaNeta, nDiscrepancias, discrepancias, datosExtraidos }
 
-      // Resumen financiero
-      acumulados : { baseIRPF: null, irpf: null },
-      diasInfo   : { trabajados: null },
+      // Eventos posteriores a la auditoría — capas aditivas, no modifican auditoria
+      regularizacion : null,   // { importeNeto, netoFinalAjustado, nota, fecha, docNombre, registrado }
+      reclamacion    : null,   // { generada, texto, referencia } — futuro
 
-      // Integridad/calidad de datos — estructura preparada para Fase 2
-      // Indica qué fuentes han contribuido datos al mes.
-      // No tiene lógica funcional todavía; es trazabilidad de origen.
+      // Trazabilidad de fuentes
       sourceIntegrity : {
-        nominaParsed      : false,   // PDF de nómina parseado
-        variablesParsed   : false,   // PDF de variables parseado
-        auditoriaCompleta : false,   // comparativa ejecutada y guardada
-        simulatorDerived  : false    // cálculo teórico disponible
+        variablesParsed   : false,
+        nominaParsed      : false,
+        auditoriaCompleta : false,
+        simulatorDerived  : false,
+        regularizado      : false,
+        reclamado         : false
       },
 
-      // Futuro: clave en IndexedDB al PDF original del mes
+      // Reservado: clave futura en IndexedDB
       pdfRef : null,
 
       // Metadatos
@@ -154,13 +168,15 @@
   }
 
   // ── Hydration ───────────────────────────────────────────────────────────────
+  // Enriquece _monthly (cargado desde monthly_v1) con datos de audit_history_v1.
+  // audit_history_v1 es append-only: esta función nunca lo escribe.
+  // Aplica migración lazy: AuditRecord.regularizacionFinal → MonthRecord.regularizacion.
   function _hydrateMonthly(auditList, calcResult) {
-    var _pendingClosed = false;
-
     // Construir MonthRecords desde registros de auditoría existentes.
+    // auditList ya está ordenado más-reciente-primero.
     auditList.forEach(function (rec) {
       var ym = _inferYearMonth(rec);
-      if (!ym) return; // no parseable → ignorar sin descartar del audit[]
+      if (!ym) return;
 
       var k  = _monthKey(ym.year, ym.month);
       if (!_monthly[k]) {
@@ -168,39 +184,53 @@
       }
       var mr = _monthly[k];
 
-      // El registro más reciente del mes gana (auditList ya está en orden inverso)
+      // Solo el registro más reciente define la auditoría del mes.
       if (!mr.auditoria) {
-        // Si tenía previsión pendiente y ahora llega una auditoría, hay que
-        // eliminar el mes de monthly_v1 tras el loop.
-        if (mr.estado === 'pending_comparison') _pendingClosed = true;
-
+        var de = rec.datosExtraidos || {};
         mr.auditoria = {
           fechaAuditoria : rec.fechaAuditoria,
-          diferenciaNeta : rec.diff,
+          liqTeorico     : rec.liqTeorico     || null,
+          liqReal        : rec.liqReal        || null,
+          diferenciaNeta : rec.diff           || null,
           nDiscrepancias : rec.nDiscrepancias || 0,
           discrepancias  : rec.discrepancias  || [],
-          datosExtraidos : rec.datosExtraidos || {}
+          totalDevengado : de.total_devengado || null,
+          baseIRPF       : de.base_irpf       || null,
+          baseSS         : de.base_ss         || null,
+          irpf_pct       : de.irpf_pct        || null,
+          acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
+          diasTrabajados : de.dias_trabajados  || null
         };
-        mr.estado = (rec.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
         mr.sourceIntegrity.auditoriaCompleta = true;
 
-        // Promover acumulados y días desde datosExtraidos
-        var de = rec.datosExtraidos || {};
-        if (de.acum_base_irpf != null) mr.acumulados.baseIRPF   = de.acum_base_irpf;
-        if (de.acum_irpf      != null) mr.acumulados.irpf        = de.acum_irpf;
-        if (de.dias_trabajados != null) mr.diasInfo.trabajados   = de.dias_trabajados;
+        // Estado base desde auditoría
+        var estadoBase = (rec.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
+
+        // Migración lazy: si audit_history_v1 tenía regularizacionFinal y el
+        // expediente en monthly_v1 no tiene regularizacion aún, copiarlo.
+        // audit_history_v1 NO se modifica — este campo es solo lectura aquí.
+        if (rec.regularizacionFinal && !mr.regularizacion) {
+          mr.regularizacion = rec.regularizacionFinal;
+          mr.sourceIntegrity.regularizado = true;
+        }
+
+        // Estado final: regularizado si hay regularización, sea de la migración o preexistente
+        if (mr.regularizacion != null && estadoBase === 'con_diferencias') {
+          mr.estado = 'regularizado';
+        } else if (mr.estado !== 'cerrado' && mr.estado !== 'reclamado') {
+          // No sobrescribir cerrado/reclamado que ya estuviera en monthly_v1
+          mr.estado = estadoBase;
+        }
 
         mr._updatedAt = new Date().toISOString();
       }
     });
 
-    // Si algún pending_comparison fue cerrado por una auditoría, persistir
-    // inmediatamente para que ese mes quede eliminado de monthly_v1.
-    if (_pendingClosed) _saveMonthly();
+    // Calcular tamaño previo a la persistencia y persistir si cambió algo
+    _saveMonthly();
 
     // Mes en curso: añadir calculoTeorico desde live calcResult solo si el mes
-    // no tiene ya un snapshot guardado desde monthly_v1 (onCalculationDone).
-    // Sobreescribir destruiría el cálculo real del usuario con los defaults de login.
+    // no tiene snapshot guardado (guard: no sobreescribir previsión del usuario).
     if (calcResult) {
       var now   = new Date();
       var year  = now.getFullYear();
@@ -315,6 +345,76 @@
       return Object.values(_monthly)
         .filter(function (mr) { return mr.estado === 'pending_comparison'; })
         .sort(function (a, b) { return (b.year - a.year) || (b.month - a.month); });
+    },
+
+    // Llamar desde saveAuditRecord() en index.html tras guardar en audit_history_v1.
+    // audit_history_v1 permanece inmutable — este método construye el expediente en monthly_v1.
+    onAuditoriaCompletada: function (auditRecord) {
+      var ym = _inferYearMonth(auditRecord);
+      if (!ym) return;
+      var k = _monthKey(ym.year, ym.month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, ym.year, ym.month);
+      var mr = _monthly[k];
+
+      var de = auditRecord.datosExtraidos || {};
+      mr.auditoria = {
+        fechaAuditoria : auditRecord.fechaAuditoria,
+        liqTeorico     : auditRecord.liqTeorico     || null,
+        liqReal        : auditRecord.liqReal        || null,
+        diferenciaNeta : auditRecord.diff           || null,
+        nDiscrepancias : auditRecord.nDiscrepancias || 0,
+        discrepancias  : auditRecord.discrepancias  || [],
+        totalDevengado : de.total_devengado || null,
+        baseIRPF       : de.base_irpf       || null,
+        baseSS         : de.base_ss         || null,
+        irpf_pct       : de.irpf_pct        || null,
+        acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
+        diasTrabajados : de.dias_trabajados  || null
+      };
+      mr.sourceIntegrity.auditoriaCompleta = true;
+      mr.sourceIntegrity.nominaParsed = true;
+
+      if (mr.estado !== 'cerrado' && mr.estado !== 'reclamado') {
+        mr.estado = (auditRecord.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
+      }
+      mr._updatedAt = new Date().toISOString();
+      _saveMonthly();
+    },
+
+    // Llamar desde hstRegularizar() en index.html.
+    // Guarda la regularización en el expediente mensual.
+    // audit_history_v1 NO se modifica — la regularización vive aquí.
+    onRegularizacionDone: function (auditRecord, data) {
+      var ym = _inferYearMonth(auditRecord);
+      if (!ym) return;
+      var k = _monthKey(ym.year, ym.month);
+      if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, ym.year, ym.month);
+      var mr = _monthly[k];
+
+      mr.regularizacion = {
+        importeNeto       : data.importeNeto,
+        netoFinalAjustado : data.netoFinalAjustado,
+        nota              : data.nota              || '',
+        fecha             : data.fecha             || new Date().toISOString().slice(0, 10),
+        docNombre         : data.docNombre         || null,
+        registrado        : data.registrado        || new Date().toISOString()
+      };
+      mr.sourceIntegrity.regularizado = true;
+
+      if (mr.estado === 'con_diferencias') {
+        mr.estado = 'regularizado';
+      }
+      mr._updatedAt = new Date().toISOString();
+      _saveMonthly();
+    },
+
+    // Helper: devuelve el MonthRecord correspondiente a un AuditRecord.
+    // Útil para que el código de renderizado acceda al expediente desde el registro histórico.
+    getByAuditRecord: function (auditRecord) {
+      if (!auditRecord) return null;
+      var ym = _inferYearMonth(auditRecord);
+      if (!ym) return null;
+      return _monthly[_monthKey(ym.year, ym.month)] || null;
     }
   };
 
@@ -453,11 +553,13 @@
       },
 
       expedition : {
-        totalMeses      : allMR.length,
-        mesesAuditados  : allMR.filter(function (m) { return m.estado !== 'pendiente'; }).length,
-        mesesConDifs    : allMR.filter(function (m) { return m.estado === 'con_diferencias'; }).length,
-        mesesReclamados : allMR.filter(function (m) { return m.estado === 'reclamado'; }).length,
-        anosDisponibles : expedition.getAvailableYears()
+        totalMeses         : allMR.length,
+        mesesAuditados     : allMR.filter(function (m) { return m.auditoria !== null; }).length,
+        mesesConDifs       : allMR.filter(function (m) { return m.estado === 'con_diferencias'; }).length,
+        mesesRegularizados : allMR.filter(function (m) { return m.estado === 'regularizado'; }).length,
+        mesesReclamados    : allMR.filter(function (m) { return m.estado === 'reclamado'; }).length,
+        mesesCerrados      : allMR.filter(function (m) { return m.estado === 'cerrado'; }).length,
+        anosDisponibles    : expedition.getAvailableYears()
       }
     };
   }
@@ -475,8 +577,8 @@
       _ready   = false;
       _audit   = [];
 
-      // Cargar meses en progreso primero, luego enriquecer con auditorías.
-      // _hydrateMonthly no sobreescribe auditoria si ya existe.
+      // Cargar expedientes desde monthly_v1 (todos los estados).
+      // _hydrateMonthly enriquece con audit_history_v1 pero no lo modifica.
       _monthly = _loadMonthly();
 
       var auditList = _loadAuditList();
