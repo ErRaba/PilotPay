@@ -5222,6 +5222,9 @@ function initApp() {
     simHistoricoData : function() { return typeof simHistoricoData !== 'undefined' ? simHistoricoData : {}; }
   };
   if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
+  // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
+  // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
+  _restoreCalcFromStore();
 }
 
 // ── TABS ──
@@ -6945,7 +6948,13 @@ function recalc() {
     baseSS, ss_cc, ss_mei, ss_dfp, ss_sol_t1, ss_sol_t2, ss_sol_t3, ss_solidaridad, ss_total,
     retencionIRPF, irpf_especie, liquidoReal, typeRating, interesesPrestamo,
     fn, nivel: currentNivel, mad: madF, irpf_pct,
-    mes: document.getElementById('mes-nomina').value
+    mes          : document.getElementById('mes-nomina').value,
+    // Campos de contexto para restauración fiel del estado al re-login
+    vacDias      : parseInt(document.getElementById('vac-dias')?.value)    || 0,
+    conVac       : !!(document.getElementById('toggle-vac')?.checked),
+    pagaExtraMode: document.getElementById('toggle-extra')?.checked ? 'completa' : 'prorr',
+    // Versión del esquema — permite migraciones futuras sin romper snapshots existentes
+    schemaVersion: '3.0'
   };
   window._calcResultBackup = { ...calcResult };
 
@@ -8031,7 +8040,8 @@ function recalcTCP() {
     totalDest, baseSS, ss_cc, ss_mei, ss_dfp, totalSS,
     baseIRPF, irpf_pct, irpf_especie, retencionIRPF,
     segMed_dev, segMed_ded, segLic_ded,
-    totalDevengado, liquidoReal
+    totalDevengado, liquidoReal,
+    schemaVersion: '3.0'
   };
   _recalcNotifyStore();
 }
@@ -10429,6 +10439,132 @@ function _recalcNotifyStore() {
     month = now.getMonth() + 1;
   }
   PilotPayStore.monthly.onCalculationDone(year, month, cr);
+}
+
+// ── Restauración de estado mensual al re-login ──────────────────────────────
+// Llamada desde initApp() tras PilotPayStore.init().
+// Lee el MonthRecord más reciente en pending_comparison y reconstituye:
+//   - calcResult (snapshot congelado, no recalculado)
+//   - DOM inputs del Calculator (para que recalc() manual produzca el resultado correcto)
+//   - varsData (fuente persistente única entre sesiones)
+// Si no hay pending_comparison, no hace nada — sesión arranca limpia.
+function _restoreCalcFromStore() {
+  try {
+    if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+    var pending = PilotPayStore.monthly.getPendingComparisons();
+    if (!pending || pending.length === 0) return;
+
+    var mr = pending[0];
+    var ct = mr.calculoTeorico;
+    if (!ct) return;
+
+    // ── Snapshot congelado ────────────────────────────────────────────────────
+    // NO llamar recalc(). El snapshot refleja el estado exacto del cálculo
+    // original. Si han cambiado tablas, IRPF u otros parámetros desde entonces,
+    // el usuario verá la previsión que generó, no una recalculación automática.
+    calcResult = ct;
+    window._calcResultBackup = ct;
+
+    // ── Restaurar inputs del Calculator ──────────────────────────────────────
+    // Solo pilotos (CMD/COP) — TCP usa IDs distintos (tcp-*), fase futura.
+    if (!ct.isTCP) {
+      var _sv = function(id, val) {
+        if (val == null) return;
+        var el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      _sv('hv1',         ct.hv1);
+      _sv('hv2',         ct.hv2);
+      _sv('hv3',         ct.hv3);
+      _sv('hv4',         ct.hv4);
+      _sv('imaginarias', ct.im);
+      _sv('francos',     ct.fr);
+      _sv('lv1',         ct.lv1);
+      _sv('lv2',         ct.lv2);
+      _sv('lv3',         ct.lv3);
+      _sv('dpo',         ct.dpo);
+      _sv('vac-dias',    ct.vacDias || 0);
+      if (ct.mes) _sv('mes-nomina', ct.mes);
+
+      // Toggles (disponibles en snapshots schemaVersion 3.0+; ignorar si ausentes)
+      var toggleExtra = document.getElementById('toggle-extra');
+      if (toggleExtra && ct.pagaExtraMode) {
+        toggleExtra.checked = ct.pagaExtraMode === 'completa';
+        var hintEl = document.getElementById('extra-hint');
+        if (hintEl) hintEl.textContent = toggleExtra.checked
+          ? 'Paga completa (julio/diciembre)'
+          : 'Prorrateadas (suma mensual)';
+      }
+      var toggleVac = document.getElementById('toggle-vac');
+      if (toggleVac && ct.conVac != null) {
+        toggleVac.checked = !!ct.conVac;
+      }
+    }
+
+    // ── Actualizar display de resultados del Calculator ───────────────────────
+    // Sin llamar recalc() — solo mostrar los valores del snapshot en los campos.
+    var _fmtR = function(v) {
+      if (v == null || isNaN(v)) return '—';
+      return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    };
+    var _upd = function(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
+    _upd('sum-dev',       _fmtR(ct.totalDevengado));
+    _upd('sum-irpf-base', _fmtR(ct.baseIRPF));
+    _upd('sum-irpf',      '-' + _fmtR(ct.retencionIRPF));
+    _upd('sum-neto',      _fmtR(ct.liquidoReal));
+
+    // ── Restaurar varsData ────────────────────────────────────────────────────
+    // MonthRecord.variablesData es la fuente persistente única entre sesiones.
+    // Solo restaurar si el período fue confirmado (tiene _periodoInicio).
+    if (mr.variablesData && mr.variablesData._periodoInicio) {
+      varsData = mr.variablesData;
+      varsPeriodoConfirmado = true;
+    }
+
+    // ── Refrescar Nómina desde snapshot ──────────────────────────────────────
+    if (typeof renderNomina === 'function') {
+      try { renderNomina(); } catch(e) {}
+    }
+
+    // ── Indicador visual discreto ─────────────────────────────────────────────
+    var _periodo = (mr.mesLabel || '') + (mr.year ? ' ' + mr.year : '');
+    _showRestoreToast(_periodo);
+
+    console.log('[PilotPay] Estado mensual restaurado —',
+      mr.mesLabel, mr.year,
+      '| schema:', ct.schemaVersion || 'legacy',
+      '| updatedAt:', mr._updatedAt);
+
+  } catch(e) {
+    console.warn('[PilotPay] _restoreCalcFromStore: error durante restauración', e);
+  }
+}
+
+// Toast discreto que confirma al usuario que la sesión fue recuperada automáticamente.
+// Auto-dismiss a los 3.8 s. Sin interacción requerida.
+function _showRestoreToast(periodo) {
+  try {
+    var existing = document.getElementById('pp-restore-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'pp-restore-toast';
+    toast.setAttribute('style', [
+      'position:fixed', 'top:58px', 'left:50%', 'transform:translateX(-50%)',
+      'background:var(--card)', 'border:1px solid var(--border)',
+      'border-left:3px solid var(--amber)',
+      'border-radius:8px', 'padding:7px 16px',
+      'font-size:11px', 'font-family:var(--mono)', 'color:var(--text3)',
+      'z-index:9000', 'box-shadow:0 2px 10px rgba(0,0,0,.18)',
+      'white-space:nowrap', 'pointer-events:none',
+      'opacity:1', 'transition:opacity .35s'
+    ].join(';'));
+    toast.textContent = '⏳ Previsión de ' + periodo + ' — sesión recuperada';
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { if (toast.parentNode) toast.remove(); }, 400);
+    }, 3800);
+  } catch(e) {}
 }
 
 function varsConfirmarPeriodo(confirmado) {
