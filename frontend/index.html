@@ -11747,85 +11747,127 @@ window.PILOTPAY_BACKEND_READY = true;
     }
 
     const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+    const _aud   = mr.auditoria      || {};
+    const _calc  = mr.calculoTeorico || {};
+    const _reg   = mr.regularizacion || null;
 
-    /* Estado visual — color por estado del expediente */
+    /* Badge — información neutra, color por urgencia real */
     const _estadoCls = ({
       con_diferencias:     'alerta',
-      pending_comparison:  'aviso',
       auditado:            'ok',
       regularizado:        'ok',
       reclamado:           'ok',
       cerrado:             'ok',
       pending_variables:   'info',
-      pending_calculation: 'info'
+      pending_calculation: 'info',
+      pending_comparison:  'info'
     })[mr.estado] || 'dim';
     setAttr('dsh-audit-status', _estadoCls);
     setText('dsh-audit-status', mesRef || '—');
 
-    /* Etiqueta estado humanizado */
+    /* Helper: tiempo relativo desde ISO */
+    const _relTime = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return null;
+      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+      if (days === 0) return 'hoy';
+      if (days === 1) return 'hace 1 día';
+      if (days < 30)  return 'hace ' + days + ' días';
+      const m = Math.floor(days / 30);
+      return m === 1 ? 'hace 1 mes' : 'hace ' + m + ' meses';
+    };
+
+    /* Helper: fecha legible */
+    const _fmtFecha = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? iso : d.toLocaleDateString('es-ES');
+    };
+
+    /* ── RAMA 1: pendiente del flujo mensual ─────────────────────────── */
+    const _isPending = ['pending_variables','pending_calculation','pending_comparison'].indexOf(mr.estado) !== -1;
+    if (_isPending) {
+      const _needsCalc = mr.estado === 'pending_variables';
+      const _hasCalc   = _calc.liquidoReal != null;
+
+      const _check = function(done, label) {
+        const icon = done ? '✓' : '⏳';
+        const col  = done ? 'var(--pos)' : 'var(--amber)';
+        return `<div style="font-size:11px;font-family:var(--mono);color:${col};margin-bottom:3px">${icon} ${label}</div>`;
+      };
+
+      let checks = _check(true, 'Variables cargadas');
+      if (_needsCalc) {
+        checks += _check(false, 'Calcular nómina teórica');
+      } else {
+        checks += _check(true, 'Previsión generada');
+        checks += _check(false, 'Pendiente de nómina oficial');
+      }
+
+      const _netoHtml = (_hasCalc && !_needsCalc)
+        ? `<div style="margin-top:10px">
+             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:1px">Neto estimado</div>
+             <div class="dsh-val-big green" style="margin-bottom:0">${fmt(_calc.liquidoReal)}</div>
+           </div>`
+        : '';
+
+      const _updAt = _relTime(mr._updatedAt);
+      const _updHtml = _updAt ? `<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px">Actualizado: ${_updAt}</div>` : '';
+
+      const _ctaHtml = nextAction
+        ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+             <span style="font-size:10px;font-family:var(--mono);color:var(--text3)">Próximo paso  </span>
+             <span onclick="showTab('${nextAction.tab}')" style="font-size:10px;font-family:var(--mono);color:var(--blue2);cursor:pointer;text-decoration:underline">${nextAction.texto} →</span>
+           </div>`
+        : '';
+
+      setHTML('dsh-audit-body', `<div style="margin-bottom:2px">${checks}</div>${_netoHtml}${_updHtml}${_ctaHtml}`);
+      return;
+    }
+
+    /* ── RAMA 2: con_diferencias — alerta activa, sin detalle técnico ── */
+    if (mr.estado === 'con_diferencias') {
+      const _liq      = _aud.liqReal;
+      const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
+      const bigHtml   = _liq != null
+        ? `<div class="dsh-val-big">${fmt(_liq)}</div>
+           <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto oficial · ${mesRef}</div>`
+        : `<div class="dsh-val-big dim">Sin importe</div>
+           <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto oficial · ${mesRef}</div>`;
+      const rows = [];
+      if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
+      setHTML('dsh-audit-body', bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
+      return;
+    }
+
+    /* ── RAMA 3: definitivo (auditado / regularizado / reclamado / cerrado) ── */
     const _estadoLabel = ({
-      pending_variables:   'Pendiente de variables',
-      pending_calculation: 'Pendiente de cálculo',
-      pending_comparison:  'Previsión generada — pendiente de nómina',
-      auditado:            'Auditado sin diferencias',
-      con_diferencias:     'Auditado con diferencias',
-      regularizado:        'Regularizado',
-      reclamado:           'Reclamado',
-      cerrado:             'Cerrado'
-    })[mr.estado] || 'Pendiente';
+      auditado:    'Auditado',
+      regularizado:'Regularizado',
+      reclamado:   'Reclamado',
+      cerrado:     'Cerrado'
+    })[mr.estado] || mr.estado;
 
-    const _aud  = mr.auditoria   || {};
-    const _calc = mr.calculoTeorico || {};
-    const _reg  = mr.regularizacion || null;
-
-    /* Valor grande + subtítulo */
-    let bigHtml;
-    if (mr.estado === 'regularizado' && _reg && _reg.netoFinalAjustado != null) {
-      bigHtml = `<div class="dsh-val-big pos">${fmt(_reg.netoFinalAjustado)}</div>
-                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+    let _neto = null, _netoLabel = 'Neto';
+    if (_reg && _reg.netoFinalAjustado != null) {
+      _neto = _reg.netoFinalAjustado; _netoLabel = 'Neto final';
     } else if (_aud.liqReal != null) {
-      bigHtml = `<div class="dsh-val-big">${fmt(_aud.liqReal)}</div>
-                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
-    } else if (_calc.liquidoReal != null) {
-      bigHtml = `<div class="dsh-val-big green">${fmt(_calc.liquidoReal)}</div>
-                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
-    } else {
-      bigHtml = `<div class="dsh-val-big dim">Sin importe</div>
-                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+      _neto = _aud.liqReal; _netoLabel = 'Neto oficial';
     }
 
-    /* KV rows según estado */
+    const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
+    const statusLine = `<div style="font-size:11px;font-family:var(--mono);color:var(--pos);margin-bottom:8px">✓ ${_estadoLabel}</div>`;
+    const bigHtml = _neto != null
+      ? `<div class="dsh-val-big">${fmt(_neto)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_netoLabel} · ${mesRef}</div>`
+      : '';
+
     const rows = [];
-    const _esDefinitivo = ['auditado','con_diferencias','regularizado','reclamado','cerrado'].indexOf(mr.estado) !== -1;
+    if (_reg && _reg.importeNeto != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
+    if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
 
-    if (_esDefinitivo) {
-      if (_aud.liqTeorico != null)    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Líquido teórico</span><span class="dsh-kv-v">${fmt(_aud.liqTeorico)}</span></div>`);
-      if (_aud.diferenciaNeta != null) {
-        const _difCls = Math.abs(_aud.diferenciaNeta) < 1 ? 'pos' : _aud.diferenciaNeta > 0 ? 'pos' : 'neg';
-        rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Diferencia neta</span><span class="dsh-kv-v ${_difCls}">${fmtD(_aud.diferenciaNeta)}</span></div>`);
-      }
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Discrepancias</span><span class="dsh-kv-v ${(_aud.nDiscrepancias || 0) > 0 ? 'neg' : 'pos'}">${_aud.nDiscrepancias || 0}</span></div>`);
-      if (_reg && _reg.importeNeto != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
-      if (_aud.fechaAuditoria) {
-        const _fd = new Date(_aud.fechaAuditoria);
-        const _fechaFmt = isNaN(_fd.getTime()) ? _aud.fechaAuditoria : _fd.toLocaleDateString('es-ES');
-        rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Fecha auditoría</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
-      }
-    } else if (mr.estado === 'pending_comparison') {
-      if (_calc.totalDevengado != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Total devengado</span><span class="dsh-kv-v">${fmt(_calc.totalDevengado)}</span></div>`);
-      if (_calc.baseIRPF       != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Base IRPF</span><span class="dsh-kv-v">${fmt(_calc.baseIRPF)}</span></div>`);
-      if (_calc.retencionIRPF  != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Ret. IRPF</span><span class="dsh-kv-v">−${fmt(_calc.retencionIRPF)}</span></div>`);
-    }
-
-    /* CTA — próxima acción */
-    let ctaHtml = '';
-    if (nextAction) {
-      ctaHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-        <span onclick="showTab('${nextAction.tab}')" style="font-size:10px;font-family:var(--mono);color:var(--blue2);cursor:pointer;text-decoration:underline">${nextAction.texto} →</span>
-      </div>`;
-    }
-
-    setHTML('dsh-audit-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>` + ctaHtml);
+    setHTML('dsh-audit-body', statusLine + bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
   }
 
   /* ─────────────────────────────────────────
@@ -11925,8 +11967,6 @@ window.PILOTPAY_BACKEND_READY = true;
 
     const _netoAcum  = statsAnual.totalNetoCobrado;
     const _mediaNeta = statsAnual.mediaNetaFinal;
-    const _difAcum   = statsAnual.diferenciaNetaAcumulada;
-    const _conDif    = statsAnual.mesesConDiferenciasHistoricas;
     const _regs      = statsAnual.mesesRegularizados;
 
     const bigHtml = _netoAcum !== null
@@ -11936,12 +11976,8 @@ window.PILOTPAY_BACKEND_READY = true;
          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`;
 
     const rows = [];
+    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Meses auditados</span><span class="dsh-kv-v">${_nMeses}</span></div>`);
     if (_mediaNeta !== null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Media mensual</span><span class="dsh-kv-v">${fmt(_mediaNeta)}</span></div>`);
-    if (_difAcum !== null) {
-      const _cls = _difAcum > 0 ? 'pos' : _difAcum < 0 ? 'neg' : '';
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Diferencia acumulada</span><span class="dsh-kv-v ${_cls}">${fmtD(_difAcum)}</span></div>`);
-    }
-    if (_conDif > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Con diferencias</span><span class="dsh-kv-v neg">${_conDif}</span></div>`);
     if (_regs > 0)   rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularizados</span><span class="dsh-kv-v pos">${_regs}</span></div>`);
 
     setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
@@ -11955,63 +11991,55 @@ window.PILOTPAY_BACKEND_READY = true;
     derived = derived || {};
     const alerts = [];
 
-    // ── Fuente de datos unificada ──────────────────────────────────────────────
-    // Store como fuente preferida; fallback completo a parámetros legacy si no está listo.
-    const _storeReady    = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
-    const _auditStats    = _storeReady ? derived.storeSummary.auditStats : null;
+    const _storeReady     = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _auditStats     = _storeReady ? derived.storeSummary.auditStats : null;
     const _statsFinancial = derived.statsFinancial || null;
-    const _statsReady    = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
+    const _statsReady     = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
+    const _exp            = derived.expedienteActivo;
 
-    /* 0. Previsión pendiente de nómina oficial */
-    const _pendingMR = _storeReady ? derived.storeSummary.pendingComparison : null;
-    if (_pendingMR) {
-      const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
-                       'Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const _mStr = (MESES_N[_pendingMR.month] || '') + ' ' + _pendingMR.year;
-      alerts.push({ cls:'amber', icon:'⏳', msg:`<strong>Previsión generada para ${_mStr} pendiente de auditoría final.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
-    }
-
-    /* 1. Sin auditorías */
+    /* 0. Sin auditorías — primera vez en la app */
     const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);
     if (_totalAudits === 0) {
       alerts.push({ cls:'amber', icon:'📂', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
-    } else {
-      /* 2. Estado de la última auditoría */
-      const _ultimoEstado = _auditStats ? _auditStats.ultimoEstado : (list && list[0] ? list[0].estado : null);
-      const _ultimoDiff   = _auditStats ? _auditStats.ultimoDiff   : (list && list[0] ? list[0].diff   : null);
-      // Si la última auditoría está regularizada, no genera alerta activa
-      const _lastRec = list && list[0];
-      const _lastMR  = (_lastRec && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
-        ? PilotPayStore.monthly.getByAuditRecord(_lastRec) : null;
-      const _lastReg = (_lastMR && _lastMR.regularizacion) || (_lastRec && _lastRec.regularizacionFinal) || null;
-      const _ultimoEstadoEfectivo = (_lastReg != null && _ultimoEstado !== 'ok')
-        ? 'ok' : _ultimoEstado;
-      if (_ultimoEstadoEfectivo === 'alerta') {
-        const diff = _ultimoDiff != null ? fmtD(_ultimoDiff) : '';
-        alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Última auditoría con alerta</strong> — diferencia neta ${diff}. Revisa el Historial.` });
-      } else if (_ultimoEstadoEfectivo === 'aviso') {
-        alerts.push({ cls:'amber', icon:'ℹ️', msg:`<strong>Última auditoría con aviso</strong> — pequeñas diferencias detectadas. Revisa el Historial.` });
-      }
     }
 
-    /* 8. Integridad del store — solo si el store está activo y tiene datos */
+    /* 1. pending_variables — falta calcular */
+    if (_exp && _exp.estado === 'pending_variables') {
+      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
+      alerts.push({ cls:'amber', icon:'🧮', msg:`<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en la pestaña Calcular.` });
+    }
+
+    /* 2. pending_comparison / pending_calculation — falta nómina oficial */
+    if (_exp && (_exp.estado === 'pending_comparison' || _exp.estado === 'pending_calculation')) {
+      const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const _mStr = (MESES_N[_exp.month] || '') + ' ' + _exp.year;
+      alerts.push({ cls:'amber', icon:'⏳', msg:`<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
+    }
+
+    /* 3. con_diferencias — problema activo (MonthRecord sin regularizar) */
+    if (_exp && _exp.estado === 'con_diferencias') {
+      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
+      alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
+    }
+
+    /* 4. Integridad del store */
     if (_statsReady && _statsFinancial.mesesAuditados > 0) {
       if (_statsFinancial.hasErrors) {
-        alerts.push({ cls:'red', icon:'⚠️', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Contacta con soporte o revisa el historial.' });
+        alerts.push({ cls:'red', icon:'⚠️', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Revisa el Historial.' });
       } else if (_statsFinancial.hasWarnings) {
-        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos o inconsistentes. Revisa el Historial.' });
+        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos. Revisa el Historial.' });
       }
       if (_statsFinancial.inconsistencias > 0) {
-        alerts.push({ cls:'amber', icon:'🔍', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta. Revisa el Historial.` });
+        alerts.push({ cls:'amber', icon:'🔍', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta.` });
       }
     }
 
-    /* 9. Todo OK */
+    /* 5. Todo en orden */
     if (alerts.length === 0) {
-      alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay alertas pendientes.' });
+      alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay acciones pendientes.' });
     }
 
-    /* Actualizar badge */
+    /* Badge */
     const nProblemas = alerts.filter(a => a.cls !== 'green').length;
     setAttr('dsh-alerts-status', nProblemas === 0 ? 'ok' : nProblemas <= 2 ? 'aviso' : 'alerta');
     setText('dsh-alerts-status', nProblemas === 0 ? 'OK' : nProblemas + ' aviso' + (nProblemas > 1 ? 's' : ''));
