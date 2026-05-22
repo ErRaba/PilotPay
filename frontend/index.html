@@ -825,6 +825,9 @@ header {
 /* Señal visual del modo simulación — sutil pero inequívoca */
 #app.pp-sim-mode .tabs { border-bottom-color: var(--amber); }
 #app.pp-sim-mode .pp-mode-bar { border-bottom-color: var(--amber); }
+/* Aviso de simulación en Comparativa — solo visible en simulation mode */
+#sim-comp-notice { display: none; }
+#app.pp-sim-mode #sim-comp-notice { display: flex; }
 
 /* ── MAIN ── */
 main { flex: 1; overflow-y: auto; }
@@ -2713,6 +2716,16 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="upload-sub">Nómina Binter · formato PDF</div>
       </div>
       <input type="file" id="file-input" accept=".pdf,application/pdf" onchange="processNomina(this.files[0])">
+
+      <!-- Aviso de simulación — visible solo en modo simulación (CSS: #app.pp-sim-mode #sim-comp-notice) -->
+      <div id="sim-comp-notice" class="sim-banner" style="margin-bottom:12px;border-radius:8px;border:1px solid var(--amber)">
+        <span style="font-size:14px;flex-shrink:0">⚠</span>
+        <span>
+          <strong>Modo simulación.</strong>
+          Esta comparativa no se guardará como auditoría ni afectará a estadísticas, historial ni dashboard.
+          Los datos extraídos de la nómina no actualizarán el perfil.
+        </span>
+      </div>
 
       <div id="comparativa-result" style="display:none">
         <div id="comp-loading" class="loading-block" style="display:none">
@@ -6099,7 +6112,7 @@ function renderConfig() {
 function showTab(name) {
   // Guard: navegación bloqueada en modo simulación
   if (window.PilotPayMode === 'simulation' &&
-      ['dashboard', 'historial', 'comparar'].indexOf(name) !== -1) {
+      ['dashboard', 'historial'].indexOf(name) !== -1) {
     console.warn('[PilotPay] showTab("' + name + '"): bloqueado en modo simulación');
     return;
   }
@@ -8820,6 +8833,7 @@ function mostrarPropuestasActualizacion(propuestas, nomData) {
 
 // ── Aplicar propuestas desde la tarjeta integrada (checkboxes en trabajadorHTML) ──
 function aplicarPropuestasInline() {
+  if (window.PilotPayMode === 'simulation') return;
   const propuestas = window._nominaPropuestas || [];
   let updatedPerfil = 0, updatedSim = 0;
 
@@ -9179,18 +9193,23 @@ function renderComparativa(nomData) {
         + '</div>';
     }).join('');
 
-    const _updateSection = _props.length > 0
-      ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
-          + '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.04em">ACTUALIZAR — selecciona y confirma</div>'
-          + _checkHTML
-          + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'
-          + '<button onclick="aplicarPropuestasInline()" '
-          + 'style="display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--blue2);color:var(--blue2);border-radius:6px;font-size:11px;font-family:var(--mono);padding:5px 14px;cursor:pointer;white-space:nowrap">'
-          + '✓ Actualizar datos seleccionados</button>'
-          + '<span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none"></span>'
-          + '</div></div>'
-      : '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
-          + 'Los datos del perfil ya están actualizados con esta nómina.</div>';
+    // En simulation mode: no ofrecer actualización de perfil/histórico
+    const _isSim = window.PilotPayMode === 'simulation';
+    const _updateSection = _isSim
+      ? '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
+          + 'Las propuestas de actualización no están disponibles en modo simulación.</div>'
+      : (_props.length > 0
+        ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
+            + '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.04em">ACTUALIZAR — selecciona y confirma</div>'
+            + _checkHTML
+            + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'
+            + '<button onclick="aplicarPropuestasInline()" '
+            + 'style="display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--blue2);color:var(--blue2);border-radius:6px;font-size:11px;font-family:var(--mono);padding:5px 14px;cursor:pointer;white-space:nowrap">'
+            + '✓ Actualizar datos seleccionados</button>'
+            + '<span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none"></span>'
+            + '</div></div>'
+        : '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
+            + 'Los datos del perfil ya están actualizados con esta nómina.</div>');
 
     trabajadorHTML = '<div class="card" style="margin-bottom:12px" id="card-datos-nomina">'
       + '<div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>'
@@ -9269,7 +9288,7 @@ function renderComparativa(nomData) {
     <div class="card" style="margin-top:12px">
       <div class="card-title"><div class="section-dot blue"></div>Acumulados anuales en nómina</div>
       ${hasAcum ? acumRowsHTML : '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);padding:8px 0">No se detectaron acumulados en este PDF.</div>'}
-      ${canSendToSim ? `
+      ${canSendToSim && window.PilotPayMode !== 'simulation' ? `
         <button class="btn-secondary" style="margin-top:12px;border-color:var(--green);color:var(--green)"
           onclick="enviarAcumuladosAlSimulador(${ac.base_irpf||0}, ${ac.irpf||0})">
           📊 Enviar al Simulador IRPF
@@ -11203,7 +11222,9 @@ async function enviarSolicitudCambio() {
 // ──────────────────────────────────────────────────────────────────────────────
 window.PilotPayMode = 'operational';
 
-var _PP_SIM_TABS_HIDDEN = ['dashboard', 'historial', 'comparar'];
+// Comparativa visible en simulation — laboratorio financiero aislado.
+// saveAuditRecord + aplicarPropuestasInline ya tienen guards propios.
+var _PP_SIM_TABS_HIDDEN = ['dashboard', 'historial'];
 
 function _ppModeInit() {
   var saved = localStorage.getItem('pp_ui_mode_v1');
