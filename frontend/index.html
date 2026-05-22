@@ -4252,6 +4252,11 @@ Complemento de Base MAD: 1500"></textarea>
       if (list.length > MAX_RECORDS) list.splice(MAX_RECORDS);
       hstSave(list);
 
+      // IDB write-through — best-effort silencioso, no bloquea el flujo de auditoría
+      if (typeof PilotPayLocalDB !== 'undefined') {
+        try { PilotPayLocalDB.putAuditRecord(record).catch(function () {}); } catch (e) {}
+      }
+
       // Actualizar expediente mensual en monthly_v1.
       // audit_history_v1 ya se escribió arriba y no se toca más.
       if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
@@ -5440,7 +5445,18 @@ function initApp() {
   };
   if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
   // IDB: preparar base offline-first en background (Fase 0 — no bloquea, no altera lectura)
-  if (typeof PilotPayLocalDB !== 'undefined') PilotPayLocalDB.bootstrap(currentUser).catch(function(e) { console.warn('[IDB]', e); });
+  if (typeof PilotPayLocalDB !== 'undefined') {
+    PilotPayLocalDB.bootstrap(currentUser)
+      .then(function () {
+        return (typeof PilotPayStore !== 'undefined' && typeof PilotPayStore.hydrateFromIDB === 'function')
+          ? PilotPayStore.hydrateFromIDB()
+          : Promise.resolve(false);
+      })
+      .then(function (changed) {
+        if (changed && typeof renderDashboard === 'function') renderDashboard();
+      })
+      .catch(function (e) { console.warn('[IDB]', e); });
+  }
   // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
   // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
   _restoreCalcFromStore();

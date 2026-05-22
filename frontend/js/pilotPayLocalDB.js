@@ -429,6 +429,33 @@ var PilotPayLocalDB = (function () {
     });
   }
 
+  // ── Utilidades de salud ──────────────────────────────────────────────────────
+
+  function hasUserData(userId) {
+    if (!userId) return Promise.resolve(false);
+    return Promise.all([
+      _txGetAllByIndex('monthlyRecords', 'byUser', userId),
+      _txGetAllByIndex('auditHistory',   'byUser', userId)
+    ]).then(function(results) {
+      return results[0].length > 0 || results[1].length > 0;
+    }).catch(function() { return false; });
+  }
+
+  function healthCheck(userId) {
+    if (!userId) return Promise.resolve({ monthly: { count: 0, ok: false }, audit: { count: 0, ok: false } });
+    return Promise.all([
+      _txGetAllByIndex('monthlyRecords', 'byUser', userId),
+      _txGetAllByIndex('auditHistory',   'byUser', userId)
+    ]).then(function(results) {
+      return {
+        monthly : { count: results[0].length, ok: results[0].length > 0 },
+        audit   : { count: results[1].length, ok: results[1].length > 0 }
+      };
+    }).catch(function(e) {
+      return { monthly: { count: 0, ok: false }, audit: { count: 0, ok: false }, error: e.message };
+    });
+  }
+
   // ── API PÚBLICA ───────────────────────────────────────────────────────────────
 
   return {
@@ -436,14 +463,18 @@ var PilotPayLocalDB = (function () {
     bootstrap: bootstrap,
 
     // monthlyRecords
-    putMonthlyRecord:       putMonthlyRecord,
-    getMonthlyRecord:       getMonthlyRecord,
+    putMonthlyRecord:        putMonthlyRecord,
+    getMonthlyRecord:        getMonthlyRecord,
     getMonthlyRecordsByUser: getMonthlyRecordsByUser,
 
     // auditHistory
     putAuditRecord:         putAuditRecord,
     getAuditRecord:         getAuditRecord,
     getAuditRecordsByUser:  getAuditRecordsByUser,
+
+    // Salud / diagnóstico
+    hasUserData:  hasUserData,
+    healthCheck:  healthCheck,
 
     // Utilidades
     getDeviceId: _getOrCreateDeviceId,
