@@ -15,7 +15,29 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.0.0';
+  var VERSION          = '2.0.0';
+
+  // ── Constantes de esquema y motor ───────────────────────────────────────────
+  var SCHEMA_VERSION   = 1;             // Integer — independiente de la versión del producto
+  var ENGINE_VERSION   = '1.0';
+  var CONVENIO_VERSION = 'BCSA-2024';
+
+  var ESTADOS_VALIDOS = [
+    'pendiente', 'pending_variables', 'pending_calculation', 'pending_comparison',
+    'auditado', 'con_diferencias', 'regularizado', 'reclamado', 'cerrado'
+  ];
+
+  var TRANSICIONES_VALIDAS = {
+    'pendiente'           : ['pending_variables','pending_calculation','pending_comparison','auditado','con_diferencias'],
+    'pending_variables'   : ['pending_calculation','pending_comparison'],
+    'pending_calculation' : ['pending_comparison'],
+    'pending_comparison'  : ['auditado','con_diferencias'],
+    'auditado'            : ['cerrado'],
+    'con_diferencias'     : ['regularizado','reclamado','cerrado'],
+    'regularizado'        : ['cerrado'],
+    'reclamado'           : ['cerrado'],
+    'cerrado'             : []
+  };
 
   // ── Tabla de meses ──────────────────────────────────────────────────────────
   var MESES_IDX = {
@@ -89,8 +111,21 @@
   function _loadMonthly() {
     try {
       var raw = localStorage.getItem(_monthlyKey());
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) { return {}; }
+      if (!raw) return {};
+      var data = JSON.parse(raw);
+      // Normalizar y validar cada registro en memoria
+      // El guardado ocurre al final de _hydrateMonthly via _saveMonthly
+      Object.keys(data).forEach(function (k) {
+        var result = _normalizeMonthRecord(data[k]);
+        data[k] = result.mr;
+        var issues = _validateMonthRecord(data[k]);
+        if (issues.length > 0) _logValidationIssues(k, issues);
+      });
+      return data;
+    } catch (e) {
+      console.warn('[PilotPayStore] _loadMonthly error:', e);
+      return {};
+    }
   }
 
   // ── Helpers internos ────────────────────────────────────────────────────────
@@ -157,13 +192,18 @@
   //   → 'auditado' | 'con_diferencias' → 'regularizado' → 'reclamado' → 'cerrado'
   // 'cerrado' SOLO se establece de forma explícita, nunca automática.
   function _makeMonthRecord(userId, year, month) {
+    var now = new Date().toISOString();
     return {
       // Identidad
-      schemaVersion : '3.0',
+      schemaVersion : SCHEMA_VERSION,
+      id            : userId + ':' + year + ':' + month,
       userId        : userId,
       year          : year,
       month         : month,
       mesLabel      : _monthLabel(month),
+
+      // Metadatos de creación
+      metadata : { createdFrom: null, migratedAt: null },
 
       // Máquina de estados
       estado : 'pendiente',
@@ -180,30 +220,177 @@
       auditoria : null,
 
       // Eventos posteriores a la auditoría — capas aditivas, no modifican auditoria
-      regularizacion : null,   // { importeNeto, netoFinalAjustado, nota, fecha, docNombre, registrado }
+      regularizacion : null,   // { tipo, importeNeto, netoFinalAjustado, nota, fecha, docNombre, registrado }
       reclamacion    : null,   // { generada, texto, referencia } — futuro
 
       // Audit trail de resolución temporal — por qué este expediente es del mes que es
       // { year, month, mesLabel, source, resolvedAt }
       resolvedPeriod : null,
 
-      // Trazabilidad de fuentes
-      sourceIntegrity : {
-        variablesParsed   : false,
-        nominaParsed      : false,
-        auditoriaCompleta : false,
-        simulatorDerived  : false,
-        regularizado      : false,
-        reclamado         : false
-      },
-
       // Reservado: clave futura en IndexedDB
       pdfRef : null,
 
-      // Metadatos
-      _createdAt : new Date().toISOString(),
-      _updatedAt : new Date().toISOString()
+      // Metadatos de tiempo
+      _createdAt : now,
+      _updatedAt : now
     };
+  }
+
+  // ── Integridad derivada (pura, sin side effects) ────────────────────────────
+  function _deriveSourceIntegrity(mr) {
+    return {
+      variablesParsed   : !!(mr.variablesData && mr.variablesData._periodoFin),
+      nominaParsed      : !!(mr.nominaData    || mr.auditoria),
+      auditoriaCompleta : !!(mr.auditoria),
+      simulatorDerived  : !!(mr.calculoTeorico),
+      regularizado      : !!(mr.regularizacion),
+      reclamado         : !!(mr.reclamacion)
+    };
+  }
+
+  // ── Validación de MonthRecord ────────────────────────────────────────────────
+  // Devuelve [{ severity: 'error'|'warn', code, message, field }]
+  function _validateMonthRecord(mr) {
+    var issues = [];
+    function err(code, message, field) { issues.push({ severity: 'error', code: code, message: message, field: field || null }); }
+    function wrn(code, message, field) { issues.push({ severity: 'warn',  code: code, message: message, field: field || null }); }
+
+    // ── Errores de identidad ─────────────────────────────────────────────────
+    if (!mr.userId)                         err('E_NO_USERID',     'userId ausente',                         'userId');
+    if (!mr.year || isNaN(mr.year) || mr.year < 2020)
+                                            err('E_YEAR_INVALID',  'year inválido: ' + mr.year,              'year');
+    if (!mr.month || mr.month < 1 || mr.month > 12)
+                                            err('E_MONTH_INVALID', 'month inválido: ' + mr.month,            'month');
+    if (mr.schemaVersion === null || mr.schemaVersion === undefined || typeof mr.schemaVersion !== 'number')
+                                            err('E_SCHEMA_TYPE',   'schemaVersion debe ser number: ' + JSON.stringify(mr.schemaVersion), 'schemaVersion');
+
+    // ── Errores de estado ────────────────────────────────────────────────────
+    if (ESTADOS_VALIDOS.indexOf(mr.estado) === -1)
+                                            err('E_ESTADO_INVALID','estado no reconocido: ' + mr.estado,    'estado');
+    var st = mr.estado;
+    if (st === 'pending_comparison' && !mr.calculoTeorico)
+                                            err('E_PEND_NO_CALC',  'pending_comparison sin calculoTeorico',  'calculoTeorico');
+    if ((st === 'auditado' || st === 'con_diferencias') && !mr.auditoria)
+                                            err('E_AUDIT_NO_DATA', st + ' sin auditoria',                    'auditoria');
+    if (st === 'regularizado' && !mr.regularizacion)
+                                            err('E_REG_NO_DATA',   'regularizado sin regularizacion',        'regularizacion');
+
+    // ── Error de coherencia temporal ─────────────────────────────────────────
+    if (mr.resolvedPeriod) {
+      var rp = mr.resolvedPeriod;
+      if (rp.year !== mr.year || rp.month !== mr.month)
+                                            err('E_PERIOD_MISMATCH','resolvedPeriod (' + rp.year + ':' + rp.month + ') ≠ registro (' + mr.year + ':' + mr.month + ')', 'resolvedPeriod');
+    }
+
+    // ── Warnings ─────────────────────────────────────────────────────────────
+    if (!mr.mesLabel)                       wrn('W_NO_MESLABEL',   'mesLabel ausente',                       'mesLabel');
+    if (typeof mr.schemaVersion === 'number' && mr.schemaVersion < SCHEMA_VERSION)
+                                            wrn('W_SCHEMA_OLD',    'schemaVersion ' + mr.schemaVersion + ' < actual ' + SCHEMA_VERSION, 'schemaVersion');
+    if (!mr.id)                             wrn('W_NO_ID',         'id ausente (migración pendiente)',        'id');
+    if (!mr.metadata)                       wrn('W_NO_METADATA',   'metadata ausente (migración pendiente)',  'metadata');
+    if (!mr._createdAt)                     wrn('W_NO_CREATEDAT',  '_createdAt ausente',                     '_createdAt');
+    if (!mr._updatedAt)                     wrn('W_NO_UPDATEDAT',  '_updatedAt ausente',                     '_updatedAt');
+
+    // Warnings de período
+    var pendingStates = ['pending_calculation','pending_comparison','auditado','con_diferencias','regularizado','reclamado','cerrado'];
+    if (!mr.resolvedPeriod && pendingStates.indexOf(st) !== -1)
+                                            wrn('W_NO_RESOLVED',   'resolvedPeriod null en estado ' + st,    'resolvedPeriod');
+    if (mr.resolvedPeriod && mr.resolvedPeriod.source === 'calendarioFallback')
+                                            wrn('W_FALLBACK_SRC',  'resolvedPeriod.source es calendarioFallback (baja confianza)', 'resolvedPeriod');
+
+    // Warnings de datos
+    if (mr.variablesData && !mr.variablesData._periodoFin)
+                                            wrn('W_VARS_NO_FIN',   'variablesData presente pero sin _periodoFin', 'variablesData');
+    if (st === 'pending_comparison' && !mr.variablesData)
+                                            wrn('W_PEND_NO_VARS',  'pending_comparison sin variablesData',    'variablesData');
+    if (mr.auditoria && mr.auditoria.diferenciaNeta && mr.auditoria.diferenciaNeta !== 0 && st !== 'con_diferencias' && st !== 'regularizado' && st !== 'reclamado' && st !== 'cerrado')
+                                            wrn('W_DIFF_ESTADO',   'auditoria con diferencias pero estado es ' + st, 'estado');
+
+    // Warnings de regularizacion
+    if (mr.regularizacion) {
+      if (!mr.regularizacion.tipo)          wrn('W_REG_NO_TIPO',   'regularizacion sin tipo',                 'regularizacion.tipo');
+      if (!mr.regularizacion.fecha)         wrn('W_REG_NO_FECHA',  'regularizacion sin fecha',                'regularizacion.fecha');
+      if (mr.regularizacion.importeNeto == null) wrn('W_REG_NO_IMPORTE','regularizacion sin importeNeto',     'regularizacion.importeNeto');
+    }
+
+    // Warnings de calculoTeorico (legacy sin versioning)
+    if (mr.calculoTeorico) {
+      if (!mr.calculoTeorico.engineVersion)   wrn('W_CALC_NO_ENGINE',  'calculoTeorico sin engineVersion (legacy)',   'calculoTeorico.engineVersion');
+      if (!mr.calculoTeorico.convenioVersion) wrn('W_CALC_NO_CONV',    'calculoTeorico sin convenioVersion (legacy)', 'calculoTeorico.convenioVersion');
+      if (!mr.calculoTeorico.calculatedAt)    wrn('W_CALC_NO_TS',      'calculoTeorico sin calculatedAt (legacy)',    'calculoTeorico.calculatedAt');
+    }
+
+    return issues;
+  }
+
+  function _logValidationIssues(key, issues) {
+    var errors = issues.filter(function (i) { return i.severity === 'error'; });
+    var warns  = issues.filter(function (i) { return i.severity === 'warn';  });
+    if (errors.length > 0) {
+      console.error('[PilotPayStore] validate[' + key + '] —', errors.length, 'error(s):',
+        errors.map(function (i) { return i.code + '(' + i.field + ')'; }).join(', '));
+    }
+    if (warns.length > 0) {
+      console.warn('[PilotPayStore] validate[' + key + '] —', warns.length, 'warn(s):',
+        warns.map(function (i) { return i.code + '(' + i.field + ')'; }).join(', '));
+    }
+  }
+
+  // ── Normalización de MonthRecord ─────────────────────────────────────────────
+  // Migración lazy in-memory. Devuelve { mr, changed }.
+  // El guardado lo hace _hydrateMonthly/_saveMonthly — no aquí.
+  function _normalizeMonthRecord(mr) {
+    var changed = false;
+    var now = new Date().toISOString();
+
+    // Migrar schemaVersion string '3.0' → integer
+    if (mr.schemaVersion === '3.0' || typeof mr.schemaVersion !== 'number') {
+      mr.schemaVersion = SCHEMA_VERSION;
+      changed = true;
+    }
+
+    // Añadir id si falta
+    if (!mr.id && mr.userId && mr.year && mr.month) {
+      mr.id = mr.userId + ':' + mr.year + ':' + mr.month;
+      changed = true;
+    }
+
+    // Añadir metadata si falta
+    if (!mr.metadata) {
+      mr.metadata = { createdFrom: null, migratedAt: now };
+      changed = true;
+    }
+
+    // Añadir timestamps si faltan
+    if (!mr._createdAt) { mr._createdAt = now; changed = true; }
+    if (!mr._updatedAt) { mr._updatedAt = now; changed = true; }
+
+    // Añadir mesLabel si falta
+    if (!mr.mesLabel && mr.month) { mr.mesLabel = _monthLabel(mr.month); changed = true; }
+
+    // Eliminar sourceIntegrity (ahora se deriva, no se persiste)
+    if (mr.sourceIntegrity !== undefined) {
+      delete mr.sourceIntegrity;
+      changed = true;
+    }
+
+    // regularizacion: añadir tipo por defecto si falta
+    if (mr.regularizacion && !mr.regularizacion.tipo) {
+      mr.regularizacion.tipo = 'acuerdo_manual';
+      changed = true;
+    }
+
+    // calculoTeorico legacy: añadir versioning si falta
+    if (mr.calculoTeorico) {
+      if (!mr.calculoTeorico.engineVersion) {
+        mr.calculoTeorico.engineVersion   = 'legacy';
+        mr.calculoTeorico.convenioVersion = mr.calculoTeorico.convenioVersion || 'legacy';
+        mr.calculoTeorico.calculatedAt    = mr.calculoTeorico.calculatedAt    || mr._createdAt || now;
+        changed = true;
+      }
+    }
+
+    return { mr: mr, changed: changed };
   }
 
   // ── Carga de auditorías ─────────────────────────────────────────────────────
@@ -247,8 +434,6 @@
           acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
           diasTrabajados : de.dias_trabajados  || null
         };
-        mr.sourceIntegrity.auditoriaCompleta = true;
-
         // Audit trail: período resuelto desde nómina PDF (si no lo tenía ya)
         if (!mr.resolvedPeriod) {
           mr.resolvedPeriod = {
@@ -268,7 +453,6 @@
         // audit_history_v1 NO se modifica — este campo es solo lectura aquí.
         if (rec.regularizacionFinal && !mr.regularizacion) {
           mr.regularizacion = rec.regularizacionFinal;
-          mr.sourceIntegrity.regularizado = true;
         }
 
         // Estado final: regularizado si hay regularización, sea de la migración o preexistente
@@ -395,7 +579,6 @@
       var now = new Date().toISOString();
       mr.variablesData = varsData;
       mr.estado = 'pending_calculation';
-      mr.sourceIntegrity.variablesParsed = true;
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
                               source: rp.source, resolvedAt: now };
@@ -417,13 +600,16 @@
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
       var mr  = _monthly[k];
       var now = new Date().toISOString();
-      mr.calculoTeorico = calcResult;
+      mr.calculoTeorico = Object.assign({}, calcResult, {
+        engineVersion   : ENGINE_VERSION,
+        convenioVersion : CONVENIO_VERSION,
+        calculatedAt    : now
+      });
       if (mr.estado === 'pending_calculation' ||
           mr.estado === 'pending_variables'   ||
           mr.estado === 'pendiente') {
         mr.estado = 'pending_comparison';
       }
-      mr.sourceIntegrity.simulatorDerived = true;
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
                               source: rp.source, resolvedAt: now };
@@ -581,9 +767,6 @@
         acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
         diasTrabajados : de.dias_trabajados  || null
       };
-      mr.sourceIntegrity.auditoriaCompleta = true;
-      mr.sourceIntegrity.nominaParsed = true;
-
       // Audit trail: período resuelto desde nómina PDF (solo si no tenía ya resolvedPeriod)
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = {
@@ -613,6 +796,7 @@
       var mr = _monthly[k];
 
       mr.regularizacion = {
+        tipo              : data.tipo              || 'acuerdo_manual',
         importeNeto       : data.importeNeto,
         netoFinalAjustado : data.netoFinalAjustado,
         nota              : data.nota              || '',
@@ -620,7 +804,6 @@
         docNombre         : data.docNombre         || null,
         registrado        : data.registrado        || new Date().toISOString()
       };
-      mr.sourceIntegrity.regularizado = true;
 
       if (mr.estado === 'con_diferencias') {
         mr.estado = 'regularizado';
@@ -636,6 +819,12 @@
       var ym = _inferYearMonth(auditRecord);
       if (!ym) return null;
       return _monthly[_monthKey(ym.year, ym.month)] || null;
+    },
+
+    // Integridad de fuentes del expediente — derivada en tiempo real, nunca persistida.
+    getSourceIntegrity: function (year, month) {
+      var mr = this.get(year, month);
+      return mr ? _deriveSourceIntegrity(mr) : null;
     },
 
     // Eliminar una previsión pendiente del expediente.
@@ -889,7 +1078,19 @@
     getDashboardSummary : getDashboardSummary,
 
     // Mantenimiento
-    cleanupDuplicateMonthRecords : function () { return monthly.cleanupDuplicateMonthRecords(); }
+    cleanupDuplicateMonthRecords : function () { return monthly.cleanupDuplicateMonthRecords(); },
+
+    // Internals expuestos para PilotPayDebug y tests — no usar en UI
+    _internal : {
+      validateMonthRecord    : _validateMonthRecord,
+      normalizeMonthRecord   : _normalizeMonthRecord,
+      deriveSourceIntegrity  : _deriveSourceIntegrity,
+      SCHEMA_VERSION         : SCHEMA_VERSION,
+      ENGINE_VERSION         : ENGINE_VERSION,
+      CONVENIO_VERSION       : CONVENIO_VERSION,
+      ESTADOS_VALIDOS        : ESTADOS_VALIDOS,
+      TRANSICIONES_VALIDAS   : TRANSICIONES_VALIDAS
+    }
   };
 
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
