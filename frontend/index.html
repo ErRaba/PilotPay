@@ -4128,6 +4128,37 @@ Complemento de Base MAD: 1500"></textarea>
 
   /* ── Constantes ── */
   const MAX_RECORDS = 100;
+
+  /* Lookup mes → número para ordenación por período de nómina */
+  const _MESES_N = {
+    'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,
+    'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12,
+    'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,
+    'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12
+  };
+
+  /* Clave numérica de ordenación para un AuditRecord.
+     Devuelve year * 100 + month (ej. 202604) para comparación directa.
+     Preferencia:
+       1. MonthRecord.year/month  → fuente canónica si existe
+       2. rec.anyo + rec.mes      → datos del propio registro
+       3. fechaAuditoria          → último fallback (fecha en que se hizo la auditoría)  */
+  function _hstSortKey(rec) {
+    const mr = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
+    if (mr && mr.year && mr.month) return mr.year * 100 + mr.month;
+
+    const yr = parseInt(rec.anyo, 10);
+    const mo = _MESES_N[rec.mes] || 0;
+    if (yr > 2000 && mo > 0) return yr * 100 + mo;
+
+    if (rec.fechaAuditoria) {
+      const d = new Date(rec.fechaAuditoria);
+      if (!isNaN(d)) return d.getFullYear() * 100 + (d.getMonth() + 1);
+    }
+    return 0;
+  }
+
   function _key() {
     return window.storageKey
       ? window.storageKey('audit_history_v1')
@@ -4281,7 +4312,7 @@ Complemento de Base MAD: 1500"></textarea>
   window.renderHistorial = function renderHistorial() {
     renderPendingSection();   // sección superior de previsiones pendientes
 
-    const list    = hstLoad();
+    const list    = hstLoad().sort((a, b) => _hstSortKey(b) - _hstSortKey(a));
     const listEl  = document.getElementById('hst-list');
     const countEl = document.getElementById('hst-count');
     if (!listEl) return;
