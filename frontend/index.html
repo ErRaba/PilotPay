@@ -3025,19 +3025,10 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="card">
           <div class="card-title"><div class="section-dot amber"></div>Estado profesional</div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-            <div>
-              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
-                letter-spacing:.06em;margin-bottom:3px">ANTIGÜEDAD EMPRESA</div>
-              <div id="prf-antiguedad" style="font-size:15px;font-family:var(--mono);
-                font-weight:600;color:var(--text)">—</div>
-            </div>
-            <div>
-              <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
-                letter-spacing:.06em;margin-bottom:3px">ANTIGÜEDAD FUNCIÓN</div>
-              <div id="prf-atig-funcion" style="font-size:15px;font-family:var(--mono);
-                font-weight:600;color:var(--text)">—</div>
-            </div>
+          <div style="margin-bottom:12px;font-size:11px;font-family:var(--mono);color:var(--text3)">
+            Empresa&nbsp;<span id="prf-antiguedad" style="color:var(--text2)">—</span>
+            <span style="margin:0 8px;color:var(--border2)">·</span>
+            Función&nbsp;<span id="prf-atig-funcion" style="color:var(--text2)">—</span>
           </div>
 
           <!-- Alerta y progresión de nivel — Art. 26 -->
@@ -9619,6 +9610,66 @@ function _renderPerfilHero(nvl) {
     `${fnLabels[fn]||fn} · NIVEL ${nvl} · BASE ${getBaseLabel(u.base || profileData.base).toUpperCase()}`;
 }
 
+function _formatDateDMY(iso) {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso;
+}
+
+function _buildNivelNarrativa(fn, nvl, refDate, hasOCC, pd) {
+  const isCmd   = fn === 'CMD';
+  const UMBRAL  = { 6: 12, 5: 24 }; // meses provisionales — Art. 26 BCSA
+  const nextNvl = nvl - 1;
+  const umbral  = UMBRAL[nvl];
+  const p = 'margin:0 0 8px;font-size:12px;line-height:1.65;color:var(--text2)';
+  const ph = 'margin:0 0 8px;font-size:12px;line-height:1.65;color:var(--blue2)';
+
+  let alertHTML = '';
+  const parts = [];
+
+  parts.push(`<p style="${p}">Actualmente estás en Nivel ${nvl}.</p>`);
+
+  if (nvl === 1) {
+    parts.push(`<p style="${p}">Nivel máximo del escalafón, según el Art. 26 del convenio BCSA.</p>`);
+    return { alertHTML, bodyHTML: parts.join('') };
+  }
+
+  if (umbral != null) {
+    const yearText = umbral === 12 ? '1 año' : '2 años';
+    const refLabel = isCmd ? 'el inicio del curso OCC' : 'la fecha de ingreso en la empresa';
+    parts.push(`<p style="${p}">La progresión a Nivel ${nextNvl} requiere ${yearText} de antigüedad computada desde ${refLabel}, según el Art. 26 del convenio BCSA.</p>`);
+
+    if (isCmd && !hasOCC) {
+      parts.push(`<p style="${p}">Todavía no has informado la fecha de inicio OCC.</p>`);
+    } else if (!refDate) {
+      parts.push(`<p style="${p}">Fecha de referencia no disponible.</p>`);
+    } else {
+      const months = Math.floor((new Date() - refDate) / (1000 * 60 * 60 * 24 * 30.44));
+      const refISO = isCmd ? (pd.fechaOCC || '') : (pd.fechaIngresoEmpresa || pd.ingreso || '');
+      const refDMY = _formatDateDMY(refISO);
+      const refTag = refDMY ? (isCmd ? `Inicio OCC: ${refDMY}` : `Ingreso: ${refDMY}`) : '';
+
+      if (months >= umbral) {
+        const condText = refTag ? `${refTag}. Condición de tiempo cumplida (${yearText}).` : `Condición de tiempo cumplida (${yearText}).`;
+        parts.push(`<p style="${p}">${condText}</p>`);
+        parts.push(`<p style="${ph}">Conviene revisar si corresponde actualizar el nivel según el procedimiento interno aplicable.</p>`);
+        alertHTML = `<div class="alert warning" style="margin-bottom:10px"><div class="alert-icon">🔔</div><div class="alert-content"><div class="alert-title">N${nvl}→N${nextNvl} — Revisión disponible</div><div class="alert-text">Cumples el plazo del Art. 26 del convenio BCSA.</div></div></div>`;
+      } else {
+        const falta = umbral - months;
+        const faltaText = falta === 1 ? '1 mes restante' : `${falta} meses restantes`;
+        const progText = refTag
+          ? `${refTag} — ${months} de ${umbral} meses completados (${faltaText}).`
+          : `${months} de ${umbral} meses completados (${faltaText}).`;
+        parts.push(`<p style="${p}">${progText}</p>`);
+      }
+    }
+  } else {
+    parts.push(`<p style="${p}">La progresión hacia Nivel ${nextNvl} se realiza por designación de la empresa y disponibilidad de vacante, según el Art. 26 del convenio BCSA.</p>`);
+  }
+
+  return { alertHTML, bodyHTML: parts.join('') };
+}
+
 function _renderNivelProgression() {
   const alertEl    = document.getElementById('nivel-alert-container');
   const progressEl = document.getElementById('nivel-progress-info');
@@ -9629,7 +9680,6 @@ function _renderNivelProgression() {
   const fn  = UserProfile.getRole(pd) || u.funcion || 'CMD';
   const nvl = UserProfile.getNivelActual(pd);
 
-  // Fecha ingreso (YYYY-MM-DD)
   let ingresoDate = null;
   const ingresoISO = UserProfile.getFechaIngresoEmpresa(pd) || '';
   if (ingresoISO) { ingresoDate = new Date(ingresoISO); if (isNaN(ingresoDate)) ingresoDate = null; }
@@ -9642,53 +9692,12 @@ function _renderNivelProgression() {
   const occDate = pd.fechaOCC ? new Date(pd.fechaOCC) : null;
   const hasOCC  = occDate && !isNaN(occDate);
   const isCmd   = fn === 'CMD';
-  const refDate   = isCmd ? (hasOCC ? occDate : null) : ingresoDate;
-  const refNombre = isCmd ? 'Inicio curso OCC' : 'Fecha ingreso empresa';
+  const refDate = isCmd ? (hasOCC ? occDate : null) : ingresoDate;
 
-  let alertHTML = '';
-  let rows = _nivelRow('Nivel actual', `N${nvl}`);
-
-  if (nvl === 1) {
-    rows += _nivelRow('Progresión', 'Nivel máximo alcanzado');
-  } else {
-    const nextNvl = nvl - 1; // N6→N5→N4→N3→N2→N1
-    const UMBRAL  = { 6: 12, 5: 24 }; // meses — provisional Art. 26
-    const umbral  = UMBRAL[nvl];
-
-    rows += _nivelRow('Próxima revisión', `N${nextNvl}`);
-    rows += _nivelRow('Referencia', refNombre);
-
-    if (umbral != null) {
-      if (isCmd && !hasOCC) {
-        rows += _nivelRow('Estado', 'Pendiente de fecha OCC');
-      } else if (!refDate) {
-        rows += _nivelRow('Estado', 'Pendiente de fecha de ingreso');
-      } else {
-        const months = Math.floor((new Date() - refDate) / (1000*60*60*24*30.44));
-        const falta  = umbral - months;
-        if (falta <= 0) {
-          rows += _nivelRow('Estado', `Condición cumplida — ${umbral === 12 ? '1 año' : '2 años'} (Art. 26)`);
-          alertHTML = `<div class="alert warning" style="margin-bottom:8px"><div class="alert-icon">🔔</div><div class="alert-content"><div class="alert-title">N${nvl}→N${nextNvl} — Revisión disponible</div><div class="alert-text">Cumples el plazo del Art. 26. Solicita el cambio a la Dirección de Operaciones.</div></div></div>`;
-        } else {
-          rows += _nivelRow('Estado', `${months}/${umbral} meses — faltan ${falta === 1 ? '1 mes' : falta + ' meses'}`);
-        }
-      }
-    } else {
-      rows += _nivelRow('Estado', 'Progresión por designación (Art. 26)');
-    }
-  }
+  const { alertHTML, bodyHTML } = _buildNivelNarrativa(fn, nvl, refDate, hasOCC, pd);
 
   alertEl.innerHTML = alertHTML;
-  progressEl.innerHTML = `<div style="display:table;width:100%;border-top:1px solid var(--border);padding-top:10px;margin-top:4px">${rows}</div>`;
-}
-
-function _nivelRow(label, value) {
-  return `<div style="display:table-row">
-    <div style="display:table-cell;padding:4px 14px 4px 0;font-size:11px;font-family:var(--mono);
-      color:var(--text3);white-space:nowrap;vertical-align:top">${label}</div>
-    <div style="display:table-cell;padding:4px 0;font-size:12px;font-family:var(--mono);
-      color:var(--text2);vertical-align:top">${value}</div>
-  </div>`;
+  progressEl.innerHTML = `<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">${bodyHTML}</div>`;
 }
 
 function renderPerfil() {
