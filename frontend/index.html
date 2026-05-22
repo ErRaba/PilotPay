@@ -11527,6 +11527,82 @@ window.PILOTPAY_BACKEND_READY = true;
     return 'GCLP'; // GC o legacy '1'
   }
 
+  // ── Próxima acción del ciclo mensual ─────────────────────────────────────────
+  // Función pura: sin DOM, sin cálculos, sin efectos secundarios.
+  // Retorna { texto, tab } según el estado del MonthRecord activo, o null si no hay acción.
+  function _nextAction(mr) {
+    if (!mr) return { texto: 'Carga las variables del mes', tab: 'variables' };
+    switch (mr.estado) {
+      case 'pending_variables':
+        return { texto: 'Calcula en Calcular', tab: 'calcular' };
+      case 'pending_calculation':
+      case 'pending_comparison':
+        return { texto: 'Sube la nómina oficial en Comparativa', tab: 'comparar' };
+      case 'con_diferencias':
+        return { texto: 'Gestiona las diferencias en Historial', tab: 'historial' };
+      default:
+        return null;
+    }
+  }
+
+  // ── Selección del expediente activo ──────────────────────────────────────────
+  // Cola de prioridad: el MonthRecord más relevante operativamente.
+  // NO es necesariamente el mes calendario — puede ser el mes anterior
+  // si el usuario aún tiene un ciclo abierto.
+  function _selectExpedienteActivo(allMR) {
+    if (!allMR || allMR.length === 0) return null;
+
+    // Prioridad 1: con_diferencias — requiere acción inmediata
+    var conDifs = allMR.filter(function(m) { return m.estado === 'con_diferencias'; });
+    if (conDifs.length > 0) {
+      // El más reciente si hay varios
+      return conDifs.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 2: pending_comparison — ciclo activo esperando nómina oficial
+    var pendComp = allMR.filter(function(m) { return m.estado === 'pending_comparison'; });
+    if (pendComp.length > 0) {
+      return pendComp.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 3: pending_calculation — previsión generada, esperando nómina
+    var pendCalc = allMR.filter(function(m) { return m.estado === 'pending_calculation'; });
+    if (pendCalc.length > 0) {
+      return pendCalc.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 4: pending_variables — variables cargadas, pendiente cálculo
+    var pendVars = allMR.filter(function(m) { return m.estado === 'pending_variables'; });
+    if (pendVars.length > 0) {
+      return pendVars.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 5: MonthRecord del mes calendario actual (cualquier estado).
+    // filter() en lugar de find() — determinista si hay múltiples registros del mismo mes
+    // (legacy/corrupción). Se selecciona el más reciente por _updatedAt.
+    var now = new Date();
+    var calYear = now.getFullYear(), calMonth = now.getMonth() + 1;
+    var calCandidates = allMR.filter(function(m) { return m.year === calYear && m.month === calMonth; });
+    if (calCandidates.length > 0) {
+      return calCandidates.reduce(function(a, b) {
+        return (a._updatedAt || '') >= (b._updatedAt || '') ? a : b;
+      });
+    }
+
+    // Prioridad 6: el más reciente de cualquier estado
+    return allMR.reduce(function(a, b) {
+      return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+    });
+  }
+
   /* ── Fuente de verdad centralizada del dashboard ── */
   function getDashboardData() {
     // PP_getters es la única vía correcta para acceder a variables let de otros scripts.
@@ -11561,7 +11637,25 @@ window.PILOTPAY_BACKEND_READY = true;
       ? PilotPayStore.stats.getSummary()
       : null;
 
-    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary, statsFinancial };
+    // ── Estadísticas del año en curso (para Resumen Anual) ───────────────────
+    // Llama getSummary con año actual — ya soportado por la implementación.
+    const currentYear = new Date().getFullYear();
+    const statsAnual = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready() && PilotPayStore.stats)
+      ? PilotPayStore.stats.getSummary({ year: currentYear })
+      : null;
+
+    // ── Expediente activo ────────────────────────────────────────────────────
+    // MonthRecord más relevante según cola de prioridad operativa.
+    // Fuente canónica para la card principal del Dashboard.
+    const _allMR = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getAll()
+      : [];
+    const expedienteActivo = _selectExpedienteActivo(_allMR);
+    const nextAction       = _nextAction(expedienteActivo);
+
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf,
+             storeSummary, statsFinancial, statsAnual,
+             expedienteActivo, nextAction, currentYear };
   }
 
   /* ══════════════════════════════════════════
@@ -11601,6 +11695,21 @@ window.PILOTPAY_BACKEND_READY = true;
         hasWarnings             : _sf.hasWarnings,
         primerMes               : _sf.primerMesAuditado,
         ultimoMes               : _sf.ultimoMesAuditado
+      });
+    }
+    if (window._PP_DEBUG) {
+      const _ea = derived.expedienteActivo;
+      console.log('[Dashboard] expedienteActivo ✓', {
+        id         : _ea ? _ea.id                  : null,
+        estado     : _ea ? _ea.estado               : '(vacío)',
+        mesLabel   : _ea ? (_ea.mesLabel + ' ' + _ea.year) : '—',
+        nextAction : derived.nextAction ? derived.nextAction.texto : null,
+        statsAnual : derived.statsAnual ? {
+          mesesAuditados   : derived.statsAnual.mesesAuditados,
+          totalNetoCobrado : derived.statsAnual.totalNetoCobrado,
+          mediaNetaFinal   : derived.statsAnual.mediaNetaFinal,
+          year             : derived.currentYear
+        } : null
       });
     }
 
