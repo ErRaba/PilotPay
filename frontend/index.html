@@ -11380,7 +11380,13 @@ window.PILOTPAY_BACKEND_READY = true;
       ? PilotPayStore.getDashboardSummary()
       : null;
 
-    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary };
+    // API financiera centralizada — fuente canónica para métricas acumuladas.
+    // Preparado para stats.getSummary({ year }) cuando se añada selector anual.
+    const statsFinancial = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready() && PilotPayStore.stats)
+      ? PilotPayStore.stats.getSummary()
+      : null;
+
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary, statsFinancial };
   }
 
   /* ══════════════════════════════════════════
@@ -11399,12 +11405,27 @@ window.PILOTPAY_BACKEND_READY = true;
       baseNum: derived.baseNum, baseICAO,
       simHistoricoKeys: Object.keys(pd.simHistorico || {})
     });
-    if (derived.storeSummary) {
+    if (derived.storeSummary && window._PP_DEBUG) {
       console.log('[Dashboard] PilotPayStore connected ✓', {
         auditorias : derived.storeSummary.auditStats.total,
         conDifs    : derived.storeSummary.auditStats.conDiferencias,
         mesActual  : derived.storeSummary.mesActual.label + ' ' + derived.storeSummary.mesActual.estado,
         expediente : derived.storeSummary.expedition.totalMeses + ' meses indexados'
+      });
+    }
+    if (derived.statsFinancial && window._PP_DEBUG) {
+      const _sf = derived.statsFinancial;
+      console.log('[Dashboard] stats.getSummary ✓', {
+        mesesAuditados          : _sf.mesesAuditados,
+        mesesConDifsHistoricas  : _sf.mesesConDiferenciasHistoricas,
+        mesesRegularizados      : _sf.mesesRegularizados,
+        totalNetoCobrado        : _sf.totalNetoCobrado,
+        diferenciaNetaAcumulada : _sf.diferenciaNetaAcumulada,
+        mediaNetaFinal          : _sf.mediaNetaFinal,
+        hasErrors               : _sf.hasErrors,
+        hasWarnings             : _sf.hasWarnings,
+        primerMes               : _sf.primerMesAuditado,
+        ultimoMes               : _sf.ultimoMesAuditado
       });
     }
 
@@ -11421,7 +11442,7 @@ window.PILOTPAY_BACKEND_READY = true;
     const now = new Date();
     setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
-    renderAuditCard(hist, derived.storeSummary);
+    renderAuditCard(hist, derived.storeSummary, derived.statsFinancial);
     renderSimCard(pd);
     renderCalcCard(calc, derived.storeSummary);
     renderAlertsCard(hist, pd, calc, derived);
@@ -11431,11 +11452,15 @@ window.PILOTPAY_BACKEND_READY = true;
   /* ─────────────────────────────────────────
      TARJETA: ÚLTIMA AUDITORÍA
   ───────────────────────────────────────── */
-  function renderAuditCard(list, storeSummary) {
+  function renderAuditCard(list, storeSummary, statsFinancial) {
     // Datos del registro: store como fuente preferida, list[0] como fallback
-    const _storeReady = storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready();
+    const _storeReady  = !!(storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _statsReady  = !!(_storeReady && statsFinancial && statsFinancial.mesesAuditados !== undefined);
     const rec   = _storeReady ? PilotPayStore.audit.getLast() : (list && list[0] || null);
-    const total = _storeReady ? storeSummary.auditStats.total : (list ? list.length : 0);
+    // auditStats.total = eventos de auditoría (incluye re-auditorías del mismo mes)
+    // mesesAuditados   = expedientes únicos mensuales en estado definitivo
+    const total         = _storeReady ? storeSummary.auditStats.total              : (list ? list.length : 0);
+    const mesesUnicos   = _statsReady ? statsFinancial.mesesAuditados              : null;
 
     if (!rec && total === 0) {
       setAttr('dsh-audit-status', 'dim');
@@ -11471,6 +11496,47 @@ window.PILOTPAY_BACKEND_READY = true;
       ? `<div class="dsh-kv"><span class="dsh-kv-k">Neto ajustado</span><span class="dsh-kv-v pos">${fmt(_auditRF.netoFinalAjustado)}</span></div>`
       : '';
 
+    // ── Métricas financieras acumuladas — fuente: stats.getSummary() ──────────
+    // Preparado para stats.getSummary({ year }) cuando se añada selector anual.
+    const _difAcum     = _statsReady && statsFinancial.diferenciaNetaAcumulada !== null
+      ? statsFinancial.diferenciaNetaAcumulada : null;
+    const _difAcumCls  = _difAcum === null ? '' : _difAcum > 0 ? 'pos' : _difAcum < 0 ? 'neg' : '';
+    const _difAcumFmt  = _difAcum === null ? '—' : fmtD(_difAcum);
+
+    const _netoAcum    = _statsReady && statsFinancial.totalNetoCobrado !== null
+      ? statsFinancial.totalNetoCobrado : null;
+    const _mediaNeta   = _statsReady && statsFinancial.mediaNetaFinal !== null
+      ? statsFinancial.mediaNetaFinal : null;
+    const _mesesConDif = _statsReady ? statsFinancial.mesesConDiferenciasHistoricas : null;
+    const _mesesReg    = _statsReady ? statsFinancial.mesesRegularizados : null;
+
+    // Rows acumulados — solo si statsFinancial disponible y valor no nulo
+    const _statsRows = _statsReady ? `
+      <div class="dsh-kv" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">
+        <span class="dsh-kv-k">Neto acumulado</span>
+        <span class="dsh-kv-v">${_netoAcum !== null ? fmt(_netoAcum) : '—'}</span>
+      </div>
+      <div class="dsh-kv">
+        <span class="dsh-kv-k">Media neta mensual</span>
+        <span class="dsh-kv-v">${_mediaNeta !== null ? fmt(_mediaNeta) : '—'}</span>
+      </div>
+      <div class="dsh-kv">
+        <span class="dsh-kv-k">Diferencia acumulada</span>
+        <span class="dsh-kv-v ${_difAcumCls}">${_difAcumFmt}</span>
+      </div>
+      <div class="dsh-kv">
+        <span class="dsh-kv-k">Meses auditados</span>
+        <span class="dsh-kv-v">${mesesUnicos !== null ? mesesUnicos : '—'}</span>
+      </div>
+      ${_mesesConDif !== null && _mesesConDif > 0 ? `<div class="dsh-kv">
+        <span class="dsh-kv-k">Con diferencias</span>
+        <span class="dsh-kv-v neg">${_mesesConDif}</span>
+      </div>` : ''}
+      ${_mesesReg !== null && _mesesReg > 0 ? `<div class="dsh-kv">
+        <span class="dsh-kv-k">Regularizados</span>
+        <span class="dsh-kv-v pos">${_mesesReg}</span>
+      </div>` : ''}` : '';
+
     const kvHtml = `<div class="dsh-kv-list">
       <div class="dsh-kv">
         <span class="dsh-kv-k">Líquido teórico</span>
@@ -11486,9 +11552,10 @@ window.PILOTPAY_BACKEND_READY = true;
         <span class="dsh-kv-v ${rec.nDiscrepancias > 0 ? 'neg' : 'pos'}">${rec.nDiscrepancias}</span>
       </div>
       <div class="dsh-kv">
-        <span class="dsh-kv-k">Total guardadas</span>
+        <span class="dsh-kv-k">Auditorías realizadas</span>
         <span class="dsh-kv-v">${total}</span>
       </div>
+      ${_statsRows}
     </div>`;
 
     setHTML('dsh-audit-body', bigHtml + kvHtml);
@@ -11648,8 +11715,10 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── Fuente de datos unificada ──────────────────────────────────────────────
     // Store como fuente preferida; fallback completo a parámetros legacy si no está listo.
-    const _storeReady = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
-    const _auditStats = _storeReady ? derived.storeSummary.auditStats : null;
+    const _storeReady    = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _auditStats    = _storeReady ? derived.storeSummary.auditStats : null;
+    const _statsFinancial = derived.statsFinancial || null;
+    const _statsReady    = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
     // profile.get() normaliza campos vacíos a ''; pd sigue disponible para sim_ccaa
     const _prof       = _storeReady ? PilotPayStore.profile.get() : pd;
     // Guard de hydration: si el perfil está completamente vacío, Firebase aún no ha cargado.
@@ -11731,7 +11800,19 @@ window.PILOTPAY_BACKEND_READY = true;
       }
     }
 
-    /* 8. Todo OK */
+    /* 8. Integridad del store — solo si el store está activo y tiene datos */
+    if (_statsReady && _statsFinancial.mesesAuditados > 0) {
+      if (_statsFinancial.hasErrors) {
+        alerts.push({ cls:'red', icon:'⚠️', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Contacta con soporte o revisa el historial.' });
+      } else if (_statsFinancial.hasWarnings) {
+        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos o inconsistentes. Revisa el Historial.' });
+      }
+      if (_statsFinancial.inconsistencias > 0) {
+        alerts.push({ cls:'amber', icon:'🔍', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta. Revisa el Historial.` });
+      }
+    }
+
+    /* 9. Todo OK */
     if (alerts.length === 0) {
       alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay alertas pendientes.' });
     }

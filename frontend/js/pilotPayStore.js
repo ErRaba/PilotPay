@@ -1032,6 +1032,173 @@
   };
 
   // ══════════════════════════════════════════════════════════════════════════════
+  // ESTADÍSTICAS FINANCIERAS — stats.getSummary(opts)
+  // PURE: sin escrituras, sin normalize, sin repair, sin persist.
+  // ══════════════════════════════════════════════════════════════════════════════
+  var _ESTADOS_DEFINITIVOS = ['auditado', 'con_diferencias', 'regularizado', 'reclamado', 'cerrado'];
+
+  var stats = {
+    getSummary: function (opts) {
+      if (!_ready) return null;
+      opts = opts || {};
+      var filterYear = (opts.year && !isNaN(opts.year)) ? Number(opts.year) : null;
+
+      var allMR = Object.values(_monthly);
+
+      // Aplicar scope de año si se pide
+      var scopedMR = filterYear
+        ? allMR.filter(function (mr) { return mr.year === filterYear; })
+        : allMR;
+
+      // Separar: definitivos con auditoría vs inconsistentes vs pendientes
+      var definitivos   = [];
+      var inconsistentes = 0;
+      var pendientes    = 0;
+
+      scopedMR.forEach(function (mr) {
+        var esDefinitivo = _ESTADOS_DEFINITIVOS.indexOf(mr.estado) !== -1;
+        if (esDefinitivo && mr.auditoria !== null) {
+          definitivos.push(mr);
+        } else if (esDefinitivo && mr.auditoria === null) {
+          inconsistentes++;
+        } else {
+          pendientes++;
+        }
+      });
+
+      // Ordenar definitivos por año/mes (canónico, no por fecha de auditoría)
+      definitivos.sort(function (a, b) {
+        return a.year !== b.year ? a.year - b.year : a.month - b.month;
+      });
+
+      // Contadores de estado
+      var mesesAuditados                = definitivos.length;
+      var mesesConDiferencias           = 0;  // estado actual con_diferencias
+      var mesesConDiferenciasHistoricas = 0;  // nDiscrepancias > 0 en auditoría
+      var mesesRegularizados            = 0;
+      var mesesReclamados               = 0;
+
+      // Acumuladores financieros
+      var totalNetoCobrado        = null;
+      var totalRegularizado       = 0;
+      var diferenciaNetaAcumulada = 0;
+      var sumaLiqReal             = 0;
+      var countLiqReal            = 0;
+      var sumaNetoEfectivo        = 0;
+      var countNetoEfectivo       = 0;
+      var mesesSinLiqReal         = 0;
+
+      definitivos.forEach(function (mr) {
+        var st  = mr.estado;
+        var aud = mr.auditoria;  // garantizado !== null por filtro anterior
+        var reg = mr.regularizacion;
+
+        // Contadores de estado
+        if (st === 'con_diferencias')  mesesConDiferencias++;
+        if (st === 'regularizado')     mesesRegularizados++;
+        if (st === 'reclamado')        mesesReclamados++;
+
+        // Diferencias históricas (independiente del estado actual)
+        if (aud.nDiscrepancias > 0) mesesConDiferenciasHistoricas++;
+
+        // Diferencia neta acumulada
+        if (typeof aud.diferenciaNeta === 'number' && !isNaN(aud.diferenciaNeta)) {
+          diferenciaNetaAcumulada += aud.diferenciaNeta;
+        }
+
+        // Neto cobrado — fuente canónica: netoFinalAjustado si existe, sino liqReal
+        // totalRegularizado acumula el IMPORTE de la regularización (no el neto final total)
+        var netoEfectivo = null;
+        if (reg && typeof reg.netoFinalAjustado === 'number' && !isNaN(reg.netoFinalAjustado)) {
+          netoEfectivo = reg.netoFinalAjustado;
+        }
+        if (reg && typeof reg.importeNeto === 'number' && !isNaN(reg.importeNeto)) {
+          totalRegularizado += reg.importeNeto;
+        }
+
+        if (typeof aud.liqReal === 'number' && !isNaN(aud.liqReal)) {
+          sumaLiqReal  += aud.liqReal;
+          countLiqReal++;
+          if (netoEfectivo === null) netoEfectivo = aud.liqReal;
+        } else {
+          mesesSinLiqReal++;
+        }
+
+        if (netoEfectivo !== null) {
+          sumaNetoEfectivo += netoEfectivo;
+          countNetoEfectivo++;
+          if (totalNetoCobrado === null) totalNetoCobrado = 0;
+          totalNetoCobrado += netoEfectivo;
+        }
+      });
+
+      // Redondeo financiero (2 decimales)
+      function _r2(v) { return Math.round(v * 100) / 100; }
+
+      totalNetoCobrado        = totalNetoCobrado !== null ? _r2(totalNetoCobrado)        : null;
+      totalRegularizado       = _r2(totalRegularizado);
+      diferenciaNetaAcumulada = _r2(diferenciaNetaAcumulada);
+      var mediaNetaOficial    = countLiqReal      > 0 ? _r2(sumaLiqReal      / countLiqReal)      : null;
+      var mediaNetaFinal      = countNetoEfectivo > 0 ? _r2(sumaNetoEfectivo / countNetoEfectivo) : null;
+
+      // Primer y último mes auditado
+      var primerMesAuditado = null;
+      var ultimoMesAuditado = null;
+      if (definitivos.length > 0) {
+        var _toRef = function (mr) {
+          return {
+            year          : mr.year,
+            month         : mr.month,
+            mesLabel      : mr.mesLabel,
+            estado        : mr.estado,
+            fechaAuditoria: mr.auditoria ? mr.auditoria.fechaAuditoria : null
+          };
+        };
+        primerMesAuditado = _toRef(definitivos[0]);
+        ultimoMesAuditado = _toRef(definitivos[definitivos.length - 1]);
+      }
+
+      // Quality flags — _validateMonthRecord sobre todos los registros en scope
+      var hasErrors   = false;
+      var hasWarnings = false;
+      scopedMR.forEach(function (mr) {
+        var issues = _validateMonthRecord(mr);
+        issues.forEach(function (issue) {
+          if (issue.severity === 'error')   hasErrors   = true;
+          if (issue.severity === 'warning') hasWarnings = true;
+        });
+      });
+
+      return {
+        generatedAt : new Date().toISOString(),
+        userId      : _userId,
+        scope       : { year: filterYear },
+
+        mesesAuditados               : mesesAuditados,
+        mesesConDiferencias          : mesesConDiferencias,
+        mesesConDiferenciasHistoricas: mesesConDiferenciasHistoricas,
+        mesesRegularizados           : mesesRegularizados,
+        mesesReclamados              : mesesReclamados,
+        mesesPendientes              : pendientes,
+
+        totalNetoCobrado        : totalNetoCobrado,
+        totalRegularizado       : totalRegularizado,
+        diferenciaNetaAcumulada : diferenciaNetaAcumulada,
+        mediaNetaOficial        : mediaNetaOficial,
+        mediaNetaFinal          : mediaNetaFinal,
+
+        primerMesAuditado : primerMesAuditado,
+        ultimoMesAuditado : ultimoMesAuditado,
+
+        mesesSinLiqReal  : mesesSinLiqReal,
+        inconsistencias  : inconsistentes,
+        hasErrors        : hasErrors,
+        hasWarnings      : hasWarnings
+      };
+    }
+  };
+
+  // ══════════════════════════════════════════════════════════════════════════════
   // AGREGADO: getDashboardSummary
   // Primer consumidor previsto en Fase 1. Compila todo lo que el Dashboard
   // necesita en un único objeto sin acceder al DOM.
@@ -1183,6 +1350,7 @@
     audit      : audit,
     simulator  : simulator,
     expedition : expedition,
+    stats      : stats,
 
     // Agregados
     getDashboardSummary : getDashboardSummary,
