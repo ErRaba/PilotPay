@@ -88,6 +88,11 @@ var UserAdmin = (function () {
       baseEl.value = window.getBaseFactor(base);
     }
 
+    // 2b. Panel piloto↔TCP y permisos de calculadora (sin applyUserPerms bloqueará el selector)
+    if (typeof window.applyUserPerms  === 'function') window.applyUserPerms();
+    if (typeof window.onFuncionChange === 'function') window.onFuncionChange();
+    if (typeof window.onBaseChange    === 'function') window.onBaseChange();
+
     // 3. Nivel dots
     if (typeof window.highlightNivel === 'function') window.highlightNivel();
 
