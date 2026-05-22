@@ -4162,6 +4162,7 @@ Complemento de Base MAD: 1500"></textarea>
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js"></script>
 <script src="js/pilotPayStore.js"></script>
+<script src="js/userProfile.js"></script>
 <script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
 
@@ -5209,6 +5210,9 @@ async function doLogin() {
     btn.textContent = 'Cargando perfil...';
     btn.disabled = true;
     await loadUserData(u);
+    // Normalizar profileData: aliases canónicos (nivelActual, fechaIngresoEmpresa, role),
+    // normalización de base ('1.2' → 'MAD'), garantizar fechaOCC existe.
+    if (typeof UserProfile !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
     await loadPermsFromFirebase();
     btn.textContent = 'Entrar';
     btn.disabled = false;
@@ -5384,7 +5388,8 @@ function initApp() {
   }
 
   document.getElementById('irpf').value = profileData.irpf || USERS[currentUser]?.irpf || 30.00;
-  currentNivel = profileData.nivel || u.nivel;
+  currentNivel = profileData.nivelActual != null ? profileData.nivelActual
+               : (profileData.nivel || u.nivel || 3);
   highlightNivel();
 
   // Load admin-created users

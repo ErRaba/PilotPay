@@ -626,15 +626,23 @@
   // ══════════════════════════════════════════════════════════════════════════════
   var profile = {
     get: function () {
-      var pd = _pd();
+      var pd    = _pd();
       var users = window.USERS || {};
-      var u = (_userId && users[_userId]) ? users[_userId] : {};
+      var u     = (_userId && users[_userId]) ? users[_userId] : {};
       return {
         userId      : _userId,
         nombre      : pd.fullName    || u.name     || '',
         funcion     : pd.funcion     || u.funcion  || '',
-        nivel       : pd.nivel       || u.nivel    || 3,
+        // role: alias de funcion — mismo valor, nombre más estándar para futura API/sync
+        role        : pd.funcion     || u.funcion  || '',
+        // nivelActual: campo canónico editable — nivel (legacy) como alias de lectura
+        nivelActual : pd.nivelActual != null ? pd.nivelActual : (pd.nivel || u.nivel || 3),
+        nivel       : pd.nivelActual != null ? pd.nivelActual : (pd.nivel || u.nivel || 3),
         base        : pd.base        || u.base     || 'GC',
+        // fechaIngresoEmpresa: campo canónico ISO — ingreso (legacy) como alias
+        fechaIngresoEmpresa : pd.fechaIngresoEmpresa || pd.ingreso || u.ingreso || null,
+        ingreso     : pd.fechaIngresoEmpresa || pd.ingreso || u.ingreso || null,
+        fechaOCC    : pd.fechaOCC    != null ? pd.fechaOCC : null,
         irpf        : pd.irpf        != null ? pd.irpf : (u.irpf || 30),
         nif         : pd.nif         || '',
         nss         : pd.nss         || '',
