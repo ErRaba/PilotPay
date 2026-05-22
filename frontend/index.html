@@ -1765,10 +1765,10 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Grid principal de tarjetas -->
       <div class="dsh-grid">
 
-        <!-- ── Última auditoría ── -->
+        <!-- ── Expediente activo ── -->
         <div class="dsh-card accent-amber" id="dsh-audit-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Última auditoría</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Expediente activo</span>
             <span class="dsh-status dim" id="dsh-audit-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-audit-body">
@@ -1776,10 +1776,10 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div>
 
-        <!-- ── Simulador IRPF ── -->
+        <!-- ── Proyección IRPF ── -->
         <div class="dsh-card" id="dsh-sim-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">📊</span>Simulador IRPF</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">📊</span>Proyección IRPF</span>
             <span class="dsh-status dim" id="dsh-sim-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-sim-body">
@@ -1787,10 +1787,10 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div>
 
-        <!-- ── Actividad del mes ── -->
+        <!-- ── Resumen anual ── -->
         <div class="dsh-card accent-green" id="dsh-calc-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">✈️</span>Actividad del mes</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">📋</span>Resumen anual</span>
             <span class="dsh-status dim" id="dsh-calc-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-calc-body">
@@ -11726,123 +11726,106 @@ window.PILOTPAY_BACKEND_READY = true;
     const now = new Date();
     setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
-    renderAuditCard(hist, derived.storeSummary, derived.statsFinancial);
+    renderExpedienteActivoCard(derived.expedienteActivo, derived.nextAction, derived.storeSummary);
     renderSimCard(pd);
-    renderCalcCard(calc, derived.storeSummary);
+    renderResumenAnualCard(derived.statsAnual, derived.currentYear);
     renderAlertsCard(hist, pd, calc, derived);
     renderMetarWidget(baseICAO);
   };
 
   /* ─────────────────────────────────────────
-     TARJETA: ÚLTIMA AUDITORÍA
+     TARJETA: EXPEDIENTE ACTIVO
   ───────────────────────────────────────── */
-  function renderAuditCard(list, storeSummary, statsFinancial) {
-    // Datos del registro: store como fuente preferida, list[0] como fallback
-    const _storeReady  = !!(storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
-    const _statsReady  = !!(_storeReady && statsFinancial && statsFinancial.mesesAuditados !== undefined);
-    const rec   = _storeReady ? PilotPayStore.audit.getLast() : (list && list[0] || null);
-    // auditStats.total = eventos de auditoría (incluye re-auditorías del mismo mes)
-    // mesesAuditados   = expedientes únicos mensuales en estado definitivo
-    const total         = _storeReady ? storeSummary.auditStats.total              : (list ? list.length : 0);
-    const mesesUnicos   = _statsReady ? statsFinancial.mesesAuditados              : null;
+  function renderExpedienteActivoCard(expedienteActivo, nextAction, storeSummary) {
+    const mr = expedienteActivo;
 
-    if (!rec && total === 0) {
+    if (!mr) {
       setAttr('dsh-audit-status', 'dim');
       setText('dsh-audit-status', '—');
-      setHTML('dsh-audit-body', '<div class="dsh-empty">Todavía no hay auditorías.<br>Sube una nómina en Comparativa.</div>');
+      setHTML('dsh-audit-body', '<div class="dsh-empty">No hay expediente activo.<br>Carga las variables del mes para empezar.</div>');
       return;
     }
 
-    /* Estado visual — si regularizada, badge → OK */
-    const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
-    const _auditMR    = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
-      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
-    const _auditRF    = (_auditMR && _auditMR.regularizacion) || rec.regularizacionFinal || null;
-    const _auditIsReg = _auditRF != null && rec.estado !== 'ok';
-    const _auditCls   = _auditIsReg ? 'ok' : (rec.estado || 'dim');
-    setAttr('dsh-audit-status', _auditCls);
-    setText('dsh-audit-status', stMap[_auditCls] || '—');
+    const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
 
-    /* Período */
-    const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
+    /* Estado visual — color por estado del expediente */
+    const _estadoCls = ({
+      con_diferencias:     'alerta',
+      pending_comparison:  'aviso',
+      auditado:            'ok',
+      regularizado:        'ok',
+      reclamado:           'ok',
+      cerrado:             'ok',
+      pending_variables:   'info',
+      pending_calculation: 'info'
+    })[mr.estado] || 'dim';
+    setAttr('dsh-audit-status', _estadoCls);
+    setText('dsh-audit-status', mesRef || '—');
 
-    /* Clase de diferencia */
-    const diffCls = (rec.diff == null) ? '' : Math.abs(rec.diff) < 1 ? 'pos' : rec.diff > 0 ? 'pos' : 'neg';
+    /* Etiqueta estado humanizado */
+    const _estadoLabel = ({
+      pending_variables:   'Pendiente de variables',
+      pending_calculation: 'Pendiente de cálculo',
+      pending_comparison:  'Previsión generada — pendiente de nómina',
+      auditado:            'Auditado sin diferencias',
+      con_diferencias:     'Auditado con diferencias',
+      regularizado:        'Regularizado',
+      reclamado:           'Reclamado',
+      cerrado:             'Cerrado'
+    })[mr.estado] || 'Pendiente';
 
-    /* Valor grande: neto ajustado si regularizada, liqReal si no */
-    const _bigLiq = (_auditRF && _auditRF.netoFinalAjustado != null) ? _auditRF.netoFinalAjustado : rec.liqReal;
-    const bigHtml = _bigLiq != null
-      ? `<div class="dsh-val-big">${fmt(_bigLiq)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${periodo} · ${rec.nombre || 'Empleado'}</div>`
-      : `<div class="dsh-val-big dim">Sin importe</div>`;
+    const _aud  = mr.auditoria   || {};
+    const _calc = mr.calculoTeorico || {};
+    const _reg  = mr.regularizacion || null;
 
-    const _netoAjRow = (_auditRF && _auditRF.netoFinalAjustado != null)
-      ? `<div class="dsh-kv"><span class="dsh-kv-k">Neto ajustado</span><span class="dsh-kv-v pos">${fmt(_auditRF.netoFinalAjustado)}</span></div>`
-      : '';
+    /* Valor grande + subtítulo */
+    let bigHtml;
+    if (mr.estado === 'regularizado' && _reg && _reg.netoFinalAjustado != null) {
+      bigHtml = `<div class="dsh-val-big pos">${fmt(_reg.netoFinalAjustado)}</div>
+                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+    } else if (_aud.liqReal != null) {
+      bigHtml = `<div class="dsh-val-big">${fmt(_aud.liqReal)}</div>
+                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+    } else if (_calc.liquidoReal != null) {
+      bigHtml = `<div class="dsh-val-big green">${fmt(_calc.liquidoReal)}</div>
+                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+    } else {
+      bigHtml = `<div class="dsh-val-big dim">Sin importe</div>
+                 <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_estadoLabel} · ${mesRef}</div>`;
+    }
 
-    // ── Métricas financieras acumuladas — fuente: stats.getSummary() ──────────
-    // Preparado para stats.getSummary({ year }) cuando se añada selector anual.
-    const _difAcum     = _statsReady && statsFinancial.diferenciaNetaAcumulada !== null
-      ? statsFinancial.diferenciaNetaAcumulada : null;
-    const _difAcumCls  = _difAcum === null ? '' : _difAcum > 0 ? 'pos' : _difAcum < 0 ? 'neg' : '';
-    const _difAcumFmt  = _difAcum === null ? '—' : fmtD(_difAcum);
+    /* KV rows según estado */
+    const rows = [];
+    const _esDefinitivo = ['auditado','con_diferencias','regularizado','reclamado','cerrado'].indexOf(mr.estado) !== -1;
 
-    const _netoAcum    = _statsReady && statsFinancial.totalNetoCobrado !== null
-      ? statsFinancial.totalNetoCobrado : null;
-    const _mediaNeta   = _statsReady && statsFinancial.mediaNetaFinal !== null
-      ? statsFinancial.mediaNetaFinal : null;
-    const _mesesConDif = _statsReady ? statsFinancial.mesesConDiferenciasHistoricas : null;
-    const _mesesReg    = _statsReady ? statsFinancial.mesesRegularizados : null;
+    if (_esDefinitivo) {
+      if (_aud.liqTeorico != null)    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Líquido teórico</span><span class="dsh-kv-v">${fmt(_aud.liqTeorico)}</span></div>`);
+      if (_aud.diferenciaNeta != null) {
+        const _difCls = Math.abs(_aud.diferenciaNeta) < 1 ? 'pos' : _aud.diferenciaNeta > 0 ? 'pos' : 'neg';
+        rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Diferencia neta</span><span class="dsh-kv-v ${_difCls}">${fmtD(_aud.diferenciaNeta)}</span></div>`);
+      }
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Discrepancias</span><span class="dsh-kv-v ${(_aud.nDiscrepancias || 0) > 0 ? 'neg' : 'pos'}">${_aud.nDiscrepancias || 0}</span></div>`);
+      if (_reg && _reg.importeNeto != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
+      if (_aud.fechaAuditoria) {
+        const _fd = new Date(_aud.fechaAuditoria);
+        const _fechaFmt = isNaN(_fd.getTime()) ? _aud.fechaAuditoria : _fd.toLocaleDateString('es-ES');
+        rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Fecha auditoría</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
+      }
+    } else if (mr.estado === 'pending_comparison') {
+      if (_calc.totalDevengado != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Total devengado</span><span class="dsh-kv-v">${fmt(_calc.totalDevengado)}</span></div>`);
+      if (_calc.baseIRPF       != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Base IRPF</span><span class="dsh-kv-v">${fmt(_calc.baseIRPF)}</span></div>`);
+      if (_calc.retencionIRPF  != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Ret. IRPF</span><span class="dsh-kv-v">−${fmt(_calc.retencionIRPF)}</span></div>`);
+    }
 
-    // Rows acumulados — solo si statsFinancial disponible y valor no nulo
-    const _statsRows = _statsReady ? `
-      <div class="dsh-kv" style="margin-top:6px;border-top:1px solid var(--border);padding-top:6px">
-        <span class="dsh-kv-k">Neto acumulado</span>
-        <span class="dsh-kv-v">${_netoAcum !== null ? fmt(_netoAcum) : '—'}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Media neta mensual</span>
-        <span class="dsh-kv-v">${_mediaNeta !== null ? fmt(_mediaNeta) : '—'}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Diferencia acumulada</span>
-        <span class="dsh-kv-v ${_difAcumCls}">${_difAcumFmt}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Meses auditados</span>
-        <span class="dsh-kv-v">${mesesUnicos !== null ? mesesUnicos : '—'}</span>
-      </div>
-      ${_mesesConDif !== null && _mesesConDif > 0 ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">Con diferencias</span>
-        <span class="dsh-kv-v neg">${_mesesConDif}</span>
-      </div>` : ''}
-      ${_mesesReg !== null && _mesesReg > 0 ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">Regularizados</span>
-        <span class="dsh-kv-v pos">${_mesesReg}</span>
-      </div>` : ''}` : '';
+    /* CTA — próxima acción */
+    let ctaHtml = '';
+    if (nextAction) {
+      ctaHtml = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span onclick="showTab('${nextAction.tab}')" style="font-size:10px;font-family:var(--mono);color:var(--blue2);cursor:pointer;text-decoration:underline">${nextAction.texto} →</span>
+      </div>`;
+    }
 
-    const kvHtml = `<div class="dsh-kv-list">
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Líquido teórico</span>
-        <span class="dsh-kv-v">${fmt(rec.liqTeorico)}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Diferencia neta</span>
-        <span class="dsh-kv-v ${diffCls}">${fmtD(rec.diff)}</span>
-      </div>
-      ${_netoAjRow}
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Discrepancias</span>
-        <span class="dsh-kv-v ${rec.nDiscrepancias > 0 ? 'neg' : 'pos'}">${rec.nDiscrepancias}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Auditorías realizadas</span>
-        <span class="dsh-kv-v">${total}</span>
-      </div>
-      ${_statsRows}
-    </div>`;
-
-    setHTML('dsh-audit-body', bigHtml + kvHtml);
+    setHTML('dsh-audit-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>` + ctaHtml);
   }
 
   /* ─────────────────────────────────────────
@@ -11919,72 +11902,47 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ─────────────────────────────────────────
-     TARJETA: ACTIVIDAD DEL MES
+     TARJETA: RESUMEN ANUAL
   ───────────────────────────────────────── */
-  function renderCalcCard(c, storeSummary) {
-    // pendingComparison: MonthRecord con estado pending_comparison y calculoTeorico guardado.
-    // Puede ser de cualquier mes (no solo el calendario actual) — el usuario puede estar
-    // en junio esperando la nómina de mayo.
-    const _pending  = storeSummary && storeSummary.pendingComparison;
+  function renderResumenAnualCard(statsAnual, currentYear) {
+    const _yr    = currentYear || new Date().getFullYear();
+    const _ready = !!(statsAnual && statsAnual.mesesAuditados !== undefined);
+    const _nMeses = _ready ? statsAnual.mesesAuditados : 0;
 
-    // Datos financieros: snapshot guardado > store live > calcResult global
-    const _calcData = (_pending && _pending.calculoTeorico)
-      || (storeSummary && storeSummary.currentCalc)
-      || window.calcResult;
-    const hasCalc   = _calcData != null;
-    const hasHV     = c.hvTotal > 0 || c.hbTotal > 0;
+    /* Actualizar label con el año en curso */
+    const _labelEl = document.querySelector('#dsh-calc-card .dsh-card-label');
+    if (_labelEl) _labelEl.innerHTML = '<span class="dsh-card-label-icon">📋</span>Resumen ' + _yr;
 
-    if (!hasCalc && !hasHV) {
+    if (!_ready || _nMeses === 0) {
       setAttr('dsh-calc-status', 'dim');
       setText('dsh-calc-status', '—');
-      setHTML('dsh-calc-body', '<div class="dsh-empty">Sin datos calculados.<br>Usa la pestaña Calcular.</div>');
+      setHTML('dsh-calc-body', `<div class="dsh-empty">Sin auditorías en ${_yr}.</div>`);
       return;
     }
 
-    // Label del mes: pending usa mes del PDF; en otro caso, calendario o DOM
-    const _mesLabel = _pending
-      ? (_pending.mesLabel + ' ' + _pending.year)
-      : ((storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado');
+    setAttr('dsh-calc-status', 'info');
+    setText('dsh-calc-status', _nMeses + ' mes' + (_nMeses !== 1 ? 'es' : ''));
 
-    setAttr('dsh-calc-status', _pending ? 'aviso' : 'info');
-    setText('dsh-calc-status', _mesLabel);
+    const _netoAcum  = statsAnual.totalNetoCobrado;
+    const _mediaNeta = statsAnual.mediaNetaFinal;
+    const _difAcum   = statsAnual.diferenciaNetaAcumulada;
+    const _conDif    = statsAnual.mesesConDiferenciasHistoricas;
+    const _regs      = statsAnual.mesesRegularizados;
 
-    const _liquidoReal = _calcData ? _calcData.liquidoReal : null;
-    const _subtitle = _pending
-      ? `Previsión generada · pendiente de nómina oficial · ${_mesLabel}`
-      : `Líquido calculado · ${_mesLabel}`;
-
-    const bigHtml = hasCalc && _liquidoReal
-      ? `<div class="dsh-val-big green">${fmt(_liquidoReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_subtitle}</div>`
-      : '';
+    const bigHtml = _netoAcum !== null
+      ? `<div class="dsh-val-big">${fmt(_netoAcum)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`
+      : `<div class="dsh-val-big dim">Sin datos de neto</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`;
 
     const rows = [];
-    if (_pending) {
-      // Modo previsión: datos del snapshot guardado + datos operativos del PDF
-      const _ct = _pending.calculoTeorico || {};
-      const _vd = _pending.variablesData  || {};
-      if (_ct.totalDevengado != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Total devengado</span><span class="dsh-kv-v">${fmt(_ct.totalDevengado)}</span></div>`);
-      if (_ct.baseIRPF       != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Base IRPF</span><span class="dsh-kv-v">${fmt(_ct.baseIRPF)}</span></div>`);
-      if (_ct.retencionIRPF  != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Ret. IRPF</span><span class="dsh-kv-v">-${fmt(_ct.retencionIRPF)}</span></div>`);
-      // Datos operativos desde variablesData (parseados del PDF, sobreviven al logout)
-      const _hvP = _vd.hv_total  != null ? _vd.hv_total  : (_vd.hv_puro != null ? _vd.hv_puro : null);
-      const _hbP = _vd.hb_total  != null ? _vd.hb_total  : null;
-      const _imP = _vd.imaginarias != null ? _vd.imaginarias : null;
-      const _frP = _vd.francos     != null ? _vd.francos     : null;
-      if (_hvP > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${_hvP} h</span></div>`);
-      if (_hbP > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${_hbP} h</span></div>`);
-      if (_imP != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${_imP > 0 ? _imP : '—'}</span></div>`);
-      if (_frP != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${_frP > 0 ? _frP : '—'}</span></div>`);
-    } else {
-      // Modo normal: datos operativos en vivo del DOM
-      if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
-      if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
-      if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
-      if (c.dpo > 0)     rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
+    if (_mediaNeta !== null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Media mensual</span><span class="dsh-kv-v">${fmt(_mediaNeta)}</span></div>`);
+    if (_difAcum !== null) {
+      const _cls = _difAcum > 0 ? 'pos' : _difAcum < 0 ? 'neg' : '';
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Diferencia acumulada</span><span class="dsh-kv-v ${_cls}">${fmtD(_difAcum)}</span></div>`);
     }
+    if (_conDif > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Con diferencias</span><span class="dsh-kv-v neg">${_conDif}</span></div>`);
+    if (_regs > 0)   rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularizados</span><span class="dsh-kv-v pos">${_regs}</span></div>`);
 
     setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
   }
@@ -12003,11 +11961,6 @@ window.PILOTPAY_BACKEND_READY = true;
     const _auditStats    = _storeReady ? derived.storeSummary.auditStats : null;
     const _statsFinancial = derived.statsFinancial || null;
     const _statsReady    = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
-    // profile.get() normaliza campos vacíos a ''; pd sigue disponible para sim_ccaa
-    const _prof       = _storeReady ? PilotPayStore.profile.get() : pd;
-    // Guard de hydration: si el perfil está completamente vacío, Firebase aún no ha cargado.
-    // Silenciar alertas fiscales para evitar falsos positivos durante la inicialización.
-    const _profileCargado = !!((_prof.nombre || _prof.fullName || _prof.name) || _prof.nif || _prof.base);
 
     /* 0. Previsión pendiente de nómina oficial */
     const _pendingMR = _storeReady ? derived.storeSummary.pendingComparison : null;
@@ -12038,49 +11991,6 @@ window.PILOTPAY_BACKEND_READY = true;
         alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Última auditoría con alerta</strong> — diferencia neta ${diff}. Revisa el Historial.` });
       } else if (_ultimoEstadoEfectivo === 'aviso') {
         alerts.push({ cls:'amber', icon:'ℹ️', msg:`<strong>Última auditoría con aviso</strong> — pequeñas diferencias detectadas. Revisa el Historial.` });
-      }
-    }
-
-    /* 3. Simulador — solo datos persistidos, sin leer DOM de otras pestañas */
-    const _simHist   = pd.simHistorico || {};
-    const _mesesHist = Object.keys(_simHist).filter(k => _simHist[k] && (_simHist[k].bruto || _simHist[k].irpf)).length;
-    if (_mesesHist === 0) {
-      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Registra los acumulados en el histórico del Simulador IRPF o súbelos desde Comparativa.' });
-    } else {
-      const _mesActualNum   = new Date().getMonth() + 1;
-      const _tieneMesActual = _simHist[_mesActualNum] && (_simHist[_mesActualNum].bruto || _simHist[_mesActualNum].irpf);
-      if (!_tieneMesActual) {
-        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[_mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
-      }
-    }
-
-    /* 4–7. Checks de perfil — solo si el perfil ya ha hidratado desde Firebase */
-    if (_profileCargado) {
-      const sinEstadoCivil = !_prof.estadoCivil;
-      // sim_ccaa viene de profileData directamente (no está en profile.get())
-      const ccaaExplicita  = !!(_prof.ccaa || pd.sim_ccaa);
-      const sinIRPF        = derived.irpf == null;  // ya resuelto con prioridad pd.irpf > u.irpf
-
-      if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
-        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
-      } else {
-        if (!ccaaExplicita) {
-          alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
-        }
-        if (sinIRPF) {
-          alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
-        }
-      }
-
-      /* 7. NIF ausente — solo si ya existe alguna auditoría */
-      if (_totalAudits > 0 && !_prof.nif) {
-        const _lastRec   = list && list[0];
-        const _nifDetect = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
-        const _msg = _nifDetect
-          ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
-          : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
-        alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
       }
     }
 
