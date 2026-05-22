@@ -348,6 +348,32 @@ var PilotPayLocalDB = (function () {
   // Punto de entrada único. Llámalo tras login con el userId autenticado.
   // Asíncrono y no-bloqueante — la app no espera su resolución.
 
+  function _runMigration(userId) {
+    var migKey = _migrationKey(userId);
+    console.log('[PilotPayLocalDB] Iniciando migración para', userId, '| device:', _deviceId);
+
+    return Promise.all([
+      _migrateMonthlyRecords(userId),
+      _migrateAuditHistory(userId)
+    ]).then(function (results) {
+      var mr  = results[0];
+      var aud = results[1];
+
+      console.log('[PilotPayLocalDB] Migración completada:',
+        'monthlyRecords migrados=' + mr.migrated + ' fallidos=' + mr.failed,
+        '| auditHistory migrados=' + aud.migrated + ' fallidos=' + aud.failed
+      );
+
+      if (mr.failed === 0 && aud.failed === 0) {
+        localStorage.setItem(migKey, 'done');
+      } else {
+        console.warn('[PilotPayLocalDB] Migración parcial — flag NO marcado como done. Se reintentará.');
+      }
+
+      return _logIDBState(userId);
+    });
+  }
+
   function bootstrap(userId) {
     if (!userId) {
       console.warn('[PilotPayLocalDB] bootstrap: userId vacío — abortando');
@@ -358,35 +384,23 @@ var PilotPayLocalDB = (function () {
 
     return _openDB()
       .then(function () {
-        // ── Migración ──
         var migKey = _migrationKey(userId);
-        if (localStorage.getItem(migKey) === 'done') {
-          console.log('[PilotPayLocalDB] Migración ya realizada para', userId);
-          return _logIDBState(userId);
+
+        if (localStorage.getItem(migKey) !== 'done') {
+          return _runMigration(userId);
         }
 
-        console.log('[PilotPayLocalDB] Iniciando migración para', userId, '| device:', _deviceId);
-
-        return Promise.all([
-          _migrateMonthlyRecords(userId),
-          _migrateAuditHistory(userId)
-        ]).then(function (results) {
-          var mr  = results[0];
-          var aud = results[1];
-
-          console.log('[PilotPayLocalDB] Migración completada:',
-            'monthlyRecords migrados=' + mr.migrated + ' fallidos=' + mr.failed,
-            '| auditHistory migrados=' + aud.migrated + ' fallidos=' + aud.failed
-          );
-
-          // Solo marcar 'done' si no hubo errores totales
-          if (mr.failed === 0 && aud.failed === 0) {
-            localStorage.setItem(migKey, 'done');
-          } else {
-            console.warn('[PilotPayLocalDB] Migración parcial — flag NO marcado como done. Se reintentará.');
+        // Flag dice 'done' — verificar que IDB realmente tiene datos.
+        // Si IDB fue borrado externamente (DevTools, Safari cache clear, etc.)
+        // el flag queda huérfano y hay que re-migrar.
+        return hasUserData(userId).then(function (hasData) {
+          if (hasData) {
+            console.log('[PilotPayLocalDB] IDB OK para', userId);
+            return _logIDBState(userId);
           }
-
-          return _logIDBState(userId);
+          console.warn('[PilotPayLocalDB] Flag "done" pero IDB vacío — re-migrando para', userId);
+          localStorage.removeItem(migKey);
+          return _runMigration(userId);
         });
       })
       .catch(function (err) {
