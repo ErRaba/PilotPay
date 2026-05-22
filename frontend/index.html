@@ -802,6 +802,30 @@ header {
 .tab.active { color: var(--blue2); border-bottom-color: var(--blue); }
 .tab-icon { margin-right: 5px; }
 
+/* ── MODO OPERATIVO ── */
+.pp-mode-bar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 12px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.pp-mode-btn {
+  font-size: 10.5px; font-family: var(--mono); font-weight: 500;
+  letter-spacing: .04em; padding: 3px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: none; color: var(--text3);
+  cursor: pointer; transition: all .15s;
+}
+.pp-mode-btn.active { background: var(--card); color: var(--text1); border-color: var(--text2); }
+.pp-mode-btn.pp-sim-active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+.sim-banner {
+  background: var(--amber-dim); border-bottom: 1px solid rgba(245,158,11,.35);
+  color: var(--amber); font-family: var(--mono); font-size: 11px;
+  padding: 7px 20px; display: flex; align-items: center;
+  gap: 8px; letter-spacing: .02em;
+}
+/* Señal visual del modo simulación — sutil pero inequívoca */
+#app.pp-sim-mode .tabs { border-bottom-color: var(--amber); }
+#app.pp-sim-mode .pp-mode-bar { border-bottom-color: var(--amber); }
+
 /* ── MAIN ── */
 main { flex: 1; overflow-y: auto; }
 .page { display: none; padding: 16px; }
@@ -1560,7 +1584,19 @@ input[type=number] { -moz-appearance: textfield; }
     <button class="tab" id="tab-admin"  style="display:none" onclick="showTab('admin')"></button>
   </div>
 
+  <!-- ── SELECTOR DE MODO OPERATIVO ── -->
+  <div id="pp-mode-bar" class="pp-mode-bar" style="display:none">
+    <button id="pp-mode-op"  class="pp-mode-btn active" onclick="switchPPMode('operational')">Auditoría real</button>
+    <button id="pp-mode-sim" class="pp-mode-btn"         onclick="switchPPMode('simulation')">Simulación libre</button>
+  </div>
+
   <main>
+    <!-- ── BANNER MODO SIMULACIÓN ── -->
+    <div id="sim-banner" class="sim-banner" style="display:none">
+      <span style="font-size:14px;flex-shrink:0">⚠</span>
+      <span>Modo simulación — los cálculos no se guardan en el historial ni afectan a estadísticas.</span>
+    </div>
+
     <!-- ══════════════════════════════════════════
          TAB: DASHBOARD
     ══════════════════════════════════════════ -->
@@ -4184,6 +4220,10 @@ Complemento de Base MAD: 1500"></textarea>
      Recibe los objetos ya calculados por la comparativa
   ───────────────────────────────────────────────── */
   window.saveAuditRecord = function saveAuditRecord(nomData, diffs, totalDelta, errores, avisos) {
+    if (window.PilotPayMode === 'simulation') {
+      console.warn('[PilotPay] saveAuditRecord: bloqueado en modo simulación');
+      return;
+    }
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
@@ -4644,6 +4684,7 @@ Complemento de Base MAD: 1500"></textarea>
      Regularización: guardar y persistir
   ───────────────────────────────────────────────── */
   window.hstRegularizar = function(idx, recId, liqReal) {
+    if (window.PilotPayMode === 'simulation') return;
     const impEl   = document.getElementById('hst-reg-imp-'   + idx);
     const notaEl  = document.getElementById('hst-reg-nota-'  + idx);
     const fechaEl = document.getElementById('hst-reg-fecha-' + idx);
@@ -5390,6 +5431,8 @@ function initApp() {
   // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
   // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
   _restoreCalcFromStore();
+  // Inicializar modo operativo (lee localStorage) y aplicar UI
+  if (typeof _ppModeInit === 'function') { _ppModeInit(); applyModeUI(); }
 }
 
 // ── TABS ──
@@ -6054,6 +6097,12 @@ function renderConfig() {
 }
 
 function showTab(name) {
+  // Guard: navegación bloqueada en modo simulación
+  if (window.PilotPayMode === 'simulation' &&
+      ['dashboard', 'historial', 'comparar'].indexOf(name) !== -1) {
+    console.warn('[PilotPay] showTab("' + name + '"): bloqueado en modo simulación');
+    return;
+  }
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   // Seleccionar por atributo onclick en lugar de por índice — inmune a reordenaciones.
@@ -10584,12 +10633,14 @@ function varsGetNominaMes(fechaFin) {
 // El frontend NO resuelve year/month — esa responsabilidad es del store.
 // PilotPayStore.resolveExpedientePeriod() es la única fuente de verdad temporal.
 function _varsNotifyStore() {
+  if (window.PilotPayMode === 'simulation') return;
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
   if (!varsData || !varsData._periodoFin) return;
   PilotPayStore.monthly.onVariablesConfirmed(varsData);
 }
 
 function _recalcNotifyStore() {
+  if (window.PilotPayMode === 'simulation') return;
   if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
   var cr = calcResult;
   if (!cr) return;
@@ -11146,6 +11197,108 @@ async function enviarSolicitudCambio() {
 
 <script src="./api-client.js"></script>
 <script>
+// ── MODO OPERATIVO ─────────────────────────────────────────────────────────────
+// PilotPayMode: contexto operativo global. 'operational' (default) | 'simulation'
+// Los write guards en store hooks leen este valor para bloquear persistencia.
+// ──────────────────────────────────────────────────────────────────────────────
+window.PilotPayMode = 'operational';
+
+var _PP_SIM_TABS_HIDDEN = ['dashboard', 'historial', 'comparar'];
+
+function _ppModeInit() {
+  var saved = localStorage.getItem('pp_ui_mode_v1');
+  window.PilotPayMode = (saved === 'simulation') ? 'simulation' : 'operational';
+}
+
+function applyModeUI() {
+  var isSim = (window.PilotPayMode === 'simulation');
+  var app      = document.getElementById('app');
+  var modeBar  = document.getElementById('pp-mode-bar');
+  var simBanner = document.getElementById('sim-banner');
+  var btnOp    = document.getElementById('pp-mode-op');
+  var btnSim   = document.getElementById('pp-mode-sim');
+
+  // Clase raíz — habilita el cascade CSS de simulación
+  if (app) app.classList.toggle('pp-sim-mode', isSim);
+
+  // Hacer visible el mode bar (oculto hasta primer login)
+  if (modeBar) modeBar.style.display = '';
+
+  // Estados de los botones
+  if (btnOp) {
+    btnOp.classList.toggle('active', !isSim);
+    btnOp.classList.remove('pp-sim-active');
+  }
+  if (btnSim) {
+    btnSim.classList.toggle('active', isSim);
+    btnSim.classList.toggle('pp-sim-active', isSim);
+  }
+
+  // Banner de simulación
+  if (simBanner) simBanner.style.display = isSim ? '' : 'none';
+
+  // Pestañas prohibidas en simulación
+  _PP_SIM_TABS_HIDDEN.forEach(function(name) {
+    var tabEl = document.querySelector('.tab[onclick="showTab(\'' + name + '\')"]');
+    if (tabEl) tabEl.style.display = isSim ? 'none' : '';
+  });
+
+  // Si el tab activo está prohibido en simulación → redirigir a calcular
+  if (isSim) {
+    var activePage = document.querySelector('.page.active');
+    if (activePage) {
+      var prohibitedIds = _PP_SIM_TABS_HIDDEN.map(function(n) { return 'page-' + n; });
+      if (prohibitedIds.indexOf(activePage.id) !== -1) {
+        showTab('calcular');
+      }
+    }
+  }
+}
+
+function switchPPMode(newMode) {
+  if (newMode === window.PilotPayMode) return;
+
+  if (window.PilotPayMode === 'simulation' && newMode === 'operational') {
+    // Salir de simulación — diálogo explícito
+    _ppSimExitDialog(function() {
+      window.PilotPayMode = 'operational';
+      localStorage.setItem('pp_ui_mode_v1', 'operational');
+      applyModeUI();
+    });
+    return;
+  }
+
+  // Entrar en simulación — sin diálogo
+  window.PilotPayMode = 'simulation';
+  localStorage.setItem('pp_ui_mode_v1', 'simulation');
+  applyModeUI();
+}
+
+function _ppSimExitDialog(onConfirm) {
+  var existing = document.getElementById('pp-sim-exit-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'pp-sim-exit-overlay';
+  overlay.className = 'hst-confirm-overlay';
+  overlay.innerHTML =
+    '<div class="hst-confirm-box" style="border-top-color:var(--amber)">' +
+      '<div class="hst-confirm-title">Salir del modo simulación</div>' +
+      '<div class="hst-confirm-msg">Los cálculos realizados en simulación <strong>no se han guardado</strong> en el historial ni afectan a estadísticas.<br><br>¿Volver al modo Auditoría real?</div>' +
+      '<div class="hst-confirm-actions">' +
+        '<button class="hst-confirm-cancel" id="pp-sim-cancel-btn">Continuar editando</button>' +
+        '<button class="hst-confirm-delete" id="pp-sim-confirm-btn" style="background:var(--blue2);border-color:var(--blue2)">Volver a Auditoría real</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.getElementById('pp-sim-cancel-btn').onclick = function() { overlay.remove(); };
+  document.getElementById('pp-sim-confirm-btn').onclick = function() { overlay.remove(); onConfirm(); };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+}
+</script>
+
+<script>
 // PILOTPAY · MIGRACIÓN FRONTEND → BACKEND
 (function setupBackendPayrollBridge(){
   if (window.__pilotpayBackendBridgeInstalled) return;
@@ -11234,6 +11387,7 @@ async function enviarSolicitudCambio() {
   }
 
   function scheduleBackendAudit(){
+    if (window.PilotPayMode === 'simulation') return;
     if (!window.PilotPayAPI || !window.PILOTPAY_BACKEND_READY) return;
     clearTimeout(timer);
     const seq = ++lastSeq;
