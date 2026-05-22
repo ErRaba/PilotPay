@@ -3429,6 +3429,19 @@ Complemento de Base MAD: 1500"></textarea>
               </select>
             </div>
           </div>
+          <div class="row" style="margin-top:4px;align-items:flex-end">
+            <div class="field">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding-top:6px">
+                <input type="checkbox" id="adm-temporal" onchange="onAdmTemporalChange()"
+                  style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer">
+                <span class="field-label" style="margin:0">Acceso temporal</span>
+              </label>
+            </div>
+            <div class="field" id="adm-expires-wrap" style="display:none">
+              <span class="field-label">Fecha límite acceso</span>
+              <input class="field-input" id="adm-expires" type="date">
+            </div>
+          </div>
           <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla</button>
           <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario</button>
         </div>
@@ -5207,6 +5220,22 @@ async function doLogin() {
       document.getElementById('login-pass').value = '';
       return;
     }
+    // Comprobar caducidad de acceso temporal
+    // Comparación por fecha local (YYYY-MM-DD) para evitar desfase UTC
+    if (USERS[u].temporal && USERS[u].accessExpiresAt) {
+      const now   = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      if (today > USERS[u].accessExpiresAt) {
+        // Persistir bloqueo en Firebase (best-effort — no impide la denegación si falla)
+        try { await fbUpdate(`pilotpay/usuarios/${u}`, { bloqueado: true }); USERS[u].bloqueado = true; } catch(e) {}
+        errEl.textContent = '⏰ Acceso temporal caducado. Contacta con el administrador.';
+        errEl.style.display = 'block';
+        card.classList.add('login-shake');
+        setTimeout(() => card.classList.remove('login-shake'), 400);
+        document.getElementById('login-pass').value = '';
+        return;
+      }
+    }
     currentUser = u;
     profileData = { ...USERS[u] };
     btn.textContent = 'Cargando perfil...';
@@ -5654,57 +5683,40 @@ function renderAdmin() {
       ? { funciones: ['CMD','COP','SCC','CC'], bases: ['GC','TFN','MAD'] }
       : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
 
-    const funcChecks = [
-      { val:'CMD', label:'Comandante' },
-      { val:'COP', label:'Copiloto' },
-      { val:'SCC', label:'SCC — Sobrecargo' },
-      { val:'CC',  label:'CC — Tripulante Cabina' },
-    ].map(f => `
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
-        <input type="checkbox"
-          ${isAdmin ? 'checked disabled' : ''}
-          ${!isAdmin ? `class="adm-perm-check" data-user="${code}" data-type="funcion" data-val="${f.val}"
-          ${userPerms.funciones.includes(f.val) ? 'checked' : ''}
-          onchange="togglePerm('${code}','funcion','${f.val}',this.checked)"` : ''}
-          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--amber)">
-        <span style="font-size:12px;color:var(--text2)">${f.label}</span>
-      </label>`).join('');
+    // Permisos extra — capacidades adicionales más allá de la identidad real
+    const idBase    = getBaseCode(u.base);
+    const extraFn   = isAdmin ? [] : userPerms.funciones.filter(f => f !== u.funcion);
+    const extraBase = isAdmin ? [] : userPerms.bases.filter(b => b !== idBase);
+    const extraItems = [...extraFn, ...extraBase].map(x =>
+      `<span style="font-size:10px;font-family:var(--mono);color:var(--blue2);
+        background:var(--blue-dim);padding:1px 6px;border-radius:3px;margin-right:3px">+${x}</span>`
+    ).join('');
 
-    const baseChecks = [
-      { val:'GC',  label:'Gran Canaria' },
-      { val:'TFN', label:'Tenerife' },
-      { val:'MAD', label:'Madrid' },
-    ].map(b => `
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
-        <input type="checkbox"
-          ${isAdmin ? 'checked disabled' : ''}
-          ${!isAdmin ? `class="adm-perm-check" data-user="${code}" data-type="base" data-val="${b.val}"
-          ${userPerms.bases.includes(b.val) ? 'checked' : ''}
-          onchange="togglePerm('${code}','base','${b.val}',this.checked)"` : ''}
-          style="width:16px;height:16px;cursor:${isAdmin?'default':'pointer'};accent-color:var(--blue)">
-        <span style="font-size:12px;color:var(--text2)">${b.label}</span>
-      </label>`).join('');
-
-    const fnIcon = {CMD:'✈️ CMD',COP:'🛫 COP',SCC:'👔 SCC',CC:'🧳 CC'}[u.funcion]||u.funcion;
+    const fnIcon     = {CMD:'✈️ CMD',COP:'🛫 COP',SCC:'👔 SCC',CC:'🧳 CC'}[u.funcion]||u.funcion;
     const ingresoStr = u.ingreso ? ` · Alta: ${u.ingreso}` : '';
-    const bloqBadge = u.bloqueado
+    const bloqBadge  = u.bloqueado
       ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">🔒 BLOQUEADO</span>`
+      : '';
+    const tempBadge  = (!u.bloqueado && u.temporal && u.accessExpiresAt)
+      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);background:var(--amber-dim);padding:2px 6px;border-radius:4px">⏰ Temporal hasta ${u.accessExpiresAt}</span>`
       : '';
 
     return `
     <div class="card" style="margin-bottom:10px;${u.bloqueado?'opacity:0.7':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name||''} ${u.apellidos||''}</div>
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3)">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px">
             <span style="color:var(--blue2)">${code}</span> · ${fnIcon} · N${u.nivel}${ingresoStr}
           </div>
-          ${bloqBadge ? `<div style="margin-top:4px">${bloqBadge}</div>` : ''}
+          ${(bloqBadge || tempBadge) ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">${bloqBadge}${tempBadge}</div>` : ''}
+          ${(!isAdmin && extraItems) ? `<div style="margin-top:5px;font-size:10px;font-family:var(--mono);color:var(--text3)">Permisos extra: ${extraItems}</div>` : ''}
         </div>
-        ${isAdmin ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2)">ADMIN</span>` : `
-          <button onclick="eliminarUsuario('${code}')"
-            style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
-            font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono)">🗑</button>`}
+        ${isAdmin
+          ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);flex-shrink:0">ADMIN</span>`
+          : `<button onclick="confirmarEliminarUsuario('${code}')"
+              style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
+              font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono);flex-shrink:0;margin-left:8px">🗑</button>`}
       </div>
       ${isAdmin ? `
         <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
@@ -5713,29 +5725,21 @@ function renderAdmin() {
             background:var(--blue-dim);border:1px solid var(--blue);
             color:var(--blue2);border-radius:5px;cursor:pointer">✏️ Editar perfil</button>
         </div>` : `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
-          <div>
-            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;letter-spacing:.06em">CARGO</div>
-            ${funcChecks}
-          </div>
-          <div>
-            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:4px;letter-spacing:.06em">BASE</div>
-            ${baseChecks}
-          </div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:8px">
+        <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap">
           <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
             background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer">✏️ Editar</button>
+            color:var(--blue2);border-radius:5px;cursor:pointer;white-space:nowrap">✏️ Identidad</button>
+          <button onclick="gestionarPermisos('${code}')"
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
+            background:var(--bg3);border:1px solid var(--border);
+            color:var(--text2);border-radius:5px;cursor:pointer;white-space:nowrap">🔑 Permisos</button>
           <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
+            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
             background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
             border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
             color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            border-radius:5px;cursor:pointer">
-            ${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
-          </button>
+            border-radius:5px;cursor:pointer;white-space:nowrap">${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
         </div>`}
     </div>`;
   }).join('');
@@ -5778,11 +5782,18 @@ async function crearUsuarioLocal() {
   const funcion  = document.getElementById('adm-funcion').value;
   const base     = document.getElementById('adm-base').value;
   const nivel    = parseInt(document.getElementById('adm-nivel').value);
-  const apellidos= document.getElementById('adm-apellidos')?.value.trim() || '';
-  const alias    = document.getElementById('adm-alias-new')?.value.trim() || '';
+  const apellidos       = document.getElementById('adm-apellidos')?.value.trim() || '';
+  const alias           = document.getElementById('adm-alias-new')?.value.trim() || '';
+  const temporal        = document.getElementById('adm-temporal')?.checked || false;
+  const accessExpiresAt = temporal
+    ? (document.getElementById('adm-expires')?.value || null)
+    : null;
 
   if (!nombre || !codigo || !pass) {
     alert('Rellena nombre, código y contraseña'); return;
+  }
+  if (temporal && !accessExpiresAt) {
+    alert('Indica la fecha límite de acceso temporal'); return;
   }
   if (USERS[codigo]) {
     alert(`El código ${codigo} ya existe`); return;
@@ -5796,8 +5807,9 @@ async function crearUsuarioLocal() {
     pass, name: nombre, apellidos, alias,
     funcion, nivel, base, irpf: 30.00, ingreso: null, admin: false,
     theme: defaultTheme,
-    firstAccess: true,   // flag para redirigir a Perfil en primer login
-    pagaExtra: 'prorr',  // prorr por defecto
+    firstAccess: true,
+    pagaExtra: 'prorr',
+    temporal, accessExpiresAt,
   };
 
   try {
@@ -5843,6 +5855,8 @@ async function crearUsuarioLocal() {
     document.getElementById('adm-pass').value = '';
     if (document.getElementById('adm-apellidos')) document.getElementById('adm-apellidos').value = '';
     if (document.getElementById('adm-alias-new')) document.getElementById('adm-alias-new').value = '';
+    const admTemp = document.getElementById('adm-temporal');
+    if (admTemp) { admTemp.checked = false; onAdmTemporalChange(); }
 
     renderAdmin();
     alert(`✓ Usuario ${codigo} creado correctamente.\nTema asignado: ${defaultTheme}\nPrimer acceso: pestaña Perfil`);
@@ -5997,7 +6011,7 @@ function editarUsuario(code) {
     </div>
     <div class="row">
       <div class="field">
-        <span class="field-label">Función</span>
+        <span class="field-label">Cargo real</span>
         <select class="field-input" id="edit-funcion" onchange="updateEditNivelOptions()">
           <option value="CMD" ${u.funcion==='CMD'?'selected':''}>Comandante</option>
           <option value="COP" ${u.funcion==='COP'?'selected':''}>Copiloto</option>
@@ -6006,7 +6020,7 @@ function editarUsuario(code) {
         </select>
       </div>
       <div class="field">
-        <span class="field-label">Nivel</span>
+        <span class="field-label">Nivel real</span>
         <select class="field-input" id="edit-nivel">
           ${(['SCC','CC'].includes(u.funcion||'CMD')
             ? [1,2,3,4,5]
@@ -6015,13 +6029,18 @@ function editarUsuario(code) {
         </select>
       </div>
     </div>
-    <div class="field" style="margin-bottom:14px">
-      <span class="field-label">Base</span>
+    <div class="field" style="margin-bottom:10px">
+      <span class="field-label">Base principal</span>
       <select class="field-input" id="edit-base">
         <option value="GC"  ${getBaseCode(u.base||'GC')==='GC' ?'selected':''}>Gran Canaria</option>
         <option value="TFN" ${getBaseCode(u.base||'GC')==='TFN'?'selected':''}>Tenerife</option>
         <option value="MAD" ${getBaseCode(u.base||'GC')==='MAD'?'selected':''}>Madrid</option>
       </select>
+    </div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
+      background:var(--amber-dim);border:1px solid var(--amber);border-radius:6px;
+      padding:8px 10px;margin-bottom:12px;line-height:1.5">
+      ⚠️ Cambiar cargo, base o nivel reseteará los permisos operativos adicionales.
     </div>
     <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
     ${!isAdmin ? `
@@ -6130,6 +6149,86 @@ async function guardarEdicionUsuario(code) {
   closeDayModal();
   renderAdmin();
   alert(`✓ Perfil de ${code} actualizado`);
+}
+
+// Modal de permisos operativos — separado de la identidad real del usuario.
+// Los permisos solo afectan a /permisos/{code} (qué cálculos puede hacer),
+// nunca a /usuarios ni /perfiles (identidad). No llama a atomicRoleChange.
+function gestionarPermisos(code) {
+  const u = USERS[code] || {};
+  const userPerms = perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] };
+
+  const funcChecks = [
+    { val:'CMD', label:'Comandante' },
+    { val:'COP', label:'Copiloto' },
+    { val:'SCC', label:'SCC — Sobrecargo' },
+    { val:'CC',  label:'CC — Tripulante de Cabina' },
+  ].map(f => `
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:5px 0">
+      <input type="checkbox"
+        class="adm-perm-check" data-user="${code}" data-type="funcion" data-val="${f.val}"
+        ${userPerms.funciones.includes(f.val) ? 'checked' : ''}
+        onchange="togglePerm('${code}','funcion','${f.val}',this.checked)"
+        style="width:16px;height:16px;cursor:pointer;accent-color:var(--amber)">
+      <span style="font-size:12px;color:var(--text2)">${f.label}
+        ${f.val === u.funcion ? `<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">(cargo real)</span>` : ''}
+      </span>
+    </label>`).join('');
+
+  const baseChecks = [
+    { val:'GC',  label:'Gran Canaria' },
+    { val:'TFN', label:'Tenerife' },
+    { val:'MAD', label:'Madrid' },
+  ].map(b => `
+    <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:5px 0">
+      <input type="checkbox"
+        class="adm-perm-check" data-user="${code}" data-type="base" data-val="${b.val}"
+        ${userPerms.bases.includes(b.val) ? 'checked' : ''}
+        onchange="togglePerm('${code}','base','${b.val}',this.checked)"
+        style="width:16px;height:16px;cursor:pointer;accent-color:var(--blue)">
+      <span style="font-size:12px;color:var(--text2)">${b.label}
+        ${b.val === getBaseCode(u.base) ? `<span style="font-size:10px;color:var(--text3);font-family:var(--mono)">(base real)</span>` : ''}
+      </span>
+    </label>`).join('');
+
+  document.getElementById('day-modal-content').innerHTML = `
+    <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:4px;color:var(--text)">
+      🔑 Permisos operativos — <span style="color:var(--blue2)">${code}</span>
+    </div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:14px">
+      Cargo real: ${u.funcion||'—'} · NVL${u.nivel||'—'} · ${getBaseCode(u.base)||'—'}
+    </div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text2);
+      background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+      padding:8px 10px;margin-bottom:14px;line-height:1.5">
+      Estos permisos solo controlan a qué cálculos tiene acceso en la calculadora.<br>
+      No modifican el perfil real del usuario.
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.06em;margin-bottom:4px">CARGOS ACCESIBLES</div>
+      ${funcChecks}
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);letter-spacing:.06em;margin-bottom:4px">BASES ACCESIBLES</div>
+      ${baseChecks}
+    </div>
+    <button onclick="closeDayModal()"
+      style="width:100%;padding:11px;background:var(--blue);border:none;
+      color:#fff;border-radius:var(--r);font-family:var(--mono);font-size:12px;
+      letter-spacing:1px;cursor:pointer">Cerrar</button>
+  `;
+  document.getElementById('day-modal').classList.add('open');
+}
+
+// Muestra/oculta el campo de fecha límite en el formulario de alta temporal.
+function onAdmTemporalChange() {
+  const checked = document.getElementById('adm-temporal')?.checked;
+  const wrap    = document.getElementById('adm-expires-wrap');
+  if (wrap) wrap.style.display = checked ? '' : 'none';
+  if (!checked) {
+    const inp = document.getElementById('adm-expires');
+    if (inp) inp.value = '';
+  }
 }
 
 // Actualiza las opciones de nivel al cambiar función en el modal de edición.
