@@ -4162,6 +4162,7 @@ Complemento de Base MAD: 1500"></textarea>
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js"></script>
 <script src="js/pilotPayStore.js"></script>
+<script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
 
 <!-- ══════════════════════════════════════════
@@ -5438,6 +5439,8 @@ function initApp() {
     simHistoricoData : function() { return typeof simHistoricoData !== 'undefined' ? simHistoricoData : {}; }
   };
   if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
+  // IDB: preparar base offline-first en background (Fase 0 — no bloquea, no altera lectura)
+  if (typeof PilotPayLocalDB !== 'undefined') PilotPayLocalDB.bootstrap(currentUser).catch(function(e) { console.warn('[IDB]', e); });
   // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
   // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
   _restoreCalcFromStore();
