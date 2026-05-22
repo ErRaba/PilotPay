@@ -175,7 +175,62 @@ var UserProfile = (function () {
     };
   }
 
-  console.log('[UserProfile] módulo cargado v1.0');
+  // ── Helpers de acceso semántico ──────────────────────────────────────────────
+  // Fachada sobre el perfil normalizado. Cada helper acepta un objeto perfil
+  // (preferiblemente ya procesado por normalizeProfile) y devuelve el campo
+  // correspondiente con fallback seguro.
+  //
+  // Propósito: lectura semántica sin acceso directo a campos legacy ni raw.
+  // No modifican el perfil. Todos son puros.
+
+  function getRole(p) {
+    return (p && (p.role || p.funcion)) || null;
+  }
+
+  function getNivelActual(p) {
+    if (!p) return 3;
+    return p.nivelActual != null ? p.nivelActual : (p.nivel != null ? p.nivel : 3);
+  }
+
+  function getFechaIngresoEmpresa(p) {
+    return (p && (p.fechaIngresoEmpresa || p.ingreso)) || null;
+  }
+
+  function getFechaOCC(p) {
+    if (!p) return null;
+    return p.fechaOCC != null ? p.fechaOCC : null;
+  }
+
+  // Base helpers — extraen base del perfil y la interpretan.
+  // Delegan en window.* si están disponibles (fuente canónica en index.html)
+  // para garantizar consistencia absoluta.
+
+  function _baseVal(p) { return p ? (p.base || null) : null; }
+
+  function getBaseCode(p) {
+    var b = _baseVal(p);
+    if (typeof window.getBaseCode === 'function') return window.getBaseCode(b);
+    if (!b) return 'GC';
+    if (b === 'GC' || b === 'TFN' || b === 'MAD') return b;
+    return parseFloat(b) > 1 ? 'MAD' : 'GC';
+  }
+
+  function getBaseLabel(p) {
+    var b = _baseVal(p);
+    if (typeof window.getBaseLabel === 'function') return window.getBaseLabel(b);
+    if (b === 'MAD' || parseFloat(b) > 1) return 'Madrid';
+    if (b === 'TFN') return 'Tenerife';
+    return 'Gran Canaria';
+  }
+
+  function getBaseFactor(p) {
+    var b = _baseVal(p);
+    if (typeof window.getBaseFactor === 'function') return window.getBaseFactor(b);
+    if (b === 'MAD' || parseFloat(b) > 1) return '1.2';
+    return '1';
+  }
+
+  console.log('[UserProfile] módulo cargado v1.1');
 
   // ── API PÚBLICA ───────────────────────────────────────────────────────────────
   return {
@@ -185,6 +240,15 @@ var UserProfile = (function () {
 
     // Derivados en runtime (no persisten)
     deriveProfile   : deriveProfile,
+
+    // Helpers de acceso semántico (fachada sobre perfil normalizado)
+    getRole                : getRole,
+    getNivelActual         : getNivelActual,
+    getFechaIngresoEmpresa : getFechaIngresoEmpresa,
+    getFechaOCC            : getFechaOCC,
+    getBaseCode            : getBaseCode,
+    getBaseLabel           : getBaseLabel,
+    getBaseFactor          : getBaseFactor,
 
     // Interno — disponible para debug/testing, NO para UI todavía
     _calcProximoCambioNivel: _calcProximoCambioNivel

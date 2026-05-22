@@ -5363,7 +5363,7 @@ function initApp() {
   const _pillInitials = document.getElementById('user-initials-header');
   if (_pillInitials) _pillInitials.textContent = currentUser;
   document.getElementById('header-badge').textContent =
-    `${fnBadge[u.funcion]||u.funcion} · NVL${profileData.nivel || u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
+    `${fnBadge[u.funcion]||u.funcion} · NVL${profileData.nivelActual ?? profileData.nivel ?? u.nivel} · ${baseLabel}${isAdmin ? ' · ADMIN' : ''}`;
 
   // Set funcion and base from profile
   const funcEl = document.getElementById('funcion');
@@ -6405,7 +6405,7 @@ function showWelcome() {
   const u = USERS[currentUser];
   const isAdmin = currentUser === ADMIN_CODE;
   const funcion = profileData.funcion || u.funcion || 'CMD';
-  const nivel   = profileData.nivel || u.nivel || 3;
+  const nivel   = profileData.nivelActual ?? profileData.nivel ?? u.nivel ?? 3;
   const isCMD   = funcion === 'CMD';
   const isTCP   = funcion === 'SCC' || funcion === 'CC';
   const isSCC   = funcion === 'SCC';
@@ -11763,7 +11763,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     /* ── Subtítulo contextual ── */
     const fn  = pd.funcion || u.funcion || '';
-    const nvl = pd.nivel   || u.nivel   || '';
+    const nvl = pd.nivelActual ?? pd.nivel ?? u.nivel ?? '';
     const userCtx = [];
     if (fn)  userCtx.push(fn);
     if (nvl) userCtx.push('NVL ' + nvl);
