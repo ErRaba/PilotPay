@@ -234,7 +234,12 @@ var PilotPayLocalDB = (function () {
 
   function putMonthlyRecord(mr) {
     if (!mr || !mr.id) return Promise.reject(new Error('putMonthlyRecord: id requerido'));
-    return _txPut('monthlyRecords', mr);
+    // Decorar automáticamente si el registro llega sin campos IDB meta.
+    // Los registros procedentes de localStorage (write-through desde _saveMonthly)
+    // no tienen _deviceId/_hash/_syncState — se añaden aquí para mantener IDB íntegro.
+    // Los registros que ya vienen de IDB (tienen _deviceId) se escriben tal cual.
+    var record = mr._deviceId ? mr : _decorateRecord(mr);
+    return _txPut('monthlyRecords', record);
   }
 
   function getMonthlyRecord(id) {
@@ -249,7 +254,9 @@ var PilotPayLocalDB = (function () {
 
   function putAuditRecord(ar) {
     if (!ar || !ar.id) return Promise.reject(new Error('putAuditRecord: id requerido'));
-    return _txPut('auditHistory', ar);
+    // Igual que putMonthlyRecord: decorar si llega sin campos IDB meta.
+    var record = ar._deviceId ? ar : _decorateRecord(ar);
+    return _txPut('auditHistory', record);
   }
 
   function getAuditRecord(id) {
