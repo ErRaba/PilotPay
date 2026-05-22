@@ -2995,7 +2995,7 @@ Complemento de Base MAD: 1500"></textarea>
               <input class="field-input" id="prf-ingreso" type="date" onchange="saveProfile()">
             </div>
             <div class="field" id="prf-fecha-occ-wrap" style="display:none">
-              <span class="field-label">Ascenso CMD (OCC)</span>
+              <span class="field-label">Inicio curso OCC</span>
               <input class="field-input" id="prf-fecha-occ" type="date" onchange="saveProfile()">
             </div>
           </div>
@@ -3025,18 +3025,18 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="card">
           <div class="card-title"><div class="section-dot amber"></div>Estado profesional</div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
             <div>
               <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
-                letter-spacing:.06em;margin-bottom:4px">ANTIGÜEDAD EMPRESA</div>
-              <div id="prf-antiguedad" style="font-size:20px;font-family:var(--head);
-                font-weight:700;color:var(--text)">—</div>
+                letter-spacing:.06em;margin-bottom:3px">ANTIGÜEDAD EMPRESA</div>
+              <div id="prf-antiguedad" style="font-size:15px;font-family:var(--mono);
+                font-weight:600;color:var(--text)">—</div>
             </div>
             <div>
               <div style="font-size:10px;font-family:var(--mono);color:var(--text3);
-                letter-spacing:.06em;margin-bottom:4px">ANTIGÜEDAD FUNCIÓN</div>
-              <div id="prf-atig-funcion" style="font-size:20px;font-family:var(--head);
-                font-weight:700;color:var(--text)">—</div>
+                letter-spacing:.06em;margin-bottom:3px">ANTIGÜEDAD FUNCIÓN</div>
+              <div id="prf-atig-funcion" style="font-size:15px;font-family:var(--mono);
+                font-weight:600;color:var(--text)">—</div>
             </div>
           </div>
 
@@ -9592,6 +9592,105 @@ function generarInformeReclamacion(causasRaiz, totalDeltaLiq, nombresDerivados) 
 // ── PERFIL ──
 function initPerfil() { renderPerfil(); }
 
+// ── Helpers de actualización parcial del Perfil ─────────────────────────────
+// Llamados por setPrfNivel() y renderPerfil() para evitar re-render completo.
+
+function _updateProfileBadge(nvl) {
+  const badgeEl = document.getElementById('header-badge');
+  if (!badgeEl) return;
+  const u = USERS[currentUser] || {};
+  const fn = UserProfile.getRole(profileData) || u.funcion || 'CMD';
+  const base = profileData.base || u.base || '';
+  const baseLabel = typeof getBaseLabelShort === 'function' ? getBaseLabelShort(base) : base;
+  badgeEl.textContent = fn + ' · NVL' + nvl + ' · ' + baseLabel
+    + (currentUser === ADMIN_CODE ? ' · ADMIN' : '');
+}
+
+function _renderPerfilHero(nvl) {
+  const u = USERS[currentUser] || {};
+  const pd = UserProfile.normalizeProfile(profileData);
+  const fn = UserProfile.getRole(pd) || u.funcion || 'CMD';
+  const fnLabels = { CMD:'COMANDANTE', COP:'COPILOTO', SCC:'SOBRECARGO (SCC)', CC:'TRIPULANTE DE CABINA (CC)' };
+  const nombreCompleto = `${pd.name || u.name || ''} ${pd.apellidos || u.apellidos || ''}`.trim();
+  const nombreEl = document.getElementById('prf-nombre');
+  const roleEl   = document.getElementById('prf-role');
+  if (nombreEl) nombreEl.textContent = nombreCompleto || `${u.name || ''} — ${currentUser}`;
+  if (roleEl)   roleEl.textContent   =
+    `${fnLabels[fn]||fn} · NIVEL ${nvl} · BASE ${getBaseLabel(u.base || profileData.base).toUpperCase()}`;
+}
+
+function _renderNivelProgression() {
+  const alertEl    = document.getElementById('nivel-alert-container');
+  const progressEl = document.getElementById('nivel-progress-info');
+  if (!alertEl || !progressEl) return;
+
+  const u   = USERS[currentUser] || {};
+  const pd  = UserProfile.normalizeProfile(profileData);
+  const fn  = UserProfile.getRole(pd) || u.funcion || 'CMD';
+  const nvl = UserProfile.getNivelActual(pd);
+
+  // Fecha ingreso (YYYY-MM-DD)
+  let ingresoDate = null;
+  const ingresoISO = UserProfile.getFechaIngresoEmpresa(pd) || '';
+  if (ingresoISO) { ingresoDate = new Date(ingresoISO); if (isNaN(ingresoDate)) ingresoDate = null; }
+  if (!ingresoDate && profileData.ingreso_display && /^\d{2}\/\d{2}\/\d{4}$/.test(profileData.ingreso_display)) {
+    const [dd, mm, yyyy] = profileData.ingreso_display.split('/');
+    ingresoDate = new Date(+yyyy, +mm - 1, +dd);
+    if (isNaN(ingresoDate)) ingresoDate = null;
+  }
+
+  const occDate = pd.fechaOCC ? new Date(pd.fechaOCC) : null;
+  const hasOCC  = occDate && !isNaN(occDate);
+  const isCmd   = fn === 'CMD';
+  const refDate   = isCmd ? (hasOCC ? occDate : null) : ingresoDate;
+  const refNombre = isCmd ? 'Inicio curso OCC' : 'Fecha ingreso empresa';
+
+  let alertHTML = '';
+  let rows = _nivelRow('Nivel actual', `N${nvl}`);
+
+  if (nvl === 1) {
+    rows += _nivelRow('Progresión', 'Nivel máximo alcanzado');
+  } else {
+    const nextNvl = nvl - 1; // N6→N5→N4→N3→N2→N1
+    const UMBRAL  = { 6: 12, 5: 24 }; // meses — provisional Art. 26
+    const umbral  = UMBRAL[nvl];
+
+    rows += _nivelRow('Próxima revisión', `N${nextNvl}`);
+    rows += _nivelRow('Referencia', refNombre);
+
+    if (umbral != null) {
+      if (isCmd && !hasOCC) {
+        rows += _nivelRow('Estado', 'Pendiente de fecha OCC');
+      } else if (!refDate) {
+        rows += _nivelRow('Estado', 'Pendiente de fecha de ingreso');
+      } else {
+        const months = Math.floor((new Date() - refDate) / (1000*60*60*24*30.44));
+        const falta  = umbral - months;
+        if (falta <= 0) {
+          rows += _nivelRow('Estado', `Condición cumplida — ${umbral === 12 ? '1 año' : '2 años'} (Art. 26)`);
+          alertHTML = `<div class="alert warning" style="margin-bottom:8px"><div class="alert-icon">🔔</div><div class="alert-content"><div class="alert-title">N${nvl}→N${nextNvl} — Revisión disponible</div><div class="alert-text">Cumples el plazo del Art. 26. Solicita el cambio a la Dirección de Operaciones.</div></div></div>`;
+        } else {
+          rows += _nivelRow('Estado', `${months}/${umbral} meses — faltan ${falta === 1 ? '1 mes' : falta + ' meses'}`);
+        }
+      }
+    } else {
+      rows += _nivelRow('Estado', 'Progresión por designación (Art. 26)');
+    }
+  }
+
+  alertEl.innerHTML = alertHTML;
+  progressEl.innerHTML = `<div style="display:table;width:100%;border-top:1px solid var(--border);padding-top:10px;margin-top:4px">${rows}</div>`;
+}
+
+function _nivelRow(label, value) {
+  return `<div style="display:table-row">
+    <div style="display:table-cell;padding:4px 14px 4px 0;font-size:11px;font-family:var(--mono);
+      color:var(--text3);white-space:nowrap;vertical-align:top">${label}</div>
+    <div style="display:table-cell;padding:4px 0;font-size:12px;font-family:var(--mono);
+      color:var(--text2);vertical-align:top">${value}</div>
+  </div>`;
+}
+
 function renderPerfil() {
   const u  = USERS[currentUser] || {};
   const pd = UserProfile.normalizeProfile(profileData);
@@ -9599,14 +9698,8 @@ function renderPerfil() {
 
   const fn        = UserProfile.getRole(pd) || u.funcion || 'CMD';
   const nvlActual = UserProfile.getNivelActual(pd);
-  const fnLabels  = { CMD:'COMANDANTE', COP:'COPILOTO', SCC:'SOBRECARGO (SCC)', CC:'TRIPULANTE DE CABINA (CC)' };
-  const nombreCompleto = `${pd.name || u.name || ''} ${pd.apellidos || u.apellidos || ''}`.trim();
 
-  // ── Hero ──
-  document.getElementById('prf-nombre').textContent =
-    nombreCompleto || `${u.name || ''} — ${currentUser}`;
-  document.getElementById('prf-role').textContent =
-    `${fnLabels[fn]||fn} · NIVEL ${nvlActual} · BASE ${getBaseLabel(u.base || profileData.base).toUpperCase()}`;
+  _renderPerfilHero(nvlActual);
 
   // ── Bloque A — Identidad profesional ──
   const nombreEditEl = document.getElementById('prf-nombre-edit');
@@ -9665,59 +9758,7 @@ function renderPerfil() {
   const atigFnEl = document.getElementById('prf-atig-funcion');
   if (atigEl)   atigEl.textContent   = dp._antiguedadLabel    || '—';
   if (atigFnEl) atigFnEl.textContent = dp._aniosEnFuncionLabel || '—';
-
-  // Progresión de nivel — Art. 26
-  // CMD: referencia desde fechaOCC si existe, si no desde ingreso
-  const alertContainer = document.getElementById('nivel-alert-container');
-  const progressInfo   = document.getElementById('nivel-progress-info');
-  let alertHTML   = '';
-  let progressHTML = '';
-
-  const progressDate = (fn === 'CMD' && pd.fechaOCC) ? new Date(pd.fechaOCC) : ingresoDate;
-
-  if (progressDate && !isNaN(progressDate) && nvlActual >= 4) {
-    const now    = new Date();
-    const months = Math.floor((now - progressDate) / (1000*60*60*24*30.44));
-
-    if (nvlActual === 6) {
-      const falta = 12 - months;
-      if (falta <= 0) {
-        alertHTML = `<div class="alert warning"><div class="alert-icon">🔔</div><div class="alert-content"><div class="alert-title">Progresión N6→N5 pendiente</div><div class="alert-text">Ya cumples el plazo de 1 año (Art. 26). Solicita el cambio a la Dirección de Operaciones.</div></div></div>`;
-      } else {
-        const pct = Math.round((months / 12) * 100);
-        progressHTML = `<div style="margin-bottom:10px"><div class="flex-between text-sm" style="margin-bottom:4px"><span style="color:var(--text2)">N6 → N5 (1 año requerido)</span><span class="text-mono" style="color:var(--text3)">${months}/12 meses</span></div><div class="nivel-progress"><div class="nivel-bar" style="width:${Math.min(pct,100)}%"></div></div><div class="text-xs text-muted mt-8">Queda${falta>1?'n':''} aprox. ${falta} mes${falta>1?'es':''} para cumplir el requisito.</div></div>`;
-      }
-    } else if (nvlActual === 5) {
-      const falta = 24 - months;
-      if (falta <= 0) {
-        alertHTML = `<div class="alert warning"><div class="alert-icon">🔔</div><div class="alert-content"><div class="alert-title">Progresión N5→N4 pendiente</div><div class="alert-text">Ya cumples los 2 años en Nivel 5 (Art. 26). Solicita el cambio a la Dirección de Operaciones.</div></div></div>`;
-      } else {
-        const pct = Math.round((months / 24) * 100);
-        progressHTML = `<div style="margin-bottom:10px"><div class="flex-between text-sm" style="margin-bottom:4px"><span style="color:var(--text2)">N5 → N4 (2 años requeridos)</span><span class="text-mono" style="color:var(--text3)">${months}/24 meses</span></div><div class="nivel-progress"><div class="nivel-bar" style="width:${Math.min(pct,100)}%"></div></div><div class="text-xs text-muted mt-8">Queda${falta>1?'n':''} aprox. ${falta} mes${falta>1?'es':''} para cumplir el requisito.</div></div>`;
-      }
-    }
-  }
-
-  if (nvlActual <= 4) {
-    progressHTML = `
-      <div class="alert info" style="margin-bottom:0">
-        <div class="alert-icon">ℹ️</div>
-        <div class="alert-content">
-          <div class="alert-title">Nivel ${nvlActual} — Progresión por designación</div>
-          <div class="alert-text">Según el Art. 26 del convenio BCSA 2026, la progresión a partir del Nivel 4 requiere que la empresa declare vacante disponible. Mantente al tanto de las convocatorias internas y asegúrate de cumplir los requisitos (sin sanciones, formación al día, informe favorable).</div>
-        </div>
-      </div>
-    `;
-    if (nvlActual === 4 && ingresoDate && !isNaN(ingresoDate)) {
-      const mesesEmpresa = Math.floor((new Date() - ingresoDate) / (1000*60*60*24*30.44));
-      if (mesesEmpresa >= 24) {
-        alertHTML = `<div class="alert success"><div class="alert-icon">✅</div><div class="alert-content"><div class="alert-title">Requisito antigüedad cumplido</div><div class="alert-text">Llevas más de 2 años en la empresa. Cuando haya vacante en Nivel 3, cumplirías el requisito de permanencia mínima del Art. 26.</div></div></div>`;
-      }
-    }
-  }
-
-  alertContainer.innerHTML = alertHTML;
-  progressInfo.innerHTML = progressHTML || `<div class="text-sm text-muted">Sin datos de progresión disponibles. Sube una nómina para calcular automáticamente.</div>`;
+  _renderNivelProgression();
 
   // ── Bloque C — Configuración nómina ──
   document.getElementById('prf-irpf-input').value = profileData.irpf ?? (USERS[currentUser]?.irpf ?? 34.15);
@@ -9800,10 +9841,16 @@ function setPrfNivel(n) {
   profileData.nivelActual = n;
   profileData.nivel = n;
   currentNivel = n;
-  highlightNivel();
+  // Selector buttons
   document.querySelectorAll('.prf-nvl-btn').forEach(b => {
     b.classList.toggle('prf-nvl-active', parseInt(b.dataset.n) === n);
   });
+  // Calculator dots
+  highlightNivel();
+  // Live UI updates (sin re-render completo)
+  _updateProfileBadge(n);
+  _renderPerfilHero(n);
+  _renderNivelProgression();
   if (currentUser) saveUserData(currentUser);
 }
 
