@@ -389,8 +389,8 @@
                                             wrn('W_VARS_NO_FIN',   'variablesData presente pero sin _periodoFin', 'variablesData');
     if (st === 'pending_comparison' && !mr.variablesData)
                                             wrn('W_PEND_NO_VARS',  'pending_comparison sin variablesData',    'variablesData');
-    if (mr.auditoria && mr.auditoria.diferenciaNeta && mr.auditoria.diferenciaNeta !== 0 && st !== 'con_diferencias' && st !== 'regularizado' && st !== 'reclamado' && st !== 'cerrado')
-                                            wrn('W_DIFF_ESTADO',   'auditoria con diferencias pero estado es ' + st, 'estado');
+    if (mr.auditoria && mr.auditoria.nDiscrepancias > 0 && st !== 'con_diferencias' && st !== 'regularizado' && st !== 'reclamado' && st !== 'cerrado')
+                                            wrn('W_DIFF_ESTADO',   'auditoria con nDiscrepancias>0 pero estado es ' + st, 'estado');
 
     // Warnings de regularizacion
     if (mr.regularizacion) {
