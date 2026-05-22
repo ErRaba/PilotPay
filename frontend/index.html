@@ -4163,6 +4163,7 @@ Complemento de Base MAD: 1500"></textarea>
 <script src="js/auditEngine.js"></script>
 <script src="js/pilotPayStore.js"></script>
 <script src="js/userProfile.js"></script>
+<script src="js/userAdmin.js"></script>
 <script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
 
@@ -4934,7 +4935,7 @@ let USERS = {};
 // Solo ESH como usuario inicial — el resto se crean desde el panel Admin
 const DEFAULT_USERS = {
   'ESH': { pass: '7800', name: 'Eloy', apellidos: 'Infante Seco de Herrera', alias: '',
-           funcion:'CMD', nivel:3, base:'1.2', irpf:34.15, ingreso:'2024-07-01', admin: true },
+           funcion:'CMD', nivel:3, base:'MAD', irpf:34.15, ingreso:'2024-07-01', admin: true },
 };
 
 // Load all users from Firebase
@@ -5035,11 +5036,12 @@ async function saveUserData(user) {
   if (_online) {
     try {
       await fbUpdate(path, data);
-      // También actualizar nodo de usuario para campos que usa el login
+      // Actualizar nodo de usuario — solo campos user-managed.
+      // funcion y base son admin-managed: solo via UserAdmin.atomicRoleChange().
       const userFields = {
         name: data.name, apellidos: data.apellidos, alias: data.alias,
-        funcion: data.funcion, nivel: data.nivel, base: data.base,
         irpf: data.irpf, theme: data.theme,
+        nivel: data.nivelActual != null ? data.nivelActual : data.nivel, // advisory, user-managed
       };
       await fbUpdate(`pilotpay/usuarios/${user}`, userFields);
       USERS[user] = { ...USERS[user], ...userFields };
@@ -6087,28 +6089,54 @@ async function eliminarUsuario(code) {
 }
 
 async function guardarEdicionUsuario(code) {
-  const updates = {
-    name:      document.getElementById('edit-nombre').value.trim(),
-    apellidos: document.getElementById('edit-apellidos').value.trim(),
-    alias:     document.getElementById('edit-alias').value.trim(),
-    pass:      document.getElementById('edit-pass').value.trim(),
-    funcion:   document.getElementById('edit-funcion').value,
-    nivel:     parseInt(document.getElementById('edit-nivel').value),
-    base:      document.getElementById('edit-base').value,
-  };
+  const nameVal   = document.getElementById('edit-nombre').value.trim();
+  const apellidos = document.getElementById('edit-apellidos').value.trim();
+  const alias     = document.getElementById('edit-alias').value.trim();
+  const pass      = document.getElementById('edit-pass').value.trim();
+  const funcion   = document.getElementById('edit-funcion').value;
+  const nivelRaw  = parseInt(document.getElementById('edit-nivel').value);
+  const base      = document.getElementById('edit-base').value;
 
-  if (!updates.name || !updates.pass) {
-    alert('Nombre y contraseña son obligatorios'); return;
+  if (!nameVal || !pass) { alert('Nombre y contraseña son obligatorios'); return; }
+
+  // 1) Campos de identidad personal (no admin-managed de rol)
+  const nameUpdates = { name: nameVal, apellidos, alias, pass };
+  await fbUpdate(`pilotpay/usuarios/${code}`, nameUpdates);
+  USERS[code] = { ...USERS[code], ...nameUpdates };
+
+  // 2) Cambio de rol/base/nivel — propagación atómica via UserAdmin
+  const cu = USERS[code] || {};
+  const roleChanged = funcion !== cu.funcion
+    || nivelRaw !== (cu.nivelActual ?? cu.nivel)
+    || base !== cu.base;
+
+  if (roleChanged) {
+    const result = await UserAdmin.atomicRoleChange(code, { funcion, nivel: nivelRaw, base });
+    if (!result.ok) {
+      alert('Error al cambiar rol: ' + result.error);
+      console.error('[UserAdmin] atomicRoleChange failed:', result);
+      return;
+    }
+    if (result.warnings.length) console.warn('[UserAdmin] warnings:', result.warnings);
+    console.log('[UserAdmin] rol actualizado:', result);
   }
-
-  // Update Firebase
-  await fbUpdate(`pilotpay/usuarios/${code}`, updates);
-  // Update runtime cache
-  USERS[code] = { ...USERS[code], ...updates };
 
   closeDayModal();
   renderAdmin();
   alert(`✓ Perfil de ${code} actualizado`);
+}
+
+// Actualiza las opciones de nivel al cambiar función en el modal de edición.
+// Referenciada en el onchange de edit-funcion — no existía hasta P1-c.
+function updateEditNivelOptions() {
+  const fn     = document.getElementById('edit-funcion')?.value || 'CMD';
+  const max    = (fn === 'SCC' || fn === 'CC') ? 5 : 6;
+  const selEl  = document.getElementById('edit-nivel');
+  if (!selEl) return;
+  const cur    = Math.min(parseInt(selEl.value) || 1, max);
+  selEl.innerHTML = Array.from({ length: max }, (_, i) =>
+    `<option value="${i+1}" ${i+1 === cur ? 'selected' : ''}>${i+1}</option>`
+  ).join('');
 }
 
 // ── END ADMIN PANEL ──
