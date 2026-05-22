@@ -112,8 +112,21 @@ var PilotPayLocalDB = (function () {
       };
 
       req.onsuccess = function (evt) {
+        var db = evt.target.result;
+        // Validar integridad del schema: los stores críticos deben existir.
+        // Si faltan (DB creada manualmente sin onupgradeneeded, o corrompida),
+        // rechazar con código MISSING_STORES para que bootstrap() pueda auto-sanar.
+        if (!db.objectStoreNames.contains('monthlyRecords') ||
+            !db.objectStoreNames.contains('auditHistory')) {
+          db.close();
+          _dbPromise = null;
+          var schemaErr = new Error('[PilotPayLocalDB] DB abierta sin stores críticos — schema corrupto');
+          schemaErr.code = 'MISSING_STORES';
+          reject(schemaErr);
+          return;
+        }
         console.log('[PilotPayLocalDB] DB abierta v' + DB_VERSION);
-        resolve(evt.target.result);
+        resolve(db);
       };
 
       req.onerror = function (evt) {
@@ -348,6 +361,16 @@ var PilotPayLocalDB = (function () {
   // Punto de entrada único. Llámalo tras login con el userId autenticado.
   // Asíncrono y no-bloqueante — la app no espera su resolución.
 
+  // Elimina la DB y limpia el cache de promesa para forzar recreación con schema correcto.
+  function _deleteAndReopenDB() {
+    return new Promise(function (resolve) {
+      if (!window.indexedDB) { resolve(); return; }
+      var del = window.indexedDB.deleteDatabase(DB_NAME);
+      del.onsuccess = function () { _dbPromise = null; resolve(); };
+      del.onerror   = function () { _dbPromise = null; resolve(); }; // intentar igualmente
+    }).then(function () { return _openDB(); });
+  }
+
   function _runMigration(userId) {
     var migKey = _migrationKey(userId);
     console.log('[PilotPayLocalDB] Iniciando migración para', userId, '| device:', _deviceId);
@@ -404,6 +427,17 @@ var PilotPayLocalDB = (function () {
         });
       })
       .catch(function (err) {
+        if (err && err.code === 'MISSING_STORES') {
+          // DB existe en versión correcta pero sin stores (creada manualmente o corrompida).
+          // Auto-heal: eliminar, recrear con schema correcto, y migrar. Un solo intento.
+          console.warn('[PilotPayLocalDB] Schema corrupto — auto-heal: eliminando y recreando DB');
+          localStorage.removeItem(_migrationKey(userId));
+          return _deleteAndReopenDB()
+            .then(function () { return _runMigration(userId); })
+            .catch(function (e2) {
+              console.warn('[PilotPayLocalDB] Auto-heal falló — usando localStorage:', e2.message);
+            });
+        }
         console.warn('[PilotPayLocalDB] Bootstrap falló — la app sigue usando localStorage:', err.message);
       });
   }
