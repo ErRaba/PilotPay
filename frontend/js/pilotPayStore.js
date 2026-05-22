@@ -108,23 +108,28 @@
     } catch (e) { console.warn('[PilotPayStore] _saveMonthly error:', e); }
   }
 
+  // Devuelve { data, changedCount }.
+  // changedCount > 0 indica registros migrados — se persistirán en el _saveMonthly de _hydrateMonthly.
   function _loadMonthly() {
     try {
       var raw = localStorage.getItem(_monthlyKey());
-      if (!raw) return {};
+      if (!raw) return { data: {}, changedCount: 0 };
       var data = JSON.parse(raw);
-      // Normalizar y validar cada registro en memoria
-      // El guardado ocurre al final de _hydrateMonthly via _saveMonthly
+      var changedCount = 0;
       Object.keys(data).forEach(function (k) {
         var result = _normalizeMonthRecord(data[k]);
         data[k] = result.mr;
+        if (result.changed) changedCount++;
         var issues = _validateMonthRecord(data[k]);
         if (issues.length > 0) _logValidationIssues(k, issues);
       });
-      return data;
+      if (changedCount > 0) {
+        console.log('[PilotPayStore] normalized', changedCount, 'MonthRecord(s) — se persistirán en el próximo save');
+      }
+      return { data: data, changedCount: changedCount };
     } catch (e) {
       console.warn('[PilotPayStore] _loadMonthly error:', e);
-      return {};
+      return { data: {}, changedCount: 0 };
     }
   }
 
@@ -184,6 +189,87 @@
     var month = record.mes  ? (MESES_IDX[record.mes]   || null) : null;
     if (!year || !month || isNaN(year)) return null;
     return { year: year, month: month };
+  }
+
+  // ── Clone profundo seguro ────────────────────────────────────────────────────
+  // Usa structuredClone si existe, fallback JSON, devuelve null si ambos fallan.
+  // NUNCA muta el objeto original.
+  function _cloneSnapshot(obj) {
+    if (obj === null || obj === undefined) return obj;
+    try {
+      if (typeof structuredClone === 'function') return structuredClone(obj);
+    } catch (e1) { /* structuredClone no soporta este tipo — intentar JSON fallback */ }
+    try {
+      return JSON.parse(JSON.stringify(obj));
+    } catch (e2) {
+      console.error('[PilotPayStore] _cloneSnapshot: imposible clonar objeto —', e2, obj);
+      return null;
+    }
+  }
+
+  // ── Máquina de estados controlada ───────────────────────────────────────────
+  // Única función autorizada para cambiar mr.estado.
+  // Orden garantizado: validar → loguear → mutar.
+  // Devuelve true si el estado cambió o fue confirmado; false si se rechazó.
+  function _setEstado(mr, nuevoEstado, opts) {
+    opts = opts || {};
+    var reason = opts.reason || null;
+    var force  = opts.force  === true;
+
+    // 1. Validar que el estado destino existe
+    if (ESTADOS_VALIDOS.indexOf(nuevoEstado) === -1) {
+      console.warn('[PilotPayStore] _setEstado: estado desconocido "' + nuevoEstado + '"' +
+                   (reason ? ' | reason: ' + reason : '') + ' — ignorado');
+      return false;
+    }
+
+    var estadoActual = mr.estado || '(null)';
+    var now = new Date().toISOString();
+
+    // 2a. No-op: mismo estado sin force — no tocar nada
+    if (estadoActual === nuevoEstado && !force) {
+      return true;
+    }
+
+    // 2b. Mismo estado con force — actualizar timestamps y lastTransition
+    if (estadoActual === nuevoEstado && force) {
+      mr._updatedAt = now;
+      if (!mr.metadata) mr.metadata = {};
+      mr.metadata.lastTransition = { from: estadoActual, to: nuevoEstado, at: now, reason: reason, forced: true };
+      return true;
+    }
+
+    // 3. Validar transición (solo si no es force)
+    if (!force) {
+      var permitidas = TRANSICIONES_VALIDAS[estadoActual] || [];
+      if (permitidas.indexOf(nuevoEstado) === -1) {
+        console.warn('[PilotPayStore] _setEstado: transición inválida ' + estadoActual + ' → ' + nuevoEstado +
+                     (reason ? ' | reason: ' + reason : '') + ' — ignorado');
+        return false;
+      }
+    } else {
+      // force:true — advertir si la transición no está en la tabla (para detectar migraciones peligrosas)
+      var permitidas2 = TRANSICIONES_VALIDAS[estadoActual] || [];
+      if (permitidas2.indexOf(nuevoEstado) === -1) {
+        console.warn('[PilotPayStore] forced transition: ' + estadoActual + ' → ' + nuevoEstado +
+                     (reason ? ' | reason: ' + reason : ''));
+      }
+    }
+
+    // 4. Mutar (después de validar y loguear)
+    mr.estado = nuevoEstado;
+    mr._updatedAt = now;
+
+    if (!mr.metadata) mr.metadata = {};
+    mr.metadata.lastTransition = {
+      from   : estadoActual,
+      to     : nuevoEstado,
+      at     : now,
+      reason : reason
+    };
+    if (force) mr.metadata.lastTransition.forced = true;
+
+    return true;
   }
 
   // ── MonthRecord factory ─────────────────────────────────────────────────────
@@ -419,6 +505,7 @@
 
       // Solo el registro más reciente define la auditoría del mes.
       if (!mr.auditoria) {
+        var now = new Date().toISOString();
         var de = rec.datosExtraidos || {};
         mr.auditoria = {
           fechaAuditoria : rec.fechaAuditoria,
@@ -426,7 +513,7 @@
           liqReal        : rec.liqReal        || null,
           diferenciaNeta : rec.diff           || null,
           nDiscrepancias : rec.nDiscrepancias || 0,
-          discrepancias  : rec.discrepancias  || [],
+          discrepancias  : _cloneSnapshot(rec.discrepancias || []) || [],
           totalDevengado : de.total_devengado || null,
           baseIRPF       : de.base_irpf       || null,
           baseSS         : de.base_ss         || null,
@@ -434,6 +521,8 @@
           acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
           diasTrabajados : de.dias_trabajados  || null
         };
+        mr._updatedAt = now;  // datos reales cambiaron
+
         // Audit trail: período resuelto desde nómina PDF (si no lo tenía ya)
         if (!mr.resolvedPeriod) {
           mr.resolvedPeriod = {
@@ -441,7 +530,7 @@
             month     : ym.month,
             mesLabel  : _monthLabel(ym.month),
             source    : 'nominaPDF',
-            resolvedAt: new Date().toISOString()
+            resolvedAt: now
           };
         }
 
@@ -449,21 +538,20 @@
         var estadoBase = (rec.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
 
         // Migración lazy: si audit_history_v1 tenía regularizacionFinal y el
-        // expediente en monthly_v1 no tiene regularizacion aún, copiarlo.
+        // expediente en monthly_v1 no tiene regularizacion aún, copiarlo clonado.
         // audit_history_v1 NO se modifica — este campo es solo lectura aquí.
         if (rec.regularizacionFinal && !mr.regularizacion) {
-          mr.regularizacion = rec.regularizacionFinal;
+          mr.regularizacion = _cloneSnapshot(rec.regularizacionFinal) || rec.regularizacionFinal;
         }
 
-        // Estado final: regularizado si hay regularización, sea de la migración o preexistente
+        // Estado final: regularizado si hay regularización, sea de la migración o preexistente.
+        // force:true porque la hydration puede saltar estados no contemplados en TRANSICIONES_VALIDAS.
         if (mr.regularizacion != null && estadoBase === 'con_diferencias') {
-          mr.estado = 'regularizado';
+          _setEstado(mr, 'regularizado', { force: true, reason: 'hydration' });
         } else if (mr.estado !== 'cerrado' && mr.estado !== 'reclamado') {
           // No sobrescribir cerrado/reclamado que ya estuviera en monthly_v1
-          mr.estado = estadoBase;
+          _setEstado(mr, estadoBase, { force: true, reason: 'hydration' });
         }
-
-        mr._updatedAt = new Date().toISOString();
       }
     });
 
@@ -577,13 +665,20 @@
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
       var mr  = _monthly[k];
       var now = new Date().toISOString();
-      mr.variablesData = varsData;
-      mr.estado = 'pending_calculation';
+
+      var snapshot = _cloneSnapshot(varsData);
+      if (snapshot === null) {
+        console.error('[PilotPayStore] onVariablesConfirmed: _cloneSnapshot devolvió null — abortando');
+        return;
+      }
+      mr.variablesData = snapshot;
+      mr._updatedAt    = now;  // datos reales cambiaron
+
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
                               source: rp.source, resolvedAt: now };
       }
-      mr._updatedAt = now;
+      _setEstado(mr, 'pending_calculation', { reason: 'variables-confirmadas' });
       _saveMonthly();
     },
 
@@ -600,21 +695,28 @@
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, rp.year, rp.month);
       var mr  = _monthly[k];
       var now = new Date().toISOString();
-      mr.calculoTeorico = Object.assign({}, calcResult, {
-        engineVersion   : ENGINE_VERSION,
-        convenioVersion : CONVENIO_VERSION,
-        calculatedAt    : now
-      });
-      if (mr.estado === 'pending_calculation' ||
-          mr.estado === 'pending_variables'   ||
-          mr.estado === 'pendiente') {
-        mr.estado = 'pending_comparison';
+
+      // Clonar calcResult ANTES de añadir campos — no mutar el objeto original del frontend
+      var snapshot = _cloneSnapshot(calcResult);
+      if (snapshot === null) {
+        console.error('[PilotPayStore] onCalculationDone: _cloneSnapshot devolvió null — abortando');
+        return;
       }
+      snapshot.engineVersion   = ENGINE_VERSION;
+      snapshot.convenioVersion = CONVENIO_VERSION;
+      snapshot.calculatedAt    = now;
+      mr.calculoTeorico = snapshot;
+      mr._updatedAt     = now;  // datos reales cambiaron
+
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = { year: rp.year, month: rp.month, mesLabel: rp.mesLabel,
                               source: rp.source, resolvedAt: now };
       }
-      mr._updatedAt = now;
+      if (mr.estado === 'pending_calculation' ||
+          mr.estado === 'pending_variables'   ||
+          mr.estado === 'pendiente') {
+        _setEstado(mr, 'pending_comparison', { reason: 'calculo-done' });
+      }
       _saveMonthly();
     },
     getEstado: function (year, month) {
@@ -752,6 +854,7 @@
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, ym.year, ym.month);
       var mr = _monthly[k];
 
+      var now = new Date().toISOString();
       var de = auditRecord.datosExtraidos || {};
       mr.auditoria = {
         fechaAuditoria : auditRecord.fechaAuditoria,
@@ -759,7 +862,7 @@
         liqReal        : auditRecord.liqReal        || null,
         diferenciaNeta : auditRecord.diff           || null,
         nDiscrepancias : auditRecord.nDiscrepancias || 0,
-        discrepancias  : auditRecord.discrepancias  || [],
+        discrepancias  : _cloneSnapshot(auditRecord.discrepancias || []) || [],
         totalDevengado : de.total_devengado || null,
         baseIRPF       : de.base_irpf       || null,
         baseSS         : de.base_ss         || null,
@@ -767,6 +870,8 @@
         acumulados     : { baseIRPF: de.acum_base_irpf || null, irpf: de.acum_irpf || null },
         diasTrabajados : de.dias_trabajados  || null
       };
+      mr._updatedAt = now;  // datos reales cambiaron
+
       // Audit trail: período resuelto desde nómina PDF (solo si no tenía ya resolvedPeriod)
       if (!mr.resolvedPeriod) {
         mr.resolvedPeriod = {
@@ -774,14 +879,16 @@
           month     : ym.month,
           mesLabel  : _monthLabel(ym.month),
           source    : 'nominaPDF',
-          resolvedAt: new Date().toISOString()
+          resolvedAt: now
         };
       }
 
+      // force:true porque una re-auditoría del mismo mes puede venir cuando el estado ya
+      // es 'auditado' o 'con_diferencias', transición no contemplada en TRANSICIONES_VALIDAS.
       if (mr.estado !== 'cerrado' && mr.estado !== 'reclamado') {
-        mr.estado = (auditRecord.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
+        var nuevoEstadoAudit = (auditRecord.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
+        _setEstado(mr, nuevoEstadoAudit, { force: true, reason: 'auditoria-completada' });
       }
-      mr._updatedAt = new Date().toISOString();
       _saveMonthly();
     },
 
@@ -795,20 +902,21 @@
       if (!_monthly[k]) _monthly[k] = _makeMonthRecord(_userId, ym.year, ym.month);
       var mr = _monthly[k];
 
+      var now = new Date().toISOString();
       mr.regularizacion = {
         tipo              : data.tipo              || 'acuerdo_manual',
         importeNeto       : data.importeNeto,
         netoFinalAjustado : data.netoFinalAjustado,
         nota              : data.nota              || '',
-        fecha             : data.fecha             || new Date().toISOString().slice(0, 10),
+        fecha             : data.fecha             || now.slice(0, 10),
         docNombre         : data.docNombre         || null,
-        registrado        : data.registrado        || new Date().toISOString()
+        registrado        : data.registrado        || now
       };
+      mr._updatedAt = now;  // datos reales cambiaron
 
       if (mr.estado === 'con_diferencias') {
-        mr.estado = 'regularizado';
+        _setEstado(mr, 'regularizado', { reason: 'regularizacion-done' });
       }
-      mr._updatedAt = new Date().toISOString();
       _saveMonthly();
     },
 
@@ -1011,7 +1119,8 @@
 
       // Cargar expedientes desde monthly_v1 (todos los estados).
       // _hydrateMonthly enriquece con audit_history_v1 pero no lo modifica.
-      _monthly = _loadMonthly();
+      var loadResult = _loadMonthly();
+      _monthly = loadResult.data;
 
       var auditList = _loadAuditList();
       _audit = auditList;
@@ -1033,9 +1142,10 @@
   function refresh() {
     if (!_ready || !_userId) return;
     try {
-      var auditList = _loadAuditList();
-      _audit   = auditList;
-      _monthly = _loadMonthly();
+      var auditList  = _loadAuditList();
+      _audit         = auditList;
+      var loadResult = _loadMonthly();
+      _monthly       = loadResult.data;
       _hydrateMonthly(auditList, _cr());   // incluye cleanupDuplicateMonthRecords
     } catch (e) {
       console.warn('[PilotPayStore] refresh error:', e);
@@ -1085,6 +1195,8 @@
       validateMonthRecord    : _validateMonthRecord,
       normalizeMonthRecord   : _normalizeMonthRecord,
       deriveSourceIntegrity  : _deriveSourceIntegrity,
+      cloneSnapshot          : _cloneSnapshot,
+      setEstado              : _setEstado,
       SCHEMA_VERSION         : SCHEMA_VERSION,
       ENGINE_VERSION         : ENGINE_VERSION,
       CONVENIO_VERSION       : CONVENIO_VERSION,
