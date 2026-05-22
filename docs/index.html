@@ -802,6 +802,33 @@ header {
 .tab.active { color: var(--blue2); border-bottom-color: var(--blue); }
 .tab-icon { margin-right: 5px; }
 
+/* ── MODO OPERATIVO ── */
+.pp-mode-bar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 12px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.pp-mode-btn {
+  font-size: 10.5px; font-family: var(--mono); font-weight: 500;
+  letter-spacing: .04em; padding: 3px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: none; color: var(--text3);
+  cursor: pointer; transition: all .15s;
+}
+.pp-mode-btn.active { background: var(--card); color: var(--text1); border-color: var(--text2); }
+.pp-mode-btn.pp-sim-active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+.sim-banner {
+  background: var(--amber-dim); border-bottom: 1px solid rgba(245,158,11,.35);
+  color: var(--amber); font-family: var(--mono); font-size: 11px;
+  padding: 7px 20px; display: flex; align-items: center;
+  gap: 8px; letter-spacing: .02em;
+}
+/* Señal visual del modo simulación — sutil pero inequívoca */
+#app.pp-sim-mode .tabs { border-bottom-color: var(--amber); }
+#app.pp-sim-mode .pp-mode-bar { border-bottom-color: var(--amber); }
+/* Aviso de simulación en Comparativa — solo visible en simulation mode */
+#sim-comp-notice { display: none; }
+#app.pp-sim-mode #sim-comp-notice { display: flex; }
+
 /* ── MAIN ── */
 main { flex: 1; overflow-y: auto; }
 .page { display: none; padding: 16px; }
@@ -1547,20 +1574,32 @@ input[type=number] { -moz-appearance: textfield; }
 
   <div class="tabs">
     <button class="tab active" onclick="showTab('dashboard')"><span class="tab-icon">🏠</span>Dashboard</button>
-    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Variables</button>
+    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
     <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
     <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
     <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
-    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <button class="tab" id="tab-historial" onclick="showTab('historial')"><span class="tab-icon">🗂</span>Historial</button>
+    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
     <button class="tab" id="tab-admin"  style="display:none" onclick="showTab('admin')"></button>
   </div>
 
+  <!-- ── SELECTOR DE MODO OPERATIVO ── -->
+  <div id="pp-mode-bar" class="pp-mode-bar" style="display:none">
+    <button id="pp-mode-op"  class="pp-mode-btn active" onclick="switchPPMode('operational')">Auditoría real</button>
+    <button id="pp-mode-sim" class="pp-mode-btn"         onclick="switchPPMode('simulation')">Simulación libre</button>
+  </div>
+
   <main>
+    <!-- ── BANNER MODO SIMULACIÓN ── -->
+    <div id="sim-banner" class="sim-banner" style="display:none">
+      <span style="font-size:14px;flex-shrink:0">⚠</span>
+      <span>Modo simulación — los cálculos no se guardan en el historial ni afectan a estadísticas.</span>
+    </div>
+
     <!-- ══════════════════════════════════════════
          TAB: DASHBOARD
     ══════════════════════════════════════════ -->
@@ -1726,10 +1765,10 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Grid principal de tarjetas -->
       <div class="dsh-grid">
 
-        <!-- ── Última auditoría ── -->
+        <!-- ── Expediente activo ── -->
         <div class="dsh-card accent-amber" id="dsh-audit-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Última auditoría</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Expediente activo</span>
             <span class="dsh-status dim" id="dsh-audit-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-audit-body">
@@ -1737,10 +1776,10 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div>
 
-        <!-- ── Simulador IRPF ── -->
+        <!-- ── Proyección IRPF ── -->
         <div class="dsh-card" id="dsh-sim-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">📊</span>Simulador IRPF</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">📊</span>Proyección IRPF</span>
             <span class="dsh-status dim" id="dsh-sim-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-sim-body">
@@ -1748,10 +1787,10 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div>
 
-        <!-- ── Actividad del mes ── -->
+        <!-- ── Resumen anual ── -->
         <div class="dsh-card accent-green" id="dsh-calc-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">✈️</span>Actividad del mes</span>
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">📋</span>Resumen anual</span>
             <span class="dsh-status dim" id="dsh-calc-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-calc-body">
@@ -2677,6 +2716,16 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="upload-sub">Nómina Binter · formato PDF</div>
       </div>
       <input type="file" id="file-input" accept=".pdf,application/pdf" onchange="processNomina(this.files[0])">
+
+      <!-- Aviso de simulación — visible solo en modo simulación (CSS: #app.pp-sim-mode #sim-comp-notice) -->
+      <div id="sim-comp-notice" class="sim-banner" style="margin-bottom:12px;border-radius:8px;border:1px solid var(--amber)">
+        <span style="font-size:14px;flex-shrink:0">⚠</span>
+        <span>
+          <strong>Modo simulación.</strong>
+          Esta comparativa no se guardará como auditoría ni afectará a estadísticas, historial ni dashboard.
+          Los datos extraídos de la nómina no actualizarán el perfil.
+        </span>
+      </div>
 
       <div id="comparativa-result" style="display:none">
         <div id="comp-loading" class="loading-block" style="display:none">
@@ -3897,6 +3946,190 @@ Complemento de Base MAD: 1500"></textarea>
           padding: 5px 12px; cursor: pointer; opacity: .8; transition: opacity .15s;
         }
         .hst-del-btn:hover { opacity: 1; }
+
+        /* ─── Modal confirmación borrado ─── */
+        .hst-confirm-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,.45);
+          z-index: 9100; display: flex; align-items: center; justify-content: center;
+        }
+        .hst-confirm-box {
+          background: var(--card); border: 1px solid var(--border);
+          border-top: 3px solid var(--red); border-radius: 12px;
+          padding: 24px 28px; max-width: 360px; width: 90%;
+          box-shadow: 0 8px 32px rgba(0,0,0,.28); font-family: var(--mono);
+        }
+        .hst-confirm-title {
+          font-size: 13px; font-weight: 600; color: var(--text1); margin-bottom: 8px;
+        }
+        .hst-confirm-msg {
+          font-size: 11.5px; color: var(--text2); line-height: 1.55; margin-bottom: 6px;
+        }
+        .hst-confirm-warning {
+          font-size: 11px; color: var(--red); opacity: .85; margin-bottom: 20px;
+        }
+        .hst-confirm-actions {
+          display: flex; gap: 8px; justify-content: flex-end;
+        }
+        .hst-confirm-cancel {
+          font-size: 11px; font-family: var(--mono); color: var(--text2);
+          background: none; border: 1px solid var(--border); border-radius: 6px;
+          padding: 6px 14px; cursor: pointer; transition: border-color .15s;
+        }
+        .hst-confirm-cancel:hover { border-color: var(--text2); }
+        .hst-confirm-delete {
+          font-size: 11px; font-family: var(--mono); color: #fff;
+          background: var(--red); border: 1px solid var(--red); border-radius: 6px;
+          padding: 6px 14px; cursor: pointer; opacity: .85; transition: opacity .15s;
+        }
+        .hst-confirm-delete:hover { opacity: 1; }
+
+        /* ─── Previsiones pendientes ─── */
+        .hst-pend-section { margin-bottom: 20px; }
+        .hst-pend-header {
+          display: flex; align-items: center; gap: 8px;
+          margin-bottom: 10px;
+        }
+        .hst-pend-title {
+          font-size: 12px; font-weight: 700; color: var(--amber2);
+          font-family: var(--mono); letter-spacing: .04em; text-transform: uppercase;
+        }
+        .hst-pend-count {
+          font-size: 10px; font-family: var(--mono);
+          background: var(--amber-dim); color: var(--amber2);
+          border: 1px solid var(--amber); border-radius: 10px; padding: 1px 7px;
+        }
+        .hst-pend-row {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-left: 3px solid var(--amber);
+          border-radius: var(--r);
+          padding: 13px 15px;
+          margin-bottom: 8px;
+        }
+        .hst-pend-top {
+          display: flex; align-items: flex-start; justify-content: space-between;
+          gap: 12px; margin-bottom: 8px;
+        }
+        .hst-pend-left { flex: 1; min-width: 0; }
+        .hst-pend-periodo {
+          font-size: 13px; font-weight: 700; color: var(--text);
+          margin-bottom: 3px;
+        }
+        .hst-pend-sub {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+        }
+        .hst-pend-badge {
+          flex-shrink: 0; display: inline-flex; align-items: center;
+          font-size: 10px; font-family: var(--mono); font-weight: 700;
+          background: var(--amber-dim); color: var(--amber2);
+          border: 1px solid var(--amber); border-radius: 4px;
+          padding: 3px 8px; white-space: nowrap;
+        }
+        .hst-pend-kv-row {
+          display: flex; flex-wrap: wrap; gap: 6px 20px;
+          margin-bottom: 10px;
+        }
+        .hst-pend-kv {
+          display: flex; flex-direction: column; gap: 1px;
+        }
+        .hst-pend-kv-k {
+          font-size: 9px; font-family: var(--mono); color: var(--text3);
+          text-transform: uppercase; letter-spacing: .05em;
+        }
+        .hst-pend-kv-v {
+          font-size: 12px; font-family: var(--mono); color: var(--text2); font-weight: 600;
+        }
+        .hst-pend-kv-v.liq { color: var(--text); font-size: 13px; }
+        .hst-pend-bottom {
+          display: flex; align-items: center; justify-content: space-between;
+          padding-top: 10px; border-top: 1px solid var(--border);
+        }
+        .hst-pend-ts {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+        }
+        .hst-pend-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--amber2); background: var(--amber-dim);
+          border: 1px solid var(--amber); border-radius: 6px;
+          padding: 5px 13px; cursor: pointer; opacity: .85;
+          transition: opacity .15s; white-space: nowrap;
+        }
+        .hst-pend-btn:hover { opacity: 1; }
+        .hst-pend-del-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--red); background: none;
+          border: 1px solid var(--red); border-radius: 6px;
+          padding: 5px 11px; cursor: pointer; opacity: .65;
+          transition: opacity .15s; white-space: nowrap;
+        }
+        .hst-pend-del-btn:hover { opacity: 1; }
+        .hst-pend-divider {
+          border: none; border-top: 1px solid var(--border);
+          margin: 0 0 18px;
+        }
+
+        /* ─── Regularización final ─── */
+        .hst-reg-section {
+          margin-top: 14px; padding-top: 12px;
+          border-top: 1px solid var(--border);
+        }
+        .hst-reg-detail {
+          background: var(--bg2);
+          border: 1px solid var(--border);
+          border-left: 3px solid var(--green);
+          border-radius: 6px;
+          padding: 10px 12px;
+        }
+        .hst-reg-trigger-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--text2); background: none;
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; opacity: .8; transition: opacity .15s;
+        }
+        .hst-reg-trigger-btn:hover { opacity: 1; }
+        .hst-reg-form {
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 6px; padding: 12px 14px; margin-top: 10px;
+        }
+        .hst-reg-form-title {
+          font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 12px;
+        }
+        .hst-reg-field { margin-bottom: 10px; }
+        .hst-reg-label {
+          display: block; font-size: 10px; font-family: var(--mono);
+          color: var(--text3); text-transform: uppercase; letter-spacing: .05em;
+          margin-bottom: 4px;
+        }
+        .hst-reg-input, .hst-reg-textarea {
+          width: 100%; box-sizing: border-box;
+          background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+          color: var(--text); font-size: 12px; font-family: var(--mono);
+          padding: 6px 8px; outline: none; transition: border-color .15s;
+        }
+        .hst-reg-input:focus, .hst-reg-textarea:focus { border-color: var(--border2); }
+        .hst-reg-textarea { resize: vertical; min-height: 52px; }
+        .hst-reg-hint {
+          font-size: 10px; color: var(--text3); font-family: var(--mono);
+          margin-top: 3px; line-height: 1.4;
+        }
+        .hst-reg-form-actions {
+          display: flex; gap: 8px; margin-top: 12px;
+          padding-top: 10px; border-top: 1px solid var(--border);
+        }
+        .hst-reg-save-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--green); background: var(--green-dim);
+          border: 1px solid var(--green); border-radius: 6px;
+          padding: 5px 14px; cursor: pointer; opacity: .85; transition: opacity .15s;
+        }
+        .hst-reg-save-btn:hover { opacity: 1; }
+        .hst-reg-cancel-btn {
+          font-size: 11px; font-family: var(--mono);
+          color: var(--text3); background: none;
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 5px 12px; cursor: pointer; opacity: .75; transition: opacity .15s;
+        }
+        .hst-reg-cancel-btn:hover { opacity: 1; }
       </style>
 
       <!-- Cabecera -->
@@ -3914,6 +4147,9 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>
 
+      <!-- Previsiones pendientes de comparar con nómina oficial -->
+      <div id="hst-pending-section"></div>
+
       <!-- Lista de auditorías -->
       <div id="hst-list"></div>
 
@@ -3929,6 +4165,7 @@ Complemento de Base MAD: 1500"></textarea>
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js"></script>
 <script src="js/pilotPayStore.js"></script>
+<script src="js/pilotPayDebug.js"></script>
 
 <!-- ══════════════════════════════════════════
      MÓDULO: HISTORIAL DE AUDITORÍAS
@@ -3941,6 +4178,37 @@ Complemento de Base MAD: 1500"></textarea>
 
   /* ── Constantes ── */
   const MAX_RECORDS = 100;
+
+  /* Lookup mes → número para ordenación por período de nómina */
+  const _MESES_N = {
+    'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,
+    'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12,
+    'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,
+    'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12
+  };
+
+  /* Clave numérica de ordenación para un AuditRecord.
+     Devuelve year * 100 + month (ej. 202604) para comparación directa.
+     Preferencia:
+       1. MonthRecord.year/month  → fuente canónica si existe
+       2. rec.anyo + rec.mes      → datos del propio registro
+       3. fechaAuditoria          → último fallback (fecha en que se hizo la auditoría)  */
+  function _hstSortKey(rec) {
+    const mr = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
+    if (mr && mr.year && mr.month) return mr.year * 100 + mr.month;
+
+    const yr = parseInt(rec.anyo, 10);
+    const mo = _MESES_N[rec.mes] || 0;
+    if (yr > 2000 && mo > 0) return yr * 100 + mo;
+
+    if (rec.fechaAuditoria) {
+      const d = new Date(rec.fechaAuditoria);
+      if (!isNaN(d)) return d.getFullYear() * 100 + (d.getMonth() + 1);
+    }
+    return 0;
+  }
+
   function _key() {
     return window.storageKey
       ? window.storageKey('audit_history_v1')
@@ -3965,12 +4233,16 @@ Complemento de Base MAD: 1500"></textarea>
      Recibe los objetos ya calculados por la comparativa
   ───────────────────────────────────────────────── */
   window.saveAuditRecord = function saveAuditRecord(nomData, diffs, totalDelta, errores, avisos) {
+    if (window.PilotPayMode === 'simulation') {
+      console.warn('[PilotPay] saveAuditRecord: bloqueado en modo simulación');
+      return;
+    }
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
-        calcResult  : (window.PP_getters && window.PP_getters.calcResult) ? window.PP_getters.calcResult() : null,
-        profileData : window.profileData,
-        currentUser : window.currentUser,
+        calcResult  : (window.PP_getters && window.PP_getters.calcResult)   ? window.PP_getters.calcResult()   : null,
+        profileData : (window.PP_getters && window.PP_getters.profileData) ? window.PP_getters.profileData() : null,
+        currentUser : (window.PP_getters && window.PP_getters.currentUser) ? window.PP_getters.currentUser() : null,
         currentNivel: window.currentNivel,
         USERS       : window.USERS
       };
@@ -3982,9 +4254,23 @@ Complemento de Base MAD: 1500"></textarea>
       if (list.length > MAX_RECORDS) list.splice(MAX_RECORDS);
       hstSave(list);
 
+      // Actualizar expediente mensual en monthly_v1.
+      // audit_history_v1 ya se escribió arriba y no se toca más.
+      if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+        PilotPayStore.monthly.onAuditoriaCompletada(record);
+      }
+
       /* Actualizar badge de count si la pestaña existe */
       const countEl = document.getElementById('hst-count');
       if (countEl) countEl.textContent = list.length;
+
+      // Refrescar UI: el dashboard y el historial deben reflejar el nuevo estado.
+      // La previsión pendiente debe desaparecer en cuanto se completa la comparativa.
+      try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+      const _hstPage = document.getElementById('page-historial');
+      if (_hstPage && _hstPage.style.display !== 'none') {
+        try { if (typeof renderHistorial === 'function') renderHistorial(); } catch(e) {}
+      }
 
     } catch(e) {
       console.warn('PilotPay Historial: error al guardar', e);
@@ -3992,10 +4278,95 @@ Complemento de Base MAD: 1500"></textarea>
   };
 
   /* ─────────────────────────────────────────────────
+     RENDER: previsiones pendientes de comparar
+  ───────────────────────────────────────────────── */
+  function renderPendingSection() {
+    const el = document.getElementById('hst-pending-section');
+    if (!el) return;
+
+    if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) {
+      el.innerHTML = '';
+      return;
+    }
+
+    const pending = PilotPayStore.monthly.getPendingComparisons();
+    if (!pending || pending.length === 0) {
+      el.innerHTML = '';
+      return;
+    }
+
+    const fmt = function(v) {
+      if (v == null) return '—';
+      return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+    };
+
+    const rows = pending.map(function(mr) {
+      const ct = mr.calculoTeorico || {};
+      const vd = mr.variablesData  || {};
+      const periodo = (mr.mesLabel || '') + (mr.year ? (' ' + mr.year) : '');
+
+      const ts = mr._updatedAt
+        ? 'Generada el ' + new Date(mr._updatedAt).toLocaleString('es-ES', {
+            day:'2-digit', month:'2-digit', year:'numeric',
+            hour:'2-digit', minute:'2-digit'
+          })
+        : '';
+
+      return `
+        <div class="hst-pend-row">
+          <div class="hst-pend-top">
+            <div class="hst-pend-left">
+              <div class="hst-pend-periodo">${periodo || 'Período pendiente'}</div>
+              <div class="hst-pend-sub">Pendiente de validar con nómina oficial</div>
+            </div>
+            <span class="hst-pend-badge">Previsión pendiente</span>
+          </div>
+          <div class="hst-pend-kv-row">
+            <div class="hst-pend-kv">
+              <span class="hst-pend-kv-k">Líquido teórico</span>
+              <span class="hst-pend-kv-v liq">${fmt(ct.liquidoReal)}</span>
+            </div>
+            <div class="hst-pend-kv">
+              <span class="hst-pend-kv-k">Total devengado</span>
+              <span class="hst-pend-kv-v">${fmt(ct.totalDevengado)}</span>
+            </div>
+            <div class="hst-pend-kv">
+              <span class="hst-pend-kv-k">Base IRPF</span>
+              <span class="hst-pend-kv-v">${fmt(ct.baseIRPF)}</span>
+            </div>
+            <div class="hst-pend-kv">
+              <span class="hst-pend-kv-k">Retención</span>
+              <span class="hst-pend-kv-v">${fmt(ct.retencionIRPF)}</span>
+            </div>
+          </div>
+          <div class="hst-pend-bottom">
+            <span class="hst-pend-ts">${ts}</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="hst-pend-del-btn" onclick="hstDeletePending(${mr.year}, ${mr.month}, '${periodo}')">Eliminar previsión</button>
+              <button class="hst-pend-btn" onclick="showTab('comparar')">Finalizar auditoría →</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="hst-pend-section">
+        <div class="hst-pend-header">
+          <span class="hst-pend-title">Previsiones pendientes</span>
+          <span class="hst-pend-count">${pending.length}</span>
+        </div>
+        ${rows}
+      </div>
+      <hr class="hst-pend-divider">`;
+  }
+
+  /* ─────────────────────────────────────────────────
      RENDER: dibuja la lista completa
   ───────────────────────────────────────────────── */
   window.renderHistorial = function renderHistorial() {
-    const list    = hstLoad();
+    renderPendingSection();   // sección superior de previsiones pendientes
+
+    const list    = hstLoad().sort((a, b) => _hstSortKey(b) - _hstSortKey(a));
     const listEl  = document.getElementById('hst-list');
     const countEl = document.getElementById('hst-count');
     if (!listEl) return;
@@ -4042,13 +4413,25 @@ Complemento de Base MAD: 1500"></textarea>
       aviso : ['AVISO',  'aviso'],
       alerta: ['ALERTA', 'alerta']
     };
-    const [badgeTxt, badgeCls] = badgeMap[rec.estado] || ['—','ok'];
+    /* Regularización: leer desde MonthRecord (fuente de verdad); fallback a campo legacy en AuditRecord */
+    const _mr = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getByAuditRecord(rec) : null;
+    const _rf = (_mr && _mr.regularizacion) || rec.regularizacionFinal || null;
+    const _badgeEstado = (_rf && rec.estado !== 'ok') ? 'ok' : rec.estado;
+    const [badgeTxt, badgeCls] = badgeMap[_badgeEstado] || ['—','ok'];
 
     /* Clase de color diferencia */
     const diffCls = (rec.diff == null) ? 'neu'
                   : (Math.abs(rec.diff) < 1) ? 'neu'
                   : (rec.diff > 0)           ? 'pos'
                   : 'neg';
+
+    /* Importes del resumen: si regularizada, mostrar neto ajustado + importe de la regularización */
+    const _liqDisplay     = (_rf && _rf.netoFinalAjustado != null) ? _rf.netoFinalAjustado : rec.liqReal;
+    const _diffDisplay    = _rf ? _rf.importeNeto : rec.diff;
+    const _diffDisplayCls = _rf
+      ? (_rf.importeNeto > 0 ? 'pos' : _rf.importeNeto < 0 ? 'neg' : 'neu')
+      : diffCls;
 
     /* Mes + año */
     const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
@@ -4110,6 +4493,54 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>`;
 
+    /* Sección de regularización final: detalle si ya existe, formulario si no */
+    const regHTML = (function() {
+      const fR = function(v) {
+        if (v == null) return '—';
+        return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+      };
+      const fRD = function(v) {
+        if (v == null) return '—';
+        const s = v >= 0 ? '+' : '';
+        return s + Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+      };
+      if (_rf) {
+        const fechaEvt = _rf.fecha
+          ? new Date(_rf.fecha + 'T12:00:00').toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' })
+          : '—';
+        const fechaReg = _rf.registrado
+          ? new Date(_rf.registrado).toLocaleString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+          : '—';
+        const impCls = _rf.importeNeto >= 0 ? 'pos' : 'neg';
+        const netoRow = _rf.netoFinalAjustado != null
+          ? '<div class="hst-kv" style="border-bottom:none"><span class="hst-kv-k" style="font-weight:600;color:var(--text2)">Neto final ajustado</span><span class="hst-kv-v" style="color:var(--text);font-size:12px;font-weight:700">' + fR(_rf.netoFinalAjustado) + '</span></div>'
+          : '';
+        const notaRow = _rf.nota
+          ? '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text2);font-style:italic;line-height:1.4">"' + _rf.nota + '"</div>'
+          : '';
+        const docStr = _rf.docNombre ? ' &nbsp;·&nbsp; ' + _rf.docNombre : '';
+        return '<div class="hst-reg-section">'
+          + '<div class="hst-det-label">Regularización final</div>'
+          + '<div class="hst-reg-detail">'
+          + '<div class="hst-kv"><span class="hst-kv-k">Diferencia original</span><span class="hst-kv-v ' + diffCls + '">' + fRD(rec.diff) + '</span></div>'
+          + '<div class="hst-kv"><span class="hst-kv-k">Importe neto regularizado</span><span class="hst-kv-v ' + impCls + '">' + fRD(_rf.importeNeto) + '</span></div>'
+          + netoRow
+          + notaRow
+          + '<div style="margin-top:6px;font-size:10px;font-family:var(--mono);color:var(--text3)">Fecha evento: ' + fechaEvt + ' &nbsp;·&nbsp; Registrada: ' + fechaReg + docStr + '</div>'
+          + '</div></div>';
+      }
+      if (rec.estado !== 'ok') {
+        const safeId = rec.id;
+        const liqArg = rec.liqReal != null ? rec.liqReal : 'null';
+        return '<div class="hst-reg-section">'
+          + '<div class="hst-det-label">Regularización final</div>'
+          + '<button class="hst-reg-trigger-btn" onclick="hstShowRegForm(' + idx + ', \'' + safeId + '\', ' + liqArg + ')">Registrar regularización →</button>'
+          + '<div id="hst-reg-form-' + idx + '"></div>'
+          + '</div>';
+      }
+      return '';
+    })();
+
     return `
       <div class="hst-row" id="hst-row-${idx}">
         <div class="hst-row-summary" onclick="hstToggle(${idx})">
@@ -4119,8 +4550,8 @@ Complemento de Base MAD: 1500"></textarea>
             <div class="hst-meta-sub">${meta2}</div>
           </div>
           <div class="hst-amounts">
-            <div class="hst-amounts-liq">${fmt(rec.liqReal)}</div>
-            <div class="hst-amounts-diff ${diffCls}">${fmtD(rec.diff)}</div>
+            <div class="hst-amounts-liq">${fmt(_liqDisplay)}</div>
+            <div class="hst-amounts-diff ${_diffDisplayCls}">${fmtD(_diffDisplay)}</div>
           </div>
           <span class="hst-chevron">▶</span>
         </div>
@@ -4141,6 +4572,7 @@ Complemento de Base MAD: 1500"></textarea>
           <div class="hst-actions">
             <button class="hst-del-btn" onclick="hstDelete('${rec.id}')">🗑 Eliminar este registro</button>
           </div>
+          ${regHTML}
         </div>
       </div>`;
   }
@@ -4157,24 +4589,180 @@ Complemento de Base MAD: 1500"></textarea>
   };
 
   /* ─────────────────────────────────────────────────
+     Modal de confirmación de borrado
+  ───────────────────────────────────────────────── */
+  function _hstConfirm(title, msg, onConfirm) {
+    var existing = document.getElementById('hst-confirm-overlay');
+    if (existing) existing.remove();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'hst-confirm-overlay';
+    overlay.className = 'hst-confirm-overlay';
+    overlay.innerHTML =
+      '<div class="hst-confirm-box">' +
+        '<div class="hst-confirm-title">' + title + '</div>' +
+        '<div class="hst-confirm-msg">' + msg + '</div>' +
+        '<div class="hst-confirm-warning">⚠ Esta acción no se puede deshacer.</div>' +
+        '<div class="hst-confirm-actions">' +
+          '<button class="hst-confirm-cancel" id="hst-confirm-cancel-btn">Cancelar</button>' +
+          '<button class="hst-confirm-delete" id="hst-confirm-delete-btn">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(overlay);
+
+    document.getElementById('hst-confirm-cancel-btn').onclick = function() { overlay.remove(); };
+    document.getElementById('hst-confirm-delete-btn').onclick = function() { overlay.remove(); onConfirm(); };
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  }
+
+  /* ─────────────────────────────────────────────────
      Eliminar un registro
   ───────────────────────────────────────────────── */
   window.hstDelete = function hstDelete(id) {
-    let list = hstLoad();
-    list = list.filter(function(r) { return r.id !== id; });
-    hstSave(list);
-    renderHistorial();
+    var list = hstLoad();
+    var rec = list.find(function(r) { return r.id === id; });
+    var periodo = rec ? ([rec.mes, rec.anyo].filter(Boolean).join(' ') || 'este registro') : 'este registro';
+    _hstConfirm(
+      'Eliminar registro de auditoría',
+      'Se eliminará el registro de <strong>' + periodo + '</strong> del historial.',
+      function() {
+        var updated = hstLoad().filter(function(r) { return r.id !== id; });
+        hstSave(updated);
+        renderHistorial();
+        getDashboardData();
+      }
+    );
   };
 
   /* ─────────────────────────────────────────────────
-     Borrar todo (con confirmación)
+     Borrar todo
   ───────────────────────────────────────────────── */
   window.hstClearAll = function hstClearAll() {
-    const list = hstLoad();
+    var list = hstLoad();
     if (list.length === 0) return;
-    if (!confirm('¿Eliminar las ' + list.length + ' auditorías guardadas? Esta acción no se puede deshacer.')) return;
-    hstSave([]);
+    _hstConfirm(
+      'Eliminar todo el historial',
+      'Se eliminarán los <strong>' + list.length + ' registro' + (list.length !== 1 ? 's' : '') + '</strong> guardados en el historial.',
+      function() {
+        hstSave([]);
+        renderHistorial();
+        getDashboardData();
+      }
+    );
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: mostrar formulario inline
+  ───────────────────────────────────────────────── */
+  window.hstShowRegForm = function(idx, recId, liqReal) {
+    const container = document.getElementById('hst-reg-form-' + idx);
+    if (!container) return;
+    const today = new Date().toISOString().slice(0, 10);
+    container.innerHTML = `<div class="hst-reg-form">
+      <div class="hst-reg-form-title">Registrar regularización final</div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Importe neto regularizado (€)</label>
+        <input type="number" id="hst-reg-imp-${idx}" step="0.01" placeholder="0.00" class="hst-reg-input">
+        <div class="hst-reg-hint">+ si la empresa abona lo pendiente &nbsp;·&nbsp; − si descuenta &nbsp;·&nbsp; 0 si aceptas sin ajuste económico</div>
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Nota de resolución</label>
+        <textarea id="hst-reg-nota-${idx}" class="hst-reg-textarea" rows="2" placeholder="Describe brevemente cómo se resolvió..."></textarea>
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Fecha de resolución</label>
+        <input type="date" id="hst-reg-fecha-${idx}" class="hst-reg-input" value="${today}">
+      </div>
+      <div class="hst-reg-field">
+        <label class="hst-reg-label">Nombre del documento soporte (opcional)</label>
+        <input type="text" id="hst-reg-doc-${idx}" class="hst-reg-input" placeholder="ej: nomina_complementaria_mayo.pdf">
+      </div>
+      <div class="hst-reg-form-actions">
+        <button class="hst-reg-save-btn" onclick="hstRegularizar(${idx}, '${recId}', ${liqReal})">Guardar regularización</button>
+        <button class="hst-reg-cancel-btn" onclick="hstHideRegForm(${idx})">Cancelar</button>
+      </div>
+    </div>`;
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: cancelar / ocultar formulario
+  ───────────────────────────────────────────────── */
+  window.hstHideRegForm = function(idx) {
+    const container = document.getElementById('hst-reg-form-' + idx);
+    if (container) container.innerHTML = '';
+  };
+
+  /* ─────────────────────────────────────────────────
+     Regularización: guardar y persistir
+  ───────────────────────────────────────────────── */
+  window.hstRegularizar = function(idx, recId, liqReal) {
+    if (window.PilotPayMode === 'simulation') return;
+    const impEl   = document.getElementById('hst-reg-imp-'   + idx);
+    const notaEl  = document.getElementById('hst-reg-nota-'  + idx);
+    const fechaEl = document.getElementById('hst-reg-fecha-' + idx);
+    const docEl   = document.getElementById('hst-reg-doc-'   + idx);
+
+    if (!impEl) return;
+    const importeNeto = parseFloat(impEl.value);
+    if (isNaN(importeNeto)) {
+      alert('Indica un importe neto válido (puede ser 0 si aceptas la diferencia sin ajuste económico).');
+      impEl.focus();
+      return;
+    }
+
+    const netoFinalAjustado = (liqReal != null) ? (Number(liqReal) + importeNeto) : null;
+
+    const reg = {
+      importeNeto       : importeNeto,
+      netoFinalAjustado : netoFinalAjustado,
+      nota              : notaEl  ? notaEl.value.trim()  : '',
+      fecha             : fechaEl ? fechaEl.value        : new Date().toISOString().slice(0, 10),
+      registrado        : new Date().toISOString(),
+      docNombre         : (docEl && docEl.value.trim()) ? docEl.value.trim() : null
+    };
+
+    // Obtener el AuditRecord para pasarlo al store (necesita mes/año para identificar el expediente)
+    const auditList = hstLoad();
+    const auditRec  = auditList.find(function(r) { return r.id === recId; });
+    if (!auditRec) {
+      console.warn('[PilotPay] hstRegularizar: registro no encontrado', recId);
+      return;
+    }
+
+    // Guardar regularización en el expediente mensual (monthly_v1).
+    // audit_history_v1 permanece inmutable — no se modifica.
+    if (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      PilotPayStore.monthly.onRegularizacionDone(auditRec, reg);
+    }
+
     renderHistorial();
+    setTimeout(function() {
+      hstToggle(idx);
+      // Refrescar dashboard si está activo
+      try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+    }, 60);
+  };
+
+  /* ─────────────────────────────────────────────────
+     Eliminar previsión pendiente
+  ───────────────────────────────────────────────── */
+  window.hstDeletePending = function hstDeletePending(year, month, periodo) {
+    _hstConfirm(
+      'Eliminar previsión pendiente',
+      'Se eliminará la previsión de <strong>' + (periodo || (year + '/' + month)) + '</strong>. ' +
+      'Las auditorías ya registradas en el historial no se ven afectadas.',
+      function() {
+        if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+        var ok = PilotPayStore.monthly.deletePending(year, month);
+        if (!ok) {
+          console.warn('[PilotPay] hstDeletePending: no se pudo eliminar', year, month);
+          return;
+        }
+        renderHistorial();
+        try { if (typeof getDashboardData === 'function') getDashboardData(); } catch(e) {}
+      }
+    );
   };
 
   /* ─────────────────────────────────────────────────
@@ -4732,6 +5320,11 @@ function doLogout() {
     if (_varsUploadTxt) _varsUploadTxt.textContent = 'Toca para subir PDF de Variables';
     const _varsUploadZone = document.getElementById('vars-upload-zone');
     if (_varsUploadZone) _varsUploadZone.classList.remove('drag', 'has-file');
+    // Resetear el input file: sin esto, seleccionar el mismo PDF tras re-login
+    // no dispara onchange porque el navegador no detecta cambio de valor.
+    const _varsFileInput = document.getElementById('vars-file-input');
+    if (_varsFileInput) _varsFileInput.value = '';
+    varsPeriodoConfirmado = false;
 
     // 2) DOM con datos personales — limpiar para que no sean visibles al siguiente usuario
     if (typeof resetComparativa === 'function') resetComparativa();
@@ -4848,6 +5441,11 @@ function initApp() {
     simHistoricoData : function() { return typeof simHistoricoData !== 'undefined' ? simHistoricoData : {}; }
   };
   if (typeof PilotPayStore !== 'undefined') PilotPayStore.init(currentUser);
+  // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
+  // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
+  _restoreCalcFromStore();
+  // Inicializar modo operativo (lee localStorage) y aplicar UI
+  if (typeof _ppModeInit === 'function') { _ppModeInit(); applyModeUI(); }
 }
 
 // ── TABS ──
@@ -5512,12 +6110,17 @@ function renderConfig() {
 }
 
 function showTab(name) {
+  // Guard: navegación bloqueada en modo simulación
+  if (window.PilotPayMode === 'simulation' &&
+      ['dashboard', 'historial'].indexOf(name) !== -1) {
+    console.warn('[PilotPay] showTab("' + name + '"): bloqueado en modo simulación');
+    return;
+  }
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const tabs = ['dashboard','calcular','variables','nomina','comparar','simulador','convenio','historial','perfil','config','admin'];
-  const idx = tabs.indexOf(name);
-  const tabEls = document.querySelectorAll('.tab');
-  if (tabEls[idx]) tabEls[idx].classList.add('active');
+  // Seleccionar por atributo onclick en lugar de por índice — inmune a reordenaciones.
+  const tabEl = document.querySelector(`.tab[onclick="showTab('${name}')"]`);
+  if (tabEl) tabEl.classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
@@ -6572,7 +7175,13 @@ function recalc() {
     baseSS, ss_cc, ss_mei, ss_dfp, ss_sol_t1, ss_sol_t2, ss_sol_t3, ss_solidaridad, ss_total,
     retencionIRPF, irpf_especie, liquidoReal, typeRating, interesesPrestamo,
     fn, nivel: currentNivel, mad: madF, irpf_pct,
-    mes: document.getElementById('mes-nomina').value
+    mes          : document.getElementById('mes-nomina').value,
+    // Campos de contexto para restauración fiel del estado al re-login
+    vacDias      : parseInt(document.getElementById('vac-dias')?.value)    || 0,
+    conVac       : !!(document.getElementById('toggle-vac')?.checked),
+    pagaExtraMode: document.getElementById('toggle-extra')?.checked ? 'completa' : 'prorr',
+    // Versión del esquema — permite migraciones futuras sin romper snapshots existentes
+    schemaVersion: '3.0'
   };
   window._calcResultBackup = { ...calcResult };
 
@@ -6583,6 +7192,7 @@ function recalc() {
   document.getElementById('sum-neto').textContent = fmt(liquidoReal);
 
   updateRates();
+  _recalcNotifyStore();
 }
 
 // ── NÓMINA COMPLETA ──
@@ -6816,6 +7426,12 @@ function renderNomina() {
       return `<div class="nomina-row" style="opacity:.65">
         <span class="nomina-concept">${row.concept}</span>
         <span class="nomina-amount" style="color:var(--text3)">${row.total ? fmt(row.total)+' €' : '—'}</span>
+      </div>`;
+    }
+    if (row.type === 'info') {
+      return `<div class="nomina-row" style="opacity:.75">
+        <span class="nomina-concept" style="color:var(--text2)">${row.concept}</span>
+        <span class="nomina-amount" style="color:var(--text3)">${fmt(row.total)} ${row.unit || ''}</span>
       </div>`;
     }
     // Normal row with units × price
@@ -7651,8 +8267,10 @@ function recalcTCP() {
     totalDest, baseSS, ss_cc, ss_mei, ss_dfp, totalSS,
     baseIRPF, irpf_pct, irpf_especie, retencionIRPF,
     segMed_dev, segMed_ded, segLic_ded,
-    totalDevengado, liquidoReal
+    totalDevengado, liquidoReal,
+    schemaVersion: '3.0'
   };
+  _recalcNotifyStore();
 }
 
 // ── COMPARATIVA ──
@@ -8215,6 +8833,7 @@ function mostrarPropuestasActualizacion(propuestas, nomData) {
 
 // ── Aplicar propuestas desde la tarjeta integrada (checkboxes en trabajadorHTML) ──
 function aplicarPropuestasInline() {
+  if (window.PilotPayMode === 'simulation') return;
   const propuestas = window._nominaPropuestas || [];
   let updatedPerfil = 0, updatedSim = 0;
 
@@ -8574,18 +9193,23 @@ function renderComparativa(nomData) {
         + '</div>';
     }).join('');
 
-    const _updateSection = _props.length > 0
-      ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
-          + '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.04em">ACTUALIZAR — selecciona y confirma</div>'
-          + _checkHTML
-          + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'
-          + '<button onclick="aplicarPropuestasInline()" '
-          + 'style="display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--blue2);color:var(--blue2);border-radius:6px;font-size:11px;font-family:var(--mono);padding:5px 14px;cursor:pointer;white-space:nowrap">'
-          + '✓ Actualizar datos seleccionados</button>'
-          + '<span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none"></span>'
-          + '</div></div>'
-      : '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
-          + 'Los datos del perfil ya están actualizados con esta nómina.</div>';
+    // En simulation mode: no ofrecer actualización de perfil/histórico
+    const _isSim = window.PilotPayMode === 'simulation';
+    const _updateSection = _isSim
+      ? '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
+          + 'Las propuestas de actualización no están disponibles en modo simulación.</div>'
+      : (_props.length > 0
+        ? '<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">'
+            + '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:8px;letter-spacing:.04em">ACTUALIZAR — selecciona y confirma</div>'
+            + _checkHTML
+            + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px">'
+            + '<button onclick="aplicarPropuestasInline()" '
+            + 'style="display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--blue2);color:var(--blue2);border-radius:6px;font-size:11px;font-family:var(--mono);padding:5px 14px;cursor:pointer;white-space:nowrap">'
+            + '✓ Actualizar datos seleccionados</button>'
+            + '<span id="_upd_feedback" style="font-size:10px;font-family:var(--mono);color:var(--green);display:none"></span>'
+            + '</div></div>'
+        : '<div style="font-size:10px;font-family:var(--mono);color:var(--text3);border-top:1px solid var(--border);padding-top:8px;margin-top:6px">'
+            + 'Los datos del perfil ya están actualizados con esta nómina.</div>');
 
     trabajadorHTML = '<div class="card" style="margin-bottom:12px" id="card-datos-nomina">'
       + '<div class="card-title"><div class="section-dot"></div>Datos extraídos de la nómina</div>'
@@ -8664,7 +9288,7 @@ function renderComparativa(nomData) {
     <div class="card" style="margin-top:12px">
       <div class="card-title"><div class="section-dot blue"></div>Acumulados anuales en nómina</div>
       ${hasAcum ? acumRowsHTML : '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);padding:8px 0">No se detectaron acumulados en este PDF.</div>'}
-      ${canSendToSim ? `
+      ${canSendToSim && window.PilotPayMode !== 'simulation' ? `
         <button class="btn-secondary" style="margin-top:12px;border-color:var(--green);color:var(--green)"
           onclick="enviarAcumuladosAlSimulador(${ac.base_irpf||0}, ${ac.irpf||0})">
           📊 Enviar al Simulador IRPF
@@ -9944,9 +10568,12 @@ function varsParseText(text) {
   data.dest_int = parseVal(/destacamento\s*int(?:ernacional)?\s*:?\s*([\d.,]+)/i);
 
   // Desplazamiento/Dieta NAC sin pernocta
-  // "Dieta Desplaz. Nac. Exenta" (sin mencionar pernocta = sin pernocta)
+  // Variantes reales del PDF Binter:
+  //   "Dieta Desplaz. Nac.: 1"           (bare, sin calificador = sin pernocta)
+  //   "Dieta Desplaz. Nac. Exenta: ..."  (en nómina, misma semántica)
+  //   "Desplazamiento Nac. sin pernocta: ..."
   data.dieta_nac_sp = parseVal(
-    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct)\s*:?\s*([\d.,]+)/i
+    /(?:desplazamiento\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?\s*exenta(?!\s*pernoct)|dieta\s*nac(?:ional)?\s*sin\s*pernoct|dieta\s*desplaz\.?\s*nac\.?(?!\s*(?:pernoct|exenta|con\s|inter|sujeta)))\s*:?\s*([\d.,]+)/i
   );
 
   // Desplazamiento/Dieta NAC con pernocta
@@ -10021,11 +10648,157 @@ function varsGetNominaMes(fechaFin) {
                   .replace(/^\w/, c => c.toUpperCase());
 }
 
+// ── Notificaciones al store ──────────────────────────────────────────────────
+// El frontend NO resuelve year/month — esa responsabilidad es del store.
+// PilotPayStore.resolveExpedientePeriod() es la única fuente de verdad temporal.
+function _varsNotifyStore() {
+  if (window.PilotPayMode === 'simulation') return;
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  if (!varsData || !varsData._periodoFin) return;
+  PilotPayStore.monthly.onVariablesConfirmed(varsData);
+}
+
+function _recalcNotifyStore() {
+  if (window.PilotPayMode === 'simulation') return;
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+  var cr = calcResult;
+  if (!cr) return;
+  if (!varsData || !varsData._periodoFin) return;
+  PilotPayStore.monthly.onCalculationDone(varsData, cr);
+}
+
+// ── Restauración de estado mensual al re-login ──────────────────────────────
+// Llamada desde initApp() tras PilotPayStore.init().
+// Lee el MonthRecord más reciente en pending_comparison y reconstituye:
+//   - calcResult (snapshot congelado, no recalculado)
+//   - DOM inputs del Calculator (para que recalc() manual produzca el resultado correcto)
+//   - varsData (fuente persistente única entre sesiones)
+// Si no hay pending_comparison, no hace nada — sesión arranca limpia.
+function _restoreCalcFromStore() {
+  try {
+    if (typeof PilotPayStore === 'undefined' || !PilotPayStore.ready()) return;
+    var pending = PilotPayStore.monthly.getPendingComparisons();
+    if (!pending || pending.length === 0) return;
+
+    var mr = pending[0];
+    var ct = mr.calculoTeorico;
+    if (!ct) return;
+
+    // ── Snapshot congelado ────────────────────────────────────────────────────
+    // NO llamar recalc(). El snapshot refleja el estado exacto del cálculo
+    // original. Si han cambiado tablas, IRPF u otros parámetros desde entonces,
+    // el usuario verá la previsión que generó, no una recalculación automática.
+    calcResult = ct;
+    window._calcResultBackup = ct;
+
+    // ── Restaurar inputs del Calculator ──────────────────────────────────────
+    // Solo pilotos (CMD/COP) — TCP usa IDs distintos (tcp-*), fase futura.
+    if (!ct.isTCP) {
+      var _sv = function(id, val) {
+        if (val == null) return;
+        var el = document.getElementById(id);
+        if (el) el.value = val;
+      };
+      _sv('hv1',         ct.hv1);
+      _sv('hv2',         ct.hv2);
+      _sv('hv3',         ct.hv3);
+      _sv('hv4',         ct.hv4);
+      _sv('imaginarias', ct.im);
+      _sv('francos',     ct.fr);
+      _sv('lv1',         ct.lv1);
+      _sv('lv2',         ct.lv2);
+      _sv('lv3',         ct.lv3);
+      _sv('dpo',         ct.dpo);
+      _sv('vac-dias',    ct.vacDias || 0);
+      if (ct.mes) _sv('mes-nomina', ct.mes);
+
+      // Toggles (disponibles en snapshots schemaVersion 3.0+; ignorar si ausentes)
+      var toggleExtra = document.getElementById('toggle-extra');
+      if (toggleExtra && ct.pagaExtraMode) {
+        toggleExtra.checked = ct.pagaExtraMode === 'completa';
+        var hintEl = document.getElementById('extra-hint');
+        if (hintEl) hintEl.textContent = toggleExtra.checked
+          ? 'Paga completa (julio/diciembre)'
+          : 'Prorrateadas (suma mensual)';
+      }
+      var toggleVac = document.getElementById('toggle-vac');
+      if (toggleVac && ct.conVac != null) {
+        toggleVac.checked = !!ct.conVac;
+      }
+    }
+
+    // ── Actualizar display de resultados del Calculator ───────────────────────
+    // Sin llamar recalc() — solo mostrar los valores del snapshot en los campos.
+    var _fmtR = function(v) {
+      if (v == null || isNaN(v)) return '—';
+      return Number(v).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    };
+    var _upd = function(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; };
+    _upd('sum-dev',       _fmtR(ct.totalDevengado));
+    _upd('sum-irpf-base', _fmtR(ct.baseIRPF));
+    _upd('sum-irpf',      '-' + _fmtR(ct.retencionIRPF));
+    _upd('sum-neto',      _fmtR(ct.liquidoReal));
+
+    // ── Restaurar varsData ────────────────────────────────────────────────────
+    // MonthRecord.variablesData es la fuente persistente única entre sesiones.
+    // Solo restaurar si el período fue confirmado (tiene _periodoInicio).
+    if (mr.variablesData && mr.variablesData._periodoInicio) {
+      varsData = mr.variablesData;
+      varsPeriodoConfirmado = true;
+    }
+
+    // ── Refrescar Nómina desde snapshot ──────────────────────────────────────
+    if (typeof renderNomina === 'function') {
+      try { renderNomina(); } catch(e) {}
+    }
+
+    // ── Indicador visual discreto ─────────────────────────────────────────────
+    var _periodo = (mr.mesLabel || '') + (mr.year ? ' ' + mr.year : '');
+    _showRestoreToast(_periodo);
+
+    console.log('[PilotPay] Estado mensual restaurado —',
+      mr.mesLabel, mr.year,
+      '| schema:', ct.schemaVersion || 'legacy',
+      '| updatedAt:', mr._updatedAt);
+
+  } catch(e) {
+    console.warn('[PilotPay] _restoreCalcFromStore: error durante restauración', e);
+  }
+}
+
+// Toast discreto que confirma al usuario que la sesión fue recuperada automáticamente.
+// Auto-dismiss a los 3.8 s. Sin interacción requerida.
+function _showRestoreToast(periodo) {
+  try {
+    var existing = document.getElementById('pp-restore-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.id = 'pp-restore-toast';
+    toast.setAttribute('style', [
+      'position:fixed', 'top:58px', 'left:50%', 'transform:translateX(-50%)',
+      'background:var(--card)', 'border:1px solid var(--border)',
+      'border-left:3px solid var(--amber)',
+      'border-radius:8px', 'padding:7px 16px',
+      'font-size:11px', 'font-family:var(--mono)', 'color:var(--text3)',
+      'z-index:9000', 'box-shadow:0 2px 10px rgba(0,0,0,.18)',
+      'white-space:nowrap', 'pointer-events:none',
+      'opacity:1', 'transition:opacity .35s'
+    ].join(';'));
+    toast.textContent = '⏳ Previsión de ' + periodo + ' — sesión recuperada';
+    document.body.appendChild(toast);
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { if (toast.parentNode) toast.remove(); }, 400);
+    }, 3800);
+  } catch(e) {}
+}
+
 function varsConfirmarPeriodo(confirmado) {
   if (confirmado) {
     document.getElementById('vars-periodo-edit').style.display = 'none';
     varsPeriodoConfirmado = true;
     varsMostrarResultado();
+    _varsNotifyStore();
   } else {
     document.getElementById('vars-periodo-edit').style.display = 'block';
     // Pre-rellenar con fechas detectadas si existen
@@ -10053,6 +10826,7 @@ function varsAplicarPeriodoManual() {
   document.getElementById('vars-nomina-mes-display').innerHTML =
     `Estas variables corresponden a la nómina de <strong style="color:var(--blue2)">${varsGetNominaMes(varsData._periodoFin)}</strong>`;
   varsMostrarResultado();
+  _varsNotifyStore();
 }
 
 function varsEditarPeriodo() {
@@ -10442,6 +11216,110 @@ async function enviarSolicitudCambio() {
 
 <script src="./api-client.js"></script>
 <script>
+// ── MODO OPERATIVO ─────────────────────────────────────────────────────────────
+// PilotPayMode: contexto operativo global. 'operational' (default) | 'simulation'
+// Los write guards en store hooks leen este valor para bloquear persistencia.
+// ──────────────────────────────────────────────────────────────────────────────
+window.PilotPayMode = 'operational';
+
+// Comparativa visible en simulation — laboratorio financiero aislado.
+// saveAuditRecord + aplicarPropuestasInline ya tienen guards propios.
+var _PP_SIM_TABS_HIDDEN = ['dashboard', 'historial'];
+
+function _ppModeInit() {
+  var saved = localStorage.getItem('pp_ui_mode_v1');
+  window.PilotPayMode = (saved === 'simulation') ? 'simulation' : 'operational';
+}
+
+function applyModeUI() {
+  var isSim = (window.PilotPayMode === 'simulation');
+  var app      = document.getElementById('app');
+  var modeBar  = document.getElementById('pp-mode-bar');
+  var simBanner = document.getElementById('sim-banner');
+  var btnOp    = document.getElementById('pp-mode-op');
+  var btnSim   = document.getElementById('pp-mode-sim');
+
+  // Clase raíz — habilita el cascade CSS de simulación
+  if (app) app.classList.toggle('pp-sim-mode', isSim);
+
+  // Hacer visible el mode bar (oculto hasta primer login)
+  if (modeBar) modeBar.style.display = '';
+
+  // Estados de los botones
+  if (btnOp) {
+    btnOp.classList.toggle('active', !isSim);
+    btnOp.classList.remove('pp-sim-active');
+  }
+  if (btnSim) {
+    btnSim.classList.toggle('active', isSim);
+    btnSim.classList.toggle('pp-sim-active', isSim);
+  }
+
+  // Banner de simulación
+  if (simBanner) simBanner.style.display = isSim ? '' : 'none';
+
+  // Pestañas prohibidas en simulación
+  _PP_SIM_TABS_HIDDEN.forEach(function(name) {
+    var tabEl = document.querySelector('.tab[onclick="showTab(\'' + name + '\')"]');
+    if (tabEl) tabEl.style.display = isSim ? 'none' : '';
+  });
+
+  // Si el tab activo está prohibido en simulación → redirigir a calcular
+  if (isSim) {
+    var activePage = document.querySelector('.page.active');
+    if (activePage) {
+      var prohibitedIds = _PP_SIM_TABS_HIDDEN.map(function(n) { return 'page-' + n; });
+      if (prohibitedIds.indexOf(activePage.id) !== -1) {
+        showTab('calcular');
+      }
+    }
+  }
+}
+
+function switchPPMode(newMode) {
+  if (newMode === window.PilotPayMode) return;
+
+  if (window.PilotPayMode === 'simulation' && newMode === 'operational') {
+    // Salir de simulación — diálogo explícito
+    _ppSimExitDialog(function() {
+      window.PilotPayMode = 'operational';
+      localStorage.setItem('pp_ui_mode_v1', 'operational');
+      applyModeUI();
+    });
+    return;
+  }
+
+  // Entrar en simulación — sin diálogo
+  window.PilotPayMode = 'simulation';
+  localStorage.setItem('pp_ui_mode_v1', 'simulation');
+  applyModeUI();
+}
+
+function _ppSimExitDialog(onConfirm) {
+  var existing = document.getElementById('pp-sim-exit-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'pp-sim-exit-overlay';
+  overlay.className = 'hst-confirm-overlay';
+  overlay.innerHTML =
+    '<div class="hst-confirm-box" style="border-top-color:var(--amber)">' +
+      '<div class="hst-confirm-title">Salir del modo simulación</div>' +
+      '<div class="hst-confirm-msg">Los cálculos realizados en simulación <strong>no se han guardado</strong> en el historial ni afectan a estadísticas.<br><br>¿Volver al modo Auditoría real?</div>' +
+      '<div class="hst-confirm-actions">' +
+        '<button class="hst-confirm-cancel" id="pp-sim-cancel-btn">Continuar editando</button>' +
+        '<button class="hst-confirm-delete" id="pp-sim-confirm-btn" style="background:var(--blue2);border-color:var(--blue2)">Volver a Auditoría real</button>' +
+      '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.getElementById('pp-sim-cancel-btn').onclick = function() { overlay.remove(); };
+  document.getElementById('pp-sim-confirm-btn').onclick = function() { overlay.remove(); onConfirm(); };
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+}
+</script>
+
+<script>
 // PILOTPAY · MIGRACIÓN FRONTEND → BACKEND
 (function setupBackendPayrollBridge(){
   if (window.__pilotpayBackendBridgeInstalled) return;
@@ -10530,6 +11408,7 @@ async function enviarSolicitudCambio() {
   }
 
   function scheduleBackendAudit(){
+    if (window.PilotPayMode === 'simulation') return;
     if (!window.PilotPayAPI || !window.PILOTPAY_BACKEND_READY) return;
     clearTimeout(timer);
     const seq = ++lastSeq;
@@ -10648,10 +11527,91 @@ window.PILOTPAY_BACKEND_READY = true;
     return 'GCLP'; // GC o legacy '1'
   }
 
+  // ── Próxima acción del ciclo mensual ─────────────────────────────────────────
+  // Función pura: sin DOM, sin cálculos, sin efectos secundarios.
+  // Retorna { texto, tab } según el estado del MonthRecord activo, o null si no hay acción.
+  function _nextAction(mr) {
+    if (!mr) return { texto: 'Carga las variables del mes', tab: 'variables' };
+    switch (mr.estado) {
+      case 'pending_variables':
+        return { texto: 'Calcula en Calcular', tab: 'calcular' };
+      case 'pending_calculation':
+      case 'pending_comparison':
+        return { texto: 'Sube la nómina oficial en Comparativa', tab: 'comparar' };
+      case 'con_diferencias':
+        return { texto: 'Gestiona las diferencias en Historial', tab: 'historial' };
+      default:
+        return null;
+    }
+  }
+
+  // ── Selección del expediente activo ──────────────────────────────────────────
+  // Cola de prioridad: el MonthRecord más relevante operativamente.
+  // NO es necesariamente el mes calendario — puede ser el mes anterior
+  // si el usuario aún tiene un ciclo abierto.
+  function _selectExpedienteActivo(allMR) {
+    if (!allMR || allMR.length === 0) return null;
+
+    // Prioridad 1: con_diferencias — requiere acción inmediata
+    var conDifs = allMR.filter(function(m) { return m.estado === 'con_diferencias'; });
+    if (conDifs.length > 0) {
+      // El más reciente si hay varios
+      return conDifs.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 2: pending_comparison — ciclo activo esperando nómina oficial
+    var pendComp = allMR.filter(function(m) { return m.estado === 'pending_comparison'; });
+    if (pendComp.length > 0) {
+      return pendComp.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 3: pending_calculation — previsión generada, esperando nómina
+    var pendCalc = allMR.filter(function(m) { return m.estado === 'pending_calculation'; });
+    if (pendCalc.length > 0) {
+      return pendCalc.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 4: pending_variables — variables cargadas, pendiente cálculo
+    var pendVars = allMR.filter(function(m) { return m.estado === 'pending_variables'; });
+    if (pendVars.length > 0) {
+      return pendVars.reduce(function(a, b) {
+        return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+      });
+    }
+
+    // Prioridad 5: MonthRecord del mes calendario actual (cualquier estado).
+    // filter() en lugar de find() — determinista si hay múltiples registros del mismo mes
+    // (legacy/corrupción). Se selecciona el más reciente por _updatedAt.
+    var now = new Date();
+    var calYear = now.getFullYear(), calMonth = now.getMonth() + 1;
+    var calCandidates = allMR.filter(function(m) { return m.year === calYear && m.month === calMonth; });
+    if (calCandidates.length > 0) {
+      return calCandidates.reduce(function(a, b) {
+        return (a._updatedAt || '') >= (b._updatedAt || '') ? a : b;
+      });
+    }
+
+    // Prioridad 6: el más reciente de cualquier estado
+    return allMR.reduce(function(a, b) {
+      return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
+    });
+  }
+
   /* ── Fuente de verdad centralizada del dashboard ── */
   function getDashboardData() {
-    const u       = (window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {};
-    const pd      = window.profileData || {};
+    // PP_getters es la única vía correcta para acceder a variables let de otros scripts.
+    // window.profileData y window.currentUser son siempre undefined (let ≠ var).
+    const _gu     = window.PP_getters;
+    const _userId = _gu ? _gu.currentUser()  : null;
+    const _pdRaw  = _gu ? _gu.profileData()  : null;
+    const u       = (window.USERS && _userId) ? window.USERS[_userId] : {};
+    const pd      = _pdRaw || {};
     const calc    = readCalcFields();
     const hist    = loadAuditHistory();
     const baseNum = pd.base || u.base;
@@ -10671,7 +11631,31 @@ window.PILOTPAY_BACKEND_READY = true;
       ? PilotPayStore.getDashboardSummary()
       : null;
 
-    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf, storeSummary };
+    // API financiera centralizada — fuente canónica para métricas acumuladas.
+    // Preparado para stats.getSummary({ year }) cuando se añada selector anual.
+    const statsFinancial = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready() && PilotPayStore.stats)
+      ? PilotPayStore.stats.getSummary()
+      : null;
+
+    // ── Estadísticas del año en curso (para Resumen Anual) ───────────────────
+    // Llama getSummary con año actual — ya soportado por la implementación.
+    const currentYear = new Date().getFullYear();
+    const statsAnual = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready() && PilotPayStore.stats)
+      ? PilotPayStore.stats.getSummary({ year: currentYear })
+      : null;
+
+    // ── Expediente activo ────────────────────────────────────────────────────
+    // MonthRecord más relevante según cola de prioridad operativa.
+    // Fuente canónica para la card principal del Dashboard.
+    const _allMR = (typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+      ? PilotPayStore.monthly.getAll()
+      : [];
+    const expedienteActivo = _selectExpedienteActivo(_allMR);
+    const nextAction       = _nextAction(expedienteActivo);
+
+    return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf,
+             storeSummary, statsFinancial, statsAnual,
+             expedienteActivo, nextAction, currentYear };
   }
 
   /* ══════════════════════════════════════════
@@ -10690,12 +11674,42 @@ window.PILOTPAY_BACKEND_READY = true;
       baseNum: derived.baseNum, baseICAO,
       simHistoricoKeys: Object.keys(pd.simHistorico || {})
     });
-    if (derived.storeSummary) {
+    if (derived.storeSummary && window._PP_DEBUG) {
       console.log('[Dashboard] PilotPayStore connected ✓', {
         auditorias : derived.storeSummary.auditStats.total,
         conDifs    : derived.storeSummary.auditStats.conDiferencias,
         mesActual  : derived.storeSummary.mesActual.label + ' ' + derived.storeSummary.mesActual.estado,
         expediente : derived.storeSummary.expedition.totalMeses + ' meses indexados'
+      });
+    }
+    if (derived.statsFinancial && window._PP_DEBUG) {
+      const _sf = derived.statsFinancial;
+      console.log('[Dashboard] stats.getSummary ✓', {
+        mesesAuditados          : _sf.mesesAuditados,
+        mesesConDifsHistoricas  : _sf.mesesConDiferenciasHistoricas,
+        mesesRegularizados      : _sf.mesesRegularizados,
+        totalNetoCobrado        : _sf.totalNetoCobrado,
+        diferenciaNetaAcumulada : _sf.diferenciaNetaAcumulada,
+        mediaNetaFinal          : _sf.mediaNetaFinal,
+        hasErrors               : _sf.hasErrors,
+        hasWarnings             : _sf.hasWarnings,
+        primerMes               : _sf.primerMesAuditado,
+        ultimoMes               : _sf.ultimoMesAuditado
+      });
+    }
+    if (window._PP_DEBUG) {
+      const _ea = derived.expedienteActivo;
+      console.log('[Dashboard] expedienteActivo ✓', {
+        id         : _ea ? _ea.id                  : null,
+        estado     : _ea ? _ea.estado               : '(vacío)',
+        mesLabel   : _ea ? (_ea.mesLabel + ' ' + _ea.year) : '—',
+        nextAction : derived.nextAction ? derived.nextAction.texto : null,
+        statsAnual : derived.statsAnual ? {
+          mesesAuditados   : derived.statsAnual.mesesAuditados,
+          totalNetoCobrado : derived.statsAnual.totalNetoCobrado,
+          mediaNetaFinal   : derived.statsAnual.mediaNetaFinal,
+          year             : derived.currentYear
+        } : null
       });
     }
 
@@ -10712,67 +11726,148 @@ window.PILOTPAY_BACKEND_READY = true;
     const now = new Date();
     setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
-    renderAuditCard(hist, derived.storeSummary);
+    renderExpedienteActivoCard(derived.expedienteActivo, derived.nextAction, derived.storeSummary);
     renderSimCard(pd);
-    renderCalcCard(calc, derived.storeSummary);
+    renderResumenAnualCard(derived.statsAnual, derived.currentYear);
     renderAlertsCard(hist, pd, calc, derived);
     renderMetarWidget(baseICAO);
   };
 
   /* ─────────────────────────────────────────
-     TARJETA: ÚLTIMA AUDITORÍA
+     TARJETA: EXPEDIENTE ACTIVO
   ───────────────────────────────────────── */
-  function renderAuditCard(list, storeSummary) {
-    // Datos del registro: store como fuente preferida, list[0] como fallback
-    const _storeReady = storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready();
-    const rec   = _storeReady ? PilotPayStore.audit.getLast() : (list && list[0] || null);
-    const total = _storeReady ? storeSummary.auditStats.total : (list ? list.length : 0);
+  function renderExpedienteActivoCard(expedienteActivo, nextAction, storeSummary) {
+    const mr = expedienteActivo;
 
-    if (!rec && total === 0) {
+    if (!mr) {
       setAttr('dsh-audit-status', 'dim');
       setText('dsh-audit-status', '—');
-      setHTML('dsh-audit-body', '<div class="dsh-empty">Todavía no hay auditorías.<br>Sube una nómina en Comparativa.</div>');
+      setHTML('dsh-audit-body', '<div class="dsh-empty">No hay expediente activo.<br>Carga las variables del mes para empezar.</div>');
       return;
     }
 
-    /* Estado visual */
-    const stMap = { ok:'OK', aviso:'AVISO', alerta:'ALERTA' };
-    const stCls = rec.estado || 'dim';
-    setAttr('dsh-audit-status', stCls);
-    setText('dsh-audit-status', stMap[rec.estado] || '—');
+    const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+    const _aud   = mr.auditoria      || {};
+    const _calc  = mr.calculoTeorico || {};
+    const _reg   = mr.regularizacion || null;
 
-    /* Período */
-    const periodo = [rec.mes, rec.anyo].filter(Boolean).join(' ') || 'Período desconocido';
+    /* Badge — información neutra, color por urgencia real */
+    const _estadoCls = ({
+      con_diferencias:     'alerta',
+      auditado:            'ok',
+      regularizado:        'ok',
+      reclamado:           'ok',
+      cerrado:             'ok',
+      pending_variables:   'info',
+      pending_calculation: 'info',
+      pending_comparison:  'info'
+    })[mr.estado] || 'dim';
+    setAttr('dsh-audit-status', _estadoCls);
+    setText('dsh-audit-status', mesRef || '—');
 
-    /* Clase de diferencia */
-    const diffCls = (rec.diff == null) ? '' : Math.abs(rec.diff) < 1 ? 'pos' : rec.diff > 0 ? 'pos' : 'neg';
+    /* Helper: tiempo relativo desde ISO */
+    const _relTime = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return null;
+      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+      if (days === 0) return 'hoy';
+      if (days === 1) return 'hace 1 día';
+      if (days < 30)  return 'hace ' + days + ' días';
+      const m = Math.floor(days / 30);
+      return m === 1 ? 'hace 1 mes' : 'hace ' + m + ' meses';
+    };
 
-    /* Valor grande: líquido real */
-    const bigHtml = rec.liqReal != null
-      ? `<div class="dsh-val-big">${fmt(rec.liqReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${periodo} · ${rec.nombre || 'Empleado'}</div>`
-      : `<div class="dsh-val-big dim">Sin importe</div>`;
+    /* Helper: fecha legible */
+    const _fmtFecha = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? iso : d.toLocaleDateString('es-ES');
+    };
 
-    const kvHtml = `<div class="dsh-kv-list">
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Líquido teórico</span>
-        <span class="dsh-kv-v">${fmt(rec.liqTeorico)}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Diferencia neta</span>
-        <span class="dsh-kv-v ${diffCls}">${fmtD(rec.diff)}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Discrepancias</span>
-        <span class="dsh-kv-v ${rec.nDiscrepancias > 0 ? 'neg' : 'pos'}">${rec.nDiscrepancias}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Total guardadas</span>
-        <span class="dsh-kv-v">${total}</span>
-      </div>
-    </div>`;
+    /* ── RAMA 1: pendiente del flujo mensual ─────────────────────────── */
+    const _isPending = ['pending_variables','pending_calculation','pending_comparison'].indexOf(mr.estado) !== -1;
+    if (_isPending) {
+      const _needsCalc = mr.estado === 'pending_variables';
+      const _hasCalc   = _calc.liquidoReal != null;
 
-    setHTML('dsh-audit-body', bigHtml + kvHtml);
+      const _check = function(done, label) {
+        const icon = done ? '✓' : '⏳';
+        const col  = done ? 'var(--pos)' : 'var(--amber)';
+        return `<div style="font-size:11px;font-family:var(--mono);color:${col};margin-bottom:3px">${icon} ${label}</div>`;
+      };
+
+      let checks = _check(true, 'Variables cargadas');
+      if (_needsCalc) {
+        checks += _check(false, 'Calcular nómina teórica');
+      } else {
+        checks += _check(true, 'Previsión generada');
+        checks += _check(false, 'Pendiente de nómina oficial');
+      }
+
+      const _netoHtml = (_hasCalc && !_needsCalc)
+        ? `<div style="margin-top:10px">
+             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:1px">Neto estimado</div>
+             <div class="dsh-val-big green" style="margin-bottom:0">${fmt(_calc.liquidoReal)}</div>
+           </div>`
+        : '';
+
+      const _updAt = _relTime(mr._updatedAt);
+      const _updHtml = _updAt ? `<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px">Actualizado: ${_updAt}</div>` : '';
+
+      const _ctaHtml = nextAction
+        ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+             <span style="font-size:10px;font-family:var(--mono);color:var(--text3)">Próximo paso  </span>
+             <span onclick="showTab('${nextAction.tab}')" style="font-size:10px;font-family:var(--mono);color:var(--blue2);cursor:pointer;text-decoration:underline">${nextAction.texto} →</span>
+           </div>`
+        : '';
+
+      setHTML('dsh-audit-body', `<div style="margin-bottom:2px">${checks}</div>${_netoHtml}${_updHtml}${_ctaHtml}`);
+      return;
+    }
+
+    /* ── RAMA 2: con_diferencias — alerta activa, sin detalle técnico ── */
+    if (mr.estado === 'con_diferencias') {
+      const _liq      = _aud.liqReal;
+      const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
+      const bigHtml   = _liq != null
+        ? `<div class="dsh-val-big">${fmt(_liq)}</div>
+           <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto oficial · ${mesRef}</div>`
+        : `<div class="dsh-val-big dim">Sin importe</div>
+           <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto oficial · ${mesRef}</div>`;
+      const rows = [];
+      if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
+      setHTML('dsh-audit-body', bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
+      return;
+    }
+
+    /* ── RAMA 3: definitivo (auditado / regularizado / reclamado / cerrado) ── */
+    const _estadoLabel = ({
+      auditado:    'Auditado',
+      regularizado:'Regularizado',
+      reclamado:   'Reclamado',
+      cerrado:     'Cerrado'
+    })[mr.estado] || mr.estado;
+
+    let _neto = null, _netoLabel = 'Neto';
+    if (_reg && _reg.netoFinalAjustado != null) {
+      _neto = _reg.netoFinalAjustado; _netoLabel = 'Neto final';
+    } else if (_aud.liqReal != null) {
+      _neto = _aud.liqReal; _netoLabel = 'Neto oficial';
+    }
+
+    const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
+    const statusLine = `<div style="font-size:11px;font-family:var(--mono);color:var(--pos);margin-bottom:8px">✓ ${_estadoLabel}</div>`;
+    const bigHtml = _neto != null
+      ? `<div class="dsh-val-big">${fmt(_neto)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_netoLabel} · ${mesRef}</div>`
+      : '';
+
+    const rows = [];
+    if (_reg && _reg.importeNeto != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
+    if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
+
+    setHTML('dsh-audit-body', statusLine + bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
   }
 
   /* ─────────────────────────────────────────
@@ -10849,41 +11944,47 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ─────────────────────────────────────────
-     TARJETA: ACTIVIDAD DEL MES
+     TARJETA: RESUMEN ANUAL
   ───────────────────────────────────────── */
-  function renderCalcCard(c, storeSummary) {
-    // Datos financieros: store como fuente preferida, window.calcResult como fallback
-    const _calcData  = (storeSummary && storeSummary.currentCalc) || window.calcResult;
-    const hasCalc    = _calcData != null;
-    const hasHV      = c.hvTotal > 0 || c.hbTotal > 0;
+  function renderResumenAnualCard(statsAnual, currentYear) {
+    const _yr    = currentYear || new Date().getFullYear();
+    const _ready = !!(statsAnual && statsAnual.mesesAuditados !== undefined);
+    const _nMeses = _ready ? statsAnual.mesesAuditados : 0;
 
-    if (!hasCalc && !hasHV) {
+    /* Actualizar label con el año en curso */
+    const _labelEl = document.querySelector('#dsh-calc-card .dsh-card-label');
+    if (_labelEl) _labelEl.innerHTML = '<span class="dsh-card-label-icon">📋</span>Resumen ' + _yr;
+
+    if (!_ready || _nMeses === 0) {
       setAttr('dsh-calc-status', 'dim');
       setText('dsh-calc-status', '—');
-      setHTML('dsh-calc-body', '<div class="dsh-empty">Sin datos calculados.<br>Usa la pestaña Calcular.</div>');
+      setHTML('dsh-calc-body', `<div class="dsh-empty">Sin auditorías en ${_yr}.</div>`);
       return;
     }
 
-    // Label y estado del mes: store como fuente preferida, DOM como fallback
-    const _mesLabel = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.label) || c.mes || 'Calculado';
-    const _estado   = (storeSummary && storeSummary.mesActual && storeSummary.mesActual.estado) || null;
-
     setAttr('dsh-calc-status', 'info');
-    setText('dsh-calc-status', _mesLabel);
+    setText('dsh-calc-status', _nMeses + ' mes' + (_nMeses !== 1 ? 'es' : ''));
 
-    const _liquidoReal = _calcData ? _calcData.liquidoReal : null;
-    const bigHtml = hasCalc && _liquidoReal
-      ? `<div class="dsh-val-big green">${fmt(_liquidoReal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Líquido calculado · ${_mesLabel}${_estado ? ' · ' + _estado : ''}</div>`
-      : '';
+    const _netoAcum  = statsAnual.totalNetoCobrado;
+    const _mediaNeta = statsAnual.mediaNetaFinal;
+    const _difAcum   = statsAnual.diferenciaNetaAcumulada;
+    const _conDif    = statsAnual.mesesConDiferenciasHistoricas;
+    const _regs      = statsAnual.mesesRegularizados;
+
+    const bigHtml = _netoAcum !== null
+      ? `<div class="dsh-val-big">${fmt(_netoAcum)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`
+      : `<div class="dsh-val-big dim">Sin datos de neto</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`;
 
     const rows = [];
-    if (c.hvTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HV</span><span class="dsh-kv-v">${c.hvTotal} h</span></div>`);
-    if (c.hbTotal > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">HB</span><span class="dsh-kv-v">${c.hbTotal} h</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Imaginarias</span><span class="dsh-kv-v">${c.imaginarias > 0 ? c.imaginarias : '—'}</span></div>`);
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Francos</span><span class="dsh-kv-v">${c.francos > 0 ? c.francos : '—'}</span></div>`);
-    if (c.vacDias > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Vacaciones</span><span class="dsh-kv-v">${c.vacDias} días</span></div>`);
-    if (c.dpo > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">DPO</span><span class="dsh-kv-v">${fmt(c.dpo)}</span></div>`);
+    if (_mediaNeta !== null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Media mensual</span><span class="dsh-kv-v">${fmt(_mediaNeta)}</span></div>`);
+    if (_difAcum !== null) {
+      const _cls = _difAcum > 0 ? 'pos' : _difAcum < 0 ? 'neg' : '';
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Diferencia acumulada</span><span class="dsh-kv-v ${_cls}">${fmtD(_difAcum)}</span></div>`);
+    }
+    if (_conDif > 0) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Con diferencias</span><span class="dsh-kv-v neg">${_conDif}</span></div>`);
+    if (_regs > 0)   rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularizados</span><span class="dsh-kv-v pos">${_regs}</span></div>`);
 
     setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
   }
@@ -10896,72 +11997,58 @@ window.PILOTPAY_BACKEND_READY = true;
     derived = derived || {};
     const alerts = [];
 
-    /* 1. No hay auditorías */
-    if (!list || list.length === 0) {
+    // ── Fuente de datos unificada ──────────────────────────────────────────────
+    // Store como fuente preferida; fallback completo a parámetros legacy si no está listo.
+    const _storeReady    = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _auditStats    = _storeReady ? derived.storeSummary.auditStats : null;
+    const _statsFinancial = derived.statsFinancial || null;
+    const _statsReady    = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
+
+    /* 0. Previsión pendiente de nómina oficial */
+    const _pendingMR = _storeReady ? derived.storeSummary.pendingComparison : null;
+    if (_pendingMR) {
+      const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+                       'Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const _mStr = (MESES_N[_pendingMR.month] || '') + ' ' + _pendingMR.year;
+      alerts.push({ cls:'amber', icon:'⏳', msg:`<strong>Previsión generada para ${_mStr} pendiente de auditoría final.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
+    }
+
+    /* 1. Sin auditorías */
+    const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);
+    if (_totalAudits === 0) {
       alerts.push({ cls:'amber', icon:'📂', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
     } else {
-      /* 2. Diferencia relevante en última auditoría */
-      const rec = list[0];
-      if (rec.estado === 'alerta') {
-        const diff = rec.diff != null ? fmtD(rec.diff) : '';
+      /* 2. Estado de la última auditoría */
+      const _ultimoEstado = _auditStats ? _auditStats.ultimoEstado : (list && list[0] ? list[0].estado : null);
+      const _ultimoDiff   = _auditStats ? _auditStats.ultimoDiff   : (list && list[0] ? list[0].diff   : null);
+      // Si la última auditoría está regularizada, no genera alerta activa
+      const _lastRec = list && list[0];
+      const _lastMR  = (_lastRec && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready())
+        ? PilotPayStore.monthly.getByAuditRecord(_lastRec) : null;
+      const _lastReg = (_lastMR && _lastMR.regularizacion) || (_lastRec && _lastRec.regularizacionFinal) || null;
+      const _ultimoEstadoEfectivo = (_lastReg != null && _ultimoEstado !== 'ok')
+        ? 'ok' : _ultimoEstado;
+      if (_ultimoEstadoEfectivo === 'alerta') {
+        const diff = _ultimoDiff != null ? fmtD(_ultimoDiff) : '';
         alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Última auditoría con alerta</strong> — diferencia neta ${diff}. Revisa el Historial.` });
-      } else if (rec.estado === 'aviso') {
+      } else if (_ultimoEstadoEfectivo === 'aviso') {
         alerts.push({ cls:'amber', icon:'ℹ️', msg:`<strong>Última auditoría con aviso</strong> — pequeñas diferencias detectadas. Revisa el Historial.` });
       }
     }
 
-    /* 3. Simulador sin histórico */
-    const hist = pd.simHistorico || {};
-    const mesesHist = Object.keys(hist).filter(k => hist[k] && (hist[k].bruto || hist[k].irpf)).length;
-    const brutoEl = el('sim-bruto-acum');
-    const brutoVal = brutoEl ? parseFloat(brutoEl.value) : 0;
-    if (!brutoVal && mesesHist === 0) {
-      alerts.push({ cls:'amber', icon:'📊', msg:'<strong>Simulador sin datos.</strong> Registra los acumulados en el histórico del Simulador IRPF o súbelos desde Comparativa.' });
-    } else if (mesesHist > 0) {
-      const mesActualNum = new Date().getMonth() + 1;
-      const tieneMesActual = hist[mesActualNum] && (hist[mesActualNum].bruto || hist[mesActualNum].irpf);
-      if (!tieneMesActual) {
-        const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-        alerts.push({ cls:'amber', icon:'📅', msg:`<strong>Sin nómina de ${MESES_N[mesActualNum]}.</strong> El simulador usa la estimación del último mes registrado.` });
+    /* 8. Integridad del store — solo si el store está activo y tiene datos */
+    if (_statsReady && _statsFinancial.mesesAuditados > 0) {
+      if (_statsFinancial.hasErrors) {
+        alerts.push({ cls:'red', icon:'⚠️', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Contacta con soporte o revisa el historial.' });
+      } else if (_statsFinancial.hasWarnings) {
+        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos o inconsistentes. Revisa el Historial.' });
+      }
+      if (_statsFinancial.inconsistencias > 0) {
+        alerts.push({ cls:'amber', icon:'🔍', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta. Revisa el Historial.` });
       }
     }
 
-    const u = derived.u || ((window.USERS && window.currentUser) ? window.USERS[window.currentUser] : {});
-
-    /* 4–6. Configuración fiscal
-     * CCAA se considera configurada si hay valor explícito O se puede derivar del base.
-     * derived.ccaa siempre tiene un valor (derivado de base como fallback).
-     * Solo alertamos si el usuario no ha confirmado explícitamente su CCAA.
-     */
-    const sinEstadoCivil  = !pd.estadoCivil;
-    const ccaaExplicita   = !!(pd.ccaa || pd.sim_ccaa);
-    const irpfEfectivo    = derived.irpf;      // ya resuelto con fallback a u.irpf
-    const sinIRPF         = irpfEfectivo == null;
-
-    if (sinEstadoCivil && !ccaaExplicita && sinIRPF) {
-      /* Usuario nuevo: aviso general único */
-      alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Configura tu perfil fiscal.</strong> Ve a Perfil e indica estado civil, CCAA y % de retención para activar la simulación.' });
-    } else {
-      /* Avisos específicos solo si hay config parcial */
-      if (!ccaaExplicita) {
-        alerts.push({ cls:'amber', icon:'📍', msg:'<strong>Confirma tu comunidad autónoma.</strong> Ve a Perfil → Configuración fiscal para aplicar los tramos autonómicos correctos.' });
-      }
-      if (sinIRPF) {
-        alerts.push({ cls:'amber', icon:'💶', msg:'<strong>Indica el % de retención actual.</strong> Ve a Perfil → Configuración fiscal para que el simulador proyecte correctamente.' });
-      }
-    }
-
-    /* 7. NIF ausente — solo si ya existe alguna auditoría (usuario que ya subió nómina) */
-    if (list && list.length > 0 && !pd.nif) {
-      const _lastRec = list[0];
-      const _nifDetectado = _lastRec && _lastRec.datosExtraidos && _lastRec.datosExtraidos.nif;
-      const _msg = _nifDetectado
-        ? '<strong>NIF detectado pero no guardado.</strong> Vuelve a Comparativa, sube tu nómina y confirma la propuesta de actualización para guardarlo en el perfil.'
-        : '<strong>NIF no guardado en perfil.</strong> Sube una nómina en Comparativa para completar tu NIF y Nº de SS automáticamente.';
-      alerts.push({ cls:'amber', icon:'🪪', msg: _msg });
-    }
-
-    /* 8. Todo OK */
+    /* 9. Todo OK */
     if (alerts.length === 0) {
       alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay alertas pendientes.' });
     }
