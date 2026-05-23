@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -967,6 +967,10 @@ main { flex: 1; overflow-y: auto; }
 }
 .sim-avanzado-toggle:hover { opacity: 1; color: var(--text2); }
 #sim-avanzado-wrap { border-top: 1px solid var(--border2); margin-top: 8px; padding-top: 8px; }
+.sim-profile-indicator {
+  display: none; font-size: 9px; color: var(--amber2);
+  font-family: var(--mono); font-weight: normal; margin-left: 4px;
+}
 .field-input {
   width: 100%; padding: 9px 12px;
   background: var(--bg3); border: 1px solid var(--border2);
@@ -2781,17 +2785,21 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ── TAB: SIMULADOR IRPF ── -->
     <div class="page" id="page-simulador">
 
-      <div class="alert info">
-        <div class="alert-icon">🔮</div>
-        <div class="alert-content">
-          <div class="alert-title">Simulador dinámico IRPF 2026</div>
-          <div class="alert-text">Calcula tu retención óptima mes a mes según tu bruto acumulado, situación personal y comunidad autónoma. Evita sorpresas en la declaración de la renta.</div>
+      <!-- BLOQUE A: Estado fiscal -->
+      <div class="card" id="sim-hero-card">
+        <div class="card-title"><div class="section-dot"></div>Estado fiscal · 2026</div>
+        <div id="sim-hero-content">
+          <div style="font-size:12px;color:var(--text3);font-family:var(--mono)">Cargando...</div>
         </div>
       </div>
 
-      <!-- DATOS ACUMULADOS -->
+      <!-- BLOQUE B: Escenario de proyección -->
       <div class="card">
-        <div class="card-title"><div class="section-dot amber"></div>Situación actual del año</div>
+        <div class="card-title" style="flex-wrap:wrap;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px"><div class="section-dot amber"></div>Escenario de proyección</div>
+          <span style="font-size:9px;font-family:var(--mono);color:var(--amber2);border:1px solid var(--amber2);border-radius:3px;padding:2px 5px;letter-spacing:0.04em;margin-left:auto">TEMPORAL</span>
+        </div>
+        <!-- B1: Periodo y acumulados -->
         <div class="row">
           <div class="field">
             <span class="field-label">Mes actual <span class="sim-info-icon" onclick="mostrarInfoTooltip('Mes actual',event)">i</span></span>
@@ -2805,13 +2813,8 @@ Complemento de Base MAD: 1500"></textarea>
             </select>
           </div>
           <div class="field">
-            <span class="field-label">CCAA residencia <span class="sim-info-icon" onclick="mostrarInfoTooltip('CCAA residencia',event)">i</span></span>
-            <select class="field-input" id="sim-ccaa" onchange="simRecalc()">
-              <option value="mad">Madrid</option>
-              <option value="can">Canarias</option>
-              <option value="and">Andalucía</option>
-              <option value="val">C. Valenciana</option>
-            </select>
+            <span class="field-label">% IRPF actual en nómina <span class="sim-info-icon" onclick="mostrarInfoTooltip('% IRPF actual',event)">i</span></span>
+            <input class="field-input" id="sim-irpf-actual" type="number" placeholder="34.15" step="0.01" oninput="simRecalc()">
           </div>
         </div>
         <div class="row">
@@ -2829,27 +2832,34 @@ Complemento de Base MAD: 1500"></textarea>
             <span class="field-label">Bruto est. meses restantes (€/mes) <span class="sim-info-icon" onclick="mostrarInfoTooltip('Bruto estimado meses restantes',event)">i</span></span>
             <input class="field-input" id="sim-bruto-resto" type="number" placeholder="Ej: 8700" oninput="simRecalc()">
           </div>
-          <div class="field">
-            <span class="field-label">% IRPF actual en nómina <span class="sim-info-icon" onclick="mostrarInfoTooltip('% IRPF actual',event)">i</span></span>
-            <input class="field-input" id="sim-irpf-actual" type="number" placeholder="34.15" step="0.01" oninput="simRecalc()">
+          <div class="field" style="align-self:flex-end">
+            <span class="field-label" style="visibility:hidden;display:block;height:0"></span>
           </div>
         </div>
-      </div>
-
-      <!-- SITUACIÓN PERSONAL -->
-      <div class="card">
-        <div class="card-title"><div class="section-dot"></div>Situación personal</div>
+        <!-- B2: Situación personal -->
+        <div style="height:1px;background:var(--border2);margin:10px 0"></div>
         <div class="row">
           <div class="field">
-            <span class="field-label">Estado civil <span class="sim-info-icon" onclick="mostrarInfoTooltip('Estado civil',event)">i</span></span>
+            <span class="field-label">CCAA residencia <span id="sim-pi-ccaa" class="sim-profile-indicator"></span><span class="sim-info-icon" onclick="mostrarInfoTooltip('CCAA residencia',event)">i</span></span>
+            <select class="field-input" id="sim-ccaa" onchange="simRecalc()">
+              <option value="mad">Madrid</option>
+              <option value="can">Canarias</option>
+              <option value="and">Andalucía</option>
+              <option value="val">C. Valenciana</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="field-label">Estado civil <span id="sim-pi-civil" class="sim-profile-indicator"></span><span class="sim-info-icon" onclick="mostrarInfoTooltip('Estado civil',event)">i</span></span>
             <select class="field-input" id="sim-civil" onchange="simRecalc()">
               <option value="soltero">Soltero/a</option>
               <option value="casado_sep">Casado/a (decl. separada)</option>
               <option value="casado_conj">Casado/a (decl. conjunta)</option>
             </select>
           </div>
+        </div>
+        <div class="row">
           <div class="field">
-            <span class="field-label">Hijos a cargo <span class="sim-info-icon" onclick="mostrarInfoTooltip('Hijos a cargo',event)">i</span></span>
+            <span class="field-label">Hijos a cargo <span id="sim-pi-hijos" class="sim-profile-indicator"></span><span class="sim-info-icon" onclick="mostrarInfoTooltip('Hijos a cargo',event)">i</span></span>
             <select class="field-input" id="sim-hijos" onchange="simRecalc()">
               <option value="0">0 hijos</option>
               <option value="1">1 hijo</option>
@@ -2858,10 +2868,8 @@ Complemento de Base MAD: 1500"></textarea>
               <option value="4">4+ hijos</option>
             </select>
           </div>
-        </div>
-        <div class="row">
           <div class="field">
-            <span class="field-label">Discapacidad contribuyente <span class="sim-info-icon" onclick="mostrarInfoTooltip('Discapacidad contribuyente',event)">i</span></span>
+            <span class="field-label">Discapacidad <span id="sim-pi-discap" class="sim-profile-indicator"></span><span class="sim-info-icon" onclick="mostrarInfoTooltip('Discapacidad contribuyente',event)">i</span></span>
             <select class="field-input" id="sim-discap" onchange="simRecalc()">
               <option value="0">Ninguna</option>
               <option value="33">33%–64%</option>
@@ -2869,19 +2877,23 @@ Complemento de Base MAD: 1500"></textarea>
               <option value="65m">65%+ movilidad reducida</option>
             </select>
           </div>
+        </div>
+        <div class="row">
           <div class="field">
-            <span class="field-label">Cambio de residencia <span class="sim-info-icon" onclick="mostrarInfoTooltip('Cambio de residencia',event)">i</span></span>
+            <span class="field-label">Cambio de residencia <span id="sim-pi-residencia" class="sim-profile-indicator"></span><span class="sim-info-icon" onclick="mostrarInfoTooltip('Cambio de residencia',event)">i</span></span>
             <select class="field-input" id="sim-residencia" onchange="simRecalc()">
               <option value="no">No</option>
               <option value="si">Sí (este año)</option>
             </select>
           </div>
+          <div class="field" style="align-self:flex-end">
+            <span class="field-label" style="visibility:hidden;display:block;height:0"></span>
+          </div>
         </div>
-        <!-- Toggle modo avanzado -->
+        <!-- Avanzado -->
         <button class="sim-avanzado-toggle" id="sim-avanzado-btn" onclick="toggleSimAvanzado()">
           <span>⚙</span><span id="sim-avanzado-btn-label">Ajustes fiscales avanzados</span><span id="sim-avanzado-arrow" style="margin-left:auto;font-size:10px">▼</span>
         </button>
-        <!-- Campos avanzados — ocultos por defecto -->
         <div id="sim-avanzado-wrap" style="display:none">
           <div class="row" style="margin-top:8px">
             <div class="field">
@@ -2904,25 +2916,30 @@ Complemento de Base MAD: 1500"></textarea>
             </div>
           </div>
         </div>
-        <button class="btn-secondary" style="margin-top:8px" onclick="simSyncFromPerfil()">↓ Cargar datos del Perfil</button>
+        <button class="btn-secondary" style="margin-top:8px" onclick="simSyncFromPerfil()">↩ Restaurar desde perfil real</button>
       </div>
 
-      <!-- RESULTADOS -->
+      <!-- BLOQUE C: Resultado -->
       <div id="sim-resultado"></div>
 
-      <!-- Histórico anual -->
+      <!-- BLOQUE D: Histórico fiscal auditado -->
       <div class="card" style="margin-top:4px">
-        <div class="card-title" style="cursor:pointer" onclick="toggleSimHistorico()">
-          <div class="section-dot"></div>Histórico acumulados por mes
-          <span id="sim-hist-arrow" style="margin-left:auto;font-size:12px;color:var(--text3)">▼</span>
-        </div>
-        <div id="sim-historico-wrap" style="display:none">
-          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;line-height:1.6">
-            Edita los acumulados mes a mes. Se guardan en tu perfil.
+        <div class="card-title"><div class="section-dot"></div>Histórico fiscal auditado · 2026</div>
+        <div id="sim-hist-timeline"></div>
+        <div id="sim-hist-interpretation"></div>
+        <div style="margin-top:10px;border-top:1px solid var(--border2);padding-top:8px">
+          <div style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:var(--mono)" onclick="toggleSimHistorico()">
+            <span>Editar acumulados mes a mes</span>
+            <span id="sim-hist-arrow" style="margin-left:auto;font-size:10px">▼</span>
           </div>
-          <div id="sim-historico-table"></div>
-          <button class="btn-secondary" style="margin-top:10px;border-color:var(--green);color:var(--green)" onclick="guardarHistorico()">💾 Guardar histórico</button>
-          <div id="sim-hist-save-status" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px"></div>
+          <div id="sim-historico-wrap" style="display:none">
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin:8px 0;line-height:1.6">
+              Corrección excepcional. Los cambios se guardan en el perfil.
+            </div>
+            <div id="sim-historico-table"></div>
+            <button class="btn-secondary" style="margin-top:10px;border-color:var(--green);color:var(--green)" onclick="guardarHistorico()">Guardar</button>
+            <div id="sim-hist-save-status" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px"></div>
+          </div>
         </div>
       </div>
 
@@ -10092,6 +10109,8 @@ function loadSimulatorData() {
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
   cargarHistorico();
+  renderSimHero();
+  renderSimHistTimeline();
 }
 
 function actualizarSimuladorDesdeHistorico() {
@@ -10163,6 +10182,7 @@ function simSyncFromPerfil() {
   actualizarSimuladorDesdeHistorico();
 
   simRecalc();
+  renderSimHero();
 }
 
 // ── Lee todos los inputs del simulador del DOM
@@ -10279,7 +10299,7 @@ function renderSimResultado(inp, r) {
   const el = document.getElementById('sim-resultado');
   if (!r) {
     el.innerHTML = `
-      <div class="card" style="text-align:center;padding:24px;color:var(--text3)">
+      <div class="card" style="text-align:center;padding:24px;color:var(--text3);font-size:12px;font-family:var(--mono)">
         Introduce el bruto acumulado y la estimación mensual para calcular.
       </div>`;
     return;
@@ -10299,19 +10319,28 @@ function renderSimResultado(inp, r) {
   const fmt       = v => v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
   const ccaaLabel = { mad: 'Madrid', can: 'Canarias', and: 'Andalucía', val: 'C. Valenciana' }[ccaa] || ccaa;
 
-  // Semáforo acumulado
+  // Saldo: positivo = a devolver, negativo = a pagar
+  const saldoPos   = Math.abs(saldoSiSigues);
+  const saldoLabel = saldoSiSigues >= 0 ? 'A devolver' : 'A pagar';
+  const saldoColor = saldoSiSigues >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // Estado acumulado
   const diffAcum = irpfAcum - cuotaProporAcum;
-  let alertaColor = 'success', alertaIcon = '✅', alertaTitle = 'Retención ajustada';
-  let alertaText  = 'La retención acumulada está en línea con lo que corresponde pagar.';
-  if (diffAcum > 200) {
-    alertaColor = 'info'; alertaIcon = '💙'; alertaTitle = 'Reteniendo de más';
-    alertaText  = `Llevas ${fmt(diffAcum)}€ más retenidos de lo que corresponde. La declaración probablemente te saldrá a devolver.`;
-  } else if (diffAcum < -200) {
-    alertaColor = 'warning'; alertaIcon = '⚠️'; alertaTitle = 'Retención insuficiente';
-    alertaText  = `Llevas ${fmt(Math.abs(diffAcum))}€ menos retenidos de lo que corresponde. Ajusta el % ahora para evitar una factura en junio.`;
+  let estadoLabel = 'Ajustada', estadoColor = 'var(--text3)';
+  if (diffAcum > 200)       { estadoLabel = 'Exceso';       estadoColor = 'var(--blue2)'; }
+  else if (diffAcum < -200) { estadoLabel = 'Insuficiente'; estadoColor = 'var(--amber)'; }
+
+  // Recomendación — lenguaje prudente y condicional
+  let recomendacion;
+  if (diffAcum < -200) {
+    recomendacion = `Con el porcentaje actual, el balance anual estimado sería de −${fmt(saldoPos)} €. Una retención de <strong>${retOptimaPct}%</strong> en los ${mesesRestantes} meses restantes reduciría la posible diferencia en la declaración.`;
+  } else if (diffAcum > 200) {
+    recomendacion = `La retención acumulada supera la cuota estimada en ${fmt(diffAcum)} €. Si el patrón de ingresos se mantiene, la declaración apunta a una devolución próxima a ${fmt(saldoPos)} €.`;
+  } else {
+    recomendacion = `La retención acumulada está alineada con la cuota estimada. El resultado de la declaración debería ser próximo a cero.`;
   }
 
-  // Filas condicionales — se muestran solo cuando el valor aplica
+  // Filas condicionales
   const filaConj = reduccDeclConj > 0
     ? `<div class="nomina-row"><span class="nomina-concept">Reducción decl. conjunta <span onclick="mostrarInfoTooltip('Reducción decl. conjunta')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reduccDeclConj)} €</span></div>`
     : '';
@@ -10329,80 +10358,229 @@ function renderSimResultado(inp, r) {
     : '';
 
   el.innerHTML = `
-    <div class="alert ${alertaColor}">
-      <div class="alert-icon">${alertaIcon}</div>
-      <div class="alert-content">
-        <div class="alert-title">${alertaTitle}</div>
-        <div class="alert-text">${alertaText}</div>
-      </div>
-    </div>
-
     <div class="card">
-      <div class="card-title"><div class="section-dot blue"></div>Proyección anual — ${ccaaLabel} 2026</div>
-      <div class="nomina-wrap">
-        <div class="nomina-row"><span class="nomina-concept">Bruto anual estimado <span onclick="mostrarInfoTooltip('Bruto anual estimado')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(brutoAnualEst)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">SS estimada anual <span onclick="mostrarInfoTooltip('SS estimada anual')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(ssAnual)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Gastos deducibles <span onclick="mostrarInfoTooltip('Gastos deducibles')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo${reduccionMov > 0 ? ' + movilidad' : ''} <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
-        ${filaConj}
-        ${filaPension}
-        <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar <span onclick="mostrarInfoTooltip('Mínimo personal + familiar')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
-        ${filaHijos3}
-        ${filaAsc}
-        ${filaAsc75}
-        <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable <span onclick="mostrarInfoTooltip('Base liquidable')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Cuota estatal <span onclick="mostrarInfoTooltip('Cuota estatal')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
-        <div class="nomina-row"><span class="nomina-concept">Cuota autonómica (${ccaaLabel}) <span onclick="mostrarInfoTooltip('Cuota autonómica')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaAutNeta)} €</span></div>
-        <div class="nomina-row subtotal"><span class="nomina-concept">Cuota IRPF total estimada <span onclick="mostrarInfoTooltip('Cuota IRPF total estimada')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaTotal)} €</span></div>
-      </div>
-    </div>
-
-    <div class="result-grid">
-      <div class="result-cell">
-        <div class="result-label">Tipo efectivo anual</div>
-        <div class="result-val blue">${tipoEfectivo}%</div>
-      </div>
-      <div class="result-cell">
-        <div class="result-label">% óptimo restante</div>
-        <div class="result-val ${retOptimaPct > irpfActual ? 'amber' : 'green'}">${retOptimaPct}%</div>
-      </div>
-      <div class="result-cell">
-        <div class="result-label">IRPF retenido</div>
-        <div class="result-val">${fmt(irpfAcum)} €</div>
-      </div>
-      <div class="result-cell">
-        <div class="result-label">IRPF pendiente</div>
-        <div class="result-val">${fmt(cuotaRestante)} €</div>
-      </div>
-      <div class="result-cell full">
-        <div class="result-label">Resultado estimado si sigues al ${irpfActual}%</div>
-        <div class="result-val ${Math.abs(saldoSiSigues) < 50 ? 'green' : (saldoSiSigues > 0 ? 'green' : 'red')}" style="font-size:22px">
-          ${saldoSiSigues >= 0 ? '✅ A devolver ' : '⚠️ A pagar '}${fmt(Math.abs(saldoSiSigues))} €
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em">${saldoLabel} (estimado)</div>
+          <div style="font-size:28px;font-family:var(--mono);color:${saldoColor};line-height:1.1">${fmt(saldoPos)} €</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px">Si sigues al ${irpfActual}% — ${ccaaLabel} 2026</div>
         </div>
+        <div style="font-size:10px;color:${estadoColor};font-family:var(--mono);border:1px solid ${estadoColor};border-radius:3px;padding:3px 6px;white-space:nowrap;margin-top:4px">${estadoLabel}</div>
       </div>
-    </div>
-
-    <div class="card" style="background:var(--${retOptimaPct > irpfActual + 1 ? 'amber' : 'blue'}-dim;border-color:var(--${retOptimaPct > irpfActual + 1 ? 'amber' : 'blue'})">
-      <div class="card-title"><div class="section-dot ${retOptimaPct > irpfActual + 1 ? 'amber' : ''}"></div>Recomendación</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.6">
-        ${retOptimaPct > irpfActual + 1
-          ? `Tu retención actual <strong style="color:var(--text)">${irpfActual}%</strong> es insuficiente. Solicita a la empresa subir a <strong style="color:var(--amber2)">${retOptimaPct}%</strong> para los ${mesesRestantes} meses restantes y evitar pagar en la declaración.`
-          : retOptimaPct < irpfActual - 1
-          ? `Tu retención actual <strong style="color:var(--text)">${irpfActual}%</strong> es superior a lo necesario. Podrías bajarla a <strong style="color:var(--green)">${retOptimaPct}%</strong> y cobrar más neto cada mes.`
-          : `Tu retención actual <strong style="color:var(--text)">${irpfActual}%</strong> está bien calibrada. El resultado de la declaración debería ser próximo a cero.`
-        }
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px">
-        Estimación orientativa. Tramos IRPF 2026 estatal + ${ccaaLabel}. Solo considera rendimientos del trabajo. No incluye otras rentas, hipoteca, varios pagadores ni deducciones autonómicas específicas. No sustituye al cálculo oficial de la AEAT.
+      <div style="margin-top:12px;font-size:12px;color:var(--text2);line-height:1.65">${recomendacion}</div>
+      <div style="margin-top:12px;border-top:1px solid var(--border2);padding-top:8px">
+        <div style="cursor:pointer;display:flex;align-items:center;font-size:11px;color:var(--text3);font-family:var(--mono)" onclick="toggleSimDesglose()">
+          <span>Ver desglose fiscal completo</span>
+          <span id="sim-desglose-arrow" style="margin-left:auto;font-size:10px">▼</span>
+        </div>
+        <div id="sim-desglose-wrap" style="display:none;margin-top:10px">
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px">Proyección anual — ${ccaaLabel} 2026</div>
+          <div class="nomina-wrap">
+            <div class="nomina-row"><span class="nomina-concept">Bruto anual estimado <span onclick="mostrarInfoTooltip('Bruto anual estimado')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(brutoAnualEst)} €</span></div>
+            <div class="nomina-row"><span class="nomina-concept">SS estimada anual <span onclick="mostrarInfoTooltip('SS estimada anual')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(ssAnual)} €</span></div>
+            <div class="nomina-row"><span class="nomina-concept">Gastos deducibles <span onclick="mostrarInfoTooltip('Gastos deducibles')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(gastosDed)} €</span></div>
+            <div class="nomina-row"><span class="nomina-concept">Reducción rto. trabajo${reduccionMov > 0 ? ' + movilidad' : ''} <span onclick="mostrarInfoTooltip('Reducción rto. trabajo')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">-${fmt(reducRto)} €</span></div>
+            ${filaConj}${filaPension}
+            <div class="nomina-row"><span class="nomina-concept">Mínimo personal + familiar <span onclick="mostrarInfoTooltip('Mínimo personal + familiar')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(minTotal)} €</span></div>
+            ${filaHijos3}${filaAsc}${filaAsc75}
+            <div class="nomina-row subtotal"><span class="nomina-concept">Base liquidable <span onclick="mostrarInfoTooltip('Base liquidable')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(baseLiquidable)} €</span></div>
+            <div class="nomina-row"><span class="nomina-concept">Cuota estatal <span onclick="mostrarInfoTooltip('Cuota estatal')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaEstNeta)} €</span></div>
+            <div class="nomina-row"><span class="nomina-concept">Cuota autonómica (${ccaaLabel}) <span onclick="mostrarInfoTooltip('Cuota autonómica')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaAutNeta)} €</span></div>
+            <div class="nomina-row subtotal"><span class="nomina-concept">Cuota IRPF total estimada <span onclick="mostrarInfoTooltip('Cuota IRPF total estimada')" style="cursor:pointer;color:var(--text3);font-size:10px">ℹ️</span></span><span class="nomina-amount">${fmt(cuotaTotal)} €</span></div>
+          </div>
+          <div class="result-grid" style="margin-top:10px">
+            <div class="result-cell">
+              <div class="result-label">Tipo efectivo anual</div>
+              <div class="result-val blue">${tipoEfectivo}%</div>
+            </div>
+            <div class="result-cell">
+              <div class="result-label">% óptimo restante</div>
+              <div class="result-val ${retOptimaPct > irpfActual ? 'amber' : 'green'}">${retOptimaPct}%</div>
+            </div>
+            <div class="result-cell">
+              <div class="result-label">IRPF retenido</div>
+              <div class="result-val">${fmt(irpfAcum)} €</div>
+            </div>
+            <div class="result-cell">
+              <div class="result-label">IRPF pendiente</div>
+              <div class="result-val">${fmt(cuotaRestante)} €</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:10px;line-height:1.6">
+            Estimación orientativa. Tramos IRPF 2026 estatal + ${ccaaLabel}. Solo considera rendimientos del trabajo. No incluye otras rentas, hipoteca, varios pagadores ni deducciones autonómicas específicas.
+          </div>
+        </div>
       </div>
     </div>
   `;
 }
 
+function toggleSimDesglose() {
+  const wrap  = document.getElementById('sim-desglose-wrap');
+  const arrow = document.getElementById('sim-desglose-arrow');
+  if (!wrap) return;
+  const open = wrap.style.display === 'none';
+  wrap.style.display = open ? 'block' : 'none';
+  if (arrow) arrow.textContent = open ? '▲' : '▼';
+}
+
+function renderSimHero() {
+  const el = document.getElementById('sim-hero-content');
+  if (!el) return;
+  const pd  = window.profileData || {};
+  const fp  = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
+  const year = new Date().getFullYear();
+  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
+  const fmt = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+
+  const histYear = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
+  const mesesAuditados = Object.keys(histYear).filter(function(m) {
+    const e = histYear[m]; return e && (e.brutoAcum != null || e.irpfAcum != null);
+  }).length;
+
+  const irpfConfig = fp.irpf != null ? parseFloat(fp.irpf) : null;
+  const tipoEfReal = lastEntry && lastEntry.tipoEfectivo != null ? lastEntry.tipoEfectivo : null;
+
+  if (irpfConfig == null && mesesAuditados === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);line-height:1.7">Sin datos fiscales configurados.<br>Configura tu % IRPF en el Perfil. Cuando audites una nómina con acumulados, PilotPay rellenará esta sección.</div>';
+    return;
+  }
+
+  if (irpfConfig != null && mesesAuditados === 0) {
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:10px;color:var(--text3);font-family:var(--mono);border:1px solid var(--border2);border-radius:3px;padding:2px 6px">Sin histórico</span>
+        <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${year}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">IRPF configurado</div>
+          <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig}%</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Tipo efectivo real</div>
+          <div style="font-size:20px;font-family:var(--mono);color:var(--text3)">—</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.6;border-top:1px solid var(--border2);padding-top:8px">
+        Sin histórico fiscal auditado todavía. Cuando audites una nómina con acumulados IRPF, PilotPay rellenará esta sección.
+      </div>`;
+    return;
+  }
+
+  let estadoLabel = 'Sin datos', estadoColor = 'var(--text3)';
+  if (tipoEfReal != null && irpfConfig != null) {
+    const delta = tipoEfReal - irpfConfig;
+    if (Math.abs(delta) < 1)  { estadoLabel = 'Alineado'; estadoColor = 'var(--green)'; }
+    else if (delta < 0)       { estadoLabel = 'Déficit';  estadoColor = 'var(--amber)'; }
+    else                      { estadoLabel = 'Exceso';   estadoColor = 'var(--blue2)'; }
+  }
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span style="font-size:10px;color:${estadoColor};font-family:var(--mono);border:1px solid ${estadoColor};border-radius:3px;padding:2px 6px">${estadoLabel}</span>
+      <span style="font-size:10px;color:var(--text3);font-family:var(--mono)">${year}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">IRPF configurado</div>
+        <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig}%</div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Tipo efectivo real</div>
+        <div style="font-size:20px;font-family:var(--mono);color:var(--blue2)">${tipoEfReal != null ? tipoEfReal + '%' : '—'}</div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Bruto auditado</div>
+        <div style="font-size:14px;font-family:var(--mono);color:var(--text2)">${lastEntry ? fmt(lastEntry.brutoAcum) + ' €' : '—'}</div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Meses auditados</div>
+        <div style="font-size:14px;font-family:var(--mono);color:var(--text2)">${mesesAuditados} / ${new Date().getMonth() + 1}</div>
+      </div>
+    </div>`;
+}
+
+
+function renderSimHistTimeline() {
+  const el      = document.getElementById('sim-hist-timeline');
+  const interpEl = document.getElementById('sim-hist-interpretation');
+  if (!el) return;
+  const pd   = window.profileData || {};
+  const fp   = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
+  const year = new Date().getFullYear();
+  const MESES_S = ['E','F','M','A','M','J','J','A','S','O','N','D'];
+  const histYear  = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
+  const mesActual = new Date().getMonth() + 1;
+
+  let html = '<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">';
+  for (let m = 1; m <= 12; m++) {
+    const e       = histYear[m];
+    const hasData = e && (e.brutoAcum != null || e.irpfAcum != null);
+    const isPast  = m <= mesActual;
+    const dotColor = hasData ? 'var(--blue2)' : (isPast ? 'var(--border)' : 'var(--border2)');
+    html += `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <span style="font-size:${hasData ? '13' : '11'}px;color:${dotColor};line-height:1">${hasData ? '●' : '○'}</span>
+      <span style="font-size:9px;color:${m === mesActual ? 'var(--text2)' : 'var(--text3)'};font-family:var(--mono)">${MESES_S[m-1]}</span>
+    </div>`;
+  }
+  html += '</div>';
+
+  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
+  if (lastEntry) {
+    const fmt = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+    html += `<div style="font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.6">
+      Último registro — Bruto acum.&nbsp;<span style="color:var(--text2)">${fmt(lastEntry.brutoAcum)} €</span>&nbsp;·&nbsp;IRPF acum.&nbsp;<span style="color:var(--text2)">${fmt(lastEntry.irpfAcum)} €</span>
+    </div>`;
+  } else {
+    html += `<div style="font-size:11px;font-family:var(--mono);color:var(--text3)">Sin registros auditados este año.</div>`;
+  }
+  el.innerHTML = html;
+
+  if (interpEl) {
+    const interp = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getInterpretation(pd, year, fp.irpf) : null;
+    interpEl.innerHTML = interp
+      ? `<div style="font-size:12px;color:var(--text2);line-height:1.55;margin-top:8px;border-top:1px solid var(--border2);padding-top:8px">${interp}</div>`
+      : '';
+  }
+}
+
+function _updateProfileDiffIndicators() {
+  const pd = window.profileData || {};
+  const fp = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
+
+  function _ind(indicId, inputId, profileVal, labelFn) {
+    const indEl = document.getElementById(indicId);
+    const inpEl = document.getElementById(inputId);
+    if (!indEl || !inpEl) return;
+    if (profileVal == null || profileVal === '') { indEl.style.display = 'none'; return; }
+    const cur  = String(inpEl.value || '');
+    const prof = String(profileVal);
+    if (cur !== prof) {
+      indEl.textContent = '(perfil: ' + (labelFn ? labelFn(prof) : prof) + ')';
+      indEl.style.display = 'inline';
+    } else {
+      indEl.style.display = 'none';
+    }
+  }
+
+  const CCAA_L  = { mad:'Madrid', can:'Canarias', and:'Andalucía', val:'C. Valenciana' };
+  const CIVIL_L = { soltero:'Soltero/a', casado_sep:'Casado sep.', casado_conj:'Casado conj.' };
+
+  var profileCivil = fp.estadoCivil;
+  if (profileCivil === 'casado') profileCivil = 'casado_sep';
+
+  _ind('sim-pi-ccaa',      'sim-ccaa',      fp.ccaa,                                             function(v) { return CCAA_L[v]  || v; });
+  _ind('sim-pi-civil',     'sim-civil',     profileCivil,                                        function(v) { return CIVIL_L[v] || v; });
+  _ind('sim-pi-hijos',     'sim-hijos',     fp.hijos     != null ? String(fp.hijos)     : null,  null);
+  _ind('sim-pi-discap',    'sim-discap',    fp.discapacidad != null ? String(fp.discapacidad) : null, null);
+  _ind('sim-pi-residencia','sim-residencia', fp.residencia,                                       function(v) { return v === 'si' ? 'Sí' : 'No'; });
+}
 function simRecalc() {
   saveSimulator();
   const inp = recogerInputsSimulador();
   renderSimResultado(inp, computarIRPF(inp));
+  _updateProfileDiffIndicators();
 }
 
 // ── RESET BAJA ──
@@ -10553,6 +10731,8 @@ function guardarHistorico() {
   }
   if (profileData && currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
   actualizarSimuladorDesdeHistorico();
+  renderSimHistTimeline();
+  renderSimHero();
   const statusEl = document.getElementById('sim-hist-save-status');
   if (statusEl) { statusEl.textContent = '✓ Guardado'; statusEl.style.color = 'var(--green)'; }
   setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 2000);
