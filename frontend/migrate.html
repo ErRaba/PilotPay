@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PilotPay — Migración de datos</title>
+  <style>
+    :root {
+      --bg: #0f1117; --card: #161b26; --border: #2a2f3d;
+      --text: #e8eaf0; --text2: #a0a8c0; --text3: #6070a0;
+      --blue: #4a90e2; --blue2: #6ab0ff; --blue-dim: rgba(74,144,226,.12);
+      --green: #3dd68c; --green-dim: rgba(61,214,140,.12);
+      --red: #e05c6a; --red-dim: rgba(224,92,106,.12);
+      --amber: #f0a040; --amber-dim: rgba(240,160,64,.10);
+      --mono: 'SF Mono','Fira Code','Consolas',monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px; line-height: 1.6; padding: 24px;
+      max-width: 760px; margin: 0 auto;
+    }
+    h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+    h2 { font-size: 13px; font-weight: 600; color: var(--text2); margin: 24px 0 10px; text-transform: uppercase; letter-spacing: .06em; }
+    .origin-badge {
+      display: inline-block; font-family: var(--mono); font-size: 11px;
+      padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
+    }
+    .origin-local  { background: var(--blue-dim);  color: var(--blue2); border: 1px solid var(--blue); }
+    .origin-remote { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 16px;
+    }
+    .key-list { list-style: none; }
+    .key-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .key-list li:last-child { border-bottom: none; }
+    .key-name { font-family: var(--mono); color: var(--blue2); flex: 1; word-break: break-all; }
+    .key-size { font-family: var(--mono); color: var(--text3); white-space: nowrap; font-size: 11px; }
+    .key-type { font-size: 10px; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+    .type-crit { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+    .type-ok   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+    .type-info { background: var(--blue-dim); color: var(--blue2); border: 1px solid var(--blue); }
+    .btn {
+      display: inline-block; padding: 9px 20px; border-radius: 7px; border: none;
+      cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-danger  { background: var(--red);  color: #fff; }
+    .btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .status {
+      margin-top: 14px; padding: 10px 14px; border-radius: 7px;
+      font-size: 12px; font-family: var(--mono); display: none;
+    }
+    .status.ok    { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); display: block; }
+    .status.error { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red);   display: block; }
+    .status.warn  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); display: block; }
+    textarea {
+      width: 100%; min-height: 160px; background: #0a0c14; color: var(--text);
+      border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px;
+      font-family: var(--mono); font-size: 11px; resize: vertical; margin-top: 10px;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 8px; padding: 28px;
+      text-align: center; color: var(--text3); cursor: pointer; transition: border-color .2s;
+      margin-top: 10px;
+    }
+    .drop-zone.drag-over { border-color: var(--blue); color: var(--blue2); }
+    .summary-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
+    }
+    .summary-cell {
+      background: #0d1018; border: 1px solid var(--border); border-radius: 7px;
+      padding: 10px 14px;
+    }
+    .summary-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
+    .summary-value { font-size: 18px; font-weight: 700; font-family: var(--mono); color: var(--text); margin-top: 2px; }
+    .warn-box {
+      background: var(--amber-dim); border: 1px solid var(--amber);
+      border-radius: 7px; padding: 10px 14px; font-size: 12px; color: var(--amber);
+      margin-bottom: 14px; line-height: 1.6;
+    }
+    input[type="file"] { display: none; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .section-note { font-size: 12px; color: var(--text3); margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<h1>
+  PilotPay — Migración de datos
+  <span id="origin-badge" class="origin-badge"></span>
+</h1>
+<p class="section-note" id="origin-url" style="margin-top:4px;margin-bottom:20px;font-family:var(--mono);font-size:11px"></p>
+
+<div id="section-scan">
+  <h2>Claves detectadas en este dispositivo</h2>
+  <div class="card">
+    <ul class="key-list" id="key-list-el">
+      <li style="color:var(--text3);font-size:12px">Escaneando localStorage…</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ── EXPORT ── -->
+<div id="section-export">
+  <h2>Exportar datos</h2>
+  <div class="card">
+    <p style="font-size:13px;color:var(--text2)">
+      Genera un archivo JSON con todas las claves <code style="font-family:var(--mono);color:var(--blue2)">pilotpay*</code> del
+      localStorage de este origen. Descárgalo y úsalo para importar en otro origen.
+    </p>
+    <div class="summary-grid" id="export-summary"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doExport()">Exportar a JSON</button>
+      <button class="btn btn-ghost" onclick="doPreview()">Vista previa en pantalla</button>
+    </div>
+    <div id="export-status" class="status"></div>
+    <textarea id="export-preview" style="display:none" readonly></textarea>
+  </div>
+</div>
+
+<!-- ── IMPORT ── -->
+<div id="section-import">
+  <h2>Importar datos</h2>
+  <div class="card">
+    <div class="warn-box">
+      ⚠️ Antes de importar se creará un backup automático del localStorage actual en la clave
+      <code style="font-family:var(--mono)">pilotpay_migration_backup_&lt;timestamp&gt;</code>.<br>
+      Solo se escriben claves con prefijo <code style="font-family:var(--mono)">pilotpay</code>
+      que superen la validación de estructura. Las claves que ya existen en el destino
+      <strong>no se sobrescriben</strong> salvo confirmación explícita.
+    </div>
+
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      Arrastra el JSON aquí o haz clic para seleccionar archivo
+    </div>
+    <input type="file" id="file-input" accept=".json,application/json">
+
+    <div id="import-preview" style="display:none;margin-top:16px">
+      <div class="summary-grid" id="import-summary"></div>
+      <div id="import-key-list-wrap" style="margin-top:12px">
+        <ul class="key-list" id="import-key-list"></ul>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-import-confirm" onclick="doImport(false)">Importar (preservar existentes)</button>
+        <button class="btn btn-danger"  id="btn-import-overwrite" onclick="confirmOverwrite()">Importar (sobrescribir todo)</button>
+        <button class="btn btn-ghost"   onclick="resetImport()">Cancelar</button>
+      </div>
+    </div>
+    <div id="import-status" class="status"></div>
+  </div>
+</div>
+
+<!-- ── PLAN MIGRACIÓN ── -->
+<hr>
+<h2>Estado de migración a Firebase</h2>
+<div class="card">
+  <ul class="key-list">
+    <li>
+      <span class="key-type type-ok">EN FIREBASE</span>
+      <span class="key-name">pilotpay_v2_${user}</span>
+      <span class="key-size">Perfil completo (REAL_FIELDS + historicoFiscal)</span>
+    </li>
+    <li>
+      <span class="key-type type-ok">EN FIREBASE</span>
+      <span class="key-name">pilotpay/permisos</span>
+      <span class="key-size">Permisos admin — caché en pilotpay_perms_cache</span>
+    </li>
+    <li>
+      <span class="key-type type-crit">SOLO LOCAL</span>
+      <span class="key-name">pilotpay:${user}:audit_history_v1</span>
+      <span class="key-size">Historial de auditorías — pendiente sync Firebase</span>
+    </li>
+    <li>
+      <span class="key-type type-crit">SOLO LOCAL</span>
+      <span class="key-name">pilotpay:${user}:monthly_v1</span>
+      <span class="key-size">Expedientes mensuales — pendiente sync Firebase</span>
+    </li>
+    <li>
+      <span class="key-type type-info">LOCAL/DISPOSITIVO</span>
+      <span class="key-name">pilotpay_apikey · pilotpay_device_id · pp_ui_mode_v1</span>
+      <span class="key-size">No user-scoped o secreto de dispositivo — no migrar</span>
+    </li>
+  </ul>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONSTANTES
+// ════════════════════════════════════════════════════════
+
+var TOOL_VERSION = '1.0';
+var EXPORT_FORMAT_VERSION = 1;
+
+// Claves que NO deben exportarse/importarse (device-specific o secretos)
+var EXCLUDE_KEYS = [
+  'pilotpay_apikey',
+  'pilotpay_device_id',
+  'pp_ui_mode_v1',
+];
+
+// Prefijo de backup temporal
+var BACKUP_PREFIX = 'pilotpay_migration_backup_';
+
+// Clasificación de claves para UI
+function classifyKey(key) {
+  if (/^pilotpay:.*:audit_history_v1$/.test(key)) return { label: 'AUDITORÍAS', type: 'type-crit' };
+  if (/^pilotpay:.*:monthly_v1$/.test(key))        return { label: 'MENSUAL', type: 'type-crit' };
+  if (/^pilotpay_v2_/.test(key))                    return { label: 'PERFIL', type: 'type-ok' };
+  if (/^pilotpay_perms/.test(key))                  return { label: 'PERMISOS', type: 'type-ok' };
+  if (/^pilotpay:.*:offline_queue$/.test(key))      return { label: 'COLA', type: 'type-info' };
+  if (/^pilotpay_migration_backup_/.test(key))      return { label: 'BACKUP', type: 'type-info' };
+  if (/^pilotpay_theme_/.test(key))                 return { label: 'TEMA', type: 'type-info' };
+  return { label: 'OTRO', type: 'type-info' };
+}
+
+// ════════════════════════════════════════════════════════
+// SCAN — detectar claves pilotpay* en localStorage actual
+// ════════════════════════════════════════════════════════
+
+function scanLocalStorage() {
+  var result = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (!k || !k.startsWith('pilotpay')) continue;
+    var raw = localStorage.getItem(k);
+    result.push({ key: k, size: raw ? raw.length : 0, raw: raw });
+  }
+  return result.sort(function(a, b) { return b.size - a.size; });
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  return (bytes / 1024).toFixed(1) + ' KB';
+}
+
+function renderKeyList(items, elId, excludeList) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  excludeList = excludeList || [];
+  var filtered = items.filter(function(i) { return !excludeList.includes(i.key); });
+  if (!filtered.length) {
+    el.innerHTML = '<li style="color:var(--text3);font-size:12px;padding:8px 0">Sin datos pilotpay* en este origen.</li>';
+    return;
+  }
+  el.innerHTML = filtered.map(function(item) {
+    var cls = classifyKey(item.key);
+    return '<li>' +
+      '<span class="key-type ' + cls.type + '">' + cls.label + '</span>' +
+      '<span class="key-name">' + item.key + '</span>' +
+      '<span class="key-size">' + fmtSize(item.size) + '</span>' +
+      '</li>';
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════════════════
+
+function buildExportPayload() {
+  var items = scanLocalStorage().filter(function(i) {
+    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
+  });
+  var data = {};
+  items.forEach(function(i) { data[i.key] = i.raw; }); // raw strings, preserva exactamente
+  return {
+    _meta: {
+      version: EXPORT_FORMAT_VERSION,
+      tool: 'PilotPay migrate v' + TOOL_VERSION,
+      exportedAt: new Date().toISOString(),
+      origin: location.origin,
+      keysCount: items.length,
+      totalBytes: items.reduce(function(s, i) { return s + i.size; }, 0),
+    },
+    data: data,
+  };
+}
+
+function doExport() {
+  try {
+    var payload = buildExportPayload();
+    if (!payload.data || Object.keys(payload.data).length === 0) {
+      setStatus('export-status', 'warn', 'No hay datos pilotpay* exportables en este origen.');
+      return;
+    }
+    var json = JSON.stringify(payload, null, 2);
+    var ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    var blob = new Blob([json], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pilotpay_export_' + ts + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('export-status', 'ok',
+      'Exportadas ' + Object.keys(payload.data).length + ' claves (' +
+      fmtSize(payload._meta.totalBytes) + '). Guarda el archivo y ábrelo en el otro origen.');
+  } catch(e) {
+    setStatus('export-status', 'error', 'Error al exportar: ' + e.message);
+  }
+}
+
+function doPreview() {
+  try {
+    var payload = buildExportPayload();
+    var ta = document.getElementById('export-preview');
+    ta.style.display = 'block';
+    ta.value = JSON.stringify(payload, null, 2);
+    setStatus('export-status', 'ok', 'Vista previa generada — copia el contenido manualmente si necesitas.');
+  } catch(e) {
+    setStatus('export-status', 'error', 'Error: ' + e.message);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// VALIDACIÓN — verificar estructura antes de importar
+// ════════════════════════════════════════════════════════
+
+var _importPayload = null; // payload cargado pendiente de confirmar
+
+function validatePayload(payload) {
+  var errors = [];
+  if (!payload || typeof payload !== 'object') { errors.push('El archivo no es un objeto JSON válido.'); return errors; }
+  if (!payload._meta || payload._meta.version !== EXPORT_FORMAT_VERSION) {
+    errors.push('Formato no reconocido (falta _meta.version o versión incorrecta).');
+  }
+  if (!payload.data || typeof payload.data !== 'object') {
+    errors.push('Falta campo data.');
+    return errors;
+  }
+  var keys = Object.keys(payload.data);
+  keys.forEach(function(k) {
+    // Solo aceptar claves con prefijo pilotpay
+    if (!k.startsWith('pilotpay')) {
+      errors.push('Clave no permitida (prefijo incorrecto): ' + k);
+      return;
+    }
+    // No permitir claves excluidas
+    if (EXCLUDE_KEYS.includes(k)) {
+      errors.push('Clave excluida en importación: ' + k);
+      return;
+    }
+    // Intentar parsear el valor para validar que es JSON válido
+    var raw = payload.data[k];
+    if (raw === null || raw === undefined) {
+      errors.push('Valor null/undefined para: ' + k);
+      return;
+    }
+    try {
+      var parsed = JSON.parse(raw);
+      // Validaciones de estructura por tipo de clave
+      if (/audit_history_v1/.test(k) && !Array.isArray(parsed)) {
+        errors.push(k + ': se espera array, encontrado ' + typeof parsed);
+      }
+      if (/monthly_v1/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+        errors.push(k + ': se espera objeto, encontrado ' + typeof parsed);
+      }
+      if (/pilotpay_v2_/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+        errors.push(k + ': se espera objeto, encontrado ' + typeof parsed);
+      }
+    } catch(e) {
+      errors.push(k + ': JSON inválido — ' + e.message);
+    }
+  });
+  return errors;
+}
+
+// ════════════════════════════════════════════════════════
+// BACKUP — guardar snapshot del localStorage actual
+// ════════════════════════════════════════════════════════
+
+function createBackup() {
+  try {
+    var ts = Date.now();
+    var backup = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.startsWith('pilotpay') && !k.startsWith(BACKUP_PREFIX)) {
+        backup[k] = localStorage.getItem(k);
+      }
+    }
+    var key = BACKUP_PREFIX + ts;
+    localStorage.setItem(key, JSON.stringify({ ts: ts, data: backup }));
+    return key;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// IMPORT
+// ════════════════════════════════════════════════════════
+
+function loadFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var payload = JSON.parse(e.target.result);
+      var errors = validatePayload(payload);
+      if (errors.length) {
+        setStatus('import-status', 'error', 'Errores de validación:\n• ' + errors.join('\n• '));
+        return;
+      }
+      _importPayload = payload;
+      renderImportPreview(payload);
+    } catch(ex) {
+      setStatus('import-status', 'error', 'No se pudo parsear el archivo: ' + ex.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderImportPreview(payload) {
+  var keys = Object.keys(payload.data);
+  var existing = keys.filter(function(k) { return localStorage.getItem(k) !== null; });
+  var fresh    = keys.filter(function(k) { return localStorage.getItem(k) === null; });
+
+  // Summary grid
+  var sg = document.getElementById('import-summary');
+  sg.innerHTML =
+    '<div class="summary-cell"><div class="summary-label">Claves en archivo</div><div class="summary-value">' + keys.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Ya existen aquí</div><div class="summary-value" style="color:var(--amber)">' + existing.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Nuevas</div><div class="summary-value" style="color:var(--green)">' + fresh.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Origen exportado</div><div class="summary-value" style="font-size:11px;margin-top:4px;color:var(--text2)">' + (payload._meta.origin || '?') + '</div></div>';
+
+  // Key list
+  var el = document.getElementById('import-key-list');
+  el.innerHTML = keys.map(function(k) {
+    var cls = classifyKey(k);
+    var existsMark = localStorage.getItem(k) !== null
+      ? '<span style="font-size:10px;color:var(--amber);margin-left:6px">ya existe</span>' : '';
+    return '<li>' +
+      '<span class="key-type ' + cls.type + '">' + cls.label + '</span>' +
+      '<span class="key-name">' + k + existsMark + '</span>' +
+      '<span class="key-size">' + fmtSize((payload.data[k] || '').length) + '</span>' +
+      '</li>';
+  }).join('');
+
+  document.getElementById('import-preview').style.display = 'block';
+  setStatus('import-status', 'ok',
+    'Archivo validado. ' + keys.length + ' claves listas para importar.' +
+    (existing.length ? ' ' + existing.length + ' claves ya existen — se preservarán salvo que uses "sobrescribir todo".' : ''));
+}
+
+function doImport(overwrite) {
+  if (!_importPayload) return;
+  var errors = validatePayload(_importPayload);
+  if (errors.length) {
+    setStatus('import-status', 'error', 'Validación fallida: ' + errors.join('; '));
+    return;
+  }
+
+  // Crear backup ANTES de escribir
+  var backupKey = createBackup();
+  if (!backupKey) {
+    setStatus('import-status', 'error', 'No se pudo crear backup. Importación cancelada por seguridad.');
+    return;
+  }
+
+  var written = 0, skipped = 0, failed = 0;
+  var keys = Object.keys(_importPayload.data);
+  keys.forEach(function(k) {
+    if (EXCLUDE_KEYS.includes(k)) { skipped++; return; }
+    if (!overwrite && localStorage.getItem(k) !== null) { skipped++; return; }
+    try {
+      localStorage.setItem(k, _importPayload.data[k]);
+      written++;
+    } catch(e) {
+      failed++;
+    }
+  });
+
+  var msg = 'Importación completada. Escritas: ' + written + ' · Omitidas: ' + skipped + ' · Fallidas: ' + failed + '.\nBackup guardado en: ' + backupKey;
+  if (failed > 0) {
+    setStatus('import-status', 'error', msg + '\nAlgunas claves no pudieron escribirse (¿localStorage lleno?).');
+  } else {
+    setStatus('import-status', 'ok', msg);
+  }
+
+  // Refrescar lista de claves
+  renderCurrentKeys();
+}
+
+function confirmOverwrite() {
+  if (!_importPayload) return;
+  var keys = Object.keys(_importPayload.data);
+  var existing = keys.filter(function(k) { return localStorage.getItem(k) !== null; });
+  if (existing.length === 0) { doImport(true); return; }
+  var ok = confirm(
+    '⚠️ Se sobrescribirán ' + existing.length + ' claves que ya existen en este origen:\n\n' +
+    existing.slice(0, 8).join('\n') + (existing.length > 8 ? '\n…y ' + (existing.length - 8) + ' más' : '') +
+    '\n\nSe creará un backup antes. ¿Continuar?'
+  );
+  if (ok) doImport(true);
+}
+
+function resetImport() {
+  _importPayload = null;
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('import-status').className = 'status';
+  document.getElementById('import-status').textContent = '';
+}
+
+// ════════════════════════════════════════════════════════
+// HELPERS UI
+// ════════════════════════════════════════════════════════
+
+function setStatus(id, type, msg) {
+  var el = document.getElementById(id);
+  el.className = 'status ' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.whiteSpace = 'pre-wrap';
+}
+
+function renderCurrentKeys() {
+  var items = scanLocalStorage();
+  renderKeyList(items, 'key-list-el', EXCLUDE_KEYS.concat(
+    items.filter(function(i) { return i.key.startsWith(BACKUP_PREFIX); }).map(function(i) { return i.key; })
+  ));
+
+  // Export summary
+  var exportable = items.filter(function(i) {
+    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
+  });
+  var totalBytes = exportable.reduce(function(s, i) { return s + i.size; }, 0);
+  var sg = document.getElementById('export-summary');
+  if (sg) sg.innerHTML =
+    '<div class="summary-cell"><div class="summary-label">Claves exportables</div><div class="summary-value">' + exportable.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Tamaño total</div><div class="summary-value">' + fmtSize(totalBytes) + '</div></div>';
+}
+
+// ════════════════════════════════════════════════════════
+// DRAG & DROP + FILE INPUT
+// ════════════════════════════════════════════════════════
+
+var dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', function() {
+  dropZone.classList.remove('drag-over');
+});
+dropZone.addEventListener('drop', function(e) {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  var file = e.dataTransfer.files[0];
+  if (file) loadFile(file);
+});
+document.getElementById('file-input').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (file) loadFile(file);
+});
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+
+(function init() {
+  var origin = location.origin;
+  var badge = document.getElementById('origin-badge');
+  var urlEl = document.getElementById('origin-url');
+  urlEl.textContent = location.href;
+
+  var isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(origin);
+  badge.textContent = isLocal ? 'LOCAL' : 'REMOTO';
+  badge.className = 'origin-badge ' + (isLocal ? 'origin-local' : 'origin-remote');
+
+  renderCurrentKeys();
+})();
+</script>
+</body>
+</html>
