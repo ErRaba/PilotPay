@@ -4234,6 +4234,8 @@ Complemento de Base MAD: 1500"></textarea>
 <script src="js/pilotPayStore.js"></script>
 <script src="js/userProfile.js"></script>
 <script src="js/userAdmin.js"></script>
+<script src="js/financialProfile.js"></script>
+<script src="js/fiscalHistory.js"></script>
 <script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
 
@@ -5095,32 +5097,36 @@ async function flushOfflineQueue() {
 async function saveUserData(user) {
   if (!user || !profileData) return;
 
-  // Snapshot completo del perfil
+  // Snapshot filtrado: REAL_FIELDS + historicoFiscal — excluye sim_* y deprecated
   const data = { ...profileData };
+  const snap = Object.assign(
+    FinancialProfile.toFirebaseSnapshot(data),
+    FiscalHistory.toFirebaseSnapshot(data)
+  );
 
   // 1) Siempre guardar en localStorage (caché inmediata, funciona offline)
-  try { localStorage.setItem(`pilotpay_v2_${user}`, JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(`pilotpay_v2_${user}`, JSON.stringify(snap)); } catch(e) {}
 
   const path = `pilotpay/perfiles/${user}`;
 
   if (_online) {
     try {
-      await fbUpdate(path, data);
+      await fbUpdate(path, snap);
       // Actualizar nodo de usuario — solo campos user-managed.
       // funcion y base son admin-managed: solo via UserAdmin.atomicRoleChange().
       const userFields = {
-        name: data.name, apellidos: data.apellidos, alias: data.alias,
-        irpf: data.irpf, theme: data.theme,
-        nivel: data.nivelActual != null ? data.nivelActual : data.nivel, // advisory, user-managed
+        name: snap.name, apellidos: snap.apellidos, alias: snap.alias,
+        irpf: snap.irpf, theme: snap.theme,
+        nivel: snap.nivelActual != null ? snap.nivelActual : snap.nivel, // advisory, user-managed
       };
       await fbUpdate(`pilotpay/usuarios/${user}`, userFields);
       USERS[user] = { ...USERS[user], ...userFields };
     } catch(e) {
       // Sin conexión real — encolar
-      _enqueue(path, data);
+      _enqueue(path, snap);
     }
   } else {
-    _enqueue(path, data);
+    _enqueue(path, snap);
   }
 }
 
@@ -5300,7 +5306,9 @@ async function doLogin() {
     await loadUserData(u);
     // Normalizar profileData: aliases canónicos (nivelActual, fechaIngresoEmpresa, role),
     // normalización de base ('1.2' → 'MAD'), garantizar fechaOCC existe.
-    if (typeof UserProfile !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
+    if (typeof UserProfile        !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
+    if (typeof FinancialProfile   !== 'undefined') FinancialProfile.normalize(profileData);
+    if (typeof FiscalHistory      !== 'undefined') FiscalHistory.migrateFromLegacy(profileData);
     await loadPermsFromFirebase();
     btn.textContent = 'Entrar';
     btn.disabled = false;
@@ -9061,11 +9069,13 @@ function aplicarPropuestasInline() {
         alert('No se pudo detectar el mes de la nómina. Introduce el valor manualmente en el Simulador → Histórico.');
         return;
       }
-      if (!profileData.simHistorico) profileData.simHistorico = {};
-      if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
-      if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
-      if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
-      // Sincronizar simHistoricoData (variable local del simulador)
+      // Canónico: historicoFiscal — origen 'nomina_auditada'; merge con valor existente
+      FiscalHistory.record(profileData, new Date().getFullYear(), mesKey, {
+        brutoAcum: p.clave === 'acum_base_irpf' ? p.nuevo : null,
+        irpfAcum:  p.clave === 'acum_irpf'      ? p.nuevo : null,
+        origen:    'nomina_auditada',
+      });
+      // Mirror de sesión (para renderHistoricoHTML)
       if (typeof simHistoricoData !== 'undefined') {
         if (!simHistoricoData[mesKey]) simHistoricoData[mesKey] = {};
         if (p.clave === 'acum_base_irpf') simHistoricoData[mesKey].bruto = p.nuevo;
@@ -9133,11 +9143,13 @@ function aplicarPropuestas(propuestas) {
       const _mesNorm = p.mes ? (p.mes.charAt(0).toUpperCase() + p.mes.slice(1).toLowerCase()) : null;
       const mesKey = p.mesIdx || (_mesNorm ? (_MESES_IDX[_mesNorm] || null) : null);
       if (!mesKey) { console.warn('[aplicarPropuestas] mesKey no detectado:', p); return; }
-      if (!profileData.simHistorico) profileData.simHistorico = {};
-      if (!profileData.simHistorico[mesKey]) profileData.simHistorico[mesKey] = {};
-      if (p.clave === 'acum_base_irpf') profileData.simHistorico[mesKey].bruto = p.nuevo;
-      if (p.clave === 'acum_irpf')      profileData.simHistorico[mesKey].irpf  = p.nuevo;
-      // Sincronizar simHistoricoData local
+      // Canónico: historicoFiscal — origen 'nomina_auditada'; merge con valor existente
+      FiscalHistory.record(profileData, new Date().getFullYear(), mesKey, {
+        brutoAcum: p.clave === 'acum_base_irpf' ? p.nuevo : null,
+        irpfAcum:  p.clave === 'acum_irpf'      ? p.nuevo : null,
+        origen:    'nomina_auditada',
+      });
+      // Mirror de sesión (para renderHistoricoHTML)
       if (typeof simHistoricoData !== 'undefined') {
         if (!simHistoricoData[mesKey]) simHistoricoData[mesKey] = {};
         if (p.clave === 'acum_base_irpf') simHistoricoData[mesKey].bruto = p.nuevo;
@@ -9780,7 +9792,7 @@ function renderPerfil() {
   if (profileData.discapacidad) document.getElementById('prf-discapacidad').value   = profileData.discapacidad;
   if (profileData.residencia)   document.getElementById('prf-residencia').value     = profileData.residencia;
   const ccaaEl = document.getElementById('prf-ccaa');
-  if (ccaaEl) ccaaEl.value = profileData.ccaa || profileData.sim_ccaa || 'can';
+  if (ccaaEl) ccaaEl.value = profileData.ccaa || 'can';
 
   // Persistir defaults — evita falsas alertas en dashboard para campos no tocados aún
   let _defaultsNeedSave = false;
@@ -9789,7 +9801,7 @@ function renderPerfil() {
     profileData.estadoCivil = (_ecEl && _ecEl.value) || 'soltero';
     _defaultsNeedSave = true;
   }
-  if (!profileData.ccaa && !profileData.sim_ccaa) {
+  if (!profileData.ccaa) {
     profileData.ccaa = (ccaaEl && ccaaEl.value) || (getBaseCode(u.base) === 'MAD' ? 'mad' : 'can');
     _defaultsNeedSave = true;
   }
@@ -10052,16 +10064,17 @@ function loadSimulatorData() {
     const e = document.getElementById(id);
     if (e) e.value = val != null ? val : '';
   };
-  _sv('sim-mes',          profileData.sim_mes          || '');
-  _sv('sim-ccaa',         profileData.sim_ccaa         || 'can');
-  _sv('sim-civil',        profileData.sim_civil        || 'soltero');
-  _sv('sim-hijos',        profileData.sim_hijos        || '0');
-  _sv('sim-discap',       profileData.sim_discap       || '0');
-  _sv('sim-residencia',   profileData.sim_residencia   || '');
-  _sv('sim-hijos3',       profileData.sim_hijos3       || '0');
-  _sv('sim-ascendientes', profileData.sim_ascendientes || '0');
-  _sv('sim-asc75',        profileData.sim_asc75        || '0');
-  _sv('sim-pension',      profileData.sim_pension      || '0');
+  // Cargar desde configuración fiscal real — el simulador es un sandbox sobre el perfil
+  _sv('sim-mes',          profileData.sim_mes || '');
+  _sv('sim-ccaa',         profileData.ccaa || 'can');
+  _sv('sim-civil',        profileData.estadoCivil === 'casado' ? 'casado_sep' : (profileData.estadoCivil || 'soltero'));
+  _sv('sim-hijos',        profileData.hijos        || '0');
+  _sv('sim-discap',       profileData.discapacidad || '0');
+  _sv('sim-residencia',   profileData.residencia   || '');
+  _sv('sim-hijos3',       '0');  // campo avanzado: sin equivalente en perfil real
+  _sv('sim-ascendientes', '0');
+  _sv('sim-asc75',        '0');
+  _sv('sim-pension',      '0');
   _sv('sim-bruto-acum',  '');
   _sv('sim-irpf-acum',   '');
   _sv('sim-bruto-resto',  profileData.sim_brutoResto  || '');
@@ -10085,42 +10098,36 @@ function actualizarSimuladorDesdeHistorico() {
   const mesEl = document.getElementById('sim-mes');
   if (!mesEl) return;
 
-  // Si no hay mes seleccionado, usar el mes natural actual
   let mesActual = parseInt(mesEl.value) || 0;
   if (mesActual < 1) {
     mesActual = new Date().getMonth() + 1;
     mesEl.value = String(mesActual);
   }
 
-  const hist = profileData.simHistorico || {};
+  const year = new Date().getFullYear();
+  // Preferir historicoFiscal (canónico); fallback a simHistorico (legacy pre-migración)
+  const histFiscal = profileData.historicoFiscal && profileData.historicoFiscal[year];
+  const histLegacy = !histFiscal ? (profileData.simHistorico || null) : null;
 
-  // ── Bruto e IRPF acumulados ──
-  // Los valores en simHistorico son ACUMULADOS del año (no deltas mensuales).
-  // Se toma el último mes con datos reales <= mesActual.
+  // Los valores son ACUMULADOS YTD — se toma el último mes con datos <= mesActual
   let brutoAcum = 0, irpfAcum = 0;
   for (let m = mesActual; m >= 1; m--) {
-    const e = hist[m];
-    if (e && (parseFloat(e.bruto) > 0 || parseFloat(e.irpf) > 0)) {
-      brutoAcum = parseFloat(e.bruto) || 0;
-      irpfAcum  = parseFloat(e.irpf)  || 0;
-      break;
-    }
+    const e = histFiscal ? (histFiscal[m] || null) : (histLegacy ? (histLegacy[m] || null) : null);
+    if (!e) continue;
+    const b = histFiscal ? parseFloat(e.brutoAcum) : parseFloat(e.bruto);
+    const i = histFiscal ? parseFloat(e.irpfAcum)  : parseFloat(e.irpf);
+    if (b > 0 || i > 0) { brutoAcum = b || 0; irpfAcum = i || 0; break; }
   }
 
-  // ── Media mensual estimada para "bruto meses restantes" ──
-  // Fórmula: ultimo_acumulado / mes_de_ese_acumulado
-  // Equivale a "€/mes promedio desde enero hasta el último mes con datos".
-  // Ignora meses a 0 o vacíos; no divide entre 12 si faltan meses.
+  // Media mensual estimada = último_acumulado / mes_de_ese_acumulado
   let mediaEstimada = 0;
   for (let m = mesActual; m >= 1; m--) {
-    const e = hist[m];
-    if (e && parseFloat(e.bruto) > 0) {
-      mediaEstimada = Math.round((parseFloat(e.bruto) / m) * 100) / 100;
-      break;
-    }
+    const e = histFiscal ? (histFiscal[m] || null) : (histLegacy ? (histLegacy[m] || null) : null);
+    if (!e) continue;
+    const b = histFiscal ? parseFloat(e.brutoAcum) : parseFloat(e.bruto);
+    if (b > 0) { mediaEstimada = Math.round((b / m) * 100) / 100; break; }
   }
 
-  // ── Escribir en los inputs ──
   const brutoEl = document.getElementById('sim-bruto-acum');
   const irpfEl  = document.getElementById('sim-irpf-acum');
   const restoEl = document.getElementById('sim-bruto-resto');
@@ -10141,8 +10148,8 @@ function simSyncFromPerfil() {
   if (profileData.discapacidad) document.getElementById('sim-discap').value    = profileData.discapacidad;
   if (profileData.residencia)   document.getElementById('sim-residencia').value = profileData.residencia;
 
-  // CCAA — usar la del perfil si existe, sino la guardada en simulador, sino derivar de la base
-  const ccaaPerfil = profileData.ccaa || profileData.sim_ccaa;
+  // CCAA — usar la del perfil real (sim_ccaa ya no es fuente de verdad)
+  const ccaaPerfil = profileData.ccaa;
   if (ccaaPerfil) {
     document.getElementById('sim-ccaa').value = ccaaPerfil;
   } else {
@@ -10530,18 +10537,21 @@ function simHistoricoChanged() {
 }
 
 function guardarHistorico() {
-  const MESES_N = 12;
-  for (let i = 1; i <= MESES_N; i++) {
+  const year = new Date().getFullYear();
+  for (let i = 1; i <= 12; i++) {
     const bruto = parseFloat(document.getElementById(`simh-bruto-${i}`)?.value) || 0;
     const irpf  = parseFloat(document.getElementById(`simh-irpf-${i}`)?.value)  || 0;
-    if (bruto || irpf) simHistoricoData[i] = { bruto, irpf };
-    else delete simHistoricoData[i];
+    if (bruto || irpf) {
+      simHistoricoData[i] = { bruto, irpf };  // mirror de sesión para renderHistoricoHTML
+      FiscalHistory.record(profileData, year, i, { brutoAcum: bruto, irpfAcum: irpf, origen: 'manual' });
+    } else {
+      delete simHistoricoData[i];
+      if (profileData.historicoFiscal && profileData.historicoFiscal[year]) {
+        delete profileData.historicoFiscal[year][i];
+      }
+    }
   }
-  if (profileData) {
-    profileData.simHistorico = simHistoricoData;
-    if (currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
-  }
-  // Refrescar campos del simulador desde el histórico recién guardado
+  if (profileData && currentUser) { saveUserData(currentUser); updateOnlineIndicator(); }
   actualizarSimuladorDesdeHistorico();
   const statusEl = document.getElementById('sim-hist-save-status');
   if (statusEl) { statusEl.textContent = '✓ Guardado'; statusEl.style.color = 'var(--green)'; }
@@ -10549,8 +10559,22 @@ function guardarHistorico() {
 }
 
 function cargarHistorico() {
+  const year = new Date().getFullYear();
+
+  // Fuente canónica: historicoFiscal[year] — convertir a { bruto, irpf } para renderHistoricoHTML
+  if (profileData && profileData.historicoFiscal && profileData.historicoFiscal[year]) {
+    const yearData = profileData.historicoFiscal[year];
+    const out = {};
+    Object.keys(yearData).forEach(function(m) {
+      const e = yearData[m];
+      if (e) out[parseInt(m, 10)] = { bruto: e.brutoAcum, irpf: e.irpfAcum };
+    });
+    simHistoricoData = out;
+    return;
+  }
+
+  // Fallback legacy: simHistorico con migración de claves string → numeric
   const raw = profileData?.simHistorico || {};
-  // Migración silenciosa: claves string ('Marzo') → numéricas (3)
   const migrated = {};
   let didMigrate = false;
   Object.entries(raw).forEach(function([k, v]) {
@@ -11966,8 +11990,8 @@ window.PILOTPAY_BACKEND_READY = true;
     const hist    = loadAuditHistory();
     const baseNum = pd.base || u.base;
     const baseICAO = normalizeBaseToICAO(baseNum);
-    // CCAA: prioridad perfil > simulador > derivado de base
-    const ccaa = pd.ccaa || pd.sim_ccaa || (getBaseCode(baseNum) === 'MAD' ? 'mad' : 'can');
+    // CCAA: perfil real > derivado de base (sim_ccaa ya no contamina runtime)
+    const ccaa = pd.ccaa || (getBaseCode(baseNum) === 'MAD' ? 'mad' : 'can');
     // IRPF: prioridad perfil > USERS
     const irpf = pd.irpf != null ? pd.irpf : (u.irpf != null ? u.irpf : null);
 
@@ -12018,7 +12042,7 @@ window.PILOTPAY_BACKEND_READY = true;
     console.log('[Dashboard] profileData snapshot:', {
       name: pd.name || pd.fullName || u.name,
       nif: pd.nif,
-      ccaa: pd.ccaa, sim_ccaa: pd.sim_ccaa, ccaaDerived: derived.ccaa,
+      ccaa: pd.ccaa, ccaaDerived: derived.ccaa,
       irpf: pd.irpf, irpfUser: u.irpf, irpfDerived: derived.irpf,
       estadoCivil: pd.estadoCivil,
       baseNum: derived.baseNum, baseICAO,
