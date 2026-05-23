@@ -10463,7 +10463,9 @@ function renderSimHero() {
   auditedMonths.sort(function(a, b) { return a - b; });
 
   const fmt        = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
-  const irpfConfig = fp.irpf != null ? parseFloat(fp.irpf) : null;
+  const _u         = (window.USERS && window.currentUser) ? (window.USERS[window.currentUser] || {}) : {};
+  const _irpfRaw   = fp.irpf != null ? fp.irpf : (pd.irpf != null ? pd.irpf : (_u.irpf != null ? _u.irpf : (document.getElementById('sim-irpf-actual') ? document.getElementById('sim-irpf-actual').value : null)));
+  const irpfConfig = _irpfRaw != null && _irpfRaw !== '' ? parseFloat(_irpfRaw) : null;
   const tipoEfReal = lastEntry && lastEntry.tipoEfectivo != null ? lastEntry.tipoEfectivo : null;
 
   const coberturaLabel = mesesAuditados > 0
@@ -10484,7 +10486,7 @@ function renderSimHero() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div>
           <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">IRPF configurado</div>
-          <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig}%</div>
+          <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig != null ? irpfConfig + '%' : '—'}</div>
         </div>
         <div>
           <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Tipo efectivo real</div>
@@ -10520,7 +10522,7 @@ function renderSimHero() {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div>
         <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">IRPF configurado</div>
-        <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig}%</div>
+        <div style="font-size:20px;font-family:var(--mono);color:var(--text)">${irpfConfig != null ? irpfConfig + '%' : '—'}</div>
       </div>
       <div>
         <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Tipo efectivo real</div>
