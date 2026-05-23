@@ -5027,16 +5027,19 @@ const DEFAULT_USERS = {
            funcion:'CMD', nivel:3, base:'MAD', irpf:34.15, ingreso:'2024-07-01', admin: true },
 };
 
-// Load all users from Firebase
+// Load all users from Firebase — NUNCA escribe a Firebase si fbGet devuelve null.
+// null puede ser: error transitorio, token expirado, sin red, base vacía real.
+// En todos esos casos: cargar DEFAULT_USERS en memoria y salir sin escritura.
+// Para inicializar una base Firebase genuinamente vacía: llamar initializeFirebaseUsersOnce() de forma explícita.
 async function loadUsersFromFirebase() {
-  let fbUsers = await fbGet('pilotpay/usuarios');
+  const fbUsers = await fbGet('pilotpay/usuarios');
+  // fbGet ya captura cualquier error de red/auth y devuelve null — no se necesita try/catch adicional.
   if (!fbUsers) {
-    // Primera ejecución — crear solo ESH
-    await fbSet('pilotpay/usuarios', DEFAULT_USERS);
-    fbUsers = { ...DEFAULT_USERS };
+    console.warn('[PilotPay] loadUsersFromFirebase: Firebase devolvió null — posible error transitorio, token expirado o base vacía. Cargando DEFAULT_USERS en memoria SIN escritura a Firebase.');
+    USERS = { ...DEFAULT_USERS };
+    return;
   }
-  // Limpiar usuarios legacy hardcodeados que no deberían estar en Firebase
-  // (FLZ y cualquier otro que no sea ESH y no haya sido creado por el admin)
+  // Firebase devolvió datos válidos — limpiar usuarios legacy.
   const LEGACY_CODES = ['FLZ'];
   let cleaned = false;
   for (const code of LEGACY_CODES) {
@@ -5049,6 +5052,21 @@ async function loadUsersFromFirebase() {
   }
   if (cleaned) console.log('[PilotPay] Usuarios legacy eliminados de Firebase');
   USERS = fbUsers;
+}
+
+// Inicialización explícita — llamar SOLO cuando se sabe con certeza que la base está vacía.
+// Comprueba primero que Firebase no tiene ya usuarios (protección anti-sobrescritura).
+// Nunca llamar durante carga normal.
+async function initializeFirebaseUsersOnce() {
+  const current = await fbGet('pilotpay/usuarios');
+  if (current && Object.keys(current).length > 0) {
+    console.warn('[initializeFirebaseUsersOnce] Firebase ya tiene ' + Object.keys(current).length + ' usuarios — operación cancelada para evitar sobrescritura.');
+    return false;
+  }
+  await fbSet('pilotpay/usuarios', DEFAULT_USERS);
+  USERS = { ...DEFAULT_USERS };
+  console.log('[initializeFirebaseUsersOnce] Base vacía confirmada — DEFAULT_USERS escritos en Firebase.');
+  return true;
 }
 
 // ══════════════════════════════════════════════════════
@@ -5247,7 +5265,8 @@ async function loadPermsFromFirebase() {
 async function savePermsToFirebase() {
   try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
   if (_online) {
-    try { await fbSet('pilotpay/permisos', perms); return; } catch(e) {}
+    // fbUpdate (PATCH) — merge en lugar de PUT para no borrar permisos de otros usuarios.
+    try { await fbUpdate('pilotpay/permisos', perms); return; } catch(e) {}
   }
   _enqueue('pilotpay/permisos', perms);
 }
