@@ -337,14 +337,11 @@ function validatePayload(payload) {
   }
   var keys = Object.keys(payload.data);
   keys.forEach(function(k) {
+    // Claves excluidas: se omitirán en la importación — no es un error de validación.
+    if (EXCLUDE_KEYS.includes(k)) return;
     // Solo aceptar claves con prefijo pilotpay
     if (!k.startsWith('pilotpay')) {
       errors.push('Clave no permitida (prefijo incorrecto): ' + k);
-      return;
-    }
-    // No permitir claves excluidas
-    if (EXCLUDE_KEYS.includes(k)) {
-      errors.push('Clave excluida en importación: ' + k);
       return;
     }
     // Intentar parsear el valor para validar que es JSON válido
@@ -477,14 +474,15 @@ function doImport(overwrite) {
     }
   });
 
-  var msg = 'Importación completada. Escritas: ' + written + ' · Omitidas: ' + skipped + ' · Fallidas: ' + failed + '.\nBackup guardado en: ' + backupKey;
+  var msg = 'Importación completada. Escritas: ' + written + ' · Omitidas: ' + skipped + ' · Fallidas: ' + failed + '.\nBackup: ' + backupKey + '\n\n→ Recarga la app principal (index.html) para que lea los datos importados.';
   if (failed > 0) {
     setStatus('import-status', 'error', msg + '\nAlgunas claves no pudieron escribirse (¿localStorage lleno?).');
   } else {
     setStatus('import-status', 'ok', msg);
   }
 
-  // Refrescar lista de claves
+  // Refrescar lista de claves y ocultar preview (ya obsoleto)
+  document.getElementById('import-preview').style.display = 'none';
   renderCurrentKeys();
 }
 
@@ -506,6 +504,8 @@ function resetImport() {
   document.getElementById('import-preview').style.display = 'none';
   document.getElementById('import-status').className = 'status';
   document.getElementById('import-status').textContent = '';
+  // Resetear el input para que el mismo archivo pueda volver a seleccionarse
+  document.getElementById('file-input').value = '';
 }
 
 // ════════════════════════════════════════════════════════
