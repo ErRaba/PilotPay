@@ -5121,6 +5121,15 @@ async function saveUserData(user) {
     FiscalHistory.toFirebaseSnapshot(data)
   );
 
+  // GC: si historicoFiscal[año] tiene datos, borrar simHistorico de Firebase y runtime
+  const _gcYear  = new Date().getFullYear();
+  const _gcHasHF = data.historicoFiscal && data.historicoFiscal[_gcYear] &&
+                   Object.keys(data.historicoFiscal[_gcYear]).length > 0;
+  if (profileData.simHistorico !== undefined && _gcHasHF) {
+    snap.simHistorico = null;          // Firebase RTDB: null elimina el campo
+    delete profileData.simHistorico;   // limpiar de runtime
+  }
+
   // 1) Siempre guardar en localStorage (caché inmediata, funciona offline)
   try { localStorage.setItem(`pilotpay_v2_${user}`, JSON.stringify(snap)); } catch(e) {}
 
@@ -5928,7 +5937,6 @@ async function crearUsuarioLocal() {
       sim_civil:      'soltero',
       sim_hijos:      '0',
       sim_discap:     '0',
-      simHistorico:   {},
     });
 
     // Limpiar formulario
@@ -8986,7 +8994,7 @@ async function processNomina(file) {
     // Acumulados — preguntar si actualizar en histórico
     const ac = nomData.acumulados;
     const mesNom = nomData.periodo?.mes;
-    // Resolver índice numérico (1-12) para simHistorico; _MESES_IDX definido más abajo
+    // Resolver índice numérico (1-12) para historicoFiscal; _MESES_IDX definido más abajo
     const _mesNomNorm = mesNom ? (mesNom.charAt(0).toUpperCase() + mesNom.slice(1).toLowerCase()) : null;
     const _mesIdxProp = _mesNomNorm ? (_MESES_IDX[_mesNomNorm] || null) : null;
     if (ac.base_irpf && mesNom)
@@ -9371,8 +9379,10 @@ function renderComparativa(nomData) {
   const _mesIdx = _mesStr ? (_MESES_IDX[_mesStr] || null) : null;
 
   // ── Propuestas de actualización vía auditEngine ───────────────────────────
+  const _hfYear = new Date().getFullYear();
+  const _histFY = (profileData.historicoFiscal && profileData.historicoFiscal[_hfYear]) || null;
   const _props = auditEngine.buildPropuestasActualizacion(
-    nomData, profileData, profileData.simHistorico
+    nomData, profileData, _histFY
   );
   console.log('[auditEngine] buildPropuestasActualizacion →', _props.length, 'propuestas');
 
@@ -10126,26 +10136,24 @@ function actualizarSimuladorDesdeHistorico() {
   }
 
   const year = new Date().getFullYear();
-  // Preferir historicoFiscal (canónico); fallback a simHistorico (legacy pre-migración)
-  const histFiscal = profileData.historicoFiscal && profileData.historicoFiscal[year];
-  const histLegacy = !histFiscal ? (profileData.simHistorico || null) : null;
+  const histFiscal = (profileData.historicoFiscal && profileData.historicoFiscal[year]) || null;
 
   // Los valores son ACUMULADOS YTD — se toma el último mes con datos <= mesActual
   let brutoAcum = 0, irpfAcum = 0;
   for (let m = mesActual; m >= 1; m--) {
-    const e = histFiscal ? (histFiscal[m] || null) : (histLegacy ? (histLegacy[m] || null) : null);
+    const e = histFiscal ? (histFiscal[m] || null) : null;
     if (!e) continue;
-    const b = histFiscal ? parseFloat(e.brutoAcum) : parseFloat(e.bruto);
-    const i = histFiscal ? parseFloat(e.irpfAcum)  : parseFloat(e.irpf);
+    const b = parseFloat(e.brutoAcum);
+    const i = parseFloat(e.irpfAcum);
     if (b > 0 || i > 0) { brutoAcum = b || 0; irpfAcum = i || 0; break; }
   }
 
   // Media mensual estimada = último_acumulado / mes_de_ese_acumulado
   let mediaEstimada = 0;
   for (let m = mesActual; m >= 1; m--) {
-    const e = histFiscal ? (histFiscal[m] || null) : (histLegacy ? (histLegacy[m] || null) : null);
+    const e = histFiscal ? (histFiscal[m] || null) : null;
     if (!e) continue;
-    const b = histFiscal ? parseFloat(e.brutoAcum) : parseFloat(e.bruto);
+    const b = parseFloat(e.brutoAcum);
     if (b > 0) { mediaEstimada = Math.round((b / m) * 100) / 100; break; }
   }
 
@@ -10439,25 +10447,7 @@ function renderSimHero() {
     const e = histYear[m]; return m >= 1 && m <= 12 && e && (e.brutoAcum != null || e.irpfAcum != null);
   });
 
-  let lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
-
-  // Fallback: simHistoricoData (populated by cargarHistorico — may be from simHistorico legacy)
-  if (auditedMonths.length === 0 && typeof simHistoricoData !== 'undefined') {
-    const simData = simHistoricoData;
-    const simMonths = Object.keys(simData).map(Number).filter(function(m) {
-      const e = simData[m]; return m >= 1 && m <= 12 && e && (parseFloat(e.bruto) > 0 || parseFloat(e.irpf) > 0);
-    });
-    if (simMonths.length > 0) {
-      auditedMonths = simMonths;
-      if (!lastEntry) {
-        simMonths.sort(function(a, b) { return b - a; });
-        const ld = simData[simMonths[0]];
-        const b  = parseFloat(ld && ld.bruto) || 0;
-        const i  = parseFloat(ld && ld.irpf)  || 0;
-        lastEntry = { brutoAcum: b, irpfAcum: i, tipoEfectivo: b > 0 ? Math.round(i / b * 10000) / 100 : null };
-      }
-    }
-  }
+  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
 
   const mesesAuditados = auditedMonths.length;
   auditedMonths.sort(function(a, b) { return a - b; });
@@ -10549,13 +10539,11 @@ function renderSimHistTimeline() {
   const year = new Date().getFullYear();
   const MESES_S = ['E','F','M','A','M','J','J','A','S','O','N','D'];
   const histYear  = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
-  const simFallback = (Object.keys(histYear).length === 0 && typeof simHistoricoData !== 'undefined' && Object.keys(simHistoricoData).length > 0) ? simHistoricoData : null;
   const mesActual = new Date().getMonth() + 1;
 
   let html = '<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">';
   for (let m = 1; m <= 12; m++) {
-    const ef      = simFallback && simFallback[m] ? {brutoAcum: parseFloat(simFallback[m].bruto)||null, irpfAcum: parseFloat(simFallback[m].irpf)||null} : null;
-    const e       = histYear[m] || ef;
+    const e       = histYear[m] || null;
     const hasData = e && (e.brutoAcum != null || e.irpfAcum != null);
     const isPast  = m <= mesActual;
     const dotColor = hasData ? 'var(--blue2)' : (isPast ? 'var(--border)' : 'var(--border2)');
@@ -10566,14 +10554,7 @@ function renderSimHistTimeline() {
   }
   html += '</div>';
 
-  let lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
-  if (!lastEntry && simFallback) {
-    const ms = Object.keys(simFallback).map(Number).filter(function(m) { return m >= 1 && m <= 12; }).sort(function(a,b) { return b - a; });
-    if (ms.length > 0) {
-      const ld = simFallback[ms[0]]; const b = parseFloat(ld && ld.bruto)||0; const i = parseFloat(ld && ld.irpf)||0;
-      lastEntry = { brutoAcum: b, irpfAcum: i, tipoEfectivo: b > 0 ? Math.round(i / b * 10000) / 100 : null };
-    }
-  }
+  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
   if (lastEntry) {
     const fmt = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
     html += `<div style="font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.6">
@@ -10800,26 +10781,7 @@ function cargarHistorico() {
     return;
   }
 
-  // Fallback legacy: simHistorico con migración de claves string → numeric
-  const raw = profileData?.simHistorico || {};
-  const migrated = {};
-  let didMigrate = false;
-  Object.entries(raw).forEach(function([k, v]) {
-    const num = parseInt(k, 10);
-    if (!isNaN(num) && num >= 1 && num <= 12) {
-      migrated[num] = v;
-    } else {
-      const norm = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
-      const idx = _MESES_IDX[norm];
-      if (idx) { migrated[idx] = v; didMigrate = true; }
-    }
-  });
-  simHistoricoData = migrated;
-  if (didMigrate && profileData) {
-    console.info('[cargarHistorico] Migradas claves string → numeric en simHistorico');
-    profileData.simHistorico = migrated;
-    if (window.currentUser) saveUserData(window.currentUser);
-  }
+  simHistoricoData = {};
 }
 
 // ── INFO TOOLTIPS — inputs y proyección ──
@@ -12273,7 +12235,6 @@ window.PILOTPAY_BACKEND_READY = true;
       irpf: pd.irpf, irpfUser: u.irpf, irpfDerived: derived.irpf,
       estadoCivil: pd.estadoCivil,
       baseNum: derived.baseNum, baseICAO,
-      simHistoricoKeys: Object.keys(pd.simHistorico || {})
     });
     if (derived.storeSummary && window._PP_DEBUG) {
       console.log('[Dashboard] PilotPayStore connected ✓', {
@@ -12476,7 +12437,7 @@ window.PILOTPAY_BACKEND_READY = true;
      TARJETA: SIMULADOR IRPF
   ───────────────────────────────────────── */
   function renderSimCard(pd) {
-    /* Fuente de verdad: inputs del simulador (cargados desde simHistorico) */
+    /* Fuente de verdad: inputs del simulador */
     const brutoEl  = el('sim-bruto-acum');
     const irpfEl   = el('sim-irpf-acum');
     const brutoVal = brutoEl ? (parseFloat(brutoEl.value) || null) : null;
@@ -12491,9 +12452,11 @@ window.PILOTPAY_BACKEND_READY = true;
     }
 
     /* Cuántos meses tiene el histórico y rango */
-    const hist = pd.simHistorico || {};
+    /* Fuente de verdad: historicoFiscal auditado */
+    const _yearNow = new Date().getFullYear();
+    const hist = (pd.historicoFiscal && pd.historicoFiscal[_yearNow]) || {};
     const ABREV_M = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const mesesNums = Object.keys(hist).map(Number).filter(k => k > 0 && hist[k] && (parseFloat(hist[k].bruto) > 0 || parseFloat(hist[k].irpf) > 0)).sort((a, b) => a - b);
+    const mesesNums = Object.keys(hist).map(Number).filter(k => k >= 1 && k <= 12 && hist[k] && (hist[k].brutoAcum != null || hist[k].irpfAcum != null)).sort((a, b) => a - b);
     const mesesConDatos = mesesNums.length;
 
     if (!hasData) {

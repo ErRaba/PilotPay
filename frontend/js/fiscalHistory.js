@@ -80,35 +80,43 @@ var FiscalHistory = (function () {
   }
 
   // ── migrateFromLegacy ─────────────────────────────────────────────────────
-  // Migración lazy: simHistorico { [m]: { bruto, irpf } } → historicoFiscal[year][m].
-  // Solo ejecuta si simHistorico existe Y historicoFiscal no existe todavía.
-  // No destructiva: simHistorico queda intacto (se vuelve inerte al dejar de escribirse).
+  // Migra simHistorico { [m]: { bruto, irpf } } → historicoFiscal[year][m].
+  // Rellena solo huecos: historicoFiscal[year][m] existente nunca se sobrescribe.
+  // Maneja claves string ("Enero") y claves numeric ("1").
+  // No destructiva: simHistorico permanece hasta que saveUserData() lo limpie con null.
   function migrateFromLegacy(pd) {
     if (!pd || !pd.simHistorico) return;
     var year = new Date().getFullYear();
-    // Skip only if historicoFiscal already has real data for this year
-    if (pd.historicoFiscal && pd.historicoFiscal[year] && Object.keys(pd.historicoFiscal[year]).length > 0) return;
-    if (!pd.historicoFiscal) pd.historicoFiscal = {};
-    pd.historicoFiscal[year] = {};
+    if (!pd.historicoFiscal)       pd.historicoFiscal = {};
+    if (!pd.historicoFiscal[year]) pd.historicoFiscal[year] = {};
+    var _IDX = {
+      Enero:1, Febrero:2, Marzo:3, Abril:4, Mayo:5, Junio:6,
+      Julio:7, Agosto:8, Septiembre:9, Octubre:10, Noviembre:11, Diciembre:12,
+    };
     var migrated = 0;
-    Object.keys(pd.simHistorico).forEach(function (k) {
+    Object.keys(pd.simHistorico).forEach(function(k) {
       var m = parseInt(k, 10);
+      if (isNaN(m) || m < 1 || m > 12) {
+        var norm = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+        m = _IDX[norm] || NaN;
+      }
       if (isNaN(m) || m < 1 || m > 12) return;
+      if (pd.historicoFiscal[year][m]) return;  // historicoFiscal siempre gana
       var e = pd.simHistorico[k] || {};
       var bruto = parseFloat(e.bruto);
       var irpf  = parseFloat(e.irpf);
       if (bruto > 0 || irpf > 0) {
         pd.historicoFiscal[year][m] = {
-          brutoAcum:  isNaN(bruto) ? null : bruto,
-          irpfAcum:   isNaN(irpf)  ? null : irpf,
-          origen:     'migrado_simHistorico',
-          updatedAt:  new Date().toISOString().slice(0, 10),
+          brutoAcum: isNaN(bruto) ? null : bruto,
+          irpfAcum:  isNaN(irpf)  ? null : irpf,
+          origen:    'migrado_simHistorico',
+          updatedAt: new Date().toISOString().slice(0, 10),
         };
         migrated++;
       }
     });
     if (migrated > 0) {
-      console.info('[FiscalHistory] simHistorico migrado a historicoFiscal[' + year + ']: ' + migrated + ' meses');
+      console.info('[FiscalHistory] migrateFromLegacy: ' + migrated + ' meses migrados a historicoFiscal[' + year + ']');
     }
   }
 
