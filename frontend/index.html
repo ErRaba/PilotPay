@@ -10095,7 +10095,7 @@ function loadSimulatorData() {
   _sv('sim-bruto-acum',  '');
   _sv('sim-irpf-acum',   '');
   _sv('sim-bruto-resto',  profileData.sim_brutoResto  || '');
-  _sv('sim-irpf-actual',  profileData.sim_irpfActual  || '');
+  _sv('sim-irpf-actual',  profileData.sim_irpfActual  || profileData.irpf || ((USERS[currentUser] || {}).irpf) || 34.15);
 
   // Restaurar preferencia modo avanzado
   const _wrap  = document.getElementById('sim-avanzado-wrap');
