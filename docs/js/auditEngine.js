@@ -147,10 +147,10 @@
    *
    * @param {object} nomData       datos parseados de la nómina
    * @param {object} profileData   perfil actual del usuario
-   * @param {object} simHistorico  profileData.simHistorico (puede ser null)
+   * @param {object} histFiscalYear  profileData.historicoFiscal[year] (puede ser null)
    * @returns {Array} propuestas
    */
-  function buildPropuestasActualizacion(nomData, profileData, simHistorico) {
+  function buildPropuestasActualizacion(nomData, profileData, histFiscalYear) {
     var _t2  = nomData.trabajador || {};
     var _ac2 = nomData.acumulados || {};
 
@@ -179,8 +179,8 @@
         tipo: 'perfil', actual: profileData.ingreso_display || '—', checked: true });
 
     if (_ac2.base_irpf != null && _mesIdx) {
-      var _curB = (simHistorico && simHistorico[_mesIdx])
-        ? simHistorico[_mesIdx].bruto : null;
+      var _curB = (histFiscalYear && histFiscalYear[_mesIdx])
+        ? histFiscalYear[_mesIdx].brutoAcum : null;
       if (_curB == null || _curB !== _ac2.base_irpf)
         props.push({ campo: 'Acum. Base IRPF (' + _mesStr + ')',
           clave: 'acum_base_irpf', nuevo: _ac2.base_irpf,
@@ -189,8 +189,8 @@
     }
 
     if (_ac2.irpf != null && _mesIdx) {
-      var _curI = (simHistorico && simHistorico[_mesIdx])
-        ? simHistorico[_mesIdx].irpf : null;
+      var _curI = (histFiscalYear && histFiscalYear[_mesIdx])
+        ? histFiscalYear[_mesIdx].irpfAcum : null;
       if (_curI == null || _curI !== _ac2.irpf)
         props.push({ campo: 'Acum. IRPF retenido (' + _mesStr + ')',
           clave: 'acum_irpf', nuevo: _ac2.irpf,

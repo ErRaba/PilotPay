@@ -50,10 +50,11 @@
                      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
   // ── Estado privado ──────────────────────────────────────────────────────────
-  var _userId  = null;
-  var _ready   = false;
-  var _monthly = {};   // '2026:5' → MonthRecord
-  var _audit   = [];   // lista plana, orden cronológico inverso
+  var _userId             = null;
+  var _ready              = false;
+  var _monthly            = {};     // '2026:5' → MonthRecord
+  var _audit              = [];     // lista plana, orden cronológico inverso
+  var _isHydratingFromIDB = false;  // guard anti-loop durante hydrateFromIDB()
 
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
@@ -97,6 +98,9 @@
       });
       var json = JSON.stringify(toSave);
       localStorage.setItem(k, json);
+
+      // Write-through a IDB — best-effort, no bloquea, se omite durante hydrateFromIDB
+      Object.keys(toSave).forEach(function (key) { _idbWriteMonthly(toSave[key]); });
 
       // Monitoring de tamaño — warning si supera 500 KB
       var kb = Math.round(json.length / 1024);
@@ -486,6 +490,16 @@
     } catch (e) { return []; }
   }
 
+  // Write-through a IDB — best-effort totalmente silencioso.
+  // Se salta si _isHydratingFromIDB para evitar el loop:
+  //   hydrateFromIDB → _hydrateMonthly → _saveMonthly → _idbWriteMonthly (redundante)
+  // No bloquea nunca el flujo financiero local.
+  function _idbWriteMonthly(mr) {
+    if (_isHydratingFromIDB) return;
+    if (typeof PilotPayLocalDB === 'undefined') return;
+    try { PilotPayLocalDB.putMonthlyRecord(mr).catch(function() {}); } catch (e) {}
+  }
+
   // ── Hydration ───────────────────────────────────────────────────────────────
   // Enriquece _monthly (cargado desde monthly_v1) con datos de audit_history_v1.
   // audit_history_v1 es append-only: esta función nunca lo escribe.
@@ -612,15 +626,23 @@
   // ══════════════════════════════════════════════════════════════════════════════
   var profile = {
     get: function () {
-      var pd = _pd();
+      var pd    = _pd();
       var users = window.USERS || {};
-      var u = (_userId && users[_userId]) ? users[_userId] : {};
+      var u     = (_userId && users[_userId]) ? users[_userId] : {};
       return {
         userId      : _userId,
         nombre      : pd.fullName    || u.name     || '',
         funcion     : pd.funcion     || u.funcion  || '',
-        nivel       : pd.nivel       || u.nivel    || 3,
+        // role: alias de funcion — mismo valor, nombre más estándar para futura API/sync
+        role        : pd.funcion     || u.funcion  || '',
+        // nivelActual: campo canónico editable — nivel (legacy) como alias de lectura
+        nivelActual : pd.nivelActual != null ? pd.nivelActual : (pd.nivel || u.nivel || 3),
+        nivel       : pd.nivelActual != null ? pd.nivelActual : (pd.nivel || u.nivel || 3),
         base        : pd.base        || u.base     || 'GC',
+        // fechaIngresoEmpresa: campo canónico ISO — ingreso (legacy) como alias
+        fechaIngresoEmpresa : pd.fechaIngresoEmpresa || pd.ingreso || u.ingreso || null,
+        ingreso     : pd.fechaIngresoEmpresa || pd.ingreso || u.ingreso || null,
+        fechaOCC    : pd.fechaOCC    != null ? pd.fechaOCC : null,
         irpf        : pd.irpf        != null ? pd.irpf : (u.irpf || 30),
         nif         : pd.nif         || '',
         nss         : pd.nss         || '',
@@ -1274,6 +1296,86 @@
   // ══════════════════════════════════════════════════════════════════════════════
   // CICLO DE VIDA
   // ══════════════════════════════════════════════════════════════════════════════
+  // Hidratación async desde IDB — se llama DESPUÉS de init() síncrono.
+  // init() sigue siendo la ruta canónica de arranque (localStorage, síncrono, _ready=true).
+  // hydrateFromIDB() es aditivo: solo sobrescribe _monthly/_audit si IDB tiene datos
+  // distintos a los ya cargados desde localStorage.
+  //
+  // Retorna Promise<boolean>:
+  //   true  → datos importados desde IDB (re-render recomendado si changed)
+  //   false → IDB vacío, IDB = localStorage, o fallo silencioso
+  function hydrateFromIDB() {
+    if (!_userId || typeof PilotPayLocalDB === 'undefined') return Promise.resolve(false);
+    if (_isHydratingFromIDB) return Promise.resolve(false);
+
+    _isHydratingFromIDB = true;
+
+    var IDB_META = ['_deviceId', '_hash', '_syncState', '_localVersion', '_remoteVersion'];
+
+    return Promise.all([
+      PilotPayLocalDB.getMonthlyRecordsByUser(_userId),
+      PilotPayLocalDB.getAuditRecordsByUser(_userId)
+    ]).then(function (results) {
+      var idbMonthly = results[0];
+      var idbAudit   = results[1];
+
+      // Si IDB está vacío en ambos stores → no hay nada que importar
+      if (idbMonthly.length === 0 && idbAudit.length === 0) {
+        _isHydratingFromIDB = false;
+        console.log('[PilotPayStore] hydrateFromIDB: IDB vacío — manteniendo datos de localStorage');
+        return false;
+      }
+
+      // Comparación ligera por conjuntos de IDs
+      // Solo procesamos si hay alguna diferencia real entre IDB y el estado actual del store
+      var currentKeys   = Object.keys(_monthly).sort().join(',');
+      var idbKeys       = idbMonthly.map(function (mr) { return mr.year + ':' + mr.month; }).sort().join(',');
+      var currentAudIds = _audit.map(function (ar) { return ar.id; }).sort().join(',');
+      var idbAudIds     = idbAudit.map(function (ar) { return ar.id; }).sort().join(',');
+
+      if (currentKeys === idbKeys && currentAudIds === idbAudIds) {
+        _isHydratingFromIDB = false;
+        console.log('[PilotPayStore] hydrateFromIDB: IDB idéntico a localStorage — sin cambios');
+        return false;
+      }
+
+      // Construir dict monthly desde array IDB, stripping de campos IDB meta
+      // (no deben contaminar el modelo financiero ni el localStorage)
+      var newMonthly = {};
+      idbMonthly.forEach(function (mr) {
+        var key   = mr.year + ':' + mr.month;
+        var clean = Object.assign({}, mr);
+        IDB_META.forEach(function (f) { delete clean[f]; });
+        newMonthly[key] = clean;
+      });
+
+      var newAudit = idbAudit.map(function (ar) {
+        var clean = Object.assign({}, ar);
+        IDB_META.forEach(function (f) { delete clean[f]; });
+        return clean;
+      });
+
+      // Actualizar estado interno y rehidratar
+      // _isHydratingFromIDB=true impide que los _saveMonthly internos
+      // disparen write-through a IDB (redundante — acabamos de leer de ahí)
+      _monthly = newMonthly;
+      _audit   = newAudit;
+      _hydrateMonthly(_audit, _cr());
+
+      _isHydratingFromIDB = false;
+      console.log('[PilotPayStore] hydrateFromIDB: importados desde IDB',
+        '| monthly:', Object.keys(_monthly).length,
+        '| audit:', _audit.length
+      );
+      return true;
+
+    }).catch(function (e) {
+      _isHydratingFromIDB = false;
+      console.warn('[PilotPayStore] hydrateFromIDB falló — usando datos de localStorage:', e);
+      return false;
+    });
+  }
+
   function init(userId) {
     if (!userId) {
       console.warn('[PilotPayStore] init() llamado sin userId');
@@ -1336,10 +1438,12 @@
     version : VERSION,
 
     // Ciclo de vida
-    init    : init,
-    refresh : refresh,
-    clear   : clear,
-    ready   : ready,
+    init            : init,
+    refresh         : refresh,
+    clear           : clear,
+    ready           : ready,
+    hydrateFromIDB  : hydrateFromIDB,
+    isHydratingFromIDB : function () { return _isHydratingFromIDB; },
 
     // Resolución temporal canónica — única fuente de verdad del período del expediente
     resolveExpedientePeriod : function (varsData) { return _resolveExpedientePeriod(varsData); },
