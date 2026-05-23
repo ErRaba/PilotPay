@@ -5020,6 +5020,9 @@ async function fbUpdate(path, data) {
 
 // ── USERS — runtime cache (loaded from Firebase) ──
 let USERS = {};
+// true cuando USERS proviene de DEFAULT_USERS por fallo de Firebase (fallback temporal).
+// Bloquea operaciones admin destructivas hasta que Firebase se restaure.
+let _USERS_FROM_FALLBACK = false;
 
 // Solo ESH como usuario inicial — el resto se crean desde el panel Admin
 const DEFAULT_USERS = {
@@ -5036,6 +5039,7 @@ async function loadUsersFromFirebase() {
   // fbGet ya captura cualquier error de red/auth y devuelve null — no se necesita try/catch adicional.
   if (!fbUsers) {
     console.warn('[PilotPay] loadUsersFromFirebase: Firebase devolvió null — posible error transitorio, token expirado o base vacía. Cargando DEFAULT_USERS en memoria SIN escritura a Firebase.');
+    _USERS_FROM_FALLBACK = true;
     USERS = { ...DEFAULT_USERS };
     return;
   }
@@ -5051,6 +5055,7 @@ async function loadUsersFromFirebase() {
     }
   }
   if (cleaned) console.log('[PilotPay] Usuarios legacy eliminados de Firebase');
+  _USERS_FROM_FALLBACK = false;
   USERS = fbUsers;
 }
 
@@ -5298,8 +5303,24 @@ function updateOnlineIndicator() {
   }
 }
 
-window.addEventListener('online',  updateOnlineIndicator);
-window.addEventListener('offline', updateOnlineIndicator);
+window.addEventListener('online', async function() {
+  _online = true;
+  updateOnlineIndicator();
+  // Replicar cola offline pendiente ahora que hay conexión
+  if (typeof currentUser !== 'undefined' && currentUser) await flushOfflineQueue();
+  // Si USERS venía de fallback, intentar recargar la lista real desde Firebase
+  if (_USERS_FROM_FALLBACK) {
+    await loadUsersFromFirebase();
+    if (!_USERS_FROM_FALLBACK) {
+      console.log('[PilotPay] USERS restaurados desde Firebase tras reconexión');
+      if (document.getElementById('admin-users-list')) renderAdmin();
+    }
+  }
+});
+window.addEventListener('offline', function() {
+  _online = false;
+  updateOnlineIndicator();
+});
 
 // ── LOGIN ──
 async function doLogin() {
@@ -5361,6 +5382,8 @@ async function doLogin() {
       if (_hadSim && currentUser) saveUserData(currentUser);
     }
     await loadPermsFromFirebase();
+    // Replicar cola offline si hay conexión (puede haber entradas de sesiones previas)
+    if (_online) await flushOfflineQueue();
     btn.textContent = 'Entrar';
     btn.disabled = false;
     showWelcome();
@@ -5767,6 +5790,22 @@ function renderAdmin() {
   const el = document.getElementById('admin-users-list');
   if (!el) return;
 
+  // Banner de estado degradado: USERS proviene de fallback temporal
+  const _warnId = 'adm-fallback-warning';
+  let _warnEl = document.getElementById(_warnId);
+  if (_USERS_FROM_FALLBACK) {
+    if (!_warnEl) {
+      _warnEl = document.createElement('div');
+      _warnEl.id = _warnId;
+      _warnEl.style.cssText = 'color:var(--red,#e05);background:rgba(220,0,60,.08);border:1px solid var(--red,#e05);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-family:var(--mono,monospace);line-height:1.5';
+      el.parentNode.insertBefore(_warnEl, el);
+    }
+    _warnEl.style.display = 'block';
+    _warnEl.textContent = '⚠️ Lista de usuarios no disponible desde Firebase (fallback temporal). Mostrando solo datos locales. Creación y edición de usuarios desactivadas hasta restaurar conexión.';
+  } else if (_warnEl) {
+    _warnEl.style.display = 'none';
+  }
+
   const buscar = (document.getElementById('adm-buscar')?.value || '').toLowerCase().trim();
 
   // ESH siempre primero, resto ordenado por fecha de ingreso
@@ -5913,6 +5952,10 @@ async function crearUsuarioLocal() {
   }
   if (USERS[codigo]) {
     alert(`El código ${codigo} ya existe`); return;
+  }
+  if (_USERS_FROM_FALLBACK) {
+    alert('⚠️ Lista de usuarios no disponible desde Firebase.\nNo se puede crear usuarios en modo fallback: los datos reales podrían perderse o duplicarse.\nEspera a que se restaure la conexión y recarga la aplicación.');
+    return;
   }
 
   // Tema por defecto según función
