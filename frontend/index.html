@@ -10106,6 +10106,8 @@ function loadSimulatorData() {
     _arrow.textContent   = avanzado ? '▲' : '▼';
   }
 
+  // Migración: asegura simHistorico → historicoFiscal antes de renderizar
+  if (typeof FiscalHistory !== 'undefined' && window.profileData) FiscalHistory.migrateFromLegacy(profileData);
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
   cargarHistorico();
@@ -10427,19 +10429,46 @@ function toggleSimDesglose() {
 function renderSimHero() {
   const el = document.getElementById('sim-hero-content');
   if (!el) return;
-  const pd  = window.profileData || {};
-  const fp  = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
+  const pd   = window.profileData || {};
+  const fp   = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
   const year = new Date().getFullYear();
-  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
-  const fmt = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  const MESES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-  const histYear = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
-  const mesesAuditados = Object.keys(histYear).filter(function(m) {
-    const e = histYear[m]; return e && (e.brutoAcum != null || e.irpfAcum != null);
-  }).length;
+  const histYear  = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
+  let auditedMonths = Object.keys(histYear).map(Number).filter(function(m) {
+    const e = histYear[m]; return m >= 1 && m <= 12 && e && (e.brutoAcum != null || e.irpfAcum != null);
+  });
 
+  let lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
+
+  // Fallback: simHistoricoData (populated by cargarHistorico — may be from simHistorico legacy)
+  if (auditedMonths.length === 0 && typeof simHistoricoData !== 'undefined') {
+    const simData = simHistoricoData;
+    const simMonths = Object.keys(simData).map(Number).filter(function(m) {
+      const e = simData[m]; return m >= 1 && m <= 12 && e && (parseFloat(e.bruto) > 0 || parseFloat(e.irpf) > 0);
+    });
+    if (simMonths.length > 0) {
+      auditedMonths = simMonths;
+      if (!lastEntry) {
+        simMonths.sort(function(a, b) { return b - a; });
+        const ld = simData[simMonths[0]];
+        const b  = parseFloat(ld && ld.bruto) || 0;
+        const i  = parseFloat(ld && ld.irpf)  || 0;
+        lastEntry = { brutoAcum: b, irpfAcum: i, tipoEfectivo: b > 0 ? Math.round(i / b * 10000) / 100 : null };
+      }
+    }
+  }
+
+  const mesesAuditados = auditedMonths.length;
+  auditedMonths.sort(function(a, b) { return a - b; });
+
+  const fmt        = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
   const irpfConfig = fp.irpf != null ? parseFloat(fp.irpf) : null;
   const tipoEfReal = lastEntry && lastEntry.tipoEfectivo != null ? lastEntry.tipoEfectivo : null;
+
+  const coberturaLabel = mesesAuditados > 0
+    ? mesesAuditados + (mesesAuditados === 1 ? ' mes' : ' meses') + ' · ' + MESES_ABR[auditedMonths[0]-1] + '–' + MESES_ABR[auditedMonths[auditedMonths.length-1]-1]
+    : 'Sin datos';
 
   if (irpfConfig == null && mesesAuditados === 0) {
     el.innerHTML = '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);line-height:1.7">Sin datos fiscales configurados.<br>Configura tu % IRPF en el Perfil. Cuando audites una nómina con acumulados, PilotPay rellenará esta sección.</div>';
@@ -10468,12 +10497,19 @@ function renderSimHero() {
     return;
   }
 
-  let estadoLabel = 'Sin datos', estadoColor = 'var(--text3)';
+  let estadoLabel = '', estadoColor = 'var(--text3)', interpHero = '';
   if (tipoEfReal != null && irpfConfig != null) {
     const delta = tipoEfReal - irpfConfig;
-    if (Math.abs(delta) < 1)  { estadoLabel = 'Alineado'; estadoColor = 'var(--green)'; }
-    else if (delta < 0)       { estadoLabel = 'Déficit';  estadoColor = 'var(--amber)'; }
-    else                      { estadoLabel = 'Exceso';   estadoColor = 'var(--blue2)'; }
+    if (Math.abs(delta) < 1) {
+      estadoLabel = 'Alineado'; estadoColor = 'var(--green)';
+      interpHero  = 'La retención efectiva acumulada está alineada con tu IRPF configurado.';
+    } else if (delta < 0) {
+      estadoLabel = 'Déficit';  estadoColor = 'var(--amber)';
+      interpHero  = 'La retención acumulada está por debajo del IRPF configurado.';
+    } else {
+      estadoLabel = 'Exceso';   estadoColor = 'var(--blue2)';
+      interpHero  = 'La retención acumulada supera el IRPF configurado.';
+    }
   }
 
   el.innerHTML = `
@@ -10495,12 +10531,12 @@ function renderSimHero() {
         <div style="font-size:14px;font-family:var(--mono);color:var(--text2)">${lastEntry ? fmt(lastEntry.brutoAcum) + ' €' : '—'}</div>
       </div>
       <div>
-        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Meses auditados</div>
-        <div style="font-size:14px;font-family:var(--mono);color:var(--text2)">${mesesAuditados} / ${new Date().getMonth() + 1}</div>
+        <div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em">Cobertura auditada</div>
+        <div style="font-size:13px;font-family:var(--mono);color:var(--text2)">${coberturaLabel}</div>
       </div>
-    </div>`;
+    </div>
+    ${interpHero ? `<div style="margin-top:10px;font-size:11px;color:var(--text3);font-family:var(--mono);border-top:1px solid var(--border2);padding-top:8px;line-height:1.55">${interpHero}</div>` : ''}`;
 }
-
 
 function renderSimHistTimeline() {
   const el      = document.getElementById('sim-hist-timeline');
@@ -10511,11 +10547,13 @@ function renderSimHistTimeline() {
   const year = new Date().getFullYear();
   const MESES_S = ['E','F','M','A','M','J','J','A','S','O','N','D'];
   const histYear  = (pd.historicoFiscal && pd.historicoFiscal[year]) ? pd.historicoFiscal[year] : {};
+  const simFallback = (Object.keys(histYear).length === 0 && typeof simHistoricoData !== 'undefined' && Object.keys(simHistoricoData).length > 0) ? simHistoricoData : null;
   const mesActual = new Date().getMonth() + 1;
 
   let html = '<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px">';
   for (let m = 1; m <= 12; m++) {
-    const e       = histYear[m];
+    const ef      = simFallback && simFallback[m] ? {brutoAcum: parseFloat(simFallback[m].bruto)||null, irpfAcum: parseFloat(simFallback[m].irpf)||null} : null;
+    const e       = histYear[m] || ef;
     const hasData = e && (e.brutoAcum != null || e.irpfAcum != null);
     const isPast  = m <= mesActual;
     const dotColor = hasData ? 'var(--blue2)' : (isPast ? 'var(--border)' : 'var(--border2)');
@@ -10526,7 +10564,14 @@ function renderSimHistTimeline() {
   }
   html += '</div>';
 
-  const lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
+  let lastEntry = (typeof FiscalHistory !== 'undefined') ? FiscalHistory.getLastEntry(pd, year) : null;
+  if (!lastEntry && simFallback) {
+    const ms = Object.keys(simFallback).map(Number).filter(function(m) { return m >= 1 && m <= 12; }).sort(function(a,b) { return b - a; });
+    if (ms.length > 0) {
+      const ld = simFallback[ms[0]]; const b = parseFloat(ld && ld.bruto)||0; const i = parseFloat(ld && ld.irpf)||0;
+      lastEntry = { brutoAcum: b, irpfAcum: i, tipoEfectivo: b > 0 ? Math.round(i / b * 10000) / 100 : null };
+    }
+  }
   if (lastEntry) {
     const fmt = v => (v != null) ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
     html += `<div style="font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.6">

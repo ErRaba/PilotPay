@@ -84,9 +84,11 @@ var FiscalHistory = (function () {
   // Solo ejecuta si simHistorico existe Y historicoFiscal no existe todavía.
   // No destructiva: simHistorico queda intacto (se vuelve inerte al dejar de escribirse).
   function migrateFromLegacy(pd) {
-    if (!pd || pd.historicoFiscal || !pd.simHistorico) return;
+    if (!pd || !pd.simHistorico) return;
     var year = new Date().getFullYear();
-    pd.historicoFiscal = {};
+    // Skip only if historicoFiscal already has real data for this year
+    if (pd.historicoFiscal && pd.historicoFiscal[year] && Object.keys(pd.historicoFiscal[year]).length > 0) return;
+    if (!pd.historicoFiscal) pd.historicoFiscal = {};
     pd.historicoFiscal[year] = {};
     var migrated = 0;
     Object.keys(pd.simHistorico).forEach(function (k) {
