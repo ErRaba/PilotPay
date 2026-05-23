@@ -5334,7 +5334,13 @@ async function doLogin() {
     // normalización de base ('1.2' → 'MAD'), garantizar fechaOCC existe.
     if (typeof UserProfile        !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
     if (typeof FinancialProfile   !== 'undefined') FinancialProfile.normalize(profileData);
-    if (typeof FiscalHistory      !== 'undefined') FiscalHistory.migrateFromLegacy(profileData);
+    if (typeof FiscalHistory !== 'undefined') {
+      const _hadSim = !!(profileData.simHistorico);
+      FiscalHistory.migrateFromLegacy(profileData);
+      // Persistir inmediatamente si la migración aportó datos, para que el GC
+      // elimine simHistorico de Firebase en el mismo write y no quede en limbo.
+      if (_hadSim && currentUser) saveUserData(currentUser);
+    }
     await loadPermsFromFirebase();
     btn.textContent = 'Entrar';
     btn.disabled = false;
@@ -10117,7 +10123,7 @@ function loadSimulatorData() {
   }
 
   // Migración: asegura simHistorico → historicoFiscal antes de renderizar
-  if (typeof FiscalHistory !== 'undefined' && window.profileData) FiscalHistory.migrateFromLegacy(profileData);
+  if (typeof FiscalHistory !== 'undefined' && profileData) FiscalHistory.migrateFromLegacy(profileData);
   // Bruto acumulado e IRPF retenido — leer del histórico según el mes seleccionado
   actualizarSimuladorDesdeHistorico();
   cargarHistorico();
@@ -10437,7 +10443,7 @@ function toggleSimDesglose() {
 function renderSimHero() {
   const el = document.getElementById('sim-hero-content');
   if (!el) return;
-  const pd   = window.profileData || {};
+  const pd   = (typeof profileData !== 'undefined' && profileData) ? profileData : {};
   const fp   = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
   const year = new Date().getFullYear();
   const MESES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -10534,7 +10540,7 @@ function renderSimHistTimeline() {
   const el      = document.getElementById('sim-hist-timeline');
   const interpEl = document.getElementById('sim-hist-interpretation');
   if (!el) return;
-  const pd   = window.profileData || {};
+  const pd   = (typeof profileData !== 'undefined' && profileData) ? profileData : {};
   const fp   = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
   const year = new Date().getFullYear();
   const MESES_S = ['E','F','M','A','M','J','J','A','S','O','N','D'];
@@ -10574,7 +10580,7 @@ function renderSimHistTimeline() {
 }
 
 function _updateProfileDiffIndicators() {
-  const pd = window.profileData || {};
+  const pd = (typeof profileData !== 'undefined' && profileData) ? profileData : {};
   const fp = (typeof FinancialProfile !== 'undefined') ? FinancialProfile.get(pd) : {};
 
   function _ind(indicId, inputId, profileVal, labelFn) {
