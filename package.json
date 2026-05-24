@@ -1,0 +1,9 @@
+{
+  "name": "pilotpay",
+  "version": "2.2.0",
+  "private": true,
+  "scripts": {
+    "sync":   "node scripts/sync-docs.js",
+    "deploy": "node scripts/sync-docs.js && git add docs/ frontend/ && git status"
+  }
+}
