@@ -107,6 +107,21 @@
       <li style="color:var(--text3);font-size:12px">Escaneando localStorage…</li>
     </ul>
   </div>
+  <div id="orphan-section" style="display:none">
+    <h2 style="color:var(--amber)">⚠️ Perfiles huérfanos detectados</h2>
+    <div class="card" style="border-color:var(--amber)">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">
+        Estos perfiles existen en localStorage pero <strong>no tienen ninguna actividad asociada</strong>
+        (sin auditorías, sin expedientes mensuales, sin cola offline). Probable causa: usuario eliminado de Firebase
+        o creado y nunca usado. Se incluirán en el export si no se limpian.
+      </p>
+      <ul class="key-list" id="orphan-list-el"></ul>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-danger" onclick="deleteAllOrphans()">Eliminar todos los huérfanos</button>
+      </div>
+      <div id="orphan-status" class="status"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ── EXPORT ── -->
@@ -220,6 +235,87 @@ function classifyKey(key) {
   if (/^pilotpay_migration_backup_/.test(key))      return { label: 'BACKUP', type: 'type-info' };
   if (/^pilotpay_theme_/.test(key))                 return { label: 'TEMA', type: 'type-info' };
   return { label: 'OTRO', type: 'type-info' };
+}
+
+// ════════════════════════════════════════════════════════
+// ORPHAN DETECTION
+// Un perfil pilotpay_v2_${code} es huérfano si no existe
+// ninguna clave pilotpay:${code}:* — sin auditorías, mensual ni cola.
+// No garantiza que el usuario exista en Firebase, pero sí que
+// nunca tuvo actividad real en este dispositivo.
+// ════════════════════════════════════════════════════════
+
+var _orphanCodes = []; // códigos detectados como huérfanos (actualizado en cada scan)
+
+function detectOrphans(items) {
+  var profileCodes = [];
+  items.forEach(function(i) {
+    var m = i.key.match(/^pilotpay_v2_(.+)$/);
+    if (m) profileCodes.push(m[1]);
+  });
+  var orphans = profileCodes.filter(function(code) {
+    var prefix = 'pilotpay:' + code + ':';
+    return !items.some(function(i) { return i.key.startsWith(prefix); });
+  });
+  return orphans;
+}
+
+function renderOrphans(orphans, items) {
+  _orphanCodes = orphans;
+  var section = document.getElementById('orphan-section');
+  var listEl  = document.getElementById('orphan-list-el');
+  var statusEl = document.getElementById('orphan-status');
+  if (statusEl) { statusEl.className = 'status'; statusEl.textContent = ''; }
+
+  if (!orphans.length) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  listEl.innerHTML = orphans.map(function(code) {
+    var key  = 'pilotpay_v2_' + code;
+    var item = items.find(function(i) { return i.key === key; });
+    var size = item ? fmtSize(item.size) : '?';
+    return '<li>' +
+      '<span class="key-type" style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)">HUÉRFANO</span>' +
+      '<span class="key-name">' + key + '</span>' +
+      '<span class="key-size">' + size + '</span>' +
+      '<button class="btn btn-ghost" style="padding:3px 10px;font-size:11px;margin-left:auto" ' +
+        'onclick="deleteOrphan(\'' + code + '\')">Eliminar</button>' +
+      '</li>';
+  }).join('');
+}
+
+function deleteOrphan(code) {
+  var key = 'pilotpay_v2_' + code;
+  // También limpiar otras posibles claves residuales del mismo código
+  var residual = ['pilotpay_theme_' + code];
+  var deleted = [];
+  try {
+    localStorage.removeItem(key);
+    deleted.push(key);
+    residual.forEach(function(k) {
+      if (localStorage.getItem(k) !== null) {
+        localStorage.removeItem(k);
+        deleted.push(k);
+      }
+    });
+    setStatus('orphan-status', 'ok', 'Eliminado: ' + deleted.join(', '));
+  } catch(e) {
+    setStatus('orphan-status', 'error', 'Error al eliminar: ' + e.message);
+  }
+  renderCurrentKeys();
+}
+
+function deleteAllOrphans() {
+  if (!_orphanCodes.length) return;
+  var ok = confirm(
+    'Se eliminarán los perfiles huérfanos:\n\n' +
+    _orphanCodes.map(function(c) { return 'pilotpay_v2_' + c; }).join('\n') +
+    '\n\n¿Continuar?'
+  );
+  if (!ok) return;
+  _orphanCodes.forEach(function(c) { deleteOrphan(c); });
 }
 
 // ════════════════════════════════════════════════════════
@@ -522,18 +618,28 @@ function setStatus(id, type, msg) {
 
 function renderCurrentKeys() {
   var items = scanLocalStorage();
-  renderKeyList(items, 'key-list-el', EXCLUDE_KEYS.concat(
-    items.filter(function(i) { return i.key.startsWith(BACKUP_PREFIX); }).map(function(i) { return i.key; })
-  ));
 
-  // Export summary
+  // Detectar huérfanos antes de renderizar (para excluirlos del listado principal con badge propio)
+  var orphans = detectOrphans(items);
+  var orphanKeys = orphans.map(function(c) { return 'pilotpay_v2_' + c; });
+
+  // Listado principal: excluir device-specific, backups y huérfanos (se muestran en sección propia)
+  var excludeFromList = EXCLUDE_KEYS
+    .concat(items.filter(function(i) { return i.key.startsWith(BACKUP_PREFIX); }).map(function(i) { return i.key; }))
+    .concat(orphanKeys);
+  renderKeyList(items, 'key-list-el', excludeFromList);
+
+  // Sección de huérfanos
+  renderOrphans(orphans, items);
+
+  // Export summary — huérfanos SÍ se exportan si el usuario no los limpió (decisión consciente)
   var exportable = items.filter(function(i) {
     return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
   });
   var totalBytes = exportable.reduce(function(s, i) { return s + i.size; }, 0);
   var sg = document.getElementById('export-summary');
   if (sg) sg.innerHTML =
-    '<div class="summary-cell"><div class="summary-label">Claves exportables</div><div class="summary-value">' + exportable.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Claves exportables</div><div class="summary-value">' + exportable.length + (orphans.length ? '<span style="color:var(--amber);font-size:12px;margin-left:4px">(' + orphans.length + ' huérfano' + (orphans.length > 1 ? 's' : '') + ')</span>' : '') + '</div></div>' +
     '<div class="summary-cell"><div class="summary-label">Tamaño total</div><div class="summary-value">' + fmtSize(totalBytes) + '</div></div>';
 }
 
