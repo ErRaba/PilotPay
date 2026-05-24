@@ -2585,6 +2585,175 @@
     return true;
   };
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // DEBUG/ADMIN — nukeAudits: reset limpio de todas las auditorías
+  // Eliminar este bloque completo (hasta el cierre ══) cuando ya no sea necesario.
+  //
+  // Uso:
+  //   P4Debug.nukeAudits()                → dry-run (solo muestra qué borraría)
+  //   P4Debug.nukeAudits({ confirm:true }) → ejecuta el borrado real
+  // ══════════════════════════════════════════════════════════════════════════
+  window.P4Debug.nukeAudits = async function (opts) {
+    opts = opts || {};
+    var dryRun = opts.confirm !== true;
+
+    if (!_userId) {
+      console.warn('[P4] nukeAudits: sin usuario activo — inicia sesión primero');
+      return null;
+    }
+
+    var auditFbPath     = 'pilotpay/historicos/' + _userId + '/auditorias';
+    var tombstoneFbPath = 'pilotpay/historicos/' + _userId + '/deletedAuditorias';
+    var auditLsKey      = _auditKey();        // pilotpay:{userId}:audit_history_v1
+    var p4QueueLsKey    = _p4QueueKey();      // pilotpay:{userId}:p4_queue
+    var bkAuditLsKey    = 'pilotpay:' + _userId + ':p4_pull_backup_audit';
+    var bkTsLsKey       = 'pilotpay:' + _userId + ':p4_pull_backup_ts';
+
+    // ── Dry-run: contar qué hay ────────────────────────────────────────────
+    var localAuditCount = 0;
+    try { localAuditCount = JSON.parse(localStorage.getItem(auditLsKey) || '[]').length; } catch (e) {}
+
+    var p4QueueAuditEntries = 0;
+    if (p4QueueLsKey) {
+      try {
+        var q = JSON.parse(localStorage.getItem(p4QueueLsKey) || '{}');
+        Object.keys(q).forEach(function (k) {
+          if (k.indexOf('/auditorias/') !== -1 || k.indexOf('/deletedAuditorias/') !== -1) p4QueueAuditEntries++;
+        });
+      } catch (e) {}
+    }
+
+    var fbAuditCount     = '(no leído — sin sink o P4 desactivado)';
+    var fbTombstoneCount = '(no leído — sin sink o P4 desactivado)';
+    if (_p4Sink && typeof _p4Sink.get === 'function') {
+      try { var fa = await _p4Sink.get(auditFbPath);     fbAuditCount     = fa ? Object.keys(fa).length : 0; } catch (e) { fbAuditCount     = 'error: ' + (e.message || e); }
+      try { var ft = await _p4Sink.get(tombstoneFbPath); fbTombstoneCount = ft ? Object.keys(ft).length : 0; } catch (e) { fbTombstoneCount = 'error: ' + (e.message || e); }
+    }
+
+    console.log('══════════════════════════════════════════════════════════');
+    console.log('[P4] nukeAudits' + (dryRun ? ' — DRY RUN (sin cambios)' : ' — EJECUCIÓN REAL'));
+    console.log('  userId activo:', _userId);
+    console.log('');
+    console.log('  FIREBASE (DELETE nodo completo):');
+    console.log('    ' + auditFbPath, '→', fbAuditCount, 'registros');
+    console.log('    ' + tombstoneFbPath, '→', fbTombstoneCount, 'tombstones');
+    console.log('');
+    console.log('  LOCALSTORAGE (remove):');
+    console.log('    ' + auditLsKey, '→', localAuditCount, 'registros');
+    console.log('    ' + p4QueueLsKey + ' (filtro)', '→', p4QueueAuditEntries, 'entradas audit/tombstone (resto intacto)');
+    console.log('    ' + bkAuditLsKey, '→ backup audit del último pull');
+    console.log('    ' + bkTsLsKey,    '→ timestamp del backup');
+    console.log('');
+    console.log('  IDB auditHistory: todos los registros del usuario', _userId);
+    console.log('');
+    console.log('  NO SE TOCA: monthly_v1, p4_pull_backup_monthly, monthly Firebase,');
+    console.log('              offline_queue, usuarios, avatares, configuración, IRPF');
+    console.log('══════════════════════════════════════════════════════════');
+
+    if (dryRun) {
+      console.log('[P4] nukeAudits: para ejecutar → P4Debug.nukeAudits({ confirm: true })');
+      return {
+        dryRun          : true,
+        userId          : _userId,
+        fbAudits        : fbAuditCount,
+        fbTombstones    : fbTombstoneCount,
+        localAudits     : localAuditCount,
+        p4QueueAudits   : p4QueueAuditEntries
+      };
+    }
+
+    // ── Ejecución real ─────────────────────────────────────────────────────
+    console.log('[P4] nukeAudits: ejecutando…');
+    var errors = [];
+
+    // 1. Firebase: borrar nodo auditorias
+    if (_p4Sink && typeof _p4Sink.update === 'function') {
+      try {
+        await _p4Sink.update(auditFbPath, null);
+        console.log('[P4] nukeAudits: ✓ Firebase auditorias borrado');
+      } catch (e) {
+        var msg1 = e && e.message ? e.message : String(e);
+        errors.push('Firebase auditorias: ' + msg1);
+        console.warn('[P4] nukeAudits: ✗ Firebase auditorias —', msg1);
+      }
+
+      // 2. Firebase: borrar nodo tombstones
+      try {
+        await _p4Sink.update(tombstoneFbPath, null);
+        console.log('[P4] nukeAudits: ✓ Firebase tombstones borrado');
+      } catch (e) {
+        var msg2 = e && e.message ? e.message : String(e);
+        errors.push('Firebase tombstones: ' + msg2);
+        console.warn('[P4] nukeAudits: ✗ Firebase tombstones —', msg2);
+      }
+    } else {
+      var fbWarn = 'Firebase no limpiado: ' + (!_isP4Enabled() ? 'P4 desactivado' : 'sin sink');
+      errors.push(fbWarn);
+      console.warn('[P4] nukeAudits: ✗', fbWarn);
+    }
+
+    // 3. localStorage: auditorias
+    try {
+      localStorage.removeItem(auditLsKey);
+      _audit = [];
+      console.log('[P4] nukeAudits: ✓ localStorage audit_history_v1 borrado');
+    } catch (e) { errors.push('localStorage audit: ' + (e.message || e)); }
+
+    // 4. localStorage: filtrar entradas audit/tombstone de p4_queue (resto intacto)
+    if (p4QueueLsKey) {
+      try {
+        var queue = {};
+        try { queue = JSON.parse(localStorage.getItem(p4QueueLsKey) || '{}'); } catch (e2) {}
+        var removedFromQueue = 0;
+        Object.keys(queue).forEach(function (k) {
+          if (k.indexOf('/auditorias/') !== -1 || k.indexOf('/deletedAuditorias/') !== -1) {
+            delete queue[k];
+            removedFromQueue++;
+          }
+        });
+        localStorage.setItem(p4QueueLsKey, JSON.stringify(queue));
+        console.log('[P4] nukeAudits: ✓ p4_queue — eliminadas', removedFromQueue, 'entradas audit/tombstone');
+      } catch (e) { errors.push('p4_queue filter: ' + (e.message || e)); }
+    }
+
+    // 5. localStorage: backups de pull relacionados con audit
+    try { localStorage.removeItem(bkAuditLsKey); } catch (e) {}
+    try { localStorage.removeItem(bkTsLsKey);    } catch (e) {}
+    console.log('[P4] nukeAudits: ✓ backups de pull (audit) eliminados');
+
+    // 6. IDB: borrar todos los registros auditHistory de este usuario
+    if (typeof PilotPayLocalDB !== 'undefined' &&
+        typeof PilotPayLocalDB.getAuditRecordsByUser === 'function' &&
+        typeof PilotPayLocalDB.deleteAuditRecord === 'function') {
+      try {
+        var idbAudits = await PilotPayLocalDB.getAuditRecordsByUser(_userId);
+        await Promise.all(idbAudits.map(function (r) {
+          return PilotPayLocalDB.deleteAuditRecord(r.id).catch(function (e) {
+            console.warn('[P4] nukeAudits: IDB delete parcial fallo —', r.id, e && e.message);
+          });
+        }));
+        console.log('[P4] nukeAudits: ✓ IDB auditHistory —', idbAudits.length, 'registros eliminados');
+      } catch (e) {
+        errors.push('IDB: ' + (e && e.message ? e.message : e));
+        console.warn('[P4] nukeAudits: ✗ IDB —', e && e.message ? e.message : e);
+      }
+    } else {
+      console.log('[P4] nukeAudits: IDB no disponible — omitido');
+    }
+
+    console.log('══════════════════════════════════════════════════════════');
+    if (errors.length === 0) {
+      console.log('[P4] nukeAudits: LIMPIEZA COMPLETADA SIN ERRORES');
+      console.log('  Recarga la página para confirmar estado limpio.');
+    } else {
+      console.warn('[P4] nukeAudits: LIMPIEZA COMPLETADA CON ' + errors.length + ' ERROR(ES):', errors);
+    }
+    console.log('══════════════════════════════════════════════════════════');
+
+    return { done: true, userId: _userId, errors: errors };
+  };
+  // ══ fin DEBUG/ADMIN nukeAudits ══════════════════════════════════════════
+
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
 
 })();
