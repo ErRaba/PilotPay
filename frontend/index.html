@@ -5628,6 +5628,17 @@ function doLogout() {
   }
 }
 
+// ── P4 URL flag: ?p4=1 o ?p4pull=1 activa el flag en este dispositivo (solo testing) ──
+(function () {
+  try {
+    var _params = new URLSearchParams(window.location.search);
+    if (_params.get('p4') === '1' || _params.get('p4pull') === '1') {
+      localStorage.setItem('pilotpay_p4_enabled', '1');
+      console.log('[P4] flag activado via URL — pilotpay_p4_enabled=1');
+    }
+  } catch (e) { /* no-op */ }
+})();
+
 // ── INIT APP ──
 function initApp() {
   const u = USERS[currentUser];
