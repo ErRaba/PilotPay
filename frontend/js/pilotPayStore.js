@@ -56,6 +56,11 @@
   var _audit              = [];     // lista plana, orden cronológico inverso
   var _isHydratingFromIDB = false;  // guard anti-loop durante hydrateFromIDB()
 
+  // ── P4: Firebase write-through (feature-flagged) ────────────────────────────
+  // Sink registrado por setFirebaseSink() desde index.html tras auth exitoso.
+  // Con flag apagado toda la infraestructura es no-op; comportamiento idéntico al actual.
+  var _p4Sink = null;  // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
+
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
   // Usar window.PP_getters en lugar de captura directa para evitar problemas
@@ -490,6 +495,97 @@
     } catch (e) { return []; }
   }
 
+  // ── P4: Infraestructura de write-through Firebase ───────────────────────────
+  //
+  // Fase 1 — INFRAESTRUCTURA ÚNICAMENTE. Los call points (_saveMonthly, saveAuditRecord)
+  // se conectan en Fase 2 y Fase 3 respectivamente. Con flag apagado todo es no-op.
+
+  function _isP4Enabled() {
+    try { return localStorage.getItem('pilotpay_p4_enabled') === '1'; } catch (e) { return false; }
+  }
+
+  function _p4GetDeviceId() {
+    if (_p4Sink && typeof _p4Sink.getDeviceId === 'function') return _p4Sink.getDeviceId();
+    try { return localStorage.getItem('pilotpay_device_id') || 'unknown'; } catch (e) { return 'unknown'; }
+  }
+
+  function _p4QueueKey() {
+    return _userId ? 'pilotpay:' + _userId + ':p4_queue' : null;
+  }
+
+  // PURO — devuelve copia decorada con metadatos Firebase. No muta el original.
+  function _p4Decorate(record) {
+    return Object.assign({}, record, {
+      _schemaVersion    : 1,
+      _updatedAt        : new Date().toISOString(),
+      _lastWriterDevice : _p4GetDeviceId()
+    });
+  }
+
+  // Encola un write pendiente. fbPath = ruta Firebase relativa al root,
+  // p.ej. 'pilotpay/historicos/ESH/monthly/2026_5'.
+  // Last-writer-wins por path: si hay ya un item para ese path, se reemplaza.
+  function _enqueueP4(fbPath, decorated) {
+    var k = _p4QueueKey();
+    if (!k) return;
+    try {
+      var q = JSON.parse(localStorage.getItem(k) || '{}');
+      q[fbPath] = decorated;
+      localStorage.setItem(k, JSON.stringify(q));
+      console.log('[P4] encolado:', fbPath);
+    } catch (e) { console.warn('[P4] _enqueueP4 error:', e); }
+  }
+
+  // Vacía la cola P4 hacia Firebase. Best-effort: los items que fallen permanecen en cola.
+  // Llamar desde el handler 'online' de index.html.
+  function _flushP4Queue() {
+    if (!_isP4Enabled()) return Promise.resolve();
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') return Promise.resolve();
+    var k = _p4QueueKey();
+    if (!k) return Promise.resolve();
+    var q;
+    try { q = JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return Promise.resolve(); }
+    var paths = Object.keys(q);
+    if (paths.length === 0) return Promise.resolve();
+    console.log('[P4] flushing', paths.length, 'item(s) pendiente(s)');
+    var promises = paths.map(function (fbPath) {
+      return _p4Sink.update(fbPath, q[fbPath])
+        .then(function () {
+          try {
+            var cur = JSON.parse(localStorage.getItem(k) || '{}');
+            delete cur[fbPath];
+            localStorage.setItem(k, JSON.stringify(cur));
+          } catch (e) {}
+          console.log('[P4] flush OK:', fbPath);
+        })
+        .catch(function (err) {
+          console.warn('[P4] flush failed:', fbPath, '—', err && err.message ? err.message : err,
+                       '— permanece en cola');
+        });
+    });
+    return Promise.all(promises);
+  }
+
+  // Punto de entrada para writes P4. No-op si flag apagado o sink no registrado.
+  // Guard _isHydratingFromIDB: hydration nunca dispara escrituras Firebase.
+  // FASE 1: esta función existe pero no se llama desde ningún call point todavía.
+  function _notifyFirebase(fbPath, decorated) {
+    if (!_isP4Enabled()) return;
+    if (_isHydratingFromIDB) return;
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') {
+      _enqueueP4(fbPath, decorated);
+      return;
+    }
+    _p4Sink.update(fbPath, decorated)
+      .then(function () { console.log('[P4] write OK:', fbPath); })
+      .catch(function (err) {
+        console.warn('[P4] write failed, encolando:', fbPath, '—',
+                     err && err.message ? err.message : err);
+        _enqueueP4(fbPath, decorated);
+      });
+  }
+
+  // ── IDB write-through ────────────────────────────────────────────────────────
   // Write-through a IDB — best-effort totalmente silencioso.
   // Se salta si _isHydratingFromIDB para evitar el loop:
   //   hydrateFromIDB → _hydrateMonthly → _saveMonthly → _idbWriteMonthly (redundante)
@@ -1461,6 +1557,20 @@
 
     // Mantenimiento
     cleanupDuplicateMonthRecords : function () { return monthly.cleanupDuplicateMonthRecords(); },
+
+    // P4: Firebase write-through (feature-flagged)
+    // setFirebaseSink: llamar desde index.html tras auth exitoso, UNA SOLA VEZ.
+    // flushP4Queue:    llamar desde el handler 'online' de index.html.
+    setFirebaseSink : function (sink) {
+      _p4Sink = sink;
+      console.log('[P4] sink registrado — device:', _p4GetDeviceId());
+    },
+    flushP4Queue : function () { return _flushP4Queue(); },
+    isP4Enabled  : function () { return _isP4Enabled(); },
+
+    // Expuesto para prueba en consola: decorar un objeto de muestra.
+    // PilotPayStore.p4DecorateTest({foo:'bar'}) → {foo:'bar', _schemaVersion:1, …}
+    p4DecorateTest : function (obj) { return _p4Decorate(obj || {}); },
 
     // Internals expuestos para PilotPayDebug y tests — no usar en UI
     _internal : {

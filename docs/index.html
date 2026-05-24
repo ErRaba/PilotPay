@@ -5365,6 +5365,8 @@ window.addEventListener('online', async function() {
   updateOnlineIndicator();
   // Replicar cola offline pendiente ahora que hay conexión
   if (typeof currentUser !== 'undefined' && currentUser) await flushOfflineQueue();
+  // P4: vaciar cola de historicos pendientes
+  if (typeof PilotPayStore !== 'undefined') PilotPayStore.flushP4Queue();
   // Si USERS venía de fallback, intentar recargar la lista real desde Firebase
   if (_USERS_FROM_FALLBACK) {
     await loadUsersFromFirebase();
@@ -5459,6 +5461,35 @@ window.addEventListener('DOMContentLoaded', async () => {
   await fbSignIn();
   // Pre-load users in background for faster login
   if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
+
+  // P4 Fase 1: registrar sink Firebase en PilotPayStore.
+  // El sink expone fbUpdate (con throw en error, para que P4 pueda detectar fallos y encolar).
+  // Con pilotpay_p4_enabled !== '1' toda la infraestructura P4 es no-op.
+  if (typeof PilotPayStore !== 'undefined') {
+    PilotPayStore.setFirebaseSink({
+      update: async function(path, data) {
+        const token = await getAuthToken();
+        const q = token ? '?auth=' + token : '';
+        const r = await fetch(`${FB_URL}/${path}.json${q}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!r.ok) throw new Error('Firebase PATCH ' + path + ' → HTTP ' + r.status);
+      },
+      getDeviceId: function() {
+        try {
+          let id = localStorage.getItem('pilotpay_device_id');
+          if (!id) {
+            id = Math.random().toString(36).slice(2, 11);
+            localStorage.setItem('pilotpay_device_id', id);
+          }
+          return id;
+        } catch(e) { return 'unknown'; }
+      }
+    });
+  }
+
   // Key listeners
   const loginUser = document.getElementById('login-user');
   const loginPass = document.getElementById('login-pass');
