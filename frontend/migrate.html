@@ -162,9 +162,8 @@
 <div class="card">
   <p style="font-size:13px;color:var(--text2);margin-bottom:10px">
     Consulta Firebase para detectar inconsistencias entre usuarios locales y el registro real.
-    Requiere conexión y API key guardada en este dispositivo.
+    Requiere conexión a internet.
   </p>
-  <div id="fb-key-status" class="note-box note-amber" style="display:none"></div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="runFirebaseCheck()">Verificar contra Firebase</button>
   </div>
@@ -227,28 +226,23 @@
 
 <script>
 // ════════════════════════════════════════════════════════
-// CONFIG FIREBASE — URL pública (igual que en index.html)
-// API key se lee de localStorage (device-specific, no se exporta)
+// CONFIG FIREBASE — hardcodeada igual que en index.html.
+// FB_KEY es la Firebase RTDB API key (identificador público);
+// la seguridad la gestionan las rules de Firebase, no el secreto.
+// NO confundir con pilotpay_apikey (= clave Anthropic para IA de PDFs).
 // ════════════════════════════════════════════════════════
 var FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
-
-function _fbKey() {
-  try { return localStorage.getItem('pilotpay_apikey') || ''; } catch(e) { return ''; }
-}
+var FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
 
 async function fbGet(path) {
-  var key = _fbKey();
-  if (!key) return null;
   try {
-    var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key);
+    var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY);
     return r.ok ? await r.json() : null;
   } catch(e) { return null; }
 }
 
 async function fbSet(path, data) {
-  var key = _fbKey();
-  if (!key) throw new Error('Sin API key');
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key, {
+  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
     method: 'PUT', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
@@ -256,9 +250,7 @@ async function fbSet(path, data) {
 }
 
 async function fbUpdate(path, data) {
-  var key = _fbKey();
-  if (!key) throw new Error('Sin API key');
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key, {
+  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
     method: 'PATCH', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
@@ -524,17 +516,6 @@ async function recoverUser(code) {
 // FIREBASE CHECK — detectar inconsistencias
 // ════════════════════════════════════════════════════════
 async function runFirebaseCheck() {
-  var fbKeyWarn = document.getElementById('fb-key-status');
-  var statusEl = document.getElementById('fb-check-status');
-  fbKeyWarn.style.display = 'none';
-
-  var apiKey = _fbKey();
-  if (!apiKey) {
-    fbKeyWarn.style.display = 'block';
-    fbKeyWarn.textContent = '⚠️ No hay API key guardada en este dispositivo (pilotpay_apikey). Inicia sesión en la app principal para guardarla, luego vuelve aquí.';
-    return;
-  }
-
   setStatus('fb-check-status', 'warn', '⟳ Conectando con Firebase…');
 
   var fbUsers = await fbGet('pilotpay/usuarios');
@@ -804,14 +785,6 @@ document.getElementById('file-input').addEventListener('change', function(e) {
   var isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(location.origin);
   badge.textContent = isLocal ? 'LOCAL' : 'REMOTO';
   badge.className = 'origin-badge ' + (isLocal ? 'origin-local' : 'origin-remote');
-
-  // Avisar si no hay API key
-  var apiKey = _fbKey();
-  if (!apiKey) {
-    var el = document.getElementById('fb-key-status');
-    el.style.display = 'block';
-    el.textContent = '⚠️ No hay pilotpay_apikey en este origen. Inicia sesión en la app principal para guardarla antes de usar "Verificar contra Firebase".';
-  }
 
   renderCurrentKeys();
 })();
