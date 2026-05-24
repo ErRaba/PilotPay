@@ -668,26 +668,43 @@
       });
   }
 
-  // Borra un nodo de auditoría en Firebase usando PATCH null en el padre.
-  // Llamar desde notifyAuditDelete() (public API).
+  // Borra el nodo de auditoría en Firebase y crea tombstone en deletedAuditorias.
+  // Usa paths individuales (no PATCH padre) para que cada delete tenga su propia
+  // entrada en la cola — evita conflicto last-writer-wins entre múltiples deletes offline.
+  // sink.update(path, null) → DELETE HTTP (ver sink en index.html).
+  // TODO: GC de tombstones antiguos (>180 días) — no implementar todavía.
   function _notifyFirebaseAuditDelete(auditId) {
-    var fbParent  = 'pilotpay/historicos/' + _userId + '/auditorias';
-    var fbPath    = fbParent + '/' + auditId;
-    var payload   = {};
-    payload[auditId] = null;  // PATCH padre con null key = borrar hijo en Firebase
-    console.log('[P4] audit delete notify:', fbPath);
+    var auditPath     = 'pilotpay/historicos/' + _userId + '/auditorias/'        + auditId;
+    var tombstonePath = 'pilotpay/historicos/' + _userId + '/deletedAuditorias/' + auditId;
+    var tombstone = {
+      id              : auditId,
+      deletedAt       : new Date().toISOString(),
+      deletedByDevice : _p4GetDeviceId(),
+      _schemaVersion  : 1
+    };
+    console.log('[P4] audit delete notify:', auditPath);
+
     if (!_p4Sink || typeof _p4Sink.update !== 'function') {
-      _enqueueP4(fbParent, payload);
-      console.log('[P4] audit delete queued (sin sink):', fbPath);
+      _enqueueP4(auditPath,     null);       // null → DELETE en flush
+      _enqueueP4(tombstonePath, tombstone);  // tombstone → PATCH en flush
+      console.log('[P4] audit delete + tombstone queued (sin sink):', auditId);
       return;
     }
-    _p4Sink.update(fbParent, payload)
-      .then(function () { console.log('[P4] audit delete OK:', fbPath); })
+
+    _p4Sink.update(auditPath, null)   // DELETE nodo
+      .then(function () { console.log('[P4] audit delete OK:', auditPath); })
       .catch(function (err) {
-        console.warn('[P4] audit delete failed:', fbPath, '—',
-                     err && err.message ? err.message : err);
-        _enqueueP4(fbParent, payload);
-        console.log('[P4] audit delete queued (error red):', fbPath);
+        console.warn('[P4] audit delete failed:', auditPath, '—', err && err.message ? err.message : err);
+        _enqueueP4(auditPath, null);
+        console.log('[P4] audit delete queued (error red):', auditId);
+      });
+
+    _p4Sink.update(tombstonePath, tombstone)  // PATCH tombstone
+      .then(function () { console.log('[P4] tombstone write OK:', auditId); })
+      .catch(function (err) {
+        console.warn('[P4] tombstone write failed:', auditId, '—', err && err.message ? err.message : err);
+        _enqueueP4(tombstonePath, tombstone);
+        console.log('[P4] tombstone queued (error red):', auditId);
       });
   }
 

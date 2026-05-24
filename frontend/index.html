@@ -5482,15 +5482,17 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Con pilotpay_p4_enabled !== '1' toda la infraestructura P4 es no-op.
   if (typeof PilotPayStore !== 'undefined') {
     PilotPayStore.setFirebaseSink({
+      // data === null → DELETE HTTP (borra nodo individual).
+      // data !== null → PATCH (merge parcial, comportamiento estándar).
       update: async function(path, data) {
         const token = await getAuthToken();
         const q = token ? '?auth=' + token : '';
-        const r = await fetch(`${FB_URL}/${path}.json${q}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        if (!r.ok) throw new Error('Firebase PATCH ' + path + ' → HTTP ' + r.status);
+        const isDelete = data === null;
+        const r = await fetch(`${FB_URL}/${path}.json${q}`, isDelete
+          ? { method: 'DELETE' }
+          : { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }
+        );
+        if (!r.ok) throw new Error(`Firebase ${isDelete ? 'DELETE' : 'PATCH'} ${path} → HTTP ${r.status}`);
       },
       // P4 Fase 5: lectura Firebase para pullFromFirebase()
       get: async function(path) {
