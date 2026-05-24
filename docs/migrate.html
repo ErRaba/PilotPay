@@ -226,53 +226,77 @@
 
 <script>
 // ════════════════════════════════════════════════════════
-// CONFIG FIREBASE — hardcodeada igual que en index.html.
-// FB_KEY es la Firebase RTDB API key (identificador público);
-// la seguridad la gestionan las rules de Firebase, no el secreto.
+// CONFIG FIREBASE — idéntica a index.html.
+// FB_KEY = Web API Key del proyecto (válida para Firebase Auth REST).
+// NO es el token de autenticación RTDB; para eso usamos un ID token anónimo.
 // NO confundir con pilotpay_apikey (= clave Anthropic para IA de PDFs).
 // ════════════════════════════════════════════════════════
 var FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
 var FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
 
-// fbGet — igual que index.html: ?auth=FB_KEY.
-// Si rules son públicas, el parámetro se ignora y la request pasa igual.
+// ── FIREBASE ANONYMOUS AUTH (REST) — idéntico a index.html ──
+var _fbToken = null;
+var _fbTokenExp = 0;
+var _fbRefreshToken = null;
+
+async function fbSignIn() {
+  if (_fbToken && Date.now() < _fbTokenExp - 60000) return;
+
+  if (_fbRefreshToken) {
+    try {
+      var rr = await fetch(
+        'https://securetoken.googleapis.com/v1/token?key=' + FB_KEY,
+        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(_fbRefreshToken) }
+      );
+      if (rr.ok) {
+        var dd = await rr.json();
+        _fbToken = dd.id_token;
+        _fbRefreshToken = dd.refresh_token;
+        _fbTokenExp = Date.now() + parseInt(dd.expires_in, 10) * 1000;
+        return;
+      }
+    } catch(e) { /* caer en fresh sign-in */ }
+  }
+
+  try {
+    var rs = await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_KEY,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnSecureToken: true }) }
+    );
+    if (rs.ok) {
+      var ds = await rs.json();
+      _fbToken = ds.idToken;
+      _fbRefreshToken = ds.refreshToken;
+      _fbTokenExp = Date.now() + parseInt(ds.expiresIn, 10) * 1000;
+    } else {
+      var err = await rs.json().catch(function() { return {}; });
+      console.warn('[FB] sign-in anónimo rechazado:', (err.error || {}).message || rs.status);
+    }
+  } catch(e) {
+    console.warn('[FB] sign-in anónimo: error de red —', e.message);
+  }
+}
+
+async function getAuthToken() {
+  await fbSignIn();
+  return _fbToken;
+}
+
 async function fbGet(path) {
   try {
-    var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY);
+    var token = await getAuthToken();
+    var q = token ? '?auth=' + token : '';
+    var r = await fetch(FB_URL + '/' + path + '.json' + q);
     return r.ok ? await r.json() : null;
   } catch(e) { return null; }
 }
 
-// fbDiag — versión diagnóstica: devuelve { status, ok, body, error, url }
-// Prueba con y sin auth para detectar si las rules son públicas o requieren token.
-async function fbDiag(path) {
-  var url     = FB_URL + '/' + path + '.json';
-  var urlAuth = url + '?auth=' + FB_KEY;
-  var result  = { withAuth: null, noAuth: null };
-
-  // Prueba 1: con ?auth=FB_KEY (mecanismo de index.html)
-  try {
-    var r1 = await fetch(urlAuth);
-    var body1 = await r1.text();
-    result.withAuth = { status: r1.status, ok: r1.ok, body: body1.slice(0, 200), url: urlAuth };
-  } catch(e1) {
-    result.withAuth = { status: 'ERROR', ok: false, body: e1.message, url: urlAuth };
-  }
-
-  // Prueba 2: sin auth (lectura pública)
-  try {
-    var r2 = await fetch(url);
-    var body2 = await r2.text();
-    result.noAuth = { status: r2.status, ok: r2.ok, body: body2.slice(0, 200), url: url };
-  } catch(e2) {
-    result.noAuth = { status: 'ERROR', ok: false, body: e2.message, url: url };
-  }
-
-  return result;
-}
-
 async function fbSet(path, data) {
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
+  var token = await getAuthToken();
+  var q = token ? '?auth=' + token : '';
+  var r = await fetch(FB_URL + '/' + path + '.json' + q, {
     method: 'PUT', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
@@ -283,7 +307,9 @@ async function fbSet(path, data) {
 }
 
 async function fbUpdate(path, data) {
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
+  var token = await getAuthToken();
+  var q = token ? '?auth=' + token : '';
+  var r = await fetch(FB_URL + '/' + path + '.json' + q, {
     method: 'PATCH', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
@@ -300,6 +326,17 @@ var TOOL_VERSION = '1.1';
 var EXPORT_FORMAT_VERSION = 1;
 
 var EXCLUDE_KEYS = ['pilotpay_apikey', 'pilotpay_device_id', 'pp_ui_mode_v1'];
+// Patrones excluidos silenciosamente: no se exportan, no se importan, no se validan.
+// pilotpay_theme_* → preferencias visuales no portables entre orígenes.
+// *:idb_migration_v1 → flag interno de migración IDB; no es JSON estándar.
+var EXCLUDE_PATTERNS = [
+  /^pilotpay_theme_/,
+  /:idb_migration_v1$/,
+];
+function isExcluded(key) {
+  if (EXCLUDE_KEYS.includes(key)) return true;
+  return EXCLUDE_PATTERNS.some(function(rx) { return rx.test(key); });
+}
 var BACKUP_PREFIX = 'pilotpay_migration_backup_';
 
 // ════════════════════════════════════════════════════════
@@ -384,7 +421,7 @@ function renderKeyList(items, excludeKeys) {
   excludeKeys = excludeKeys || [];
   var filtered = items.filter(function(i) {
     return !excludeKeys.includes(i.key) &&
-           !EXCLUDE_KEYS.includes(i.key) &&
+           !isExcluded(i.key) &&
            !i.key.startsWith(BACKUP_PREFIX);
   });
   if (!filtered.length) {
@@ -552,18 +589,34 @@ async function recoverUser(code) {
 // FIREBASE CHECK — detectar inconsistencias
 // ════════════════════════════════════════════════════════
 async function runFirebaseCheck() {
-  setStatus('fb-check-status', 'warn', '⟳ Conectando con Firebase…');
+  setStatus('fb-check-status', 'warn', '⟳ Autenticando con Firebase…');
+
+  // Sign-in anónimo (mismo mecanismo que index.html)
+  await fbSignIn();
+  var token = _fbToken;
+  if (!token) {
+    setStatus('fb-check-status', 'error',
+      'No se pudo obtener token de Firebase.\n' +
+      'Causas posibles:\n' +
+      '  · Anonymous Auth no está habilitado en Firebase Console\n' +
+      '    (Authentication → Sign-in methods → Anonymous → Enable)\n' +
+      '  · Sin conexión a internet\n' +
+      '  · FB_KEY incorrecta');
+    return;
+  }
+
+  setStatus('fb-check-status', 'warn', '⟳ Token obtenido. Leyendo pilotpay/usuarios…');
 
   var fbUsers = await fbGet('pilotpay/usuarios');
   if (!fbUsers) {
     setStatus('fb-check-status', 'error',
-      'Firebase devolvió null.\nPosibles causas: sin conexión, token expirado, API key incorrecta.\n' +
-      'Inicia sesión en la app, espera a que sincronice, y vuelve a intentarlo.');
+      'Firebase autenticado pero devolvió null en pilotpay/usuarios.\n' +
+      'La ruta puede estar vacía o las rules bloquean aún la lectura.\n' +
+      'Verifica Firebase Console → Realtime Database → Rules.');
     return;
   }
 
   var fbCodes = Object.keys(fbUsers);
-  setStatus('fb-check-status', 'ok', '✓ Firebase conectado. Usuarios en Firebase: ' + fbCodes.join(', '));
 
   // Cruzar con claves locales
   var items = scanLocalStorage();
@@ -571,17 +624,17 @@ async function runFirebaseCheck() {
 
   // De los "recuperables" locales, filtrar cuáles NO están en Firebase
   var missingInFb = local.recoverable.filter(function(c) { return !fbCodes.includes(c); });
-  // Los recuperables que SÍ están en Firebase son simplemente usuarios normales
-  var okCodes = local.recoverable.filter(function(c) { return fbCodes.includes(c); });
 
-  // Actualizar render
+  // Actualizar render de recuperables
   renderRecoverable(missingInFb, items);
 
-  var msg = '✓ Firebase: ' + fbCodes.length + ' usuarios. ' +
-    'Local con actividad: ' + local.recoverable.length + ' (' +
-    (missingInFb.length ? missingInFb.length + ' ausentes en Firebase: ' + missingInFb.join(', ') : 'todos presentes en Firebase') +
-    ').' +
-    (local.probOrphans.length ? '\nProb. huérfanos (sin actividad local): ' + local.probOrphans.join(', ') : '');
+  var msg = '✓ Firebase conectado.\n' +
+    'Usuarios en Firebase : ' + fbCodes.length + ' → ' + fbCodes.join(', ') + '\n' +
+    'Local con actividad  : ' + local.recoverable.length +
+      (missingInFb.length
+        ? ' (' + missingInFb.length + ' ausentes en Firebase: ' + missingInFb.join(', ') + ')'
+        : ' (todos presentes en Firebase)') +
+    (local.probOrphans.length ? '\nProb. huérfanos (sin actividad): ' + local.probOrphans.join(', ') : '');
 
   setStatus('fb-check-status', missingInFb.length ? 'warn' : 'ok', msg);
 }
@@ -603,7 +656,7 @@ function renderCurrentKeys() {
 
   // Export summary
   var exportable = items.filter(function(i) {
-    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
+    return !isExcluded(i.key) && !i.key.startsWith(BACKUP_PREFIX);
   });
   var totalBytes = exportable.reduce(function(s, i) { return s + i.size; }, 0);
   var notes = [];
@@ -623,7 +676,7 @@ function renderCurrentKeys() {
 // ════════════════════════════════════════════════════════
 function buildExportPayload() {
   var items = scanLocalStorage().filter(function(i) {
-    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
+    return !isExcluded(i.key) && !i.key.startsWith(BACKUP_PREFIX);
   });
   var data = {};
   items.forEach(function(i) { data[i.key] = i.raw; });
@@ -672,29 +725,62 @@ function doPreview() {
 // IMPORT + VALIDACIÓN
 // ════════════════════════════════════════════════════════
 var _importPayload = null;
+var _importSkipKeys = []; // claves a omitir en doImport (excluidas o con warning)
+
+// validatePayload — devuelve { errors, warnings, skipKeys }.
+// errors   → bloquean el import (claves críticas corruptas, formato incorrecto).
+// warnings → se muestran pero no bloquean; la clave se añade a skipKeys.
+// skipKeys → claves que se excluirán del import (no se escriben, no causan error).
+// Claves críticas: audit_history_v1, monthly_v1, pilotpay_v2_*, pilotpay_perms*.
+var _CRITICAL_KEY = /^(pilotpay_v2_|pilotpay_perms|pilotpay:.*:(audit_history_v1|monthly_v1))/;
 
 function validatePayload(payload) {
-  var errors = [];
-  if (!payload || typeof payload !== 'object') { errors.push('No es un objeto JSON válido.'); return errors; }
+  var errors = [], warnings = [], skipKeys = [];
+
+  if (!payload || typeof payload !== 'object') {
+    errors.push('No es un objeto JSON válido.');
+    return { errors: errors, warnings: warnings, skipKeys: skipKeys };
+  }
   if (!payload._meta || payload._meta.version !== EXPORT_FORMAT_VERSION)
     errors.push('Formato no reconocido (_meta.version incorrecto o ausente).');
-  if (!payload.data || typeof payload.data !== 'object') { errors.push('Falta campo data.'); return errors; }
+  if (!payload.data || typeof payload.data !== 'object') {
+    errors.push('Falta campo data.');
+    return { errors: errors, warnings: warnings, skipKeys: skipKeys };
+  }
+
   Object.keys(payload.data).forEach(function(k) {
-    if (EXCLUDE_KEYS.includes(k)) return; // skip silencioso
+    // Claves excluidas por patrón → skip silencioso (ni error ni warning)
+    if (isExcluded(k)) { skipKeys.push(k); return; }
     if (!k.startsWith('pilotpay')) { errors.push('Clave no permitida: ' + k); return; }
+
     var raw = payload.data[k];
-    if (raw == null) { errors.push('Valor null para: ' + k); return; }
+    if (raw == null) {
+      if (_CRITICAL_KEY.test(k)) errors.push(k + ': valor null en clave crítica');
+      else { warnings.push(k + ': null — se omitirá'); skipKeys.push(k); }
+      return;
+    }
+
     try {
       var parsed = JSON.parse(raw);
+      // Validación de tipo para claves críticas
       if (/audit_history_v1/.test(k) && !Array.isArray(parsed))
         errors.push(k + ': se espera array');
-      if (/monthly_v1/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
+      else if (/monthly_v1/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
         errors.push(k + ': se espera objeto');
-      if (/pilotpay_v2_/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
+      else if (/^pilotpay_v2_/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
         errors.push(k + ': se espera objeto');
-    } catch(e) { errors.push(k + ': JSON inválido — ' + e.message); }
+    } catch(e) {
+      if (_CRITICAL_KEY.test(k)) {
+        errors.push(k + ': JSON inválido — ' + e.message);
+      } else {
+        // No crítica e inválida → warning + skip, sin bloquear el import
+        warnings.push(k + ': JSON inválido — se omitirá');
+        skipKeys.push(k);
+      }
+    }
   });
-  return errors;
+
+  return { errors: errors, warnings: warnings, skipKeys: skipKeys };
 }
 
 function createBackup() {
@@ -716,48 +802,71 @@ function loadFile(file) {
   reader.onload = function(e) {
     try {
       var payload = JSON.parse(e.target.result);
-      var errors = validatePayload(payload);
-      if (errors.length) {
-        setStatus('import-status', 'error', 'Errores de validación:\n• ' + errors.join('\n• ')); return;
+      var result = validatePayload(payload);
+      if (result.errors.length) {
+        setStatus('import-status', 'error',
+          'Errores de validación (import bloqueado):\n• ' + result.errors.join('\n• ') +
+          (result.warnings.length ? '\n\nAvisos adicionales:\n• ' + result.warnings.join('\n• ') : ''));
+        return;
       }
       _importPayload = payload;
-      renderImportPreview(payload);
+      _importSkipKeys = result.skipKeys;
+      renderImportPreview(payload, result.warnings);
     } catch(ex) { setStatus('import-status', 'error', 'No se pudo parsear: ' + ex.message); }
   };
   reader.readAsText(file);
 }
 
-function renderImportPreview(payload) {
-  var keys = Object.keys(payload.data);
-  var existing = keys.filter(function(k) { return localStorage.getItem(k) !== null; });
-  var fresh    = keys.filter(function(k) { return localStorage.getItem(k) === null; });
+function renderImportPreview(payload, warnings) {
+  warnings = warnings || [];
+  var allKeys   = Object.keys(payload.data);
+  var importable = allKeys.filter(function(k) { return !_importSkipKeys.includes(k); });
+  var skipped    = allKeys.filter(function(k) { return  _importSkipKeys.includes(k); });
+  var existing   = importable.filter(function(k) { return localStorage.getItem(k) !== null; });
+  var fresh      = importable.filter(function(k) { return localStorage.getItem(k) === null; });
+
   document.getElementById('import-summary').innerHTML =
-    '<div class="summary-cell"><div class="summary-label">Claves en archivo</div><div class="summary-value">' + keys.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">A importar</div><div class="summary-value">' + importable.length + '</div></div>' +
     '<div class="summary-cell"><div class="summary-label">Ya existen</div><div class="summary-value" style="color:var(--amber)">' + existing.length + '</div></div>' +
     '<div class="summary-cell"><div class="summary-label">Nuevas</div><div class="summary-value" style="color:var(--green)">' + fresh.length + '</div></div>' +
+    (skipped.length ? '<div class="summary-cell"><div class="summary-label">Omitidas</div><div class="summary-value" style="color:var(--text3)">' + skipped.length + '</div></div>' : '') +
     '<div class="summary-cell"><div class="summary-label">Origen</div><div class="summary-value" style="font-size:10px;margin-top:4px;color:var(--text2)">' + (payload._meta.origin || '?') + '</div></div>';
-  document.getElementById('import-key-list').innerHTML = keys.map(function(k) {
-    var cls = classifyKey(k);
-    var ex = localStorage.getItem(k) !== null ? ' <span style="font-size:10px;color:var(--amber)">ya existe</span>' : '';
-    return '<li><span class="badge ' + cls.cls + '">' + cls.label + '</span>' +
-      '<span class="key-name">' + k + ex + '</span>' +
+
+  document.getElementById('import-key-list').innerHTML = allKeys.map(function(k) {
+    var isSkip = _importSkipKeys.includes(k);
+    var cls = isSkip ? { label: 'OMITIR', cls: 'badge-info' } : classifyKey(k);
+    var ex = (!isSkip && localStorage.getItem(k) !== null) ? ' <span style="font-size:10px;color:var(--amber)">ya existe</span>' : '';
+    var skipNote = isSkip ? ' <span style="font-size:10px;color:var(--text3)">excluida</span>' : '';
+    return '<li' + (isSkip ? ' style="opacity:.45"' : '') + '>' +
+      '<span class="badge ' + cls.cls + '">' + cls.label + '</span>' +
+      '<span class="key-name">' + k + ex + skipNote + '</span>' +
       '<span class="key-size">' + fmtSize((payload.data[k]||'').length) + '</span></li>';
   }).join('');
+
   document.getElementById('import-preview').style.display = 'block';
-  setStatus('import-status', 'ok',
-    'Archivo validado — ' + keys.length + ' claves.' +
-    (existing.length ? ' ' + existing.length + ' ya existen (se preservarán salvo "sobrescribir todo").' : ''));
+
+  var statusMsg = 'Archivo validado — ' + importable.length + ' claves a importar' +
+    (skipped.length ? ' (' + skipped.length + ' excluidas/no críticas)' : '') + '.' +
+    (existing.length ? ' ' + existing.length + ' ya existen (se preservarán salvo "sobrescribir todo").' : '');
+  if (warnings.length)
+    statusMsg += '\n\nAvisos (no bloquean):\n• ' + warnings.join('\n• ');
+  setStatus('import-status', warnings.length ? 'warn' : 'ok', statusMsg);
 }
 
 function doImport(overwrite) {
   if (!_importPayload) return;
-  var errors = validatePayload(_importPayload);
-  if (errors.length) { setStatus('import-status', 'error', 'Validación fallida: ' + errors.join('; ')); return; }
+  // Re-validar para confirmar que no hay errores fatales nuevos.
+  var result = validatePayload(_importPayload);
+  if (result.errors.length) {
+    setStatus('import-status', 'error', 'Validación fallida:\n• ' + result.errors.join('\n• '));
+    return;
+  }
   var bk = createBackup();
   if (!bk) { setStatus('import-status', 'error', 'No se pudo crear backup. Importación cancelada.'); return; }
   var written = 0, skipped = 0, failed = 0;
   Object.keys(_importPayload.data).forEach(function(k) {
-    if (EXCLUDE_KEYS.includes(k)) { skipped++; return; }
+    // Omitir claves excluidas por patrón o marcadas como skip en la validación
+    if (_importSkipKeys.includes(k)) { skipped++; return; }
     if (!overwrite && localStorage.getItem(k) !== null) { skipped++; return; }
     try { localStorage.setItem(k, _importPayload.data[k]); written++; }
     catch(e) { failed++; }
@@ -771,7 +880,10 @@ function doImport(overwrite) {
 
 function confirmOverwrite() {
   if (!_importPayload) return;
-  var existing = Object.keys(_importPayload.data).filter(function(k) { return localStorage.getItem(k) !== null; });
+  // Solo preguntar por las claves que realmente se importarán (no las skip)
+  var existing = Object.keys(_importPayload.data).filter(function(k) {
+    return !_importSkipKeys.includes(k) && localStorage.getItem(k) !== null;
+  });
   if (!existing.length) { doImport(true); return; }
   var ok = confirm('⚠️ Se sobrescribirán ' + existing.length + ' claves ya existentes:\n\n' +
     existing.slice(0,8).join('\n') + (existing.length > 8 ? '\n…y ' + (existing.length-8) + ' más' : '') +
@@ -781,6 +893,7 @@ function confirmOverwrite() {
 
 function resetImport() {
   _importPayload = null;
+  _importSkipKeys = [];
   document.getElementById('import-preview').style.display = 'none';
   document.getElementById('import-status').className = 'status';
   document.getElementById('file-input').value = '';
