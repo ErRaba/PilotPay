@@ -5734,6 +5734,22 @@ function initApp() {
       })
       .then(function (changed) {
         if (changed && typeof renderDashboard === 'function') renderDashboard();
+        // P4 Fase 6: auto-pull Firebase → local tras login (flag-gated, non-blocking)
+        if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
+          console.log('[P4] auto-pull start');
+          PilotPayStore.pullFromFirebase()
+            .then(function (result) {
+              console.log('[P4] auto-pull complete —', result);
+              if (result && (result.monthlyMerged > 0 || result.auditMerged > 0)) {
+                if (typeof renderDashboard === 'function') renderDashboard();
+              }
+            })
+            .catch(function (err) {
+              console.warn('[P4] auto-pull failed —', err && err.message ? err.message : err);
+            });
+        } else {
+          console.log('[P4] auto-pull skipped (flag off o store no disponible)');
+        }
       })
       .catch(function (e) { console.warn('[IDB]', e); });
   }
