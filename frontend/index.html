@@ -5639,6 +5639,17 @@ function doLogout() {
   } catch (e) { /* no-op */ }
 })();
 
+// Overlay visual P4 (solo visible cuando flag activo — para testing móvil sin consola)
+window._p4StatusUpdate = function (msg) {
+  try {
+    var el = document.getElementById('_p4-status-overlay');
+    if (!el) return;
+    el.textContent = 'P4: ' + msg;
+    el.style.display = 'block';
+    if (msg.charAt(0) === '✓') setTimeout(function () { el.style.opacity = '0'; }, 4000);
+  } catch (e) { /* no-op */ }
+};
+
 // ── INIT APP ──
 function initApp() {
   const u = USERS[currentUser];
@@ -5745,26 +5756,30 @@ function initApp() {
       })
       .then(function (changed) {
         if (changed && typeof renderDashboard === 'function') renderDashboard();
-        // P4 Fase 6: auto-pull Firebase → local tras login (flag-gated, non-blocking)
-        if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
-          console.log('[P4] auto-pull start');
-          PilotPayStore.pullFromFirebase()
-            .then(function (result) {
-              console.log('[P4] auto-pull complete —', result);
-              var monthlyChanged = result && result.monthly && (result.monthly.new > 0 || result.monthly.updated > 0);
-              var auditChanged   = result && result.audit   && (result.audit.new   > 0 || result.audit.updated   > 0);
-              if (monthlyChanged || auditChanged) {
-                if (typeof renderDashboard === 'function') renderDashboard();
-              }
-            })
-            .catch(function (err) {
-              console.warn('[P4] auto-pull failed —', err && err.message ? err.message : err);
-            });
-        } else {
-          console.log('[P4] auto-pull skipped (flag off o store no disponible)');
-        }
       })
       .catch(function (e) { console.warn('[IDB]', e); });
+  }
+  // P4 Fase 6: auto-pull Firebase → local tras login (independiente del chain IDB)
+  if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
+    _p4StatusUpdate('⏳ pulling...');
+    console.log('[P4] auto-pull start');
+    PilotPayStore.pullFromFirebase()
+      .then(function (result) {
+        console.log('[P4] auto-pull complete —', result);
+        var mNew = (result && result.monthly) ? (result.monthly.new + result.monthly.updated) : 0;
+        var aN   = (result && result.audit)   ? (result.audit.new   + result.audit.updated)   : 0;
+        _p4StatusUpdate(mNew + aN > 0 ? '✓ +' + (mNew + aN) + ' registros' : '✓ sin datos nuevos');
+        if (mNew > 0 || aN > 0) {
+          if (typeof renderDashboard  === 'function') renderDashboard();
+          if (typeof hstRefreshCount  === 'function') hstRefreshCount();
+        }
+      })
+      .catch(function (err) {
+        _p4StatusUpdate('✗ error pull');
+        console.warn('[P4] auto-pull failed —', err && err.message ? err.message : err);
+      });
+  } else {
+    console.log('[P4] auto-pull skipped (flag off o store no disponible)');
   }
   // Restaurar estado mensual persistido desde el store (solo si hay pending_comparison)
   // Se llama DESPUÉS de PilotPayStore.init() para garantizar que monthly_v1 ya está cargado.
@@ -12916,6 +12931,18 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
 })();
+</script>
+<!-- P4 debug overlay: solo aparece cuando pilotpay_p4_enabled=1 (testing móvil) -->
+<div id="_p4-status-overlay" style="display:none;position:fixed;bottom:16px;right:16px;background:#1a1a2e;color:#a6e3a1;font-family:monospace;font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid #313244;z-index:99999;opacity:1;transition:opacity 2s;pointer-events:none"></div>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem('pilotpay_p4_enabled') === '1') {
+        var el = document.getElementById('_p4-status-overlay');
+        if (el) { el.textContent = 'P4: flag ✓'; el.style.display = 'block'; }
+      }
+    } catch (e) {}
+  })();
 </script>
 </body>
 </html>
