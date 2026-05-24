@@ -542,6 +542,21 @@
     });
   }
 
+  // Clave del manifest de upload inicial en localStorage.
+  function _p4ManifestKey() {
+    return _userId ? 'pilotpay:' + _userId + ':p4_upload_manifest' : null;
+  }
+
+  // Decoración para upload inicial: preserva _updatedAt original del registro,
+  // añade _uploadedAt (cuándo se subió) en lugar de sobreescribir la fecha del record.
+  function _p4DecorateUpload(record) {
+    return Object.assign({}, record, {
+      _schemaVersion    : 1,
+      _uploadedAt       : new Date().toISOString(),
+      _lastWriterDevice : _p4GetDeviceId()
+    });
+  }
+
   // Encola un write pendiente. fbPath = ruta Firebase relativa al root,
   // p.ej. 'pilotpay/historicos/ESH/monthly/2026_5'.
   // Last-writer-wins por path: si hay ya un item para ese path, se reemplaza.
@@ -1674,6 +1689,208 @@
       _p4LastAuditPath     = null;
       console.log('[P4Debug] contadores de sesión reseteados');
     }
+  };
+
+  // ── P4 Fase 4: upload inicial de históricos locales hacia Firebase ───────────
+  // Solo para uso manual en consola. Nunca llamar desde UI ni ciclo de vida.
+
+  // Dry-run síncrono: muestra qué se subiría sin escribir nada en Firebase.
+  window.P4Debug.dryRunUpload = function () {
+    if (!_userId) { console.warn('[P4] dryRunUpload: sin usuario activo'); return null; }
+    var mk = _p4ManifestKey();
+    var manifest = {};
+    try { manifest = JSON.parse(localStorage.getItem(mk) || '{}'); } catch (e) {}
+
+    var auditList = [];
+    try { auditList = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var monthlyMap = {};
+    try { monthlyMap = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}'); } catch (e) {}
+
+    var mPaths = [], mInvalid = 0;
+    Object.keys(monthlyMap).forEach(function (key) {
+      var mr = monthlyMap[key];
+      if (!mr || !mr.year || !mr.month) {
+        console.warn('[P4] upload skip: monthly inválido (sin year/month) —', key);
+        mInvalid++;
+        return;
+      }
+      mPaths.push('pilotpay/historicos/' + _userId + '/monthly/' + mr.year + '_' + mr.month);
+    });
+
+    var aPaths = [], aInvalid = 0;
+    auditList.forEach(function (rec) {
+      if (!rec || !rec.id || !rec.userId) {
+        console.warn('[P4] upload skip: audit inválido (sin id/userId) —', rec && rec.id);
+        aInvalid++;
+        return;
+      }
+      aPaths.push('pilotpay/historicos/' + rec.userId + '/auditorias/' + rec.id);
+    });
+
+    var mUploaded = mPaths.filter(function (p) { return !!manifest[p]; });
+    var mPending  = mPaths.filter(function (p) { return !manifest[p]; });
+    var aUploaded = aPaths.filter(function (p) { return !!manifest[p]; });
+    var aPending  = aPaths.filter(function (p) { return !manifest[p]; });
+
+    var result = {
+      userId  : _userId,
+      monthly : { total: mPaths.length, invalid: mInvalid, alreadyUploaded: mUploaded.length, pending: mPending.length, paths: mPending },
+      audit   : { total: aPaths.length, invalid: aInvalid, alreadyUploaded: aUploaded.length, pending: aPending.length, paths: aPending }
+    };
+    console.log('[P4] dryRunUpload →',
+      'monthly:', result.monthly.pending + '/' + result.monthly.total, 'pendientes |',
+      'audit:',   result.audit.pending   + '/' + result.audit.total,   'pendientes |',
+      'inválidos:', mInvalid + aInvalid
+    );
+    return result;
+  };
+
+  // Upload secuencial write-only hacia Firebase. localStorage/IDB no se tocan.
+  // force:false (default) → skip paths ya en manifest.
+  // force:true → re-sube todo ignorando manifest (PATCH idempotente, seguro).
+  window.P4Debug.uploadLocalToFirebase = async function (opts) {
+    opts = opts || {};
+    var force = opts.force === true;
+
+    if (!_isP4Enabled()) {
+      console.warn('[P4] uploadLocalToFirebase: flag desactivado — activar con localStorage.setItem("pilotpay_p4_enabled","1")');
+      return null;
+    }
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') {
+      console.warn('[P4] uploadLocalToFirebase: sink no registrado — la app debe estar iniciada con sesión activa');
+      return null;
+    }
+    if (!_userId) {
+      console.warn('[P4] uploadLocalToFirebase: sin usuario activo');
+      return null;
+    }
+
+    var mk = _p4ManifestKey();
+    var manifest = {};
+    try { manifest = JSON.parse(localStorage.getItem(mk) || '{}'); } catch (e) {}
+
+    var auditList = [];
+    try { auditList = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var monthlyMap = {};
+    try { monthlyMap = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}'); } catch (e) {}
+
+    // Construir work lists con validación dura
+    var monthlyWork = [];
+    Object.keys(monthlyMap).forEach(function (key) {
+      var mr = monthlyMap[key];
+      if (!mr || !mr.year || !mr.month) {
+        console.warn('[P4] upload skip: monthly inválido (sin year/month) —', key);
+        return;
+      }
+      monthlyWork.push({
+        fbPath : 'pilotpay/historicos/' + _userId + '/monthly/' + mr.year + '_' + mr.month,
+        record : mr
+      });
+    });
+
+    var auditWork = [];
+    auditList.forEach(function (rec) {
+      if (!rec || !rec.id || !rec.userId) {
+        console.warn('[P4] upload skip: audit inválido (sin id/userId) —', rec && rec.id);
+        return;
+      }
+      auditWork.push({
+        fbPath : 'pilotpay/historicos/' + rec.userId + '/auditorias/' + rec.id,
+        record : rec
+      });
+    });
+
+    // Calcular skip count para el log inicial
+    var mSkip = !force ? monthlyWork.filter(function (e) { return !!manifest[e.fbPath]; }).length : 0;
+    var aSkip = !force ? auditWork.filter(function (e)   { return !!manifest[e.fbPath]; }).length : 0;
+    var totalAttempted = (monthlyWork.length - mSkip) + (auditWork.length - aSkip);
+
+    console.log('[P4] upload start — monthly:', monthlyWork.length,
+                '| audit:', auditWork.length,
+                '| skip:', mSkip + aSkip,
+                '| a escribir:', totalAttempted,
+                force ? '[force=true]' : '');
+
+    var done = 0, failed = 0, skipped = 0;
+    var failedPaths = [];
+
+    // Monthly — secuencial
+    for (var i = 0; i < monthlyWork.length; i++) {
+      var me = monthlyWork[i];
+      if (!force && manifest[me.fbPath]) {
+        skipped++;
+        console.log('[P4] upload skip monthly:', me.fbPath);
+        continue;
+      }
+      try {
+        await _p4Sink.update(me.fbPath, _p4DecorateUpload(me.record));
+        done++;
+        try {
+          var cur = JSON.parse(localStorage.getItem(mk) || '{}');
+          cur[me.fbPath] = new Date().toISOString();
+          localStorage.setItem(mk, JSON.stringify(cur));
+        } catch (_e) {}
+        console.log('[P4] upload monthly (' + done + '/' + totalAttempted + '):', me.fbPath);
+      } catch (err) {
+        failed++;
+        failedPaths.push(me.fbPath);
+        console.warn('[P4] upload fail monthly:', me.fbPath, '—', err && err.message ? err.message : err);
+      }
+    }
+
+    // Audit — secuencial
+    for (var j = 0; j < auditWork.length; j++) {
+      var ae = auditWork[j];
+      if (!force && manifest[ae.fbPath]) {
+        skipped++;
+        console.log('[P4] upload skip audit:', ae.fbPath);
+        continue;
+      }
+      try {
+        await _p4Sink.update(ae.fbPath, _p4DecorateUpload(ae.record));
+        done++;
+        try {
+          var acur = JSON.parse(localStorage.getItem(mk) || '{}');
+          acur[ae.fbPath] = new Date().toISOString();
+          localStorage.setItem(mk, JSON.stringify(acur));
+        } catch (_e) {}
+        console.log('[P4] upload audit (' + done + '/' + totalAttempted + '):', ae.fbPath);
+      } catch (err) {
+        failed++;
+        failedPaths.push(ae.fbPath);
+        console.warn('[P4] upload fail audit:', ae.fbPath, '—', err && err.message ? err.message : err);
+      }
+    }
+
+    console.log('[P4] upload complete — done:', done,
+                '| failed:', failed,
+                '| skipped:', skipped,
+                '| total registros:', monthlyWork.length + auditWork.length);
+    if (failedPaths.length > 0) {
+      console.warn('[P4] paths con fallo (reintentables en próxima ejecución):', failedPaths);
+    }
+    return { done: done, failed: failed, skipped: skipped, total: monthlyWork.length + auditWork.length, failedPaths: failedPaths };
+  };
+
+  // Muestra el manifest de uploads completados.
+  window.P4Debug.showUploadManifest = function () {
+    var mk = _p4ManifestKey();
+    if (!mk) { console.warn('[P4] showUploadManifest: sin usuario activo'); return null; }
+    var manifest = {};
+    try { manifest = JSON.parse(localStorage.getItem(mk) || '{}'); } catch (e) {}
+    var paths = Object.keys(manifest);
+    console.log('[P4] upload manifest —', paths.length, 'path(s) subido(s):');
+    paths.forEach(function (p) { console.log('  ', p, '→', manifest[p]); });
+    return manifest;
+  };
+
+  // Limpia el manifest — permite re-ejecutar el upload completo desde cero.
+  // Los datos en Firebase NO se borran; solo se olvida qué se subió.
+  window.P4Debug.clearUploadManifest = function () {
+    var mk = _p4ManifestKey();
+    if (!mk) { console.warn('[P4] clearUploadManifest: sin usuario activo'); return; }
+    try { localStorage.removeItem(mk); } catch (e) {}
+    console.log('[P4] upload manifest limpiado — próxima ejecución re-subirá todos los registros');
   };
 
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
