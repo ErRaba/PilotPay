@@ -245,6 +245,18 @@ var PilotPayLocalDB = (function () {
 
   // ── API PÚBLICA: monthlyRecords ───────────────────────────────────────────────
 
+  // Escribe un lote de MonthRecords en una sola transaction IDB.
+  // Más eficiente que llamadas individuales a putMonthlyRecord.
+  // Records sin _deviceId se decoran automáticamente. Records nulos/sin id se saltan.
+  function putManyMonthlyRecords(records) {
+    if (!records || records.length === 0) return Promise.resolve(0);
+    var decorated = records.map(function (mr) {
+      if (!mr || !mr.id) return null;
+      return mr._deviceId ? mr : _decorateRecord(mr);
+    }).filter(Boolean);
+    return _txPutMany('monthlyRecords', decorated);
+  }
+
   function putMonthlyRecord(mr) {
     if (!mr || !mr.id) return Promise.reject(new Error('putMonthlyRecord: id requerido'));
     // Decorar automáticamente si el registro llega sin campos IDB meta.
@@ -264,6 +276,16 @@ var PilotPayLocalDB = (function () {
   }
 
   // ── API PÚBLICA: auditHistory ────────────────────────────────────────────────
+
+  // Escribe un lote de AuditRecords en una sola transaction IDB.
+  function putManyAuditRecords(records) {
+    if (!records || records.length === 0) return Promise.resolve(0);
+    var decorated = records.map(function (ar) {
+      if (!ar || !ar.id) return null;
+      return ar._deviceId ? ar : _decorateRecord(ar);
+    }).filter(Boolean);
+    return _txPutMany('auditHistory', decorated);
+  }
 
   function putAuditRecord(ar) {
     if (!ar || !ar.id) return Promise.reject(new Error('putAuditRecord: id requerido'));
@@ -519,11 +541,13 @@ var PilotPayLocalDB = (function () {
 
     // monthlyRecords
     putMonthlyRecord:        putMonthlyRecord,
+    putManyMonthlyRecords:   putManyMonthlyRecords,
     getMonthlyRecord:        getMonthlyRecord,
     getMonthlyRecordsByUser: getMonthlyRecordsByUser,
 
     // auditHistory
     putAuditRecord:         putAuditRecord,
+    putManyAuditRecords:    putManyAuditRecords,
     getAuditRecord:         getAuditRecord,
     getAuditRecordsByUser:  getAuditRecordsByUser,
 

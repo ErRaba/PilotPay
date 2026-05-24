@@ -59,12 +59,13 @@
   // ── P4: Firebase write-through (feature-flagged) ────────────────────────────
   // Sink registrado por setFirebaseSink() desde index.html tras auth exitoso.
   // Con flag apagado toda la infraestructura es no-op; comportamiento idéntico al actual.
-  var _p4Sink              = null;   // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
+  var _p4Sink              = null;   // { update, get, getDeviceId }
   var _p4WriteCount        = 0;     // contador total de sesión (monthly + audit)
   var _p4MonthlyWriteCount = 0;     // contador monthly únicamente (debug)
   var _p4AuditWriteCount   = 0;     // contador audit únicamente (debug)
   var _p4LastPath          = null;  // último path escrito — cualquier tipo (debug)
   var _p4LastAuditPath     = null;  // último path de auditoría escrito (debug)
+  var _isPullingFromFirebase = false; // guard anti-concurrencia para pullFromFirebase()
 
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
@@ -555,6 +556,23 @@
       _uploadedAt       : new Date().toISOString(),
       _lastWriterDevice : _p4GetDeviceId()
     });
+  }
+
+  // Convierte un timestamp ISO a milisegundos. Devuelve 0 si falta o es inválido.
+  // Usar siempre Date.parse() — NO comparar strings ISO directamente.
+  function _parseTs(ts) {
+    if (!ts) return 0;
+    var ms = Date.parse(ts);
+    if (isNaN(ms)) { console.warn('[P4] _parseTs: timestamp inválido —', ts); return 0; }
+    return ms;
+  }
+
+  // Elimina campos de metadata Firebase antes de escribir en localStorage/IDB.
+  var _FB_META = ['_schemaVersion', '_uploadedAt', '_lastWriterDevice'];
+  function _stripFbMeta(record) {
+    var clean = Object.assign({}, record);
+    _FB_META.forEach(function (f) { delete clean[f]; });
+    return clean;
   }
 
   // Encola un write pendiente. fbPath = ruta Firebase relativa al root,
@@ -1891,6 +1909,361 @@
     if (!mk) { console.warn('[P4] clearUploadManifest: sin usuario activo'); return; }
     try { localStorage.removeItem(mk); } catch (e) {}
     console.log('[P4] upload manifest limpiado — próxima ejecución re-subirá todos los registros');
+  };
+
+  // ── P4 Fase 5: lectura híbrida Firebase → local ──────────────────────────────
+  // Sin hook automático en esta fase — solo manual desde consola.
+  // Requiere sink.get (añadido en index.html). Sin writes hacia Firebase.
+
+  Object.defineProperty(window.P4Debug, 'isPulling', {
+    get: function () { return _isPullingFromFirebase; },
+    enumerable: true
+  });
+
+  // Dry-run async: lee Firebase, calcula el merge, sin escribir localmente.
+  window.P4Debug.dryRunPullFromFirebase = async function () {
+    if (!_userId)        { console.warn('[P4] dryRunPull: sin usuario activo'); return null; }
+    if (!_isP4Enabled()) { console.warn('[P4] dryRunPull: flag desactivado'); return null; }
+    if (!_p4Sink || typeof _p4Sink.get !== 'function') {
+      console.warn('[P4] dryRunPull: sink.get no disponible — añadir método get al sink en index.html');
+      return null;
+    }
+
+    // Leer estado local
+    var localMonthly = {};
+    try { localMonthly = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}'); } catch (e) {}
+    var localAudit = [];
+    try { localAudit = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var localAuditIndex = {};
+    localAudit.forEach(function (r) { if (r && r.id) localAuditIndex[r.id] = r; });
+
+    // Leer desde Firebase en paralelo
+    var fbMonthly = null, fbAudit = null;
+    try {
+      var res = await Promise.all([
+        _p4Sink.get('pilotpay/historicos/' + _userId + '/monthly'),
+        _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias')
+      ]);
+      fbMonthly = res[0];
+      fbAudit   = res[1];
+    } catch (err) {
+      console.warn('[P4] dryRunPull: error leyendo Firebase —', err && err.message ? err.message : err);
+      return null;
+    }
+
+    // Calcular diff monthly
+    var mNew = 0, mUpdated = 0, mUnchanged = 0, mInvalid = 0;
+    if (fbMonthly) {
+      Object.keys(fbMonthly).forEach(function (fbKey) {
+        var fbRec = fbMonthly[fbKey];
+        if (!fbRec || !fbRec.year || !fbRec.month) { mInvalid++; return; }
+        var localKey = fbRec.year + ':' + fbRec.month;
+        var localRec = localMonthly[localKey];
+        if (!localRec) {
+          mNew++;
+        } else {
+          var fbMs    = _parseTs(fbRec._updatedAt);
+          var localMs = _parseTs(localRec._updatedAt);
+          if (fbMs > localMs) mUpdated++; else mUnchanged++;
+        }
+      });
+    }
+
+    // Calcular diff audit
+    var aNew = 0, aUpdated = 0, aUnchanged = 0, aInvalid = 0;
+    if (fbAudit) {
+      Object.keys(fbAudit).forEach(function (fbId) {
+        var fbRec = fbAudit[fbId];
+        if (!fbRec || !fbRec.id || !fbRec.userId) { aInvalid++; return; }
+        var localRec = localAuditIndex[fbId];
+        if (!localRec) {
+          aNew++;
+        } else {
+          var fbMs    = _parseTs(fbRec._updatedAt);
+          var localMs = _parseTs(localRec._updatedAt);
+          if (fbMs > localMs) aUpdated++; else aUnchanged++;
+        }
+      });
+    }
+
+    var result = {
+      userId  : _userId,
+      firebase: {
+        monthly : fbMonthly ? Object.keys(fbMonthly).length : 0,
+        audit   : fbAudit   ? Object.keys(fbAudit).length   : 0
+      },
+      merge: {
+        monthly : { new: mNew, updated: mUpdated, unchanged: mUnchanged, invalid: mInvalid },
+        audit   : { new: aNew, updated: aUpdated, unchanged: aUnchanged, invalid: aInvalid }
+      }
+    };
+    console.log('[P4] dryRunPull →',
+      'monthly: +' + mNew + ' nuevos ~' + mUpdated + ' actualizados =' + mUnchanged + ' iguales |',
+      'audit: +' + aNew + ' nuevos ~' + aUpdated + ' actualizados =' + aUnchanged + ' iguales'
+    );
+    return result;
+  };
+
+  // Pull real: lee Firebase, mergea conservadoramente, escribe local.
+  // Guard anti-concurrencia: ignora llamadas si ya hay un pull en curso.
+  // NUNCA dispara write-through hacia Firebase (escribe directo a localStorage/IDB).
+  window.P4Debug.pullFromFirebase = async function () {
+    if (_isPullingFromFirebase) {
+      console.warn('[P4] pull: operación ya en curso — ignorado');
+      return null;
+    }
+    if (!_userId)        { console.warn('[P4] pull: sin usuario activo'); return null; }
+    if (!_isP4Enabled()) { console.warn('[P4] pull: flag desactivado'); return null; }
+    if (!_p4Sink || typeof _p4Sink.get !== 'function') {
+      console.warn('[P4] pull: sink.get no disponible');
+      return null;
+    }
+
+    _isPullingFromFirebase = true;
+
+    try {
+      console.log('[P4] pull start: leyendo Firebase monthly + auditorías para', _userId);
+
+      // Leer Firebase en paralelo
+      var fbMonthly = null, fbAudit = null;
+      try {
+        var res = await Promise.all([
+          _p4Sink.get('pilotpay/historicos/' + _userId + '/monthly'),
+          _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias')
+        ]);
+        fbMonthly = res[0];
+        fbAudit   = res[1];
+      } catch (err) {
+        console.warn('[P4] pull: error leyendo Firebase —', err && err.message ? err.message : err);
+        return null;
+      }
+
+      if (!fbMonthly && !fbAudit) {
+        console.log('[P4] pull: Firebase sin datos para', _userId, '— sin cambios locales');
+        return { monthly: { new: 0, updated: 0, unchanged: 0, invalid: 0 },
+                 audit  : { new: 0, updated: 0, unchanged: 0, invalid: 0 },
+                 backupSaved: false };
+      }
+
+      // Leer estado local actual
+      var localMonthly = {};
+      try { localMonthly = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}'); } catch (e) {}
+      var localAudit = [];
+      try { localAudit = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+
+      // Guardar backup ANTES de cualquier modificación (para rollback)
+      var _bkMk = 'pilotpay:' + _userId + ':p4_pull_backup_monthly';
+      var _bkAk = 'pilotpay:' + _userId + ':p4_pull_backup_audit';
+      var _bkTk = 'pilotpay:' + _userId + ':p4_pull_backup_ts';
+      var backupSaved = false;
+      try {
+        localStorage.setItem(_bkMk, localStorage.getItem(_monthlyKey()) || '{}');
+        localStorage.setItem(_bkAk, localStorage.getItem(_auditKey())   || '[]');
+        localStorage.setItem(_bkTk, new Date().toISOString());
+        backupSaved = true;
+      } catch (e) { console.warn('[P4] pull: backup no guardado —', e.message); }
+
+      // ── Merge monthly ──────────────────────────────────────────────────────
+      var mergedMonthly = Object.assign({}, localMonthly);
+      var mNew = 0, mUpdated = 0, mUnchanged = 0, mInvalid = 0;
+      var mChanged = [];   // solo los nuevos/actualizados → IDB batch
+
+      if (fbMonthly) {
+        Object.keys(fbMonthly).forEach(function (fbKey) {
+          var fbRec = fbMonthly[fbKey];
+          if (!fbRec || !fbRec.year || !fbRec.month) {
+            console.warn('[P4] pull skip: monthly inválido en Firebase —', fbKey);
+            mInvalid++; return;
+          }
+          var fbClean  = _stripFbMeta(fbRec);
+          var localKey = fbRec.year + ':' + fbRec.month;
+          var localRec = mergedMonthly[localKey];
+
+          if (!localRec) {
+            mergedMonthly[localKey] = fbClean;
+            mChanged.push(fbClean);
+            mNew++;
+            console.log('[P4] pull monthly nuevo:', localKey);
+          } else {
+            var fbMs    = _parseTs(fbClean._updatedAt);
+            var localMs = _parseTs(localRec._updatedAt);
+            if (fbMs > localMs) {
+              mergedMonthly[localKey] = fbClean;
+              mChanged.push(fbClean);
+              mUpdated++;
+              console.log('[P4] pull monthly actualizado:', localKey,
+                          '(fb=' + fbClean._updatedAt + ' > local=' + localRec._updatedAt + ')');
+            } else {
+              mUnchanged++;
+            }
+          }
+        });
+      }
+
+      // ── Merge audit ────────────────────────────────────────────────────────
+      var localAuditIndex = {};
+      localAudit.forEach(function (r) { if (r && r.id) localAuditIndex[r.id] = r; });
+      var aNew = 0, aUpdated = 0, aUnchanged = 0, aInvalid = 0;
+      var aChanged = [];   // solo los nuevos/actualizados → IDB batch
+
+      if (fbAudit) {
+        Object.keys(fbAudit).forEach(function (fbId) {
+          var fbRec = fbAudit[fbId];
+          if (!fbRec || !fbRec.id || !fbRec.userId) {
+            console.warn('[P4] pull skip: audit inválido en Firebase —', fbId);
+            aInvalid++; return;
+          }
+          var fbClean  = _stripFbMeta(fbRec);
+          var localRec = localAuditIndex[fbId];
+
+          if (!localRec) {
+            localAuditIndex[fbId] = fbClean;
+            aChanged.push(fbClean);
+            aNew++;
+            console.log('[P4] pull audit nuevo:', fbId);
+          } else {
+            var fbMs    = _parseTs(fbClean._updatedAt);
+            var localMs = _parseTs(localRec._updatedAt);
+            if (fbMs > localMs) {
+              localAuditIndex[fbId] = fbClean;
+              aChanged.push(fbClean);
+              aUpdated++;
+              console.log('[P4] pull audit actualizado:', fbId);
+            } else {
+              aUnchanged++;
+            }
+          }
+        });
+      }
+
+      // Reconstruir array audit: sort desc por fechaAuditoria, trim MAX 100
+      var mergedAudit = Object.values(localAuditIndex)
+        .sort(function (a, b) {
+          return (b.fechaAuditoria || '').localeCompare(a.fechaAuditoria || '');
+        })
+        .slice(0, 100);
+
+      console.log('[P4] pull monthly:', Object.keys(fbMonthly || {}).length, 'en Firebase —',
+                  '+' + mNew, 'nuevos,', '~' + mUpdated, 'actualizados,', '=' + mUnchanged, 'iguales');
+      console.log('[P4] pull audit:',   Object.keys(fbAudit   || {}).length, 'en Firebase —',
+                  '+' + aNew, 'nuevos,', '~' + aUpdated, 'actualizados,', '=' + aUnchanged, 'iguales');
+
+      // ── Write localStorage (directo — NO via _saveMonthly → no dispara P4) ─
+      var wroteMonthly = false, wroteAudit = false;
+      if (mChanged.length > 0) {
+        try {
+          localStorage.setItem(_monthlyKey(), JSON.stringify(mergedMonthly));
+          wroteMonthly = true;
+          console.log('[P4] pull write: monthly_v1 →', Object.keys(mergedMonthly).length, 'registros');
+        } catch (e) { console.warn('[P4] pull: error escribiendo monthly_v1 —', e.message); }
+      }
+      if (aChanged.length > 0) {
+        try {
+          localStorage.setItem(_auditKey(), JSON.stringify(mergedAudit));
+          wroteAudit = true;
+          console.log('[P4] pull write: audit_history_v1 →', mergedAudit.length, 'registros');
+        } catch (e) { console.warn('[P4] pull: error escribiendo audit_history_v1 —', e.message); }
+      }
+
+      // ── Write IDB (batch, best-effort — solo registros nuevos/actualizados) ─
+      if (typeof PilotPayLocalDB !== 'undefined') {
+        if (mChanged.length > 0) {
+          PilotPayLocalDB.putManyMonthlyRecords(mChanged)
+            .then(function (n) { console.log('[P4] pull IDB monthly:', n, 'registro(s)'); })
+            .catch(function (e) { console.warn('[P4] pull IDB monthly (best-effort):', e && e.message); });
+        }
+        if (aChanged.length > 0) {
+          PilotPayLocalDB.putManyAuditRecords(aChanged)
+            .then(function (n) { console.log('[P4] pull IDB audit:', n, 'registro(s)'); })
+            .catch(function (e) { console.warn('[P4] pull IDB audit (best-effort):', e && e.message); });
+        }
+      }
+
+      // ── Reload in-memory mínimo: sin _hydrateMonthly, sin side-effects ────
+      // Actualiza _monthly/_audit para que el store refleje el estado merged.
+      // No llama _saveMonthly() → no dispara write-through hacia Firebase.
+      if (wroteMonthly || wroteAudit) {
+        var newAuditList = [];
+        try { newAuditList = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+        _audit   = newAuditList;
+        var load = _loadMonthly();
+        _monthly = load.data;
+        console.log('[P4] pull in-memory reload: monthly=' + Object.keys(_monthly).length +
+                    ' | audit=' + _audit.length);
+      }
+
+      console.log('[P4] pull complete — monthly: +' + mNew + ' ~' + mUpdated + ' =' + mUnchanged +
+                  ' | audit: +' + aNew + ' ~' + aUpdated + ' =' + aUnchanged +
+                  (backupSaved ? ' | backup guardado' : ''));
+
+      return {
+        monthly     : { new: mNew, updated: mUpdated, unchanged: mUnchanged, invalid: mInvalid },
+        audit       : { new: aNew, updated: aUpdated, unchanged: aUnchanged, invalid: aInvalid },
+        backupSaved : backupSaved
+      };
+
+    } finally {
+      _isPullingFromFirebase = false;
+    }
+  };
+
+  // Rollback al estado pre-pull: restaura localStorage + IDB desde backup.
+  // Solo hay un nivel de rollback (el backup se elimina al usarlo).
+  window.P4Debug.rollbackPull = function () {
+    if (!_userId) { console.warn('[P4] rollbackPull: sin usuario activo'); return false; }
+    var _bkMk = 'pilotpay:' + _userId + ':p4_pull_backup_monthly';
+    var _bkAk = 'pilotpay:' + _userId + ':p4_pull_backup_audit';
+    var _bkTk = 'pilotpay:' + _userId + ':p4_pull_backup_ts';
+
+    var backupTs = null;
+    try { backupTs = localStorage.getItem(_bkTk); } catch (e) {}
+    if (!backupTs) { console.warn('[P4] rollbackPull: sin backup disponible'); return false; }
+
+    var backupMonthly = null, backupAudit = null;
+    try { backupMonthly = localStorage.getItem(_bkMk); } catch (e) {}
+    try { backupAudit   = localStorage.getItem(_bkAk); } catch (e) {}
+    if (!backupMonthly || !backupAudit) {
+      console.warn('[P4] rollbackPull: backup incompleto — abortando');
+      return false;
+    }
+
+    // Restaurar localStorage
+    try {
+      localStorage.setItem(_monthlyKey(), backupMonthly);
+      localStorage.setItem(_auditKey(),   backupAudit);
+    } catch (e) {
+      console.warn('[P4] rollbackPull: error restaurando localStorage —', e.message);
+      return false;
+    }
+
+    // Restaurar IDB desde el backup (batch, best-effort)
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      var mData = {}, aData = [];
+      try { mData = JSON.parse(backupMonthly); } catch (e) {}
+      try { aData = JSON.parse(backupAudit);   } catch (e) {}
+      var mRecs = Object.values(mData).filter(function (r) { return r && r.id; });
+      var aRecs = aData.filter(function (r) { return r && r.id; });
+      if (mRecs.length) PilotPayLocalDB.putManyMonthlyRecords(mRecs).catch(function () {});
+      if (aRecs.length) PilotPayLocalDB.putManyAuditRecords(aRecs).catch(function () {});
+    }
+
+    // Reload in-memory mínimo desde backup restaurado
+    var newAuditList = [];
+    try { newAuditList = JSON.parse(backupAudit); } catch (e) {}
+    _audit   = newAuditList;
+    var load = _loadMonthly();
+    _monthly = load.data;
+
+    // Eliminar backup (un solo nivel de rollback)
+    try {
+      localStorage.removeItem(_bkMk);
+      localStorage.removeItem(_bkAk);
+      localStorage.removeItem(_bkTk);
+    } catch (e) {}
+
+    console.log('[P4] rollbackPull: estado restaurado al de', backupTs,
+                '| monthly=' + Object.keys(_monthly).length + ' | audit=' + _audit.length);
+    return true;
   };
 
   console.log('[PilotPayStore] módulo cargado v' + VERSION);

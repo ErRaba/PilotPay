@@ -5484,6 +5484,14 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
         if (!r.ok) throw new Error('Firebase PATCH ' + path + ' → HTTP ' + r.status);
       },
+      // P4 Fase 5: lectura Firebase para pullFromFirebase()
+      get: async function(path) {
+        const token = await getAuthToken();
+        const q = token ? '?auth=' + token : '';
+        const r = await fetch(`${FB_URL}/${path}.json${q}`);
+        if (!r.ok) throw new Error('Firebase GET ' + path + ' → HTTP ' + r.status);
+        return r.json();   // null si el nodo no existe en Firebase
+      },
       getDeviceId: function() {
         try {
           let id = localStorage.getItem('pilotpay_device_id');
