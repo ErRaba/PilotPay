@@ -668,6 +668,29 @@
       });
   }
 
+  // Borra un nodo de auditoría en Firebase usando PATCH null en el padre.
+  // Llamar desde notifyAuditDelete() (public API).
+  function _notifyFirebaseAuditDelete(auditId) {
+    var fbParent  = 'pilotpay/historicos/' + _userId + '/auditorias';
+    var fbPath    = fbParent + '/' + auditId;
+    var payload   = {};
+    payload[auditId] = null;  // PATCH padre con null key = borrar hijo en Firebase
+    console.log('[P4] audit delete notify:', fbPath);
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') {
+      _enqueueP4(fbParent, payload);
+      console.log('[P4] audit delete queued (sin sink):', fbPath);
+      return;
+    }
+    _p4Sink.update(fbParent, payload)
+      .then(function () { console.log('[P4] audit delete OK:', fbPath); })
+      .catch(function (err) {
+        console.warn('[P4] audit delete failed:', fbPath, '—',
+                     err && err.message ? err.message : err);
+        _enqueueP4(fbParent, payload);
+        console.log('[P4] audit delete queued (error red):', fbPath);
+      });
+  }
+
   // ── IDB write-through ────────────────────────────────────────────────────────
   // Write-through a IDB — best-effort totalmente silencioso.
   // Se salta si _isHydratingFromIDB para evitar el loop:
@@ -1675,6 +1698,23 @@
       _notifyFirebaseAudit(record);
     },
 
+    // P4: sincronizar borrado de auditoría hacia Firebase + IDB.
+    // Llamar desde hstDelete() en index.html tras filtrar localStorage.
+    notifyAuditDelete : function (auditId) {
+      if (!_isP4Enabled()) return;
+      if (!_userId) { console.warn('[P4] notifyAuditDelete: sin usuario activo'); return; }
+      if (!auditId) { console.warn('[P4] notifyAuditDelete: auditId requerido'); return; }
+      _notifyFirebaseAuditDelete(auditId);
+      // IDB: best-effort, no bloquea
+      try {
+        if (typeof PilotPayLocalDB !== 'undefined' && typeof PilotPayLocalDB.deleteAuditRecord === 'function') {
+          PilotPayLocalDB.deleteAuditRecord(auditId).catch(function (e) {
+            console.warn('[P4] audit delete IDB failed:', auditId, e && e.message ? e.message : e);
+          });
+        }
+      } catch (e) { /* no-op */ }
+    },
+
     // Internals expuestos para PilotPayDebug y tests — no usar en UI
     _internal : {
       validateMonthRecord    : _validateMonthRecord,
@@ -2270,6 +2310,15 @@
     console.log('[P4] rollbackPull: estado restaurado al de', backupTs,
                 '| monthly=' + Object.keys(_monthly).length + ' | audit=' + _audit.length);
     return true;
+  };
+
+  // Borra manualmente una auditoría de Firebase (consola — testing).
+  // Uso: P4Debug.deleteAuditFromFirebase('audit-id-aqui')
+  window.P4Debug.deleteAuditFromFirebase = function (auditId) {
+    if (!auditId) { console.warn('[P4] deleteAuditFromFirebase: auditId requerido'); return; }
+    if (!_isP4Enabled()) { console.warn('[P4] deleteAuditFromFirebase: flag desactivado'); return; }
+    if (!_userId) { console.warn('[P4] deleteAuditFromFirebase: sin usuario activo'); return; }
+    _notifyFirebaseAuditDelete(auditId);
   };
 
   console.log('[PilotPayStore] módulo cargado v' + VERSION);

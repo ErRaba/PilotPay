@@ -4730,6 +4730,10 @@ Complemento de Base MAD: 1500"></textarea>
       function() {
         var updated = hstLoad().filter(function(r) { return r.id !== id; });
         hstSave(updated);
+        // P4: sincronizar borrado hacia Firebase + IDB
+        if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
+          PilotPayStore.notifyAuditDelete(id);
+        }
         renderHistorial();
         getDashboardData();
       }
@@ -4746,6 +4750,10 @@ Complemento de Base MAD: 1500"></textarea>
       'Eliminar todo el historial',
       'Se eliminarán los <strong>' + list.length + ' registro' + (list.length !== 1 ? 's' : '') + '</strong> guardados en el historial.',
       function() {
+        // P4: sincronizar borrado de cada registro hacia Firebase + IDB
+        if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
+          list.forEach(function(r) { if (r && r.id) PilotPayStore.notifyAuditDelete(r.id); });
+        }
         hstSave([]);
         renderHistorial();
         getDashboardData();

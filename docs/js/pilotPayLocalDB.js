@@ -533,6 +533,18 @@ var PilotPayLocalDB = (function () {
     });
   }
 
+  function deleteAuditRecord(id) {
+    if (!id) return Promise.resolve();
+    return _openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx  = db.transaction(['auditHistory'], 'readwrite');
+        tx.objectStore('auditHistory').delete(id);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror    = function () { reject(tx.error); };
+      });
+    });
+  }
+
   // ── API PÚBLICA ───────────────────────────────────────────────────────────────
 
   return {
@@ -550,6 +562,7 @@ var PilotPayLocalDB = (function () {
     putManyAuditRecords:    putManyAuditRecords,
     getAuditRecord:         getAuditRecord,
     getAuditRecordsByUser:  getAuditRecordsByUser,
+    deleteAuditRecord:      deleteAuditRecord,
 
     // Salud / diagnóstico
     hasUserData:  hasUserData,
