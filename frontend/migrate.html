@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PilotPay — Migración de datos</title>
+  <title>PilotPay — Migración y recuperación de datos</title>
   <style>
     :root {
       --bg: #0f1117; --card: #161b26; --border: #2a2f3d;
@@ -19,10 +19,10 @@
       background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 14px; line-height: 1.6; padding: 24px;
-      max-width: 760px; margin: 0 auto;
+      max-width: 800px; margin: 0 auto;
     }
     h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-    h2 { font-size: 13px; font-weight: 600; color: var(--text2); margin: 24px 0 10px; text-transform: uppercase; letter-spacing: .06em; }
+    h2 { font-size: 12px; font-weight: 600; color: var(--text2); margin: 24px 0 10px; text-transform: uppercase; letter-spacing: .07em; }
     .origin-badge {
       display: inline-block; font-family: var(--mono); font-size: 11px;
       padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
@@ -31,297 +31,252 @@
     .origin-remote { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
     .card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 18px 20px; margin-bottom: 16px;
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 14px;
     }
+    .card-amber { border-color: var(--amber); }
+    .card-blue  { border-color: var(--blue); }
     .key-list { list-style: none; }
     .key-list li {
-      display: flex; align-items: flex-start; gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
     }
     .key-list li:last-child { border-bottom: none; }
-    .key-name { font-family: var(--mono); color: var(--blue2); flex: 1; word-break: break-all; }
+    .key-name { font-family: var(--mono); color: var(--blue2); flex: 1; word-break: break-all; font-size: 12px; }
     .key-size { font-family: var(--mono); color: var(--text3); white-space: nowrap; font-size: 11px; }
-    .key-type { font-size: 10px; padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
-    .type-crit { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
-    .type-ok   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
-    .type-info { background: var(--blue-dim); color: var(--blue2); border: 1px solid var(--blue); }
+    .badge {
+      font-size: 10px; padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+      font-family: var(--mono); font-weight: 600; flex-shrink: 0;
+    }
+    .badge-crit   { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red); }
+    .badge-ok     { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+    .badge-info   { background: var(--blue-dim);  color: var(--blue2); border: 1px solid var(--blue); }
+    .badge-amber  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
     .btn {
-      display: inline-block; padding: 9px 20px; border-radius: 7px; border: none;
+      display: inline-block; padding: 8px 18px; border-radius: 7px; border: none;
       cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s;
+      white-space: nowrap;
     }
     .btn:hover { opacity: .85; }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-sm { padding: 3px 10px; font-size: 11px; }
     .btn-primary { background: var(--blue); color: #fff; }
     .btn-danger  { background: var(--red);  color: #fff; }
     .btn-ghost   { background: transparent; color: var(--text2); border: 1px solid var(--border); }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn-amber   { background: var(--amber); color: #000; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
     .status {
-      margin-top: 14px; padding: 10px 14px; border-radius: 7px;
-      font-size: 12px; font-family: var(--mono); display: none;
+      margin-top: 12px; padding: 10px 14px; border-radius: 7px;
+      font-size: 12px; font-family: var(--mono); display: none; white-space: pre-wrap; line-height: 1.5;
     }
     .status.ok    { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); display: block; }
     .status.error { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red);   display: block; }
     .status.warn  { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); display: block; }
     textarea {
-      width: 100%; min-height: 160px; background: #0a0c14; color: var(--text);
+      width: 100%; min-height: 140px; background: #0a0c14; color: var(--text);
       border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px;
       font-family: var(--mono); font-size: 11px; resize: vertical; margin-top: 10px;
     }
     .drop-zone {
-      border: 2px dashed var(--border); border-radius: 8px; padding: 28px;
+      border: 2px dashed var(--border); border-radius: 8px; padding: 24px;
       text-align: center; color: var(--text3); cursor: pointer; transition: border-color .2s;
-      margin-top: 10px;
+      margin-top: 10px; font-size: 13px;
     }
     .drop-zone.drag-over { border-color: var(--blue); color: var(--blue2); }
     .summary-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 10px;
     }
     .summary-cell {
-      background: #0d1018; border: 1px solid var(--border); border-radius: 7px;
-      padding: 10px 14px;
+      background: #0d1018; border: 1px solid var(--border); border-radius: 7px; padding: 10px 14px;
     }
     .summary-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
-    .summary-value { font-size: 18px; font-weight: 700; font-family: var(--mono); color: var(--text); margin-top: 2px; }
-    .warn-box {
-      background: var(--amber-dim); border: 1px solid var(--amber);
-      border-radius: 7px; padding: 10px 14px; font-size: 12px; color: var(--amber);
-      margin-bottom: 14px; line-height: 1.6;
+    .summary-value { font-size: 20px; font-weight: 700; font-family: var(--mono); color: var(--text); margin-top: 2px; }
+    .note-box {
+      border-radius: 7px; padding: 10px 14px; font-size: 12px; margin-bottom: 14px; line-height: 1.6;
     }
+    .note-amber { background: var(--amber-dim); border: 1px solid var(--amber); color: var(--amber); }
+    .note-blue  { background: var(--blue-dim);  border: 1px solid var(--blue);  color: var(--blue2); }
     input[type="file"] { display: none; }
+    input[type="text"], input[type="password"] {
+      background: #0d1018; border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-family: var(--mono); font-size: 12px;
+      padding: 6px 10px; width: 100%; margin-top: 4px;
+    }
+    label { font-size: 12px; color: var(--text2); display: block; margin-top: 10px; }
     hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-    .section-note { font-size: 12px; color: var(--text3); margin-top: 6px; }
+    .section-note { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+    .recover-form { margin-top: 14px; padding: 14px; background: #0d1018; border-radius: 8px; border: 1px solid var(--border); }
+    .recover-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--blue2); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <h1>
-  PilotPay — Migración de datos
+  PilotPay — Migración y recuperación
   <span id="origin-badge" class="origin-badge"></span>
 </h1>
-<p class="section-note" id="origin-url" style="margin-top:4px;margin-bottom:20px;font-family:var(--mono);font-size:11px"></p>
+<p class="section-note" id="origin-url" style="margin-top:4px;margin-bottom:20px"></p>
 
-<div id="section-scan">
-  <h2>Claves detectadas en este dispositivo</h2>
-  <div class="card">
-    <ul class="key-list" id="key-list-el">
-      <li style="color:var(--text3);font-size:12px">Escaneando localStorage…</li>
-    </ul>
-  </div>
-  <div id="orphan-section" style="display:none">
-    <h2 style="color:var(--amber)">⚠️ Perfiles huérfanos detectados</h2>
-    <div class="card" style="border-color:var(--amber)">
-      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">
-        Estos perfiles existen en localStorage pero <strong>no tienen ninguna actividad asociada</strong>
-        (sin auditorías, sin expedientes mensuales, sin cola offline). Probable causa: usuario eliminado de Firebase
-        o creado y nunca usado. Se incluirán en el export si no se limpian.
-      </p>
-      <ul class="key-list" id="orphan-list-el"></ul>
-      <div class="btn-row" style="margin-top:12px">
-        <button class="btn btn-danger" onclick="deleteAllOrphans()">Eliminar todos los huérfanos</button>
-      </div>
-      <div id="orphan-status" class="status"></div>
+<!-- ── CLAVES LOCALES ── -->
+<h2>Claves detectadas en este dispositivo</h2>
+<div class="card">
+  <ul class="key-list" id="key-list-el">
+    <li style="color:var(--text3);font-size:12px">Escaneando localStorage…</li>
+  </ul>
+</div>
+
+<!-- ── USUARIOS RECUPERABLES (requiere Firebase) ── -->
+<div id="recover-section" style="display:none">
+  <h2 style="color:var(--blue2)">Usuarios recuperables — presentes en local, ausentes en Firebase</h2>
+  <div class="card card-blue" id="recover-card">
+    <div class="note-box note-blue">
+      Estos usuarios tienen datos locales reales (auditorías o expedientes mensuales) pero
+      <strong>no existen en Firebase</strong>. Su registro fue eliminado o nunca se persistió.
+      Puedes reconstruir su entrada en Firebase usando los datos del perfil local.
+      Los datos de auditoría y mensual <strong>no se tocan</strong>.
     </div>
+    <div id="recover-list"></div>
+    <div id="recover-status" class="status"></div>
   </div>
+</div>
+
+<!-- ── PROBABLE HUÉRFANO (sin actividad local) ── -->
+<div id="orphan-section" style="display:none">
+  <h2 style="color:var(--amber)">Perfiles sin actividad local (probable huérfano)</h2>
+  <div class="card card-amber">
+    <div class="note-box note-amber">
+      Estos perfiles tienen caché de perfil (<code>pilotpay_v2_*</code>) pero
+      <strong>ninguna clave de actividad</strong> en este origen — sin auditorías, sin expedientes, sin cola offline.
+      Pueden ser usuarios creados y nunca usados, o víctimas del bug del null-path de Firebase.
+      <strong>No se eliminan automáticamente.</strong> Haz clic en "Verificar en Firebase"
+      antes de decidir si borrarlos.
+    </div>
+    <ul class="key-list" id="orphan-list-el"></ul>
+    <div id="orphan-status" class="status"></div>
+  </div>
+</div>
+
+<!-- ── VERIFICAR FIREBASE ── -->
+<h2>Diagnóstico contra Firebase</h2>
+<div class="card">
+  <p style="font-size:13px;color:var(--text2);margin-bottom:10px">
+    Consulta Firebase para detectar inconsistencias entre usuarios locales y el registro real.
+    Requiere conexión y API key guardada en este dispositivo.
+  </p>
+  <div id="fb-key-status" class="note-box note-amber" style="display:none"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="runFirebaseCheck()">Verificar contra Firebase</button>
+  </div>
+  <div id="fb-check-status" class="status"></div>
 </div>
 
 <!-- ── EXPORT ── -->
-<div id="section-export">
-  <h2>Exportar datos</h2>
-  <div class="card">
-    <p style="font-size:13px;color:var(--text2)">
-      Genera un archivo JSON con todas las claves <code style="font-family:var(--mono);color:var(--blue2)">pilotpay*</code> del
-      localStorage de este origen. Descárgalo y úsalo para importar en otro origen.
-    </p>
-    <div class="summary-grid" id="export-summary"></div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="doExport()">Exportar a JSON</button>
-      <button class="btn btn-ghost" onclick="doPreview()">Vista previa en pantalla</button>
-    </div>
-    <div id="export-status" class="status"></div>
-    <textarea id="export-preview" style="display:none" readonly></textarea>
+<hr>
+<h2>Exportar datos locales</h2>
+<div class="card">
+  <p style="font-size:13px;color:var(--text2)">
+    Genera un archivo JSON con todas las claves <code style="font-family:var(--mono);color:var(--blue2)">pilotpay*</code>
+    del localStorage de este origen. No incluye <code>pilotpay_apikey</code>, <code>pilotpay_device_id</code>
+    ni backups de migración anteriores.
+  </p>
+  <div class="summary-grid" id="export-summary"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="doExport()">Exportar a JSON</button>
+    <button class="btn btn-ghost" onclick="doPreview()">Vista previa</button>
   </div>
+  <div id="export-status" class="status"></div>
+  <textarea id="export-preview" style="display:none" readonly></textarea>
 </div>
 
 <!-- ── IMPORT ── -->
-<div id="section-import">
-  <h2>Importar datos</h2>
-  <div class="card">
-    <div class="warn-box">
-      ⚠️ Antes de importar se creará un backup automático del localStorage actual en la clave
-      <code style="font-family:var(--mono)">pilotpay_migration_backup_&lt;timestamp&gt;</code>.<br>
-      Solo se escriben claves con prefijo <code style="font-family:var(--mono)">pilotpay</code>
-      que superen la validación de estructura. Las claves que ya existen en el destino
-      <strong>no se sobrescriben</strong> salvo confirmación explícita.
-    </div>
-
-    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      Arrastra el JSON aquí o haz clic para seleccionar archivo
-    </div>
-    <input type="file" id="file-input" accept=".json,application/json">
-
-    <div id="import-preview" style="display:none;margin-top:16px">
-      <div class="summary-grid" id="import-summary"></div>
-      <div id="import-key-list-wrap" style="margin-top:12px">
-        <ul class="key-list" id="import-key-list"></ul>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="btn-import-confirm" onclick="doImport(false)">Importar (preservar existentes)</button>
-        <button class="btn btn-danger"  id="btn-import-overwrite" onclick="confirmOverwrite()">Importar (sobrescribir todo)</button>
-        <button class="btn btn-ghost"   onclick="resetImport()">Cancelar</button>
-      </div>
-    </div>
-    <div id="import-status" class="status"></div>
+<h2>Importar datos</h2>
+<div class="card">
+  <div class="note-box note-amber">
+    ⚠️ Se creará un backup automático en <code>pilotpay_migration_backup_&lt;ts&gt;</code> antes de escribir.
+    Las claves existentes no se sobrescriben salvo confirmación explícita.
   </div>
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    Arrastra el JSON aquí o haz clic para seleccionar archivo
+  </div>
+  <input type="file" id="file-input" accept=".json,application/json">
+  <div id="import-preview" style="display:none;margin-top:16px">
+    <div class="summary-grid" id="import-summary"></div>
+    <ul class="key-list" id="import-key-list" style="margin-top:12px"></ul>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="doImport(false)">Importar (preservar existentes)</button>
+      <button class="btn btn-danger"  onclick="confirmOverwrite()">Importar (sobrescribir todo)</button>
+      <button class="btn btn-ghost"   onclick="resetImport()">Cancelar</button>
+    </div>
+  </div>
+  <div id="import-status" class="status"></div>
 </div>
 
-<!-- ── PLAN MIGRACIÓN ── -->
+<!-- ── ESTADO DE MIGRACIÓN ── -->
 <hr>
-<h2>Estado de migración a Firebase</h2>
+<h2>Estado de sincronización con Firebase</h2>
 <div class="card">
   <ul class="key-list">
-    <li>
-      <span class="key-type type-ok">EN FIREBASE</span>
-      <span class="key-name">pilotpay_v2_${user}</span>
-      <span class="key-size">Perfil completo (REAL_FIELDS + historicoFiscal)</span>
-    </li>
-    <li>
-      <span class="key-type type-ok">EN FIREBASE</span>
-      <span class="key-name">pilotpay/permisos</span>
-      <span class="key-size">Permisos admin — caché en pilotpay_perms_cache</span>
-    </li>
-    <li>
-      <span class="key-type type-crit">SOLO LOCAL</span>
-      <span class="key-name">pilotpay:${user}:audit_history_v1</span>
-      <span class="key-size">Historial de auditorías — pendiente sync Firebase</span>
-    </li>
-    <li>
-      <span class="key-type type-crit">SOLO LOCAL</span>
-      <span class="key-name">pilotpay:${user}:monthly_v1</span>
-      <span class="key-size">Expedientes mensuales — pendiente sync Firebase</span>
-    </li>
-    <li>
-      <span class="key-type type-info">LOCAL/DISPOSITIVO</span>
-      <span class="key-name">pilotpay_apikey · pilotpay_device_id · pp_ui_mode_v1</span>
-      <span class="key-size">No user-scoped o secreto de dispositivo — no migrar</span>
-    </li>
+    <li><span class="badge badge-ok">FIREBASE</span><span class="key-name">pilotpay_v2_${user}</span><span class="key-size">Perfil — caché de Firebase</span></li>
+    <li><span class="badge badge-ok">FIREBASE</span><span class="key-name">pilotpay/permisos</span><span class="key-size">Permisos — caché en pilotpay_perms_cache</span></li>
+    <li><span class="badge badge-crit">SOLO LOCAL</span><span class="key-name">pilotpay:${user}:audit_history_v1</span><span class="key-size">Historial auditorías — P4 pendiente</span></li>
+    <li><span class="badge badge-crit">SOLO LOCAL</span><span class="key-name">pilotpay:${user}:monthly_v1</span><span class="key-size">Expedientes mensuales — P4 pendiente</span></li>
+    <li><span class="badge badge-info">DISPOSITIVO</span><span class="key-name">pilotpay_apikey · pilotpay_device_id · pp_ui_mode_v1</span><span class="key-size">Secreto o no user-scoped — no migrar</span></li>
   </ul>
 </div>
 
 <script>
 // ════════════════════════════════════════════════════════
+// CONFIG FIREBASE — URL pública (igual que en index.html)
+// API key se lee de localStorage (device-specific, no se exporta)
+// ════════════════════════════════════════════════════════
+var FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
+
+function _fbKey() {
+  try { return localStorage.getItem('pilotpay_apikey') || ''; } catch(e) { return ''; }
+}
+
+async function fbGet(path) {
+  var key = _fbKey();
+  if (!key) return null;
+  try {
+    var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key);
+    return r.ok ? await r.json() : null;
+  } catch(e) { return null; }
+}
+
+async function fbSet(path, data) {
+  var key = _fbKey();
+  if (!key) throw new Error('Sin API key');
+  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key, {
+    method: 'PUT', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
+async function fbUpdate(path, data) {
+  var key = _fbKey();
+  if (!key) throw new Error('Sin API key');
+  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + key, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
+// ════════════════════════════════════════════════════════
 // CONSTANTES
 // ════════════════════════════════════════════════════════
-
-var TOOL_VERSION = '1.0';
+var TOOL_VERSION = '1.1';
 var EXPORT_FORMAT_VERSION = 1;
 
-// Claves que NO deben exportarse/importarse (device-specific o secretos)
-var EXCLUDE_KEYS = [
-  'pilotpay_apikey',
-  'pilotpay_device_id',
-  'pp_ui_mode_v1',
-];
-
-// Prefijo de backup temporal
+var EXCLUDE_KEYS = ['pilotpay_apikey', 'pilotpay_device_id', 'pp_ui_mode_v1'];
 var BACKUP_PREFIX = 'pilotpay_migration_backup_';
 
-// Clasificación de claves para UI
-function classifyKey(key) {
-  if (/^pilotpay:.*:audit_history_v1$/.test(key)) return { label: 'AUDITORÍAS', type: 'type-crit' };
-  if (/^pilotpay:.*:monthly_v1$/.test(key))        return { label: 'MENSUAL', type: 'type-crit' };
-  if (/^pilotpay_v2_/.test(key))                    return { label: 'PERFIL', type: 'type-ok' };
-  if (/^pilotpay_perms/.test(key))                  return { label: 'PERMISOS', type: 'type-ok' };
-  if (/^pilotpay:.*:offline_queue$/.test(key))      return { label: 'COLA', type: 'type-info' };
-  if (/^pilotpay_migration_backup_/.test(key))      return { label: 'BACKUP', type: 'type-info' };
-  if (/^pilotpay_theme_/.test(key))                 return { label: 'TEMA', type: 'type-info' };
-  return { label: 'OTRO', type: 'type-info' };
-}
-
 // ════════════════════════════════════════════════════════
-// ORPHAN DETECTION
-// Un perfil pilotpay_v2_${code} es huérfano si no existe
-// ninguna clave pilotpay:${code}:* — sin auditorías, mensual ni cola.
-// No garantiza que el usuario exista en Firebase, pero sí que
-// nunca tuvo actividad real en este dispositivo.
+// SCAN
 // ════════════════════════════════════════════════════════
-
-var _orphanCodes = []; // códigos detectados como huérfanos (actualizado en cada scan)
-
-function detectOrphans(items) {
-  var profileCodes = [];
-  items.forEach(function(i) {
-    var m = i.key.match(/^pilotpay_v2_(.+)$/);
-    if (m) profileCodes.push(m[1]);
-  });
-  var orphans = profileCodes.filter(function(code) {
-    var prefix = 'pilotpay:' + code + ':';
-    return !items.some(function(i) { return i.key.startsWith(prefix); });
-  });
-  return orphans;
-}
-
-function renderOrphans(orphans, items) {
-  _orphanCodes = orphans;
-  var section = document.getElementById('orphan-section');
-  var listEl  = document.getElementById('orphan-list-el');
-  var statusEl = document.getElementById('orphan-status');
-  if (statusEl) { statusEl.className = 'status'; statusEl.textContent = ''; }
-
-  if (!orphans.length) {
-    section.style.display = 'none';
-    return;
-  }
-  section.style.display = 'block';
-  listEl.innerHTML = orphans.map(function(code) {
-    var key  = 'pilotpay_v2_' + code;
-    var item = items.find(function(i) { return i.key === key; });
-    var size = item ? fmtSize(item.size) : '?';
-    return '<li>' +
-      '<span class="key-type" style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber)">HUÉRFANO</span>' +
-      '<span class="key-name">' + key + '</span>' +
-      '<span class="key-size">' + size + '</span>' +
-      '<button class="btn btn-ghost" style="padding:3px 10px;font-size:11px;margin-left:auto" ' +
-        'onclick="deleteOrphan(\'' + code + '\')">Eliminar</button>' +
-      '</li>';
-  }).join('');
-}
-
-function deleteOrphan(code) {
-  var key = 'pilotpay_v2_' + code;
-  // También limpiar otras posibles claves residuales del mismo código
-  var residual = ['pilotpay_theme_' + code];
-  var deleted = [];
-  try {
-    localStorage.removeItem(key);
-    deleted.push(key);
-    residual.forEach(function(k) {
-      if (localStorage.getItem(k) !== null) {
-        localStorage.removeItem(k);
-        deleted.push(k);
-      }
-    });
-    setStatus('orphan-status', 'ok', 'Eliminado: ' + deleted.join(', '));
-  } catch(e) {
-    setStatus('orphan-status', 'error', 'Error al eliminar: ' + e.message);
-  }
-  renderCurrentKeys();
-}
-
-function deleteAllOrphans() {
-  if (!_orphanCodes.length) return;
-  var ok = confirm(
-    'Se eliminarán los perfiles huérfanos:\n\n' +
-    _orphanCodes.map(function(c) { return 'pilotpay_v2_' + c; }).join('\n') +
-    '\n\n¿Continuar?'
-  );
-  if (!ok) return;
-  _orphanCodes.forEach(function(c) { deleteOrphan(c); });
-}
-
-// ════════════════════════════════════════════════════════
-// SCAN — detectar claves pilotpay* en localStorage actual
-// ════════════════════════════════════════════════════════
-
 function scanLocalStorage() {
   var result = [];
   for (var i = 0; i < localStorage.length; i++) {
@@ -333,16 +288,77 @@ function scanLocalStorage() {
   return result.sort(function(a, b) { return b.size - a.size; });
 }
 
-function fmtSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  return (bytes / 1024).toFixed(1) + ' KB';
+function fmtSize(n) {
+  return n < 1024 ? n + ' B' : (n/1024).toFixed(1) + ' KB';
 }
 
-function renderKeyList(items, elId, excludeList) {
-  var el = document.getElementById(elId);
+function classifyKey(key) {
+  if (/^pilotpay:.*:audit_history_v1$/.test(key)) return { label: 'AUDITORÍAS', cls: 'badge-crit' };
+  if (/^pilotpay:.*:monthly_v1$/.test(key))        return { label: 'MENSUAL',    cls: 'badge-crit' };
+  if (/^pilotpay_v2_/.test(key))                    return { label: 'PERFIL',     cls: 'badge-ok'   };
+  if (/^pilotpay_perms/.test(key))                  return { label: 'PERMISOS',   cls: 'badge-ok'   };
+  if (/^pilotpay:.*:offline_queue$/.test(key))      return { label: 'COLA',       cls: 'badge-info' };
+  if (/^pilotpay_migration_backup_/.test(key))      return { label: 'BACKUP',     cls: 'badge-info' };
+  if (/^pilotpay_theme_/.test(key))                 return { label: 'TEMA',       cls: 'badge-info' };
+  return { label: 'OTRO', cls: 'badge-info' };
+}
+
+// Extrae el código de usuario de una clave pilotpay_v2_${code}
+function profileCode(key) {
+  var m = key.match(/^pilotpay_v2_(.+)$/);
+  return m ? m[1] : null;
+}
+
+// Lee el perfil local de un usuario
+function readLocalProfile(code) {
+  try {
+    var raw = localStorage.getItem('pilotpay_v2_' + code);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+// ════════════════════════════════════════════════════════
+// CLASIFICACIÓN LOCAL — sin Firebase
+// Tres categorías de códigos de usuario:
+//   recoverable : pilotpay_v2_X + pilotpay:X:* (actividad real)
+//   prob_orphan : pilotpay_v2_X sin pilotpay:X:* (sin actividad)
+//   normal      : todos los demás
+// ════════════════════════════════════════════════════════
+function classifyLocalUsers(items) {
+  var profileCodes = [];
+  items.forEach(function(i) {
+    var c = profileCode(i.key);
+    if (c) profileCodes.push(c);
+  });
+
+  var recoverable = [];
+  var probOrphans = [];
+
+  profileCodes.forEach(function(code) {
+    var prefix = 'pilotpay:' + code + ':';
+    var hasActivity = items.some(function(i) { return i.key.startsWith(prefix); });
+    if (hasActivity) {
+      recoverable.push(code); // puede estar en Firebase o no — lo sabemos solo tras consultar
+    } else {
+      probOrphans.push(code);
+    }
+  });
+
+  return { recoverable: recoverable, probOrphans: probOrphans };
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER — lista principal de claves
+// ════════════════════════════════════════════════════════
+function renderKeyList(items, excludeKeys) {
+  var el = document.getElementById('key-list-el');
   if (!el) return;
-  excludeList = excludeList || [];
-  var filtered = items.filter(function(i) { return !excludeList.includes(i.key); });
+  excludeKeys = excludeKeys || [];
+  var filtered = items.filter(function(i) {
+    return !excludeKeys.includes(i.key) &&
+           !EXCLUDE_KEYS.includes(i.key) &&
+           !i.key.startsWith(BACKUP_PREFIX);
+  });
   if (!filtered.length) {
     el.innerHTML = '<li style="color:var(--text3);font-size:12px;padding:8px 0">Sin datos pilotpay* en este origen.</li>';
     return;
@@ -350,7 +366,7 @@ function renderKeyList(items, elId, excludeList) {
   el.innerHTML = filtered.map(function(item) {
     var cls = classifyKey(item.key);
     return '<li>' +
-      '<span class="key-type ' + cls.type + '">' + cls.label + '</span>' +
+      '<span class="badge ' + cls.cls + '">' + cls.label + '</span>' +
       '<span class="key-name">' + item.key + '</span>' +
       '<span class="key-size">' + fmtSize(item.size) + '</span>' +
       '</li>';
@@ -358,21 +374,246 @@ function renderKeyList(items, elId, excludeList) {
 }
 
 // ════════════════════════════════════════════════════════
+// RENDER — sección "probable huérfano" (sin actividad local)
+// ════════════════════════════════════════════════════════
+function renderProbOrphans(probOrphans, items) {
+  var section = document.getElementById('orphan-section');
+  var listEl  = document.getElementById('orphan-list-el');
+  document.getElementById('orphan-status').className = 'status';
+
+  if (!probOrphans.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  listEl.innerHTML = probOrphans.map(function(code) {
+    var key  = 'pilotpay_v2_' + code;
+    var item = items.find(function(i) { return i.key === key; });
+    var size = item ? fmtSize(item.size) : '?';
+    var prof = readLocalProfile(code);
+    var name = prof && (prof.name || prof.alias) ? (prof.name || '') + (prof.apellidos ? ' ' + prof.apellidos : '') : '';
+
+    return '<li>' +
+      '<span class="badge badge-amber">PROB. HUÉRFANO</span>' +
+      '<span class="key-name">' + key + (name ? ' <span style="color:var(--text3);font-size:11px">(' + name.trim() + ')</span>' : '') + '</span>' +
+      '<span class="key-size">' + size + '</span>' +
+      '<button class="btn btn-ghost btn-sm" style="margin-left:auto" ' +
+        'onclick="deleteProbOrphan(\'' + code + '\')" ' +
+        'title="Eliminar solo si estás seguro de que no es un usuario real">Eliminar</button>' +
+      '</li>';
+  }).join('');
+}
+
+function deleteProbOrphan(code) {
+  var ok = confirm(
+    'Eliminar perfil SIN actividad local:\n  pilotpay_v2_' + code + '\n\n' +
+    '¿Estás seguro de que no es un usuario real?\n' +
+    'Recomendado: verifica contra Firebase primero (botón "Verificar contra Firebase").'
+  );
+  if (!ok) return;
+  var residual = ['pilotpay_theme_' + code, 'pilotpay_v2_' + code];
+  var deleted = [];
+  residual.forEach(function(k) {
+    if (localStorage.getItem(k) !== null) {
+      try { localStorage.removeItem(k); deleted.push(k); } catch(e) {}
+    }
+  });
+  setStatus('orphan-status', deleted.length ? 'ok' : 'error',
+    deleted.length ? 'Eliminado: ' + deleted.join(', ') : 'Error al eliminar.');
+  renderCurrentKeys();
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER — sección recuperables (requiere resultado Firebase)
+// ════════════════════════════════════════════════════════
+function renderRecoverable(missingInFb, items) {
+  var section = document.getElementById('recover-section');
+  var listEl  = document.getElementById('recover-list');
+
+  if (!missingInFb.length) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  listEl.innerHTML = missingInFb.map(function(code) {
+    var prof = readLocalProfile(code) || {};
+    var name     = prof.name      || '';
+    var apellidos= prof.apellidos || '';
+    var funcion  = prof.funcion   || 'CMD';
+    var base     = prof.base      || 'MAD';
+    var nivel    = prof.nivel != null ? prof.nivel : (prof.nivelActual != null ? prof.nivelActual : 3);
+    var irpf     = prof.irpf     || 30;
+    var ingreso  = prof.ingreso   || prof.fechaIngresoEmpresa || '';
+
+    return '<div class="recover-form" id="rform-' + code + '">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">' +
+        '<span class="badge badge-amber">RECUPERABLE</span>' +
+        '<span style="font-family:var(--mono);color:var(--blue2);font-size:13px"><strong>' + code + '</strong></span>' +
+        '<span style="color:var(--text3);font-size:12px">' + name + ' ' + apellidos + '</span>' +
+      '</div>' +
+      '<div class="recover-row">' +
+        '<div><label>Nombre</label><input type="text" id="r-name-' + code + '" value="' + esc(name) + '"></div>' +
+        '<div><label>Apellidos</label><input type="text" id="r-ape-' + code + '" value="' + esc(apellidos) + '"></div>' +
+        '<div><label>Función</label><input type="text" id="r-fn-' + code + '" value="' + esc(funcion) + '"></div>' +
+        '<div><label>Base</label><input type="text" id="r-base-' + code + '" value="' + esc(base) + '"></div>' +
+        '<div><label>Nivel</label><input type="text" id="r-nivel-' + code + '" value="' + nivel + '"></div>' +
+        '<div><label>IRPF (%)</label><input type="text" id="r-irpf-' + code + '" value="' + irpf + '"></div>' +
+        '<div><label>Ingreso empresa</label><input type="text" id="r-ing-' + code + '" value="' + esc(ingreso) + '" placeholder="YYYY-MM-DD"></div>' +
+        '<div><label>Nueva contraseña <span style="color:var(--red)">*</span></label>' +
+          '<input type="password" id="r-pass-' + code + '" placeholder="Requerida para login"></div>' +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-amber" onclick="recoverUser(\'' + code + '\')">Recuperar en Firebase</button>' +
+        '<span style="font-size:11px;color:var(--text3)">Permisos mínimos asignados por defecto · No sobrescribe si ya existe</span>' +
+      '</div>' +
+      '<div id="r-status-' + code + '" class="status"></div>' +
+    '</div>';
+  }).join('');
+}
+
+function esc(s) {
+  return String(s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function recoverUser(code) {
+  var pass    = (document.getElementById('r-pass-' + code)  || {}).value || '';
+  var name    = (document.getElementById('r-name-' + code)  || {}).value || '';
+  var ape     = (document.getElementById('r-ape-' + code)   || {}).value || '';
+  var funcion = (document.getElementById('r-fn-' + code)    || {}).value || 'CMD';
+  var base    = (document.getElementById('r-base-' + code)  || {}).value || 'MAD';
+  var nivel   = parseInt((document.getElementById('r-nivel-' + code) || {}).value) || 3;
+  var irpf    = parseFloat((document.getElementById('r-irpf-' + code) || {}).value) || 30;
+  var ingreso = (document.getElementById('r-ing-' + code)   || {}).value || null;
+  var statusId = 'r-status-' + code;
+
+  if (!pass) { setStatus(statusId, 'error', 'Contraseña requerida para que el usuario pueda hacer login.'); return; }
+  if (!name) { setStatus(statusId, 'error', 'Nombre requerido.'); return; }
+
+  setStatus(statusId, 'warn', '⟳ Verificando que ' + code + ' no existe ya en Firebase…');
+
+  try {
+    var existing = await fbGet('pilotpay/usuarios/' + code);
+    if (existing) {
+      setStatus(statusId, 'warn', code + ' ya existe en Firebase — no se sobrescribe.\nSi el problema persiste, verifica el panel de administración de la app.');
+      return;
+    }
+
+    var newUser = {
+      pass: pass, name: name, apellidos: ape,
+      funcion: funcion, nivel: nivel, base: base,
+      irpf: irpf, ingreso: ingreso || null,
+      admin: false, alias: '',
+    };
+    var minPerms = { funciones: [funcion], bases: [base] };
+
+    setStatus(statusId, 'warn', '⟳ Creando usuario en Firebase…');
+    await fbSet('pilotpay/usuarios/' + code, newUser);
+    await fbSet('pilotpay/permisos/' + code, minPerms);
+
+    setStatus(statusId, 'ok',
+      '✓ ' + code + ' recuperado en Firebase.\n' +
+      '  pilotpay/usuarios/' + code + ' — creado\n' +
+      '  pilotpay/permisos/' + code + ' — permisos mínimos (' + funcion + '/' + base + ')\n\n' +
+      'Los datos de auditoría y expedientes mensuales ya estaban en local — no se tocaron.\n' +
+      'Recarga la app y haz login con ' + code + ' para verificar.');
+  } catch(e) {
+    setStatus(statusId, 'error', 'Error al escribir en Firebase: ' + e.message + '\nVerifica que la API key sea correcta y que haya conexión.');
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// FIREBASE CHECK — detectar inconsistencias
+// ════════════════════════════════════════════════════════
+async function runFirebaseCheck() {
+  var fbKeyWarn = document.getElementById('fb-key-status');
+  var statusEl = document.getElementById('fb-check-status');
+  fbKeyWarn.style.display = 'none';
+
+  var apiKey = _fbKey();
+  if (!apiKey) {
+    fbKeyWarn.style.display = 'block';
+    fbKeyWarn.textContent = '⚠️ No hay API key guardada en este dispositivo (pilotpay_apikey). Inicia sesión en la app principal para guardarla, luego vuelve aquí.';
+    return;
+  }
+
+  setStatus('fb-check-status', 'warn', '⟳ Conectando con Firebase…');
+
+  var fbUsers = await fbGet('pilotpay/usuarios');
+  if (!fbUsers) {
+    setStatus('fb-check-status', 'error',
+      'Firebase devolvió null.\nPosibles causas: sin conexión, token expirado, API key incorrecta.\n' +
+      'Inicia sesión en la app, espera a que sincronice, y vuelve a intentarlo.');
+    return;
+  }
+
+  var fbCodes = Object.keys(fbUsers);
+  setStatus('fb-check-status', 'ok', '✓ Firebase conectado. Usuarios en Firebase: ' + fbCodes.join(', '));
+
+  // Cruzar con claves locales
+  var items = scanLocalStorage();
+  var local = classifyLocalUsers(items);
+
+  // De los "recuperables" locales, filtrar cuáles NO están en Firebase
+  var missingInFb = local.recoverable.filter(function(c) { return !fbCodes.includes(c); });
+  // Los recuperables que SÍ están en Firebase son simplemente usuarios normales
+  var okCodes = local.recoverable.filter(function(c) { return fbCodes.includes(c); });
+
+  // Actualizar render
+  renderRecoverable(missingInFb, items);
+
+  var msg = '✓ Firebase: ' + fbCodes.length + ' usuarios. ' +
+    'Local con actividad: ' + local.recoverable.length + ' (' +
+    (missingInFb.length ? missingInFb.length + ' ausentes en Firebase: ' + missingInFb.join(', ') : 'todos presentes en Firebase') +
+    ').' +
+    (local.probOrphans.length ? '\nProb. huérfanos (sin actividad local): ' + local.probOrphans.join(', ') : '');
+
+  setStatus('fb-check-status', missingInFb.length ? 'warn' : 'ok', msg);
+}
+
+// ════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════════════
+function renderCurrentKeys() {
+  var items = scanLocalStorage();
+  var local = classifyLocalUsers(items);
+
+  // Claves a excluir del listado principal (se muestran en secciones propias)
+  var recoverableKeys = local.recoverable.map(function(c) { return 'pilotpay_v2_' + c; });
+  var orphanKeys      = local.probOrphans.map(function(c) { return 'pilotpay_v2_' + c; });
+
+  renderKeyList(items, recoverableKeys.concat(orphanKeys));
+  renderProbOrphans(local.probOrphans, items);
+  // recover-section se muestra solo tras runFirebaseCheck()
+
+  // Export summary
+  var exportable = items.filter(function(i) {
+    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
+  });
+  var totalBytes = exportable.reduce(function(s, i) { return s + i.size; }, 0);
+  var notes = [];
+  if (local.recoverable.length) notes.push(local.recoverable.length + ' con actividad local');
+  if (local.probOrphans.length) notes.push(local.probOrphans.length + ' prob. huérfano(s)');
+  var sg = document.getElementById('export-summary');
+  if (sg) sg.innerHTML =
+    '<div class="summary-cell"><div class="summary-label">Claves exportables</div>' +
+      '<div class="summary-value">' + exportable.length + '</div>' +
+      (notes.length ? '<div style="font-size:10px;color:var(--amber);margin-top:2px">' + notes.join(' · ') + '</div>' : '') +
+    '</div>' +
+    '<div class="summary-cell"><div class="summary-label">Tamaño total</div><div class="summary-value">' + fmtSize(totalBytes) + '</div></div>';
+}
+
+// ════════════════════════════════════════════════════════
 // EXPORT
 // ════════════════════════════════════════════════════════
-
 function buildExportPayload() {
   var items = scanLocalStorage().filter(function(i) {
     return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
   });
   var data = {};
-  items.forEach(function(i) { data[i.key] = i.raw; }); // raw strings, preserva exactamente
+  items.forEach(function(i) { data[i.key] = i.raw; });
   return {
     _meta: {
-      version: EXPORT_FORMAT_VERSION,
-      tool: 'PilotPay migrate v' + TOOL_VERSION,
-      exportedAt: new Date().toISOString(),
-      origin: location.origin,
+      version: EXPORT_FORMAT_VERSION, tool: 'PilotPay migrate v' + TOOL_VERSION,
+      exportedAt: new Date().toISOString(), origin: location.origin,
       keysCount: items.length,
       totalBytes: items.reduce(function(s, i) { return s + i.size; }, 0),
     },
@@ -383,9 +624,8 @@ function buildExportPayload() {
 function doExport() {
   try {
     var payload = buildExportPayload();
-    if (!payload.data || Object.keys(payload.data).length === 0) {
-      setStatus('export-status', 'warn', 'No hay datos pilotpay* exportables en este origen.');
-      return;
+    if (!Object.keys(payload.data).length) {
+      setStatus('export-status', 'warn', 'Sin datos pilotpay* exportables en este origen.'); return;
     }
     var json = JSON.stringify(payload, null, 2);
     var ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -396,11 +636,9 @@ function doExport() {
     a.click();
     URL.revokeObjectURL(a.href);
     setStatus('export-status', 'ok',
-      'Exportadas ' + Object.keys(payload.data).length + ' claves (' +
-      fmtSize(payload._meta.totalBytes) + '). Guarda el archivo y ábrelo en el otro origen.');
-  } catch(e) {
-    setStatus('export-status', 'error', 'Error al exportar: ' + e.message);
-  }
+      'Exportadas ' + Object.keys(payload.data).length + ' claves (' + fmtSize(payload._meta.totalBytes) + ').\n' +
+      'Guarda el archivo y ábrelo en el otro origen.');
+  } catch(e) { setStatus('export-status', 'error', 'Error: ' + e.message); }
 }
 
 function doPreview() {
@@ -409,87 +647,52 @@ function doPreview() {
     var ta = document.getElementById('export-preview');
     ta.style.display = 'block';
     ta.value = JSON.stringify(payload, null, 2);
-    setStatus('export-status', 'ok', 'Vista previa generada — copia el contenido manualmente si necesitas.');
-  } catch(e) {
-    setStatus('export-status', 'error', 'Error: ' + e.message);
-  }
+    setStatus('export-status', 'ok', 'Vista previa generada.');
+  } catch(e) { setStatus('export-status', 'error', 'Error: ' + e.message); }
 }
 
 // ════════════════════════════════════════════════════════
-// VALIDACIÓN — verificar estructura antes de importar
+// IMPORT + VALIDACIÓN
 // ════════════════════════════════════════════════════════
-
-var _importPayload = null; // payload cargado pendiente de confirmar
+var _importPayload = null;
 
 function validatePayload(payload) {
   var errors = [];
-  if (!payload || typeof payload !== 'object') { errors.push('El archivo no es un objeto JSON válido.'); return errors; }
-  if (!payload._meta || payload._meta.version !== EXPORT_FORMAT_VERSION) {
-    errors.push('Formato no reconocido (falta _meta.version o versión incorrecta).');
-  }
-  if (!payload.data || typeof payload.data !== 'object') {
-    errors.push('Falta campo data.');
-    return errors;
-  }
-  var keys = Object.keys(payload.data);
-  keys.forEach(function(k) {
-    // Claves excluidas: se omitirán en la importación — no es un error de validación.
-    if (EXCLUDE_KEYS.includes(k)) return;
-    // Solo aceptar claves con prefijo pilotpay
-    if (!k.startsWith('pilotpay')) {
-      errors.push('Clave no permitida (prefijo incorrecto): ' + k);
-      return;
-    }
-    // Intentar parsear el valor para validar que es JSON válido
+  if (!payload || typeof payload !== 'object') { errors.push('No es un objeto JSON válido.'); return errors; }
+  if (!payload._meta || payload._meta.version !== EXPORT_FORMAT_VERSION)
+    errors.push('Formato no reconocido (_meta.version incorrecto o ausente).');
+  if (!payload.data || typeof payload.data !== 'object') { errors.push('Falta campo data.'); return errors; }
+  Object.keys(payload.data).forEach(function(k) {
+    if (EXCLUDE_KEYS.includes(k)) return; // skip silencioso
+    if (!k.startsWith('pilotpay')) { errors.push('Clave no permitida: ' + k); return; }
     var raw = payload.data[k];
-    if (raw === null || raw === undefined) {
-      errors.push('Valor null/undefined para: ' + k);
-      return;
-    }
+    if (raw == null) { errors.push('Valor null para: ' + k); return; }
     try {
       var parsed = JSON.parse(raw);
-      // Validaciones de estructura por tipo de clave
-      if (/audit_history_v1/.test(k) && !Array.isArray(parsed)) {
-        errors.push(k + ': se espera array, encontrado ' + typeof parsed);
-      }
-      if (/monthly_v1/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed))) {
-        errors.push(k + ': se espera objeto, encontrado ' + typeof parsed);
-      }
-      if (/pilotpay_v2_/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed))) {
-        errors.push(k + ': se espera objeto, encontrado ' + typeof parsed);
-      }
-    } catch(e) {
-      errors.push(k + ': JSON inválido — ' + e.message);
-    }
+      if (/audit_history_v1/.test(k) && !Array.isArray(parsed))
+        errors.push(k + ': se espera array');
+      if (/monthly_v1/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
+        errors.push(k + ': se espera objeto');
+      if (/pilotpay_v2_/.test(k) && (typeof parsed !== 'object' || Array.isArray(parsed)))
+        errors.push(k + ': se espera objeto');
+    } catch(e) { errors.push(k + ': JSON inválido — ' + e.message); }
   });
   return errors;
 }
 
-// ════════════════════════════════════════════════════════
-// BACKUP — guardar snapshot del localStorage actual
-// ════════════════════════════════════════════════════════
-
 function createBackup() {
   try {
-    var ts = Date.now();
-    var backup = {};
+    var ts = Date.now(), backup = {};
     for (var i = 0; i < localStorage.length; i++) {
       var k = localStorage.key(i);
-      if (k && k.startsWith('pilotpay') && !k.startsWith(BACKUP_PREFIX)) {
+      if (k && k.startsWith('pilotpay') && !k.startsWith(BACKUP_PREFIX))
         backup[k] = localStorage.getItem(k);
-      }
     }
-    var key = BACKUP_PREFIX + ts;
-    localStorage.setItem(key, JSON.stringify({ ts: ts, data: backup }));
-    return key;
-  } catch(e) {
-    return null;
-  }
+    var bk = BACKUP_PREFIX + ts;
+    localStorage.setItem(bk, JSON.stringify({ ts: ts, data: backup }));
+    return bk;
+  } catch(e) { return null; }
 }
-
-// ════════════════════════════════════════════════════════
-// IMPORT
-// ════════════════════════════════════════════════════════
 
 function loadFile(file) {
   var reader = new FileReader();
@@ -498,14 +701,11 @@ function loadFile(file) {
       var payload = JSON.parse(e.target.result);
       var errors = validatePayload(payload);
       if (errors.length) {
-        setStatus('import-status', 'error', 'Errores de validación:\n• ' + errors.join('\n• '));
-        return;
+        setStatus('import-status', 'error', 'Errores de validación:\n• ' + errors.join('\n• ')); return;
       }
       _importPayload = payload;
       renderImportPreview(payload);
-    } catch(ex) {
-      setStatus('import-status', 'error', 'No se pudo parsear el archivo: ' + ex.message);
-    }
+    } catch(ex) { setStatus('import-status', 'error', 'No se pudo parsear: ' + ex.message); }
   };
   reader.readAsText(file);
 }
@@ -514,84 +714,51 @@ function renderImportPreview(payload) {
   var keys = Object.keys(payload.data);
   var existing = keys.filter(function(k) { return localStorage.getItem(k) !== null; });
   var fresh    = keys.filter(function(k) { return localStorage.getItem(k) === null; });
-
-  // Summary grid
-  var sg = document.getElementById('import-summary');
-  sg.innerHTML =
+  document.getElementById('import-summary').innerHTML =
     '<div class="summary-cell"><div class="summary-label">Claves en archivo</div><div class="summary-value">' + keys.length + '</div></div>' +
-    '<div class="summary-cell"><div class="summary-label">Ya existen aquí</div><div class="summary-value" style="color:var(--amber)">' + existing.length + '</div></div>' +
+    '<div class="summary-cell"><div class="summary-label">Ya existen</div><div class="summary-value" style="color:var(--amber)">' + existing.length + '</div></div>' +
     '<div class="summary-cell"><div class="summary-label">Nuevas</div><div class="summary-value" style="color:var(--green)">' + fresh.length + '</div></div>' +
-    '<div class="summary-cell"><div class="summary-label">Origen exportado</div><div class="summary-value" style="font-size:11px;margin-top:4px;color:var(--text2)">' + (payload._meta.origin || '?') + '</div></div>';
-
-  // Key list
-  var el = document.getElementById('import-key-list');
-  el.innerHTML = keys.map(function(k) {
+    '<div class="summary-cell"><div class="summary-label">Origen</div><div class="summary-value" style="font-size:10px;margin-top:4px;color:var(--text2)">' + (payload._meta.origin || '?') + '</div></div>';
+  document.getElementById('import-key-list').innerHTML = keys.map(function(k) {
     var cls = classifyKey(k);
-    var existsMark = localStorage.getItem(k) !== null
-      ? '<span style="font-size:10px;color:var(--amber);margin-left:6px">ya existe</span>' : '';
-    return '<li>' +
-      '<span class="key-type ' + cls.type + '">' + cls.label + '</span>' +
-      '<span class="key-name">' + k + existsMark + '</span>' +
-      '<span class="key-size">' + fmtSize((payload.data[k] || '').length) + '</span>' +
-      '</li>';
+    var ex = localStorage.getItem(k) !== null ? ' <span style="font-size:10px;color:var(--amber)">ya existe</span>' : '';
+    return '<li><span class="badge ' + cls.cls + '">' + cls.label + '</span>' +
+      '<span class="key-name">' + k + ex + '</span>' +
+      '<span class="key-size">' + fmtSize((payload.data[k]||'').length) + '</span></li>';
   }).join('');
-
   document.getElementById('import-preview').style.display = 'block';
   setStatus('import-status', 'ok',
-    'Archivo validado. ' + keys.length + ' claves listas para importar.' +
-    (existing.length ? ' ' + existing.length + ' claves ya existen — se preservarán salvo que uses "sobrescribir todo".' : ''));
+    'Archivo validado — ' + keys.length + ' claves.' +
+    (existing.length ? ' ' + existing.length + ' ya existen (se preservarán salvo "sobrescribir todo").' : ''));
 }
 
 function doImport(overwrite) {
   if (!_importPayload) return;
   var errors = validatePayload(_importPayload);
-  if (errors.length) {
-    setStatus('import-status', 'error', 'Validación fallida: ' + errors.join('; '));
-    return;
-  }
-
-  // Crear backup ANTES de escribir
-  var backupKey = createBackup();
-  if (!backupKey) {
-    setStatus('import-status', 'error', 'No se pudo crear backup. Importación cancelada por seguridad.');
-    return;
-  }
-
+  if (errors.length) { setStatus('import-status', 'error', 'Validación fallida: ' + errors.join('; ')); return; }
+  var bk = createBackup();
+  if (!bk) { setStatus('import-status', 'error', 'No se pudo crear backup. Importación cancelada.'); return; }
   var written = 0, skipped = 0, failed = 0;
-  var keys = Object.keys(_importPayload.data);
-  keys.forEach(function(k) {
+  Object.keys(_importPayload.data).forEach(function(k) {
     if (EXCLUDE_KEYS.includes(k)) { skipped++; return; }
     if (!overwrite && localStorage.getItem(k) !== null) { skipped++; return; }
-    try {
-      localStorage.setItem(k, _importPayload.data[k]);
-      written++;
-    } catch(e) {
-      failed++;
-    }
+    try { localStorage.setItem(k, _importPayload.data[k]); written++; }
+    catch(e) { failed++; }
   });
-
-  var msg = 'Importación completada. Escritas: ' + written + ' · Omitidas: ' + skipped + ' · Fallidas: ' + failed + '.\nBackup: ' + backupKey + '\n\n→ Recarga la app principal (index.html) para que lea los datos importados.';
-  if (failed > 0) {
-    setStatus('import-status', 'error', msg + '\nAlgunas claves no pudieron escribirse (¿localStorage lleno?).');
-  } else {
-    setStatus('import-status', 'ok', msg);
-  }
-
-  // Refrescar lista de claves y ocultar preview (ya obsoleto)
+  var msg = 'Importación completada.\nEscritas: ' + written + ' · Omitidas: ' + skipped + ' · Fallidas: ' + failed +
+    '\nBackup: ' + bk + '\n\n→ Recarga la app principal (index.html) para leer los datos importados.';
+  setStatus('import-status', failed ? 'error' : 'ok', msg + (failed ? '\n¿localStorage lleno?' : ''));
   document.getElementById('import-preview').style.display = 'none';
   renderCurrentKeys();
 }
 
 function confirmOverwrite() {
   if (!_importPayload) return;
-  var keys = Object.keys(_importPayload.data);
-  var existing = keys.filter(function(k) { return localStorage.getItem(k) !== null; });
-  if (existing.length === 0) { doImport(true); return; }
-  var ok = confirm(
-    '⚠️ Se sobrescribirán ' + existing.length + ' claves que ya existen en este origen:\n\n' +
-    existing.slice(0, 8).join('\n') + (existing.length > 8 ? '\n…y ' + (existing.length - 8) + ' más' : '') +
-    '\n\nSe creará un backup antes. ¿Continuar?'
-  );
+  var existing = Object.keys(_importPayload.data).filter(function(k) { return localStorage.getItem(k) !== null; });
+  if (!existing.length) { doImport(true); return; }
+  var ok = confirm('⚠️ Se sobrescribirán ' + existing.length + ' claves ya existentes:\n\n' +
+    existing.slice(0,8).join('\n') + (existing.length > 8 ? '\n…y ' + (existing.length-8) + ' más' : '') +
+    '\n\nSe creará backup antes. ¿Continuar?');
   if (ok) doImport(true);
 }
 
@@ -599,86 +766,52 @@ function resetImport() {
   _importPayload = null;
   document.getElementById('import-preview').style.display = 'none';
   document.getElementById('import-status').className = 'status';
-  document.getElementById('import-status').textContent = '';
-  // Resetear el input para que el mismo archivo pueda volver a seleccionarse
   document.getElementById('file-input').value = '';
 }
 
 // ════════════════════════════════════════════════════════
-// HELPERS UI
+// HELPERS
 // ════════════════════════════════════════════════════════
-
 function setStatus(id, type, msg) {
   var el = document.getElementById(id);
+  if (!el) return;
   el.className = 'status ' + type;
   el.textContent = msg;
   el.style.display = 'block';
-  el.style.whiteSpace = 'pre-wrap';
-}
-
-function renderCurrentKeys() {
-  var items = scanLocalStorage();
-
-  // Detectar huérfanos antes de renderizar (para excluirlos del listado principal con badge propio)
-  var orphans = detectOrphans(items);
-  var orphanKeys = orphans.map(function(c) { return 'pilotpay_v2_' + c; });
-
-  // Listado principal: excluir device-specific, backups y huérfanos (se muestran en sección propia)
-  var excludeFromList = EXCLUDE_KEYS
-    .concat(items.filter(function(i) { return i.key.startsWith(BACKUP_PREFIX); }).map(function(i) { return i.key; }))
-    .concat(orphanKeys);
-  renderKeyList(items, 'key-list-el', excludeFromList);
-
-  // Sección de huérfanos
-  renderOrphans(orphans, items);
-
-  // Export summary — huérfanos SÍ se exportan si el usuario no los limpió (decisión consciente)
-  var exportable = items.filter(function(i) {
-    return !EXCLUDE_KEYS.includes(i.key) && !i.key.startsWith(BACKUP_PREFIX);
-  });
-  var totalBytes = exportable.reduce(function(s, i) { return s + i.size; }, 0);
-  var sg = document.getElementById('export-summary');
-  if (sg) sg.innerHTML =
-    '<div class="summary-cell"><div class="summary-label">Claves exportables</div><div class="summary-value">' + exportable.length + (orphans.length ? '<span style="color:var(--amber);font-size:12px;margin-left:4px">(' + orphans.length + ' huérfano' + (orphans.length > 1 ? 's' : '') + ')</span>' : '') + '</div></div>' +
-    '<div class="summary-cell"><div class="summary-label">Tamaño total</div><div class="summary-value">' + fmtSize(totalBytes) + '</div></div>';
 }
 
 // ════════════════════════════════════════════════════════
-// DRAG & DROP + FILE INPUT
+// DRAG & DROP
 // ════════════════════════════════════════════════════════
-
 var dropZone = document.getElementById('drop-zone');
-dropZone.addEventListener('dragover', function(e) {
-  e.preventDefault();
-  dropZone.classList.add('drag-over');
-});
-dropZone.addEventListener('dragleave', function() {
-  dropZone.classList.remove('drag-over');
-});
+dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('drag-over'); });
 dropZone.addEventListener('drop', function(e) {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  var file = e.dataTransfer.files[0];
-  if (file) loadFile(file);
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  var f = e.dataTransfer.files[0]; if (f) loadFile(f);
 });
 document.getElementById('file-input').addEventListener('change', function(e) {
-  var file = e.target.files[0];
-  if (file) loadFile(file);
+  var f = e.target.files[0]; if (f) loadFile(f);
 });
 
 // ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
-
 (function init() {
-  var origin = location.origin;
   var badge = document.getElementById('origin-badge');
   var urlEl = document.getElementById('origin-url');
   urlEl.textContent = location.href;
-
-  var isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(origin);
+  var isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(location.origin);
   badge.textContent = isLocal ? 'LOCAL' : 'REMOTO';
   badge.className = 'origin-badge ' + (isLocal ? 'origin-local' : 'origin-remote');
+
+  // Avisar si no hay API key
+  var apiKey = _fbKey();
+  if (!apiKey) {
+    var el = document.getElementById('fb-key-status');
+    el.style.display = 'block';
+    el.textContent = '⚠️ No hay pilotpay_apikey en este origen. Inicia sesión en la app principal para guardarla antes de usar "Verificar contra Firebase".';
+  }
 
   renderCurrentKeys();
 })();
