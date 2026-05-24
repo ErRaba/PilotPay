@@ -87,7 +87,7 @@
   // Persiste todos los meses con datos significativos.
   // monthly_v1 es el expediente vivo — incluye meses auditados, regularizados, etc.
   // audit_history_v1 es el log de eventos de auditoría (append-only, no se toca aquí).
-  function _saveMonthly() {
+  function _saveMonthly(changedKey) {
     try {
       var k = _monthlyKey();
       if (!k) return;
@@ -113,6 +113,21 @@
         console.warn('[PilotPayStore] monthly_v1 tamaño:', kb, 'KB —', Object.keys(toSave).length, 'meses');
       } else {
         console.log('[PilotPayStore] monthly_v1 guardado:', kb, 'KB —', Object.keys(toSave).length, 'meses');
+      }
+
+      // P4 Fase 2: write-through del nodo exacto modificado hacia Firebase.
+      // Guards triple: changedKey presente + _ready (post-init) + no en hydration.
+      // Con flag apagado _notifyFirebase() es no-op — comportamiento idéntico al actual.
+      if (changedKey && _ready && !_isHydratingFromIDB) {
+        var _p4mr = toSave[changedKey];
+        if (_p4mr) {
+          var _p4path = 'pilotpay/historicos/' + _userId +
+                        '/monthly/' + _p4mr.year + '_' + _p4mr.month;
+          console.log('[P4] monthly notify:', _p4path);
+          _notifyFirebase(_p4path, _p4Decorate(_p4mr));
+        } else {
+          console.log('[P4] monthly skip hydrate:', changedKey, '(sin datos significativos)');
+        }
       }
     } catch (e) { console.warn('[PilotPayStore] _saveMonthly error:', e); }
   }
@@ -767,7 +782,7 @@
       }
       var ts = new Date().toISOString();
       Object.assign(_monthly[k], data, { _updatedAt: ts });
-      _saveMonthly();
+      _saveMonthly(k);
     },
 
     // Llamar desde _varsNotifyStore() cuando el usuario confirma el PDF de variables.
@@ -797,7 +812,7 @@
                               source: rp.source, resolvedAt: now };
       }
       _setEstado(mr, 'pending_calculation', { reason: 'variables-confirmadas' });
-      _saveMonthly();
+      _saveMonthly(k);
     },
 
     // Llamar desde _recalcNotifyStore() cuando se completa un cálculo teórico.
@@ -835,7 +850,7 @@
           mr.estado === 'pendiente') {
         _setEstado(mr, 'pending_comparison', { reason: 'calculo-done' });
       }
-      _saveMonthly();
+      _saveMonthly(k);
     },
     getEstado: function (year, month) {
       var mr = this.get(year, month);
@@ -1007,7 +1022,7 @@
         var nuevoEstadoAudit = (auditRecord.nDiscrepancias > 0) ? 'con_diferencias' : 'auditado';
         _setEstado(mr, nuevoEstadoAudit, { force: true, reason: 'auditoria-completada' });
       }
-      _saveMonthly();
+      _saveMonthly(k);
     },
 
     // Llamar desde hstRegularizar() en index.html.
@@ -1035,7 +1050,7 @@
       if (mr.estado === 'con_diferencias') {
         _setEstado(mr, 'regularizado', { reason: 'regularizacion-done' });
       }
-      _saveMonthly();
+      _saveMonthly(k);
     },
 
     // Helper: devuelve el MonthRecord correspondiente a un AuditRecord.
