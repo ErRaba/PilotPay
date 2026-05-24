@@ -4994,16 +4994,78 @@ function calcSolidaridadTrabajador2026(baseCotizableSinTope) {
 const FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
 const FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
 
+// ── FIREBASE ANONYMOUS AUTH (REST) ──
+// Obtiene un ID token JWT anónimo válido para ?auth= en Firebase RTDB REST API.
+// No requiere SDK. Token dura 1 hora; se renueva automáticamente con refreshToken.
+// Firebase Console → Authentication → Sign-in methods → Anonymous debe estar habilitado.
+let _fbToken = null;
+let _fbTokenExp = 0;
+let _fbRefreshToken = null;
+
+async function fbSignIn() {
+  // Si el token sigue siendo válido (con margen de 60 s), no hacer nada.
+  if (_fbToken && Date.now() < _fbTokenExp - 60000) return;
+
+  // Intentar renovar con refreshToken existente.
+  if (_fbRefreshToken) {
+    try {
+      const r = await fetch(
+        'https://securetoken.googleapis.com/v1/token?key=' + FB_KEY,
+        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(_fbRefreshToken) }
+      );
+      if (r.ok) {
+        const d = await r.json();
+        _fbToken = d.id_token;
+        _fbRefreshToken = d.refresh_token;
+        _fbTokenExp = Date.now() + parseInt(d.expires_in, 10) * 1000;
+        console.log('[FB] token renovado (anon)');
+        return;
+      }
+    } catch(e) { /* caer en fresh sign-in */ }
+  }
+
+  // Sign-in anónimo inicial.
+  try {
+    const r = await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_KEY,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnSecureToken: true }) }
+    );
+    if (r.ok) {
+      const d = await r.json();
+      _fbToken = d.idToken;
+      _fbRefreshToken = d.refreshToken;
+      _fbTokenExp = Date.now() + parseInt(d.expiresIn, 10) * 1000;
+      console.log('[FB] sign-in anónimo OK');
+    } else {
+      const err = await r.json().catch(() => ({}));
+      console.warn('[FB] sign-in anónimo rechazado:', err.error?.message || r.status);
+    }
+  } catch(e) {
+    console.warn('[FB] sign-in anónimo: error de red —', e.message);
+  }
+}
+
+async function getAuthToken() {
+  await fbSignIn();
+  return _fbToken; // null si sin red o auth no habilitada
+}
+
 // Firebase REST helpers
 async function fbGet(path) {
   try {
-    const r = await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`);
+    const token = await getAuthToken();
+    const q = token ? '?auth=' + token : '';
+    const r = await fetch(`${FB_URL}/${path}.json${q}`);
     return r.ok ? await r.json() : null;
   } catch(e) { return null; }
 }
 async function fbSet(path, data) {
   try {
-    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+    const token = await getAuthToken();
+    const q = token ? '?auth=' + token : '';
+    await fetch(`${FB_URL}/${path}.json${q}`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
@@ -5011,7 +5073,9 @@ async function fbSet(path, data) {
 }
 async function fbUpdate(path, data) {
   try {
-    await fetch(`${FB_URL}/${path}.json?auth=${FB_KEY}`, {
+    const token = await getAuthToken();
+    const q = token ? '?auth=' + token : '';
+    await fetch(`${FB_URL}/${path}.json${q}`, {
       method: 'PATCH', headers: {'Content-Type':'application/json'},
       body: JSON.stringify(data)
     });
@@ -5048,8 +5112,10 @@ async function loadUsersFromFirebase() {
   let cleaned = false;
   for (const code of LEGACY_CODES) {
     if (fbUsers[code]) {
-      await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
-      await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`, { method: 'DELETE' });
+      const _tkLegacy = await getAuthToken();
+      const _qLegacy = _tkLegacy ? '?auth=' + _tkLegacy : '';
+      await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json${_qLegacy}`, { method: 'DELETE' });
+      await fetch(`${FB_URL}/pilotpay/permisos/${code}.json${_qLegacy}`, { method: 'DELETE' });
       delete fbUsers[code];
       cleaned = true;
     }
@@ -5398,6 +5464,8 @@ async function doLogin() {
 
 // Pre-fill API key if saved
 window.addEventListener('DOMContentLoaded', async () => {
+  // Autenticar anónimamente contra Firebase antes de cualquier lectura.
+  await fbSignIn();
   // Pre-load users in background for faster login
   if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
   // Key listeners
@@ -6256,9 +6324,11 @@ async function toggleBloqueoUsuario(code, bloquear) {
 async function eliminarUsuario(code) {
   try {
     // Borrar absolutamente todo rastro en Firebase
-    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/perfiles/${code}.json?auth=${FB_KEY}`,  { method: 'DELETE' });
+    const _tkDel = await getAuthToken();
+    const _qDel = _tkDel ? '?auth=' + _tkDel : '';
+    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json${_qDel}`,  { method: 'DELETE' });
+    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json${_qDel}`,  { method: 'DELETE' });
+    await fetch(`${FB_URL}/pilotpay/perfiles/${code}.json${_qDel}`,  { method: 'DELETE' });
     // Borrar también cualquier caché local
     try { localStorage.removeItem(`pilotpay_v2_${code}`); } catch(e) {}
     // Borrar de la caché en memoria

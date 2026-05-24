@@ -226,35 +226,97 @@
 
 <script>
 // ════════════════════════════════════════════════════════
-// CONFIG FIREBASE — hardcodeada igual que en index.html.
-// FB_KEY es la Firebase RTDB API key (identificador público);
-// la seguridad la gestionan las rules de Firebase, no el secreto.
+// CONFIG FIREBASE — idéntica a index.html.
+// FB_KEY = Web API Key del proyecto (válida para Firebase Auth REST).
+// NO es el token de autenticación RTDB; para eso usamos un ID token anónimo.
 // NO confundir con pilotpay_apikey (= clave Anthropic para IA de PDFs).
 // ════════════════════════════════════════════════════════
 var FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
 var FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
 
+// ── FIREBASE ANONYMOUS AUTH (REST) — idéntico a index.html ──
+var _fbToken = null;
+var _fbTokenExp = 0;
+var _fbRefreshToken = null;
+
+async function fbSignIn() {
+  if (_fbToken && Date.now() < _fbTokenExp - 60000) return;
+
+  if (_fbRefreshToken) {
+    try {
+      var rr = await fetch(
+        'https://securetoken.googleapis.com/v1/token?key=' + FB_KEY,
+        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(_fbRefreshToken) }
+      );
+      if (rr.ok) {
+        var dd = await rr.json();
+        _fbToken = dd.id_token;
+        _fbRefreshToken = dd.refresh_token;
+        _fbTokenExp = Date.now() + parseInt(dd.expires_in, 10) * 1000;
+        return;
+      }
+    } catch(e) { /* caer en fresh sign-in */ }
+  }
+
+  try {
+    var rs = await fetch(
+      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_KEY,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnSecureToken: true }) }
+    );
+    if (rs.ok) {
+      var ds = await rs.json();
+      _fbToken = ds.idToken;
+      _fbRefreshToken = ds.refreshToken;
+      _fbTokenExp = Date.now() + parseInt(ds.expiresIn, 10) * 1000;
+    } else {
+      var err = await rs.json().catch(function() { return {}; });
+      console.warn('[FB] sign-in anónimo rechazado:', (err.error || {}).message || rs.status);
+    }
+  } catch(e) {
+    console.warn('[FB] sign-in anónimo: error de red —', e.message);
+  }
+}
+
+async function getAuthToken() {
+  await fbSignIn();
+  return _fbToken;
+}
+
 async function fbGet(path) {
   try {
-    var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY);
+    var token = await getAuthToken();
+    var q = token ? '?auth=' + token : '';
+    var r = await fetch(FB_URL + '/' + path + '.json' + q);
     return r.ok ? await r.json() : null;
   } catch(e) { return null; }
 }
 
 async function fbSet(path, data) {
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
+  var token = await getAuthToken();
+  var q = token ? '?auth=' + token : '';
+  var r = await fetch(FB_URL + '/' + path + '.json' + q, {
     method: 'PUT', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) {
+    var body = await r.text().catch(function() { return ''; });
+    throw new Error('HTTP ' + r.status + (body ? ': ' + body.slice(0, 100) : ''));
+  }
 }
 
 async function fbUpdate(path, data) {
-  var r = await fetch(FB_URL + '/' + path + '.json?auth=' + FB_KEY, {
+  var token = await getAuthToken();
+  var q = token ? '?auth=' + token : '';
+  var r = await fetch(FB_URL + '/' + path + '.json' + q, {
     method: 'PATCH', headers: {'Content-Type':'application/json'},
     body: JSON.stringify(data)
   });
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if (!r.ok) {
+    var body = await r.text().catch(function() { return ''; });
+    throw new Error('HTTP ' + r.status + (body ? ': ' + body.slice(0, 100) : ''));
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -516,18 +578,34 @@ async function recoverUser(code) {
 // FIREBASE CHECK — detectar inconsistencias
 // ════════════════════════════════════════════════════════
 async function runFirebaseCheck() {
-  setStatus('fb-check-status', 'warn', '⟳ Conectando con Firebase…');
+  setStatus('fb-check-status', 'warn', '⟳ Autenticando con Firebase…');
+
+  // Sign-in anónimo (mismo mecanismo que index.html)
+  await fbSignIn();
+  var token = _fbToken;
+  if (!token) {
+    setStatus('fb-check-status', 'error',
+      'No se pudo obtener token de Firebase.\n' +
+      'Causas posibles:\n' +
+      '  · Anonymous Auth no está habilitado en Firebase Console\n' +
+      '    (Authentication → Sign-in methods → Anonymous → Enable)\n' +
+      '  · Sin conexión a internet\n' +
+      '  · FB_KEY incorrecta');
+    return;
+  }
+
+  setStatus('fb-check-status', 'warn', '⟳ Token obtenido. Leyendo pilotpay/usuarios…');
 
   var fbUsers = await fbGet('pilotpay/usuarios');
   if (!fbUsers) {
     setStatus('fb-check-status', 'error',
-      'Firebase devolvió null.\nPosibles causas: sin conexión, token expirado, API key incorrecta.\n' +
-      'Inicia sesión en la app, espera a que sincronice, y vuelve a intentarlo.');
+      'Firebase autenticado pero devolvió null en pilotpay/usuarios.\n' +
+      'La ruta puede estar vacía o las rules bloquean aún la lectura.\n' +
+      'Verifica Firebase Console → Realtime Database → Rules.');
     return;
   }
 
   var fbCodes = Object.keys(fbUsers);
-  setStatus('fb-check-status', 'ok', '✓ Firebase conectado. Usuarios en Firebase: ' + fbCodes.join(', '));
 
   // Cruzar con claves locales
   var items = scanLocalStorage();
@@ -535,17 +613,17 @@ async function runFirebaseCheck() {
 
   // De los "recuperables" locales, filtrar cuáles NO están en Firebase
   var missingInFb = local.recoverable.filter(function(c) { return !fbCodes.includes(c); });
-  // Los recuperables que SÍ están en Firebase son simplemente usuarios normales
-  var okCodes = local.recoverable.filter(function(c) { return fbCodes.includes(c); });
 
-  // Actualizar render
+  // Actualizar render de recuperables
   renderRecoverable(missingInFb, items);
 
-  var msg = '✓ Firebase: ' + fbCodes.length + ' usuarios. ' +
-    'Local con actividad: ' + local.recoverable.length + ' (' +
-    (missingInFb.length ? missingInFb.length + ' ausentes en Firebase: ' + missingInFb.join(', ') : 'todos presentes en Firebase') +
-    ').' +
-    (local.probOrphans.length ? '\nProb. huérfanos (sin actividad local): ' + local.probOrphans.join(', ') : '');
+  var msg = '✓ Firebase conectado.\n' +
+    'Usuarios en Firebase : ' + fbCodes.length + ' → ' + fbCodes.join(', ') + '\n' +
+    'Local con actividad  : ' + local.recoverable.length +
+      (missingInFb.length
+        ? ' (' + missingInFb.length + ' ausentes en Firebase: ' + missingInFb.join(', ') + ')'
+        : ' (todos presentes en Firebase)') +
+    (local.probOrphans.length ? '\nProb. huérfanos (sin actividad): ' + local.probOrphans.join(', ') : '');
 
   setStatus('fb-check-status', missingInFb.length ? 'warn' : 'ok', msg);
 }
