@@ -59,7 +59,9 @@
   // ── P4: Firebase write-through (feature-flagged) ────────────────────────────
   // Sink registrado por setFirebaseSink() desde index.html tras auth exitoso.
   // Con flag apagado toda la infraestructura es no-op; comportamiento idéntico al actual.
-  var _p4Sink = null;  // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
+  var _p4Sink       = null;  // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
+  var _p4WriteCount = 0;     // contador de sesión — writes intentados con flag activo (debug)
+  var _p4LastPath   = null;  // último path al que se intentó escribir (debug)
 
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
@@ -582,21 +584,25 @@
   }
 
   // Punto de entrada para writes P4. No-op si flag apagado o sink no registrado.
-  // Guard _isHydratingFromIDB: hydration nunca dispara escrituras Firebase.
-  // FASE 1: esta función existe pero no se llama desde ningún call point todavía.
+  // Guards: flag + _isHydratingFromIDB + _ready (aplicado en _saveMonthly antes de llegar aquí).
   function _notifyFirebase(fbPath, decorated) {
     if (!_isP4Enabled()) return;
     if (_isHydratingFromIDB) return;
+    // Contador de sesión — solo se incrementa cuando la función pasa los guards
+    _p4WriteCount++;
+    _p4LastPath = fbPath;
     if (!_p4Sink || typeof _p4Sink.update !== 'function') {
       _enqueueP4(fbPath, decorated);
+      console.log('[P4] monthly queued (sin sink):', fbPath);
       return;
     }
     _p4Sink.update(fbPath, decorated)
-      .then(function () { console.log('[P4] write OK:', fbPath); })
+      .then(function () { console.log('[P4] monthly write OK:', fbPath); })
       .catch(function (err) {
-        console.warn('[P4] write failed, encolando:', fbPath, '—',
+        console.warn('[P4] monthly write failed:', fbPath, '—',
                      err && err.message ? err.message : err);
         _enqueueP4(fbPath, decorated);
+        console.log('[P4] monthly queued (error red):', fbPath);
       });
   }
 
@@ -1599,6 +1605,26 @@
       CONVENIO_VERSION       : CONVENIO_VERSION,
       ESTADOS_VALIDOS        : ESTADOS_VALIDOS,
       TRANSICIONES_VALIDAS   : TRANSICIONES_VALIDAS
+    }
+  };
+
+  // ── P4Debug: objeto de inspección temporal — no usar en UI ni lógica de negocio ──
+  // Solo para validación en consola. Se puede quitar en Fase 4+ sin impacto.
+  window.P4Debug = {
+    get writesCount()   { return _p4WriteCount; },
+    get lastWritePath() { return _p4LastPath; },
+    get pendingQueue()  {
+      var k = _p4QueueKey();
+      if (!k) return {};
+      try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return {}; }
+    },
+    get isEnabled()     { return _isP4Enabled(); },
+    get deviceId()      { return _p4GetDeviceId(); },
+    // Resetea el contador de sesión (no borra la cola ni Firebase)
+    reset: function ()  {
+      _p4WriteCount = 0;
+      _p4LastPath   = null;
+      console.log('[P4Debug] contador de sesión reseteado');
     }
   };
 
