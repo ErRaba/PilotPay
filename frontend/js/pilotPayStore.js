@@ -2429,6 +2429,162 @@
     _notifyFirebaseAuditDelete(auditId);
   };
 
+  // ── Diagnóstico: IDs de auditorías en localStorage ──────────────────────
+  // Uso: P4Debug.listLocalAuditIds()
+  window.P4Debug.listLocalAuditIds = function () {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var ids = list.map(function (r) { return r && r.id; }).filter(Boolean);
+    console.log('[P4] listLocalAuditIds (' + ids.length + '):', ids);
+    return ids;
+  };
+
+  // ── Diagnóstico: IDs de auditorías en Firebase ───────────────────────────
+  // Uso: await P4Debug.listFirebaseAuditIds()
+  window.P4Debug.listFirebaseAuditIds = async function () {
+    if (!_isP4Enabled()) { console.warn('[P4] listFirebaseAuditIds: flag desactivado'); return []; }
+    if (!_userId)        { console.warn('[P4] listFirebaseAuditIds: sin usuario activo'); return []; }
+    if (!_p4Sink || typeof _p4Sink.get !== 'function') { console.warn('[P4] listFirebaseAuditIds: sin sink'); return []; }
+    try {
+      var data = await _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias');
+      var ids = data ? Object.keys(data) : [];
+      console.log('[P4] listFirebaseAuditIds (' + ids.length + '):', ids);
+      return ids;
+    } catch (e) {
+      console.warn('[P4] listFirebaseAuditIds error:', e && e.message ? e.message : e);
+      return [];
+    }
+  };
+
+  // ── Diagnóstico: IDs con tombstone en Firebase ───────────────────────────
+  // Uso: await P4Debug.listTombstoneIds()
+  window.P4Debug.listTombstoneIds = async function () {
+    if (!_isP4Enabled()) { console.warn('[P4] listTombstoneIds: flag desactivado'); return []; }
+    if (!_userId)        { console.warn('[P4] listTombstoneIds: sin usuario activo'); return []; }
+    if (!_p4Sink || typeof _p4Sink.get !== 'function') { console.warn('[P4] listTombstoneIds: sin sink'); return []; }
+    try {
+      var data = await _p4Sink.get('pilotpay/historicos/' + _userId + '/deletedAuditorias');
+      var ids = data ? Object.keys(data) : [];
+      console.log('[P4] listTombstoneIds (' + ids.length + '):', ids);
+      return ids;
+    } catch (e) {
+      console.warn('[P4] listTombstoneIds error:', e && e.message ? e.message : e);
+      return [];
+    }
+  };
+
+  // ── Diagnóstico: diff completo local vs Firebase ──────────────────────────
+  // Uso: await P4Debug.diffAuditSync()
+  // Devuelve: { localOnly, firebaseOnly, inSync, localWithTombstone, tombstonedNotLocal }
+  window.P4Debug.diffAuditSync = async function () {
+    if (!_isP4Enabled()) { console.warn('[P4] diffAuditSync: flag desactivado'); return null; }
+    if (!_userId)        { console.warn('[P4] diffAuditSync: sin usuario activo'); return null; }
+    if (!_p4Sink || typeof _p4Sink.get !== 'function') { console.warn('[P4] diffAuditSync: sin sink'); return null; }
+
+    var localList = [];
+    try { localList = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var localIds = {};
+    localList.forEach(function (r) { if (r && r.id) localIds[r.id] = true; });
+
+    var fbAuditData, fbTsData;
+    try {
+      var res = await Promise.all([
+        _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias'),
+        _p4Sink.get('pilotpay/historicos/' + _userId + '/deletedAuditorias')
+      ]);
+      fbAuditData = res[0] || {};
+      fbTsData    = res[1] || {};
+    } catch (e) {
+      console.warn('[P4] diffAuditSync: error leyendo Firebase —', e && e.message ? e.message : e);
+      return null;
+    }
+
+    var fbIds = Object.keys(fbAuditData);
+    var tsIds = Object.keys(fbTsData);
+
+    var result = {
+      localOnly          : [],   // en local, NO en Firebase, NO tombstone → candidatos a subir
+      firebaseOnly       : [],   // en Firebase, NO en local, NO tombstone → candidatos a bajar
+      inSync             : [],   // en ambos
+      localWithTombstone : [],   // en local PERO tienen tombstone → deben borrarse de local
+      tombstonedNotLocal : []    // tombstone existe pero ya no están en local (OK, limpio)
+    };
+
+    Object.keys(localIds).forEach(function (id) {
+      if (fbTsData[id])       result.localWithTombstone.push(id);
+      else if (fbAuditData[id]) result.inSync.push(id);
+      else                    result.localOnly.push(id);
+    });
+
+    fbIds.forEach(function (id) {
+      if (!localIds[id] && !fbTsData[id]) result.firebaseOnly.push(id);
+    });
+
+    tsIds.forEach(function (id) {
+      if (!localIds[id]) result.tombstonedNotLocal.push(id);
+    });
+
+    console.log('[P4] diffAuditSync resultado:', result);
+    console.log('  localOnly (' + result.localOnly.length + '):', result.localOnly);
+    console.log('  firebaseOnly (' + result.firebaseOnly.length + '):', result.firebaseOnly);
+    console.log('  inSync (' + result.inSync.length + '):', result.inSync);
+    console.log('  localWithTombstone (' + result.localWithTombstone.length + ') → tombstoneAudit(id) recomendado:', result.localWithTombstone);
+    console.log('  tombstonedNotLocal (' + result.tombstonedNotLocal.length + ') (ya limpio):', result.tombstonedNotLocal);
+    return result;
+  };
+
+  // ── Cleanup: crear tombstone + limpiar localmente (era pre-tombstone) ─────
+  // Uso: await P4Debug.tombstoneAudit('audit-id-aqui')
+  // Para auditorías que fueron borradas antes de que existiesen tombstones.
+  window.P4Debug.tombstoneAudit = async function (auditId) {
+    if (!auditId) { console.warn('[P4] tombstoneAudit: auditId requerido'); return false; }
+    if (!_userId) { console.warn('[P4] tombstoneAudit: sin usuario activo'); return false; }
+    if (!_isP4Enabled()) { console.warn('[P4] tombstoneAudit: flag desactivado'); return false; }
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') { console.warn('[P4] tombstoneAudit: sin sink'); return false; }
+
+    // 1. Escribir tombstone en Firebase
+    var tombstonePath = 'pilotpay/historicos/' + _userId + '/deletedAuditorias/' + auditId;
+    var tombstone = {
+      id              : auditId,
+      deletedAt       : new Date().toISOString(),
+      deletedByDevice : _p4GetDeviceId(),
+      _schemaVersion  : 1
+    };
+    try {
+      await _p4Sink.update(tombstonePath, tombstone);
+      console.log('[P4] tombstoneAudit: tombstone creado para', auditId);
+    } catch (e) {
+      console.warn('[P4] tombstoneAudit: error escribiendo tombstone —', e && e.message ? e.message : e);
+      return false;
+    }
+
+    // 2. Eliminar de localStorage
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem(_auditKey()) || '[]'); } catch (e) {}
+    var filtered = list.filter(function (r) { return r.id !== auditId; });
+    if (filtered.length < list.length) {
+      try { localStorage.setItem(_auditKey(), JSON.stringify(filtered)); } catch (e) {}
+      _audit = filtered;
+      console.log('[P4] tombstoneAudit: eliminado de localStorage', auditId);
+    } else {
+      console.log('[P4] tombstoneAudit: no estaba en localStorage', auditId);
+    }
+
+    // 3. Eliminar de IDB (best-effort)
+    if (typeof PilotPayLocalDB !== 'undefined' && typeof PilotPayLocalDB.deleteAuditRecord === 'function') {
+      PilotPayLocalDB.deleteAuditRecord(auditId)
+        .then(function () { console.log('[P4] tombstoneAudit: eliminado de IDB', auditId); })
+        .catch(function (e) { console.warn('[P4] tombstoneAudit: IDB delete failed', auditId, e && e.message ? e.message : e); });
+    }
+
+    // 4. Borrar nodo Firebase si aún existe (era pre-tombstone, puede quedar huérfano)
+    var auditPath = 'pilotpay/historicos/' + _userId + '/auditorias/' + auditId;
+    _p4Sink.update(auditPath, null).catch(function () {});
+
+    console.log('[P4] tombstoneAudit: completado para', auditId);
+    return true;
+  };
+
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
 
 })();
