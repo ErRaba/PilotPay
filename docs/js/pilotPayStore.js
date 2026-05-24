@@ -1648,8 +1648,14 @@
       _p4Sink = sink;
       console.log('[P4] sink registrado — device:', _p4GetDeviceId());
     },
-    flushP4Queue : function () { return _flushP4Queue(); },
-    isP4Enabled  : function () { return _isP4Enabled(); },
+    flushP4Queue      : function () { return _flushP4Queue(); },
+    isP4Enabled       : function () { return _isP4Enabled(); },
+    pullFromFirebase  : function () {
+      if (typeof window !== 'undefined' && window.P4Debug && typeof window.P4Debug.pullFromFirebase === 'function') {
+        return window.P4Debug.pullFromFirebase();
+      }
+      return Promise.resolve(null);
+    },
 
     // Expuesto para prueba en consola: decorar un objeto de muestra.
     // PilotPayStore.p4DecorateTest({foo:'bar'}) → {foo:'bar', _schemaVersion:1, …}
