@@ -5356,33 +5356,86 @@ function loadApiKey() {
   try { return localStorage.getItem('pilotpay_apikey') || ''; } catch(e) { return ''; }
 }
 
-// Indicador de estado de conexión — visible en la UI
+// ── Indicador de sync P4 ─────────────────────────────────────────────────────
+// Estados: sin conexión / pendiente / sincronizando / error / sincronizado·HH:MM
 function updateOnlineIndicator() {
   const el = document.getElementById('online-indicator');
   if (!el) return;
-  const q = _getQueue();
-  const pending = Object.keys(q).length;
+
   if (!_online) {
     el.textContent = '🔴 Sin conexión';
     el.style.color = 'var(--red)';
-  } else if (pending > 0) {
-    el.textContent = '🟡 Sincronizando...';
-    el.style.color = 'var(--amber2)';
-  } else {
-    el.textContent = '🟢 Sincronizado';
-    el.style.color = 'var(--green)';
-    setTimeout(() => { if (el) el.textContent = ''; }, 3000);
+    return;
   }
+
+  // Sin P4 activo: comportamiento legacy (cola offline básica)
+  if (typeof PilotPayStore === 'undefined' || !PilotPayStore.isP4Enabled()) {
+    const q = _getQueue();
+    const pending = Object.keys(q).length;
+    if (pending > 0) {
+      el.textContent = '🟡 Pendiente de subir';
+      el.style.color = 'var(--amber2)';
+    } else {
+      el.textContent = '';
+    }
+    return;
+  }
+
+  // Con P4 activo: usar estado detallado del store
+  const st = PilotPayStore.syncStatus();
+  if (st.lastError) {
+    el.textContent = '🔴 Error de sync';
+    el.style.color = 'var(--red)';
+    return;
+  }
+  if (st.isFlushing || st.isPulling) {
+    el.textContent = '🔵 Sincronizando…';
+    el.style.color = 'var(--blue, #89b4fa)';
+    return;
+  }
+  if (st.pendingOps > 0) {
+    el.textContent = '🟡 Pendiente de subir';
+    el.style.color = 'var(--amber2)';
+    return;
+  }
+  if (st.lastSyncAt) {
+    const hhmm = st.lastSyncAt.slice(11, 16);
+    el.textContent = '🟢 Sincronizado · ' + hhmm;
+    el.style.color = 'var(--green)';
+    setTimeout(function () { if (el && _online) el.textContent = ''; }, 5000);
+    return;
+  }
+  el.textContent = '';
 }
 
+// ── Reconexión: flush ordenado + pull P4 ─────────────────────────────────────
+// Orden: a) flushOfflineQueue b) flushP4Queue c) pullFromFirebase d) UI refresh
 window.addEventListener('online', async function() {
   _online = true;
   updateOnlineIndicator();
-  // Replicar cola offline pendiente ahora que hay conexión
+  // a) Cola offline legacy (perfil, usuarios)
   if (typeof currentUser !== 'undefined' && currentUser) await flushOfflineQueue();
-  // P4: vaciar cola de historicos pendientes
-  if (typeof PilotPayStore !== 'undefined') PilotPayStore.flushP4Queue();
-  // Si USERS venía de fallback, intentar recargar la lista real desde Firebase
+  // b) Cola P4 (monthly, auditorías, deletes, tombstones) — await para que c) corra tras flush
+  if (typeof PilotPayStore !== 'undefined') {
+    updateOnlineIndicator();  // muestra "Sincronizando…"
+    await PilotPayStore.flushP4Queue();
+    // c) Pull Firebase → local (tombstone-aware) — no bloquea si ya hay pull en curso
+    if (PilotPayStore.isP4Enabled() && typeof currentUser !== 'undefined' && currentUser) {
+      try {
+        const result = await PilotPayStore.pullFromFirebase();
+        if (result && (result.monthly.new + result.monthly.updated +
+                       result.audit.new + result.audit.updated + result.tombstonesApplied) > 0) {
+          if (typeof renderDashboard  === 'function') renderDashboard();
+          if (typeof hstRefreshCount  === 'function') hstRefreshCount();
+        }
+      } catch (e) {
+        console.warn('[P4] pull tras reconexión failed —', e && e.message ? e.message : e);
+      }
+    }
+  }
+  // d) UI refresh sync indicator
+  updateOnlineIndicator();
+  // Si USERS venía de fallback, recargar
   if (_USERS_FROM_FALLBACK) {
     await loadUsersFromFirebase();
     if (!_USERS_FROM_FALLBACK) {
@@ -5778,15 +5831,18 @@ function initApp() {
         console.log('[P4] auto-pull complete —', result);
         var mNew = (result && result.monthly) ? (result.monthly.new + result.monthly.updated) : 0;
         var aN   = (result && result.audit)   ? (result.audit.new   + result.audit.updated)   : 0;
-        _p4StatusUpdate(mNew + aN > 0 ? '✓ +' + (mNew + aN) + ' registros' : '✓ sin datos nuevos');
-        if (mNew > 0 || aN > 0) {
+        var ts   = result && result.tombstonesApplied ? result.tombstonesApplied : 0;
+        _p4StatusUpdate(mNew + aN + ts > 0 ? '✓ +' + (mNew + aN) + ' registros' : '✓ sin datos nuevos');
+        if (mNew > 0 || aN > 0 || ts > 0) {
           if (typeof renderDashboard  === 'function') renderDashboard();
           if (typeof hstRefreshCount  === 'function') hstRefreshCount();
         }
+        if (typeof updateOnlineIndicator === 'function') updateOnlineIndicator();
       })
       .catch(function (err) {
         _p4StatusUpdate('✗ error pull');
         console.warn('[P4] auto-pull failed —', err && err.message ? err.message : err);
+        if (typeof updateOnlineIndicator === 'function') updateOnlineIndicator();
       });
   } else {
     console.log('[P4] auto-pull skipped (flag off o store no disponible)');

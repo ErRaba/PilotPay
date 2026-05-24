@@ -66,6 +66,9 @@
   var _p4LastPath          = null;  // último path escrito — cualquier tipo (debug)
   var _p4LastAuditPath     = null;  // último path de auditoría escrito (debug)
   var _isPullingFromFirebase = false; // guard anti-concurrencia para pullFromFirebase()
+  var _isFlushingP4Queue    = false; // guard flush en curso → indicador sync
+  var _lastSyncError        = null;  // string del último error, null si sin error
+  var _lastSyncAt           = null;  // ISO del último sync OK (flush + pull)
 
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
@@ -534,6 +537,22 @@
     return _userId ? 'pilotpay:' + _userId + ':p4_queue' : null;
   }
 
+  function _p4LastSyncKey() {
+    return _userId ? 'pilotpay:' + _userId + ':last_sync_at' : null;
+  }
+
+  function _p4SaveLastSyncAt() {
+    var k = _p4LastSyncKey();
+    if (!k || !_lastSyncAt) return;
+    try { localStorage.setItem(k, _lastSyncAt); } catch (e) {}
+  }
+
+  function _p4LoadLastSyncAt() {
+    var k = _p4LastSyncKey();
+    if (!k) return null;
+    try { return localStorage.getItem(k) || null; } catch (e) { return null; }
+  }
+
   // PURO — devuelve copia decorada con metadatos Firebase. No muta el original.
   function _p4Decorate(record) {
     return Object.assign({}, record, {
@@ -600,6 +619,7 @@
     try { q = JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { return Promise.resolve(); }
     var paths = Object.keys(q);
     if (paths.length === 0) return Promise.resolve();
+    _isFlushingP4Queue = true;
     console.log('[P4] flushing', paths.length, 'item(s) pendiente(s)');
     var promises = paths.map(function (fbPath) {
       return _p4Sink.update(fbPath, q[fbPath])
@@ -612,11 +632,21 @@
           console.log('[P4] flush OK:', fbPath);
         })
         .catch(function (err) {
-          console.warn('[P4] flush failed:', fbPath, '—', err && err.message ? err.message : err,
-                       '— permanece en cola');
+          var msg = err && err.message ? err.message : String(err);
+          console.warn('[P4] flush failed:', fbPath, '—', msg, '— permanece en cola');
+          _lastSyncError = msg;
         });
     });
-    return Promise.all(promises);
+    return Promise.all(promises).then(function () {
+      _isFlushingP4Queue = false;
+      // Actualizar last_sync_at solo si no quedaron errores y la cola está vacía
+      var remaining = 0;
+      try { remaining = Object.keys(JSON.parse(localStorage.getItem(k) || '{}')).length; } catch (e) {}
+      if (!_lastSyncError && remaining === 0) {
+        _lastSyncAt = new Date().toISOString();
+        _p4SaveLastSyncAt();
+      }
+    }).catch(function () { _isFlushingP4Queue = false; });
   }
 
   // Punto de entrada para writes P4 monthly. No-op si flag apagado o sink no registrado.
@@ -1690,6 +1720,24 @@
     },
     flushP4Queue      : function () { return _flushP4Queue(); },
     isP4Enabled       : function () { return _isP4Enabled(); },
+
+    // Estado de sync — consumido por el indicador visual en index.html
+    syncStatus : function () {
+      var queueLen = 0;
+      try {
+        var k = _p4QueueKey();
+        if (k) queueLen = Object.keys(JSON.parse(localStorage.getItem(k) || '{}')).length;
+      } catch (e) {}
+      return {
+        isFlushing  : _isFlushingP4Queue,
+        isPulling   : _isPullingFromFirebase,
+        pendingOps  : queueLen,
+        lastError   : _lastSyncError,
+        lastSyncAt  : _lastSyncAt || _p4LoadLastSyncAt()
+      };
+    },
+    clearSyncError : function () { _lastSyncError = null; },
+
     pullFromFirebase  : function () {
       if (typeof window !== 'undefined' && window.P4Debug && typeof window.P4Debug.pullFromFirebase === 'function') {
         return window.P4Debug.pullFromFirebase();
@@ -2292,13 +2340,22 @@
                   ' | tombstones: ' + aTombstoned +
                   (backupSaved ? ' | backup guardado' : ''));
 
-      return {
+      var ret = {
         monthly           : { new: mNew, updated: mUpdated, unchanged: mUnchanged, invalid: mInvalid },
         audit             : { new: aNew, updated: aUpdated, unchanged: aUnchanged, invalid: aInvalid },
         tombstonesApplied : aTombstoned,
         backupSaved       : backupSaved
       };
 
+      // Pull OK → registrar como sync exitoso
+      _lastSyncAt    = new Date().toISOString();
+      _lastSyncError = null;
+      _p4SaveLastSyncAt();
+      return ret;
+
+    } catch (e) {
+      _lastSyncError = e && e.message ? e.message : String(e);
+      throw e;
     } finally {
       _isPullingFromFirebase = false;
     }
