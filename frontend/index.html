@@ -4354,6 +4354,13 @@ Complemento de Base MAD: 1500"></textarea>
         PilotPayStore.monthly.onAuditoriaCompletada(record);
       }
 
+      // P4 Fase 3: write-through individual de auditoría hacia Firebase.
+      // localStorage/IDB son primarios — Firebase es write-through secundario.
+      // No-op si flag apagado. Append-only: path único por record.id.
+      if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
+        PilotPayStore.notifyAuditRecord(record);
+      }
+
       /* Actualizar badge de count si la pestaña existe */
       const countEl = document.getElementById('hst-count');
       if (countEl) countEl.textContent = list.length;

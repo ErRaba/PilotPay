@@ -59,9 +59,12 @@
   // ── P4: Firebase write-through (feature-flagged) ────────────────────────────
   // Sink registrado por setFirebaseSink() desde index.html tras auth exitoso.
   // Con flag apagado toda la infraestructura es no-op; comportamiento idéntico al actual.
-  var _p4Sink       = null;  // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
-  var _p4WriteCount = 0;     // contador de sesión — writes intentados con flag activo (debug)
-  var _p4LastPath   = null;  // último path al que se intentó escribir (debug)
+  var _p4Sink              = null;   // { update: fn(path, data) → Promise, getDeviceId: fn() → string }
+  var _p4WriteCount        = 0;     // contador total de sesión (monthly + audit)
+  var _p4MonthlyWriteCount = 0;     // contador monthly únicamente (debug)
+  var _p4AuditWriteCount   = 0;     // contador audit únicamente (debug)
+  var _p4LastPath          = null;  // último path escrito — cualquier tipo (debug)
+  var _p4LastAuditPath     = null;  // último path de auditoría escrito (debug)
 
   // ── Acceso live a globales de index.html ────────────────────────────────────
   // PP_getters se registra desde initApp() justo antes de PilotPayStore.init().
@@ -583,13 +586,13 @@
     return Promise.all(promises);
   }
 
-  // Punto de entrada para writes P4. No-op si flag apagado o sink no registrado.
+  // Punto de entrada para writes P4 monthly. No-op si flag apagado o sink no registrado.
   // Guards: flag + _isHydratingFromIDB + _ready (aplicado en _saveMonthly antes de llegar aquí).
   function _notifyFirebase(fbPath, decorated) {
     if (!_isP4Enabled()) return;
     if (_isHydratingFromIDB) return;
-    // Contador de sesión — solo se incrementa cuando la función pasa los guards
     _p4WriteCount++;
+    _p4MonthlyWriteCount++;
     _p4LastPath = fbPath;
     if (!_p4Sink || typeof _p4Sink.update !== 'function') {
       _enqueueP4(fbPath, decorated);
@@ -603,6 +606,32 @@
                      err && err.message ? err.message : err);
         _enqueueP4(fbPath, decorated);
         console.log('[P4] monthly queued (error red):', fbPath);
+      });
+  }
+
+  // Write-through Firebase para un AuditRecord individual.
+  // Append-only: cada auditoría escribe su propio nodo vía record.id único.
+  // Llamar desde notifyAuditRecord() (public API), que aplica los guards de flag + hydration.
+  function _notifyFirebaseAudit(record) {
+    var fbPath = 'pilotpay/historicos/' + record.userId + '/auditorias/' + record.id;
+    console.log('[P4] audit notify:', fbPath);
+    _p4WriteCount++;
+    _p4AuditWriteCount++;
+    _p4LastPath      = fbPath;
+    _p4LastAuditPath = fbPath;
+    var decorated = _p4Decorate(record);
+    if (!_p4Sink || typeof _p4Sink.update !== 'function') {
+      _enqueueP4(fbPath, decorated);
+      console.log('[P4] audit queued (sin sink):', fbPath);
+      return;
+    }
+    _p4Sink.update(fbPath, decorated)
+      .then(function () { console.log('[P4] audit write OK:', fbPath); })
+      .catch(function (err) {
+        console.warn('[P4] audit write failed:', fbPath, '—',
+                     err && err.message ? err.message : err);
+        _enqueueP4(fbPath, decorated);
+        console.log('[P4] audit queued (error red):', fbPath);
       });
   }
 
@@ -1593,6 +1622,20 @@
     // PilotPayStore.p4DecorateTest({foo:'bar'}) → {foo:'bar', _schemaVersion:1, …}
     p4DecorateTest : function (obj) { return _p4Decorate(obj || {}); },
 
+    // P4 Fase 3: write-through individual de auditoría.
+    // Llamar desde saveAuditRecord() en index.html, después de hstSave() + IDB.
+    // Guards internos: flag, _isHydratingFromIDB, record.id y record.userId.
+    // No-op si flag apagado — comportamiento idéntico al actual.
+    notifyAuditRecord : function (record) {
+      if (!_isP4Enabled()) return;
+      if (_isHydratingFromIDB) return;
+      if (!record || !record.id || !record.userId) {
+        console.warn('[P4] notifyAuditRecord: record inválido — ignorado', record);
+        return;
+      }
+      _notifyFirebaseAudit(record);
+    },
+
     // Internals expuestos para PilotPayDebug y tests — no usar en UI
     _internal : {
       validateMonthRecord    : _validateMonthRecord,
@@ -1611,8 +1654,11 @@
   // ── P4Debug: objeto de inspección temporal — no usar en UI ni lógica de negocio ──
   // Solo para validación en consola. Se puede quitar en Fase 4+ sin impacto.
   window.P4Debug = {
-    get writesCount()   { return _p4WriteCount; },
-    get lastWritePath() { return _p4LastPath; },
+    get writesCount()        { return _p4WriteCount; },
+    get monthlyWritesCount() { return _p4MonthlyWriteCount; },
+    get auditWritesCount()   { return _p4AuditWriteCount; },
+    get lastWritePath()      { return _p4LastPath; },
+    get lastAuditPath()      { return _p4LastAuditPath; },
     get pendingQueue()  {
       var k = _p4QueueKey();
       if (!k) return {};
@@ -1620,11 +1666,13 @@
     },
     get isEnabled()     { return _isP4Enabled(); },
     get deviceId()      { return _p4GetDeviceId(); },
-    // Resetea el contador de sesión (no borra la cola ni Firebase)
     reset: function ()  {
-      _p4WriteCount = 0;
-      _p4LastPath   = null;
-      console.log('[P4Debug] contador de sesión reseteado');
+      _p4WriteCount        = 0;
+      _p4MonthlyWriteCount = 0;
+      _p4AuditWriteCount   = 0;
+      _p4LastPath          = null;
+      _p4LastAuditPath     = null;
+      console.log('[P4Debug] contadores de sesión reseteados');
     }
   };
 
