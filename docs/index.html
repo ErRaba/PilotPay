@@ -5740,7 +5740,9 @@ function initApp() {
           PilotPayStore.pullFromFirebase()
             .then(function (result) {
               console.log('[P4] auto-pull complete —', result);
-              if (result && (result.monthlyMerged > 0 || result.auditMerged > 0)) {
+              var monthlyChanged = result && result.monthly && (result.monthly.new > 0 || result.monthly.updated > 0);
+              var auditChanged   = result && result.audit   && (result.audit.new   > 0 || result.audit.updated   > 0);
+              if (monthlyChanged || auditChanged) {
                 if (typeof renderDashboard === 'function') renderDashboard();
               }
             })
