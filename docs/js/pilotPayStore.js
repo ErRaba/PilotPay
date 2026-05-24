@@ -2085,27 +2085,32 @@
     _isPullingFromFirebase = true;
 
     try {
-      console.log('[P4] pull start: leyendo Firebase monthly + auditorías para', _userId);
+      console.log('[P4] pull start: leyendo Firebase monthly + auditorías + tombstones para', _userId);
 
-      // Leer Firebase en paralelo
-      var fbMonthly = null, fbAudit = null;
+      // Leer Firebase en paralelo: monthly, auditorías y tombstones
+      var fbMonthly = null, fbAudit = null, fbTombstones = null;
       try {
         var res = await Promise.all([
           _p4Sink.get('pilotpay/historicos/' + _userId + '/monthly'),
-          _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias')
+          _p4Sink.get('pilotpay/historicos/' + _userId + '/auditorias'),
+          _p4Sink.get('pilotpay/historicos/' + _userId + '/deletedAuditorias')
         ]);
-        fbMonthly = res[0];
-        fbAudit   = res[1];
+        fbMonthly    = res[0];
+        fbAudit      = res[1];
+        fbTombstones = res[2] || {};   // null → vacío, no rompe
       } catch (err) {
         console.warn('[P4] pull: error leyendo Firebase —', err && err.message ? err.message : err);
         return null;
       }
 
+      var tombstoneCount = Object.keys(fbTombstones).length;
+      if (tombstoneCount > 0) console.log('[P4] pull tombstones detectados:', tombstoneCount);
+
       if (!fbMonthly && !fbAudit) {
         console.log('[P4] pull: Firebase sin datos para', _userId, '— sin cambios locales');
         return { monthly: { new: 0, updated: 0, unchanged: 0, invalid: 0 },
                  audit  : { new: 0, updated: 0, unchanged: 0, invalid: 0 },
-                 backupSaved: false };
+                 tombstonesApplied: 0, backupSaved: false };
       }
 
       // Leer estado local actual
@@ -2163,14 +2168,21 @@
         });
       }
 
-      // ── Merge audit ────────────────────────────────────────────────────────
+      // ── Merge audit (tombstone-aware) ──────────────────────────────────────
       var localAuditIndex = {};
       localAudit.forEach(function (r) { if (r && r.id) localAuditIndex[r.id] = r; });
       var aNew = 0, aUpdated = 0, aUnchanged = 0, aInvalid = 0;
       var aChanged = [];   // solo los nuevos/actualizados → IDB batch
+      var aTombstoned = 0;
+      var idbDeleteIds = [];  // IDs a eliminar de IDB por tombstone
 
       if (fbAudit) {
         Object.keys(fbAudit).forEach(function (fbId) {
+          // Tombstone remoto gana incondicionalmente — auditorías son append-only
+          if (fbTombstones[fbId]) {
+            console.log('[P4] pull skip: audit con tombstone remoto —', fbId);
+            aTombstoned++; return;
+          }
           var fbRec = fbAudit[fbId];
           if (!fbRec || !fbRec.id || !fbRec.userId) {
             console.warn('[P4] pull skip: audit inválido en Firebase —', fbId);
@@ -2199,6 +2211,18 @@
         });
       }
 
+      // Aplicar tombstones remotos a registros locales (borrar lo que no llegó como delete)
+      Object.keys(fbTombstones).forEach(function (tsId) {
+        if (localAuditIndex[tsId]) {
+          console.log('[P4] pull tombstone aplicado a local:', tsId);
+          delete localAuditIndex[tsId];
+          idbDeleteIds.push(tsId);
+          aTombstoned++;
+        }
+      });
+
+      if (aTombstoned > 0) console.log('[P4] pull tombstones aplicados total:', aTombstoned);
+
       // Reconstruir array audit: sort desc por fechaAuditoria, trim MAX 100
       var mergedAudit = Object.values(localAuditIndex)
         .sort(function (a, b) {
@@ -2220,7 +2244,7 @@
           console.log('[P4] pull write: monthly_v1 →', Object.keys(mergedMonthly).length, 'registros');
         } catch (e) { console.warn('[P4] pull: error escribiendo monthly_v1 —', e.message); }
       }
-      if (aChanged.length > 0) {
+      if (aChanged.length > 0 || idbDeleteIds.length > 0) {
         try {
           localStorage.setItem(_auditKey(), JSON.stringify(mergedAudit));
           wroteAudit = true;
@@ -2237,8 +2261,16 @@
         }
         if (aChanged.length > 0) {
           PilotPayLocalDB.putManyAuditRecords(aChanged)
-            .then(function (n) { console.log('[P4] pull IDB audit:', n, 'registro(s)'); })
-            .catch(function (e) { console.warn('[P4] pull IDB audit (best-effort):', e && e.message); });
+            .then(function (n) { console.log('[P4] pull IDB audit put:', n, 'registro(s)'); })
+            .catch(function (e) { console.warn('[P4] pull IDB audit put (best-effort):', e && e.message); });
+        }
+        // Borrar de IDB los registros eliminados por tombstone
+        if (idbDeleteIds.length > 0 && typeof PilotPayLocalDB.deleteAuditRecord === 'function') {
+          idbDeleteIds.forEach(function (delId) {
+            PilotPayLocalDB.deleteAuditRecord(delId)
+              .then(function () { console.log('[P4] pull IDB audit delete (tombstone):', delId); })
+              .catch(function (e) { console.warn('[P4] pull IDB audit delete (best-effort):', delId, e && e.message); });
+          });
         }
       }
 
@@ -2257,12 +2289,14 @@
 
       console.log('[P4] pull complete — monthly: +' + mNew + ' ~' + mUpdated + ' =' + mUnchanged +
                   ' | audit: +' + aNew + ' ~' + aUpdated + ' =' + aUnchanged +
+                  ' | tombstones: ' + aTombstoned +
                   (backupSaved ? ' | backup guardado' : ''));
 
       return {
-        monthly     : { new: mNew, updated: mUpdated, unchanged: mUnchanged, invalid: mInvalid },
-        audit       : { new: aNew, updated: aUpdated, unchanged: aUnchanged, invalid: aInvalid },
-        backupSaved : backupSaved
+        monthly           : { new: mNew, updated: mUpdated, unchanged: mUnchanged, invalid: mInvalid },
+        audit             : { new: aNew, updated: aUpdated, unchanged: aUnchanged, invalid: aInvalid },
+        tombstonesApplied : aTombstoned,
+        backupSaved       : backupSaved
       };
 
     } finally {
