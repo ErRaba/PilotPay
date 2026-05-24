@@ -5111,20 +5111,7 @@ async function loadUsersFromFirebase() {
     USERS = { ...DEFAULT_USERS };
     return;
   }
-  // Firebase devolvió datos válidos — limpiar usuarios legacy.
-  const LEGACY_CODES = ['FLZ'];
-  let cleaned = false;
-  for (const code of LEGACY_CODES) {
-    if (fbUsers[code]) {
-      const _tkLegacy = await getAuthToken();
-      const _qLegacy = _tkLegacy ? '?auth=' + _tkLegacy : '';
-      await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json${_qLegacy}`, { method: 'DELETE' });
-      await fetch(`${FB_URL}/pilotpay/permisos/${code}.json${_qLegacy}`, { method: 'DELETE' });
-      delete fbUsers[code];
-      cleaned = true;
-    }
-  }
-  if (cleaned) console.log('[PilotPay] Usuarios legacy eliminados de Firebase');
+  // No hay usuarios legacy pendientes de limpiar.
   _USERS_FROM_FALLBACK = false;
   USERS = fbUsers;
 }
