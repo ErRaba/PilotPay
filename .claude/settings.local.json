@@ -5,7 +5,20 @@
       "Bash(Select-Object FullName, PSIsContainer)",
       "Bash(Sort-Object FullName)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "PowerShell(Copy-Item *)",
+      "Bash(dir *)",
+      "Bash(ls .github/)",
+      "Bash(ls .github/workflows/)",
+      "Bash(certutil -hashfile docs/index.html MD5)",
+      "Bash(certutil -hashfile frontend/index.html MD5)",
+      "Bash(node scripts/sync-docs.js)",
+      "Bash(git fetch *)",
+      "Bash(git log *)",
+      "Bash(git ls-tree *)",
+      "Bash(node -e ' *)",
+      "Bash(git mv *)"
     ]
   }
 }
