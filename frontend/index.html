@@ -5022,7 +5022,7 @@ async function fbSignIn() {
         console.log('[FB] token renovado (anon)');
         return;
       }
-    } catch(e) { /* caer en fresh sign-in */ }
+    } catch(e) { console.warn('[FB] refresh token falló, intentando sign-in fresco:', e.message); }
   }
 
   // Sign-in anónimo inicial.
@@ -5040,7 +5040,11 @@ async function fbSignIn() {
       console.log('[FB] sign-in anónimo OK');
     } else {
       const err = await r.json().catch(() => ({}));
-      console.warn('[FB] sign-in anónimo rechazado:', err.error?.message || r.status);
+      const msg = err.error?.message || r.status;
+      console.warn('[FB] sign-in anónimo rechazado — HTTP', r.status, '—', msg);
+      if (msg === 'REQUESTS_FROM_REFERER_NOT_ALLOWED' || msg === 'API_KEY_HTTP_REFERRER_BLOCKED') {
+        console.warn('[FB] FIX: añadir este dominio a Firebase Console → Authentication → Settings → Authorized domains:', location.hostname);
+      }
     }
   } catch(e) {
     console.warn('[FB] sign-in anónimo: error de red —', e.message);
