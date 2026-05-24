@@ -1,0 +1,46 @@
+name: Sync frontend → docs
+
+# Dispara solo cuando cambia algo en frontend/.
+# Si el desarrollador ya ejecutó `npm run sync` antes del push,
+# el workflow detecta que docs/ está al día y no crea commit vacío.
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'frontend/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # necesario para hacer push de vuelta
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Token con permisos de escritura para el push automático
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync frontend/ → docs/
+        run: node scripts/sync-docs.js
+
+      - name: Commit y push si hay cambios
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Solo hace commit si docs/ tiene diferencias tras el sync
+          if ! git diff --quiet docs/; then
+            git add docs/
+            git commit -m "deploy: sync docs/ desde frontend/ [skip ci]"
+            git push
+          else
+            echo "docs/ ya estaba al día — sin commit."
+          fi
