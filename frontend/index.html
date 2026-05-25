@@ -1842,152 +1842,6 @@ input[type=number] { -moz-appearance: textfield; }
 
       </div><!-- /dsh-grid -->
 
-      <!-- ══ DEBUG/ADMIN — P4 Debug Panel ════════════════════════════════════
-           Solo visible cuando currentUser === ADMIN_CODE y P4 activo,
-           o mediante ?p4debug=1 en la URL.
-           Panel de solo lectura — no toca lógica de sync ni datos.
-           Retirar cuando no sea necesario: eliminar este bloque HTML y
-           la función refreshP4DebugPanel() + su llamada en renderDashboard().
-      ══════════════════════════════════════════════════════════════════════ -->
-      <div id="p4-debug-panel" style="display:none;margin-top:16px">
-        <style>
-          #p4-debug-panel {
-            font-family: var(--mono);
-            font-size: 11px;
-            color: var(--text2);
-          }
-          .p4dbg-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px 8px;
-            background: rgba(245,158,11,.07);
-            border: 1px solid rgba(245,158,11,.2);
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
-          }
-          .p4dbg-title {
-            font-size: 10px;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-            color: var(--amber);
-            opacity: .85;
-          }
-          .p4dbg-refresh {
-            font-family: var(--mono);
-            font-size: 10px;
-            color: var(--amber);
-            background: rgba(245,158,11,.1);
-            border: 1px solid rgba(245,158,11,.25);
-            border-radius: 4px;
-            padding: 3px 10px;
-            cursor: pointer;
-            letter-spacing: .04em;
-          }
-          .p4dbg-refresh:active { opacity: .7; }
-          .p4dbg-body {
-            background: rgba(0,0,0,.18);
-            border: 1px solid rgba(255,255,255,.06);
-            border-radius: 0 0 8px 8px;
-            padding: 12px 14px;
-          }
-          .p4dbg-section {
-            margin-bottom: 14px;
-          }
-          .p4dbg-section:last-child { margin-bottom: 0; }
-          .p4dbg-section-title {
-            font-size: 9px;
-            letter-spacing: .1em;
-            text-transform: uppercase;
-            color: var(--text3);
-            border-bottom: 1px solid rgba(255,255,255,.05);
-            padding-bottom: 4px;
-            margin-bottom: 6px;
-          }
-          .p4dbg-row {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 3px;
-            line-height: 1.5;
-          }
-          .p4dbg-k {
-            color: var(--text3);
-            min-width: 130px;
-            flex-shrink: 0;
-          }
-          .p4dbg-v { color: var(--text); word-break: break-all; }
-          .p4dbg-v.ok    { color: var(--green); }
-          .p4dbg-v.warn  { color: var(--amber); }
-          .p4dbg-v.err   { color: var(--red);   }
-          .p4dbg-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 4px;
-          }
-          .p4dbg-table th {
-            text-align: left;
-            font-size: 9px;
-            letter-spacing: .06em;
-            color: var(--text3);
-            padding: 2px 6px 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,.06);
-            font-weight: 400;
-          }
-          .p4dbg-table td {
-            padding: 3px 6px 3px 0;
-            border-bottom: 1px solid rgba(255,255,255,.03);
-            vertical-align: top;
-          }
-          .p4dbg-badge {
-            display: inline-block;
-            font-size: 9px;
-            border-radius: 3px;
-            padding: 1px 5px;
-            letter-spacing: .04em;
-          }
-          .p4dbg-badge.pending  { background: rgba(245,158,11,.15); color: var(--amber); }
-          .p4dbg-badge.done     { background: rgba(16,185,129,.12); color: var(--green); }
-          .p4dbg-badge.diff     { background: rgba(59,130,246,.12);  color: var(--blue); }
-          .p4dbg-badge.other    { background: rgba(255,255,255,.06); color: var(--text3); }
-          .p4dbg-loading { color: var(--text3); font-style: italic; }
-          .p4dbg-layer-row {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-          }
-          .p4dbg-layer {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(255,255,255,.04);
-            border: 1px solid rgba(255,255,255,.06);
-            border-radius: 5px;
-            padding: 6px 12px;
-            min-width: 80px;
-          }
-          .p4dbg-layer-n {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text);
-            line-height: 1.2;
-          }
-          .p4dbg-layer-label {
-            font-size: 8px;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            color: var(--text3);
-            margin-top: 2px;
-          }
-        </style>
-        <div class="p4dbg-header">
-          <span class="p4dbg-title">◈ P4 Debug Panel</span>
-          <button class="p4dbg-refresh" onclick="refreshP4DebugPanel()">↻ Refresh</button>
-        </div>
-        <div class="p4dbg-body" id="p4dbg-body">
-          <span class="p4dbg-loading">Cargando…</span>
-        </div>
-      </div>
-      <!-- ══ fin DEBUG/ADMIN P4 Debug Panel ═══════════════════════════════ -->
 
     </div><!-- /page-dashboard -->
 
@@ -3601,6 +3455,10 @@ Complemento de Base MAD: 1500"></textarea>
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
           🧑‍✈️ Avatares
         </button>
+        <button id="adm-tab-monitor" onclick="adminTab('monitor')"
+          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+          📡 Monitor
+        </button>
       </div>
 
       <!-- ── SUB-TAB: ALTA ── -->
@@ -3785,6 +3643,27 @@ Complemento de Base MAD: 1500"></textarea>
         <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
 
       </div><!-- /adm-panel-avatares -->
+
+      <!-- ── SUB-TAB: MONITOR DE SINCRONIZACIÓN ── -->
+      <div id="adm-panel-monitor" style="display:none">
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <label style="font-size:12px;color:var(--text3);font-family:var(--mono)">Usuario:</label>
+          <select id="adm-monitor-user-sel"
+            onchange="renderSyncMonitor(this.value)"
+            style="font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text1)">
+          </select>
+          <button onclick="renderSyncMonitor(document.getElementById('adm-monitor-user-sel').value)"
+            style="font-size:11px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer">
+            ↻ Actualizar
+          </button>
+        </div>
+
+        <div id="adm-monitor-body" style="font-family:var(--mono);font-size:11px;color:var(--text2)">
+          <span style="color:var(--text3)">Selecciona un usuario para ver su estado de sincronización.</span>
+        </div>
+
+      </div><!-- /adm-panel-monitor -->
 
     </div><!-- /page-admin -->
 
@@ -6054,7 +5933,7 @@ function getUserPerms(userCode) {
 
 // ── ADMIN SUB-TABS ──
 function adminTab(tab) {
-  ['alta','usuarios','rutas','avatares'].forEach(t => {
+  ['alta','usuarios','rutas','avatares','monitor'].forEach(t => {
     const panel = document.getElementById(`adm-panel-${t}`);
     const btn   = document.getElementById(`adm-tab-${t}`);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
@@ -6065,6 +5944,166 @@ function adminTab(tab) {
   });
   if (tab === 'rutas')    loadRutas().then(() => renderRutas());
   if (tab === 'avatares') renderAdminAvatarGrid('all');
+  if (tab === 'monitor')  _initSyncMonitor();
+}
+
+// ── MONITOR DE SINCRONIZACIÓN ────────────────────────────────────────────
+
+function _initSyncMonitor() {
+  const sel = document.getElementById('adm-monitor-user-sel');
+  if (!sel) return;
+  // Poblar selector con todos los usuarios conocidos
+  const codes = typeof USERS !== 'undefined' ? Object.keys(USERS).sort() : [currentUser];
+  sel.innerHTML = codes.map(c => {
+    const u = USERS ? USERS[c] : {};
+    const label = u && u.name ? `${c} — ${u.name}` : c;
+    return `<option value="${c}"${c === currentUser ? ' selected' : ''}>${label}</option>`;
+  }).join('');
+  renderSyncMonitor(sel.value || currentUser);
+}
+
+async function renderSyncMonitor(userId) {
+  const body = document.getElementById('adm-monitor-body');
+  if (!body) return;
+  if (!userId) { body.innerHTML = '<span style="color:var(--text3)">Selecciona un usuario.</span>'; return; }
+
+  body.innerHTML = '<span style="color:var(--text3)">Cargando…</span>';
+
+  const _esc = s => String(s == null ? '—' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const _row = (k, v, cls) => `<div style="display:flex;gap:6px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3);min-width:160px;flex-shrink:0">${_esc(k)}</span><span style="color:var(--${cls||'text2'})">${_esc(v)}</span></div>`;
+  const _sec = (title, html) => `<div style="margin-bottom:14px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:6px">${_esc(title)}</div>${html}</div>`;
+
+  const _fmtTs = iso => {
+    if (!iso || iso === '—') return '—';
+    try { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); } catch(e) { return iso; }
+  };
+
+  const _estadoBadge = estado => {
+    if (!estado) return '—';
+    const colors = { pending_variables:'#f59e0b', pending_calculation:'#f59e0b', pending_comparison:'#3b82f6', con_diferencias:'#ef4444', auditado:'#22c55e', regularizado:'#22c55e', reclamado:'#a855f7', cerrado:'#6b7280' };
+    const c = colors[estado] || 'var(--text2)';
+    return `<span style="color:${c}">${_esc(estado)}</span>`;
+  };
+
+  const p4on = typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled();
+  const isSelf = userId === currentUser;
+  const ts = new Date().toLocaleTimeString('es-ES');
+  let html = '';
+
+  // ── Sección Firebase (todos los usuarios) ─────────────────────────────
+  let fbMonthlyRows = [];
+  let fbAuditCount = '—';
+  let fbTombstoneCount = '—';
+
+  if (typeof fbGet === 'function') {
+    try {
+      const base = `pilotpay/historicos/${userId}`;
+      const [mData, aData, tData] = await Promise.all([
+        fbGet(base + '/monthly'),
+        fbGet(base + '/auditorias'),
+        fbGet(base + '/deletedAuditorias')
+      ]);
+
+      if (mData && typeof mData === 'object') {
+        fbMonthlyRows = Object.values(mData).map(r => ({
+          year: r.year, month: r.month, estado: r.estado,
+          updatedAt: r._updatedAt || null,
+          device: r._lastWriterDevice ? String(r._lastWriterDevice).slice(-6) : '—'
+        })).sort((a, b) => (b.year - a.year) || (b.month - a.month));
+      }
+      fbAuditCount = aData ? Object.keys(aData).length : 0;
+      fbTombstoneCount = tData ? Object.keys(tData).length : 0;
+    } catch(e) {
+      fbMonthlyRows = [{ error: 'Error al leer Firebase: ' + (e.message || e) }];
+    }
+  } else {
+    fbMonthlyRows = [{ info: 'Firebase no disponible en esta sesión' }];
+  }
+
+  // Tabla monthly Firebase
+  let fbMonthlyHtml;
+  if (fbMonthlyRows.length === 0) {
+    fbMonthlyHtml = '<span style="color:var(--text3)">(sin registros en Firebase)</span>';
+  } else if (fbMonthlyRows[0] && (fbMonthlyRows[0].info || fbMonthlyRows[0].error)) {
+    const msg = fbMonthlyRows[0].info || fbMonthlyRows[0].error;
+    fbMonthlyHtml = `<span style="color:var(--text3)">${_esc(msg)}</span>`;
+  } else {
+    const trs = fbMonthlyRows.map(r =>
+      `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:3px 6px">${_esc(r.year)}</td>
+        <td style="padding:3px 6px">${_esc(r.month)}</td>
+        <td style="padding:3px 6px">${_estadoBadge(r.estado)}</td>
+        <td style="padding:3px 6px;color:var(--text3)">${_fmtTs(r.updatedAt)}</td>
+        <td style="padding:3px 6px;color:var(--text3);font-size:9px">${_esc(r.device)}</td>
+      </tr>`
+    ).join('');
+    fbMonthlyHtml = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10px">
+      <thead><tr style="color:var(--text3);border-bottom:1px solid var(--border)">
+        <th style="padding:3px 6px;text-align:left">Año</th>
+        <th style="padding:3px 6px;text-align:left">Mes</th>
+        <th style="padding:3px 6px;text-align:left">Estado</th>
+        <th style="padding:3px 6px;text-align:left">_updatedAt</th>
+        <th style="padding:3px 6px;text-align:left">Dispositivo</th>
+      </tr></thead>
+      <tbody>${trs}</tbody>
+    </table></div>`;
+  }
+
+  html += _sec(`Firebase — ${_esc(userId)}`,
+    _row('Monthly (expedientes)', fbMonthlyRows[0] && (fbMonthlyRows[0].info || fbMonthlyRows[0].error) ? '—' : fbMonthlyRows.length) +
+    _row('Auditorías', fbAuditCount) +
+    _row('Tombstones', fbTombstoneCount) +
+    '<div style="margin-top:8px">' + fbMonthlyHtml + '</div>'
+  );
+
+  // ── Sección local (solo usuario actual) ───────────────────────────────
+  if (isSelf) {
+    const syncSt = typeof PilotPayStore !== 'undefined' ? PilotPayStore.syncStatus() : {};
+    const qLen   = syncSt.pendingOps || 0;
+
+    let localMonthCount = 0;
+    let localAuditCount = 0;
+    try {
+      const mk = 'pilotpay:' + userId + ':monthly_v1';
+      const ma = JSON.parse(localStorage.getItem(mk) || '{}');
+      localMonthCount = Object.keys(ma).length;
+    } catch(e) {}
+    try {
+      const ak = 'pilotpay:' + userId + ':audit_history_v1';
+      localAuditCount = JSON.parse(localStorage.getItem(ak) || '[]').length;
+    } catch(e) {}
+
+    let idbMonthCount = '—';
+    let idbAuditCount = '—';
+    if (typeof P4Debug !== 'undefined' && typeof P4Debug.inspectMonthly === 'function') {
+      try {
+        const md = await P4Debug.inspectMonthly();
+        idbMonthCount = Array.isArray(md.idb) ? md.idb.filter(r => !r.info && !r.error).length : '—';
+      } catch(e) {}
+    }
+
+    const deviceId = (() => { try { return localStorage.getItem('pilotpay_device_id') || '—'; } catch(e) { return '—'; } })();
+
+    html += _sec('Local — este dispositivo',
+      _row('Monthly (localStorage)', localMonthCount) +
+      _row('Monthly (IDB)',          idbMonthCount) +
+      _row('Auditorías (local)',     localAuditCount) +
+      _row('Device ID',             deviceId) +
+      _row('P4 activo',              p4on ? 'SÍ' : 'NO', p4on ? 'text1' : 'text3') +
+      _row('Queue pendiente',        qLen + ' op' + (qLen !== 1 ? 's' : ''), qLen > 0 ? 'text1' : 'text3') +
+      _row('Último pull',            _fmtTs(syncSt.lastSyncAt)) +
+      (syncSt.lastError ? _row('Último error', syncSt.lastError, 'text1') : '')
+    );
+  } else {
+    html += `<div style="font-size:10px;color:var(--text3);padding:8px;background:var(--bg3);border-radius:6px;margin-bottom:14px">
+      ℹ️ Diagnóstico local solo disponible en el propio dispositivo del usuario.
+    </div>`;
+  }
+
+  html += `<div style="font-size:9px;color:var(--text3);text-align:right;margin-top:4px">actualizado ${_esc(ts)}</div>`;
+  html += `<div style="font-size:9px;color:var(--text3);margin-top:2px">Ruta telemetría futura: pilotpay/diagnostics/{userId}/{deviceId}</div>`;
+
+  body.innerHTML = html;
 }
 
 // ── ADMIN AVATAR MANAGEMENT ──────────────────────────────────────────────
@@ -12735,8 +12774,6 @@ window.PILOTPAY_BACKEND_READY = true;
     renderResumenAnualCard(derived.statsAnual, derived.currentYear);
     renderAlertsCard(hist, pd, calc, derived);
     renderMetarWidget(baseICAO);
-    // DEBUG/ADMIN — refresca el panel de diagnóstico si está visible
-    if (typeof refreshP4DebugPanel === 'function') refreshP4DebugPanel();
   };
 
   /* ─────────────────────────────────────────
@@ -12945,154 +12982,8 @@ window.PILOTPAY_BACKEND_READY = true;
       (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
   }
 
-  /* ══════════════════════════════════════════════════════════════════════
-     DEBUG/ADMIN — P4 Debug Panel
-     Solo lectura. No toca lógica de sync ni datos.
-     Visible cuando: admin + P4 activo, o ?p4debug=1 en URL.
-  ══════════════════════════════════════════════════════════════════════ */
-  window.refreshP4DebugPanel = async function () {
-    const panel = document.getElementById('p4-debug-panel');
-    const body  = document.getElementById('p4dbg-body');
-    if (!panel || !body) return;
-
-    const _isDebugVisible = (typeof currentUser !== 'undefined' && currentUser === ADMIN_CODE &&
-                             typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) ||
-                            new URLSearchParams(window.location.search).get('p4debug') === '1';
-    if (!_isDebugVisible) { panel.style.display = 'none'; return; }
-    panel.style.display = '';
-
-    body.innerHTML = '<span class="p4dbg-loading">Cargando…</span>';
-
-    try {
-      // 1. Identidad
-      const _uid      = (typeof currentUser !== 'undefined') ? currentUser : '—';
-      const _p4on     = typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled();
-      const _syncSt   = (typeof PilotPayStore !== 'undefined') ? PilotPayStore.syncStatus() : {};
-      const _lastPull = _syncSt.lastSyncAt  || '—';
-      const _lastErr  = _syncSt.lastError   || null;
-      const _qLen     = _syncSt.pendingOps  || 0;
-
-      // 2. Monthly — 4 capas via inspectMonthly
-      let monthData = { memory: [], localStorage: [], idb: [], firebase: [] };
-      if (typeof P4Debug !== 'undefined' && typeof P4Debug.inspectMonthly === 'function') {
-        try { monthData = await P4Debug.inspectMonthly(); } catch (e) {}
-      }
-
-      // 3. Audit counts
-      let auditLocalCount = 0;
-      try {
-        const _ak = 'pilotpay:' + _uid + ':audit_history_v1';
-        auditLocalCount = JSON.parse(localStorage.getItem(_ak) || '[]').length;
-      } catch (e) {}
-      let auditFbCount = '—';
-      if (_p4on && typeof P4Debug !== 'undefined' && typeof P4Debug.listFirebaseAuditIds === 'function') {
-        try { auditFbCount = (await P4Debug.listFirebaseAuditIds()).length; } catch (e) { auditFbCount = 'err'; }
-      }
-
-      // 4. Tombstones count
-      let tombstoneCount = '—';
-      if (_p4on && typeof P4Debug !== 'undefined' && typeof P4Debug.listTombstoneIds === 'function') {
-        try { tombstoneCount = (await P4Debug.listTombstoneIds()).length; } catch (e) { tombstoneCount = 'err'; }
-      }
-
-      // ── Helpers de render ──────────────────────────────────────────────
-      const _esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const _row = (k, v, cls = '') => `<div class="p4dbg-row"><span class="p4dbg-k">${_esc(k)}</span><span class="p4dbg-v${cls ? ' '+cls : ''}">${_esc(v)}</span></div>`;
-      const _sec = (title, html) => `<div class="p4dbg-section"><div class="p4dbg-section-title">${_esc(title)}</div>${html}</div>`;
-
-      const _estadoBadge = estado => {
-        if (!estado) return '';
-        const cls = /^pending/.test(estado) ? 'pending'
-                  : /^con_diferencias/.test(estado) ? 'diff'
-                  : /^(auditado|regularizado|reclamado|cerrado)$/.test(estado) ? 'done'
-                  : 'other';
-        return `<span class="p4dbg-badge ${cls}">${_esc(estado)}</span>`;
-      };
-
-      const _fmtTs = iso => {
-        if (!iso || iso === '—') return '—';
-        try {
-          const d = new Date(iso);
-          if (isNaN(d)) return _esc(iso);
-          return d.toLocaleString('es-ES', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-        } catch (e) { return _esc(iso); }
-      };
-
-      const _layerBlock = (label, rows) => {
-        const n = Array.isArray(rows) ? rows.filter(r => !r.info && !r.error).length : '?';
-        const hasErr = Array.isArray(rows) && rows.some(r => r.error);
-        return `<div class="p4dbg-layer">
-          <span class="p4dbg-layer-n${hasErr ? ' err' : ''}">${hasErr ? '!' : n}</span>
-          <span class="p4dbg-layer-label">${_esc(label)}</span>
-        </div>`;
-      };
-
-      const _monthTable = (rows) => {
-        if (!Array.isArray(rows) || rows.length === 0) return '<span style="color:var(--text3);font-size:10px">(vacío)</span>';
-        if (rows[0] && (rows[0].info || rows[0].error)) {
-          const msg = rows[0].info || rows[0].error;
-          return `<span style="color:var(--text3);font-size:10px">${_esc(msg)}</span>`;
-        }
-        const trs = rows.map(r =>
-          `<tr>
-            <td>${_esc(r.year || '?')}</td>
-            <td>${_esc(r.month || '?')}</td>
-            <td>${_estadoBadge(r.estado)}</td>
-            <td style="color:var(--text3)">${_fmtTs(r.updatedAt)}</td>
-            <td style="color:var(--text3);font-size:9px">${_esc((r.id || '').slice(-8))}</td>
-          </tr>`
-        ).join('');
-        return `<table class="p4dbg-table">
-          <thead><tr>
-            <th>Año</th><th>Mes</th><th>Estado</th><th>_updatedAt</th><th>id (tail)</th>
-          </tr></thead>
-          <tbody>${trs}</tbody>
-        </table>`;
-      };
-
-      // ── Montar secciones ───────────────────────────────────────────────
-      const ts = new Date().toLocaleTimeString('es-ES');
-
-      const secIdentity = _sec('Identidad / Estado',
-        _row('userId',        _uid)  +
-        _row('P4 enabled',    _p4on ? 'SÍ' : 'NO', _p4on ? 'ok' : 'warn') +
-        _row('Último pull',   _fmtTs(_lastPull))  +
-        (_lastErr ? _row('Último error', _lastErr, 'err') : '') +
-        _row('Queue pendiente', _qLen + ' op' + (_qLen !== 1 ? 's' : ''), _qLen > 0 ? 'warn' : 'ok')
-      );
-
-      const secMonthlyLayers = _sec('Monthly — capas',
-        `<div class="p4dbg-layer-row">
-          ${_layerBlock('Memoria',      monthData.memory)}
-          ${_layerBlock('LocalStorage', monthData.localStorage)}
-          ${_layerBlock('IDB',          monthData.idb)}
-          ${_layerBlock('Firebase',     monthData.firebase)}
-        </div>`
-      );
-
-      const secMonthlyDetail = _sec('Monthly — detalle (memoria)',
-        _monthTable(monthData.memory)
-      );
-
-      const secMonthlyFb = _p4on
-        ? _sec('Monthly — Firebase',   _monthTable(monthData.firebase))
-        : '';
-
-      const secAudit = _sec('Audit history',
-        _row('Local (audit_history_v1)', auditLocalCount) +
-        _row('Firebase (auditorias/)',   auditFbCount) +
-        _row('Tombstones',               tombstoneCount)
-      );
-
-      const secTs = `<div style="font-size:9px;color:var(--text3);margin-top:6px;text-align:right">actualizado ${_esc(ts)}</div>`;
-
-      body.innerHTML = secIdentity + secMonthlyLayers + secMonthlyDetail + secMonthlyFb + secAudit + secTs;
-
-    } catch (e) {
-      body.innerHTML = `<span class="p4dbg-v err">Error: ${String(e && e.message ? e.message : e)}</span>`;
-    }
-  };
-  // ══ fin DEBUG/ADMIN refreshP4DebugPanel ══════════════════════════════
+  window.refreshP4DebugPanel = function () {};
+  // ══ fin DEBUG/ADMIN refreshP4DebugPanel (no-op — panel en Admin → Monitor) ══
 
   /* ─────────────────────────────────────────
      TARJETA: SIMULADOR IRPF
