@@ -3615,242 +3615,294 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ══════════ TAB: CONVENIO ══════════ -->
     <div class="page" id="page-convenio">
 
-      <!-- ══ ESTILOS CONVENIO ══ -->
+      <!-- ══ ESTILOS CENTRO LABORAL ══ -->
       <style>
-        /* ─ Hero ─ */
-        .cvn-hero {
-          padding: 24px 20px 20px;
+        .ck-view { display: none; }
+
+        /* ── Home: header ── */
+        .ck-home-header {
+          padding: 22px 20px 18px;
+          background: linear-gradient(135deg, var(--blue-dim) 0%, var(--bg2) 100%);
           border-bottom: 1px solid var(--border);
         }
-        .cvn-hero-eyebrow {
-          font-size: 10px; font-family: var(--mono); letter-spacing: .1em;
-          color: var(--text3); text-transform: uppercase; margin-bottom: 6px;
-        }
-        .cvn-hero-title {
-          font-size: 22px; font-weight: 700; color: var(--text);
-          letter-spacing: -.01em; line-height: 1.15;
-        }
-        .cvn-hero-sub {
-          font-size: 12px; color: var(--text2); margin-top: 6px; line-height: 1.55;
-          max-width: 480px;
-        }
+        .ck-home-eyebrow { font-size: 10px; font-family: var(--mono); letter-spacing: .1em; color: var(--blue); text-transform: uppercase; margin-bottom: 6px; }
+        .ck-home-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -.02em; margin-bottom: 5px; }
+        .ck-home-sub { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 14px; }
 
-        /* ─ Aviso principal ─ */
-        .cvn-notice {
-          display: flex; gap: 14px; align-items: flex-start;
-          padding: 16px 18px;
-          background: var(--bg3);
-          border: 1px solid var(--border2);
-          border-left: 4px solid var(--amber);
-          border-radius: var(--r);
+        /* ── Search ── */
+        .ck-search-wrap { position: relative; }
+        .ck-search-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+        .ck-search {
+          width: 100%; box-sizing: border-box;
+          background: var(--bg); border: 1.5px solid var(--border2);
+          border-radius: var(--r); padding: 10px 12px 10px 38px;
+          font-size: 14px; color: var(--text); font-family: inherit; outline: none;
+          transition: border-color .15s;
         }
-        .cvn-notice-icon {
-          font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px;
-        }
-        .cvn-notice-title {
-          font-size: 12px; font-weight: 700; color: var(--amber2);
-          font-family: var(--mono); letter-spacing: .04em; margin-bottom: 5px;
-        }
-        .cvn-notice-body {
-          font-size: 12px; color: var(--text2); line-height: 1.6;
-        }
+        .ck-search:focus { border-color: var(--blue); }
 
-        /* ─ Grid de funciones próximas ─ */
-        .cvn-feat-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px;
-        }
-        @media (max-width: 500px) { .cvn-feat-grid { grid-template-columns: 1fr; } }
+        /* ── Blocks ── */
+        .ck-block { padding: 16px 16px 0; }
+        .ck-block-label { font-size: 10px; font-family: var(--mono); letter-spacing: .1em; color: var(--text3); text-transform: uppercase; margin-bottom: 10px; }
 
-        .cvn-feat-card {
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--r);
-          padding: 14px 14px 14px 16px;
-          position: relative;
-          overflow: hidden;
-          display: flex;
-          gap: 11px;
-          align-items: flex-start;
+        /* ── Topics grid ── */
+        .ck-topics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 16px; }
+        @media (min-width: 480px) { .ck-topics-grid { grid-template-columns: repeat(3, 1fr); } }
+        .ck-topic-btn {
+          background: var(--card); border: 1px solid var(--border);
+          border-radius: var(--r); padding: 12px 10px;
+          display: flex; flex-direction: column; align-items: flex-start;
+          gap: 5px; cursor: pointer; transition: border-color .15s, background .15s; text-align: left;
         }
-        .cvn-feat-card::before {
-          content: '';
-          position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-          background: var(--blue-dim);
-          border-radius: var(--r) 0 0 var(--r);
-        }
-        .cvn-feat-icon {
-          font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: 1px;
-        }
-        .cvn-feat-label {
-          font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.25;
-        }
-        .cvn-feat-desc {
-          font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4;
-        }
+        .ck-topic-btn:hover { border-color: var(--border2); background: var(--bg3); }
+        .ck-topic-ico { font-size: 20px; line-height: 1; }
+        .ck-topic-name { font-size: 12px; font-weight: 600; color: var(--text); }
+        .ck-topic-count { font-size: 10px; color: var(--text3); font-family: var(--mono); }
 
-        /* ─ Tabla de estado ─ */
-        .cvn-status-table {
-          width: 100%; border-collapse: collapse;
+        /* ── List rows ── */
+        .ck-list-rows { display: flex; flex-direction: column; }
+        .ck-list-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 13px 16px; border-bottom: 1px solid var(--border);
+          cursor: pointer; transition: background .1s; gap: 10px;
         }
-        .cvn-status-table tr {
-          border-bottom: 1px solid var(--border);
-        }
-        .cvn-status-table tr:last-child { border-bottom: none; }
-        .cvn-status-table td {
-          padding: 9px 4px;
-          font-size: 12px;
-          vertical-align: middle;
-        }
-        .cvn-status-table td:first-child {
-          color: var(--text2);
-          width: 60%;
-        }
-        .cvn-status-table td:last-child {
-          text-align: right;
-        }
-        .cvn-pill {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-size: 10px; font-family: var(--mono); font-weight: 600;
-          padding: 3px 8px; border-radius: 20px;
-          white-space: nowrap;
-        }
-        .cvn-pill.no {
-          background: var(--bg3); color: var(--text3); border: 1px solid var(--border2);
-        }
-        .cvn-pill.pending {
-          background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber);
-        }
-        .cvn-pill.ok {
-          background: var(--green-dim); color: var(--green); border: 1px solid var(--green);
-        }
-        .cvn-pill-dot {
-          width: 6px; height: 6px; border-radius: 50%; background: currentColor;
-          flex-shrink: 0;
-        }
+        .ck-list-row:last-child { border-bottom: none; }
+        .ck-list-row:hover { background: var(--bg3); }
+        .ck-list-row-text { font-size: 13px; color: var(--text); flex: 1; line-height: 1.4; }
+        .ck-list-row-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+        .ck-list-arrow { font-size: 14px; color: var(--text3); flex-shrink: 0; }
 
-        /* ─ Section label ─ */
-        .cvn-section-label {
-          font-size: 10px; font-family: var(--mono); letter-spacing: .08em;
-          color: var(--text3); text-transform: uppercase;
-          padding: 0 2px 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
+        /* ── Nav ── */
+        .ck-nav { padding: 12px 16px 0; }
+        .ck-back {
+          background: none; border: 1px solid var(--border2);
+          border-radius: var(--r); padding: 6px 12px;
+          font-size: 12px; color: var(--text2); cursor: pointer;
+          font-family: inherit; transition: border-color .15s;
         }
+        .ck-back:hover { border-color: var(--blue); color: var(--blue); }
+
+        /* ── Topic header ── */
+        .ck-topic-header { padding: 14px 16px 12px; }
+        .ck-topic-title { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+        .ck-topic-desc { font-size: 12px; color: var(--text2); margin-top: 5px; line-height: 1.5; }
+
+        /* ── Answer ── */
+        .ck-answer-card { margin: 12px 16px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+        .ck-answer-q { padding: 16px 16px 12px; font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.35; letter-spacing: -.01em; border-bottom: 1px solid var(--border); }
+        .ck-answer-body { padding: 14px 16px; font-size: 13px; color: var(--text2); line-height: 1.7; }
+        .ck-answer-body p { margin: 0 0 10px; }
+        .ck-answer-body p:last-child { margin-bottom: 0; }
+        .ck-answer-body strong { color: var(--text); }
+        .ck-answer-note { margin: 0 16px 12px; background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--amber2); line-height: 1.55; }
+        .ck-answer-source { padding: 0 16px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .ck-answer-art { font-size: 11px; font-family: var(--mono); color: var(--text3); }
+
+        /* ── Source tags ── */
+        .ck-source-tag { font-size: 10px; font-family: var(--mono); font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: .04em; white-space: nowrap; }
+        .ck-src-convenio { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+        .ck-src-interno  { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+        .ck-src-pendiente { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
+        .ck-src-interp   { background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber); }
+
+        /* ── Tables ── */
+        .ck-table-wrap { overflow-x: auto; margin: 10px 0; }
+        .ck-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: var(--mono); }
+        .ck-table th { background: var(--bg3); color: var(--text3); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 7px 10px; border-bottom: 1px solid var(--border2); text-align: left; white-space: nowrap; }
+        .ck-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text2); }
+        .ck-table tr:last-child td { border-bottom: none; }
+        .ck-table td:first-child { color: var(--text); font-weight: 600; }
+
+        /* ── Uniformidad pilotos ── */
+        .ck-uni-cycle { display: flex; align-items: center; gap: 6px; padding: 14px 16px; flex-wrap: wrap; }
+        .ck-uni-year { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; text-align: center; min-width: 56px; flex-shrink: 0; }
+        .ck-uni-yr-n { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+        .ck-uni-pts { font-size: 17px; font-weight: 700; color: var(--blue); }
+        .ck-uni-arrow { color: var(--text3); font-size: 14px; }
+        .ck-uni-restart { font-size: 10px; font-family: var(--mono); color: var(--text3); padding: 6px 10px; border: 1px dashed var(--border2); border-radius: var(--r); }
+        .ck-uni-prenda-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 0 16px 16px; }
+        @media (min-width: 480px) { .ck-uni-prenda-grid { grid-template-columns: repeat(3, 1fr); } }
+        .ck-uni-prenda-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .ck-uni-prenda-name { font-size: 11px; color: var(--text2); flex: 1; line-height: 1.35; }
+        .ck-uni-prenda-pts { font-size: 13px; font-weight: 700; color: var(--blue); font-family: var(--mono); flex-shrink: 0; }
+        .ck-uni-prenda-pts-label { font-size: 9px; color: var(--text3); text-align: center; font-family: var(--mono); }
+
+        /* ── Uniformidad TCP ── */
+        .ck-tcp-dotacion { padding: 0 16px 16px; }
+        .ck-tcp-prenda-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+        .ck-tcp-prenda-row:last-child { border-bottom: none; }
+        .ck-tcp-prenda-name { font-size: 12px; color: var(--text2); flex: 1; }
+        .ck-tcp-prenda-qty { font-size: 12px; font-weight: 700; color: var(--text); font-family: var(--mono); flex-shrink: 0; background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; padding: 2px 8px; min-width: 28px; text-align: center; }
+        .ck-renovacion-note { background: var(--blue-dim); border: 1px solid var(--blue); border-radius: var(--r); padding: 10px 12px; margin-top: 12px; font-size: 12px; color: var(--blue); line-height: 1.55; }
+
+        /* ── Context selector ── */
+        .ck-ctx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .ck-ctx-field { display: flex; flex-direction: column; }
+        .ck-ctx-label { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 5px; display: block; }
+        .ck-ctx-select, .ck-ctx-input {
+          background: var(--bg); border: 1.5px solid var(--border2); border-radius: var(--r);
+          padding: 9px 10px; font-size: 13px; color: var(--text); font-family: inherit;
+          outline: none; transition: border-color .15s; width: 100%; box-sizing: border-box;
+          -webkit-appearance: none; appearance: none;
+        }
+        .ck-ctx-select:focus, .ck-ctx-input:focus { border-color: var(--blue); }
+        .ck-ctx-consultar {
+          width: 100%; margin-top: 12px; padding: 11px 16px;
+          background: var(--blue); border: none; border-radius: var(--r);
+          font-size: 13px; font-weight: 600; color: #fff; font-family: inherit;
+          cursor: pointer; transition: opacity .15s; display: block;
+        }
+        .ck-ctx-consultar:hover { opacity: .85; }
+        .ck-ctx-consultar:active { opacity: .7; }
+
+        /* ── Normative state badges ── */
+        .nr-badge {
+          display: inline-flex; align-items: center; gap: 3px;
+          font-size: 10px; font-family: var(--mono); font-weight: 700;
+          padding: 2px 8px; border-radius: 20px; white-space: nowrap; letter-spacing: .04em;
+        }
+        .nr-activa       { background: var(--green-dim); color: var(--green);  border: 1px solid var(--green); }
+        .nr-ampliada     { background: var(--blue-dim);  color: var(--blue);   border: 1px solid var(--blue); }
+        .nr-condicionada { background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber); }
+        .nr-suspendida   { background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber); }
+        .nr-sustituida   { background: var(--red-dim);   color: var(--red);    border: 1px solid var(--red); }
+        .nr-inactiva     { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
+
+        /* ── Results context bar ── */
+        .nr-ctx-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--blue-dim); flex-wrap: wrap; }
+        .nr-ctx-chip { font-size: 11px; font-family: var(--mono); color: var(--blue2); background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; padding: 2px 9px; }
+
+        /* ── Category header ── */
+        .nr-cat-block { padding: 12px 16px 0; }
+        .nr-cat-header { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+        .nr-cat-ico { font-size: 13px; }
+        .nr-cat-label { font-size: 10px; font-family: var(--mono); letter-spacing: .09em; color: var(--text3); text-transform: uppercase; font-weight: 700; }
+
+        /* ── Rule row in results ── */
+        .nr-rule-row {
+          display: flex; align-items: flex-start; gap: 10px;
+          padding: 11px 16px; border-bottom: 1px solid var(--border);
+          cursor: pointer; transition: background .1s;
+        }
+        .nr-rule-row:last-child { border-bottom: none; }
+        .nr-rule-row:hover { background: var(--bg3); }
+        .nr-rule-body { flex: 1; min-width: 0; }
+        .nr-rule-title { font-size: 13px; color: var(--text); line-height: 1.35; margin-bottom: 3px; }
+        .nr-rule-excerpt { font-size: 11px; color: var(--text3); line-height: 1.45; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .nr-rule-arrow { font-size: 14px; color: var(--text3); flex-shrink: 0; padding-top: 20px; }
+
+        /* ── Answer detail ── */
+        .nr-answer-estado { padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+        .nr-answer-vigencia { padding: 6px 16px 10px; font-size: 11px; font-family: var(--mono); color: var(--text3); }
+        .nr-answer-ambig { margin: 0 16px 12px; background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--amber2); line-height: 1.55; }
+        .nr-answer-condicion { margin: 0 16px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--text2); line-height: 1.55; }
+        .nr-answer-fuente { padding: 4px 16px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nr-answer-doc { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+        .nr-operativa-warn { margin: 0 16px 12px; background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 10px 12px; font-size: 12px; color: var(--amber2); line-height: 1.55; }
+
+        /* ── Warnings block ── */
+        .nr-warn-block { background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 10px 12px; }
+        .nr-warn-title { font-size: 11px; font-weight: 700; font-family: var(--mono); color: var(--amber2); margin-bottom: 4px; }
+        .nr-warn-text { font-size: 12px; color: var(--amber2); line-height: 1.5; }
+
+        /* ── FAQs normativa ── */
+        .ck-faq-item { padding: 13px 16px; border-bottom: 1px solid var(--border); }
+        .ck-faq-item:last-child { border-bottom: none; }
+        .ck-faq-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.35; }
+        .ck-faq-a { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+        /* ── Empty ── */
+        .ck-empty { padding: 36px 16px; text-align: center; font-size: 13px; color: var(--text3); font-family: var(--mono); }
       </style>
 
-      <!-- ── HERO ── -->
-      <div class="card" style="padding:0">
-        <div class="cvn-hero">
-          <div class="cvn-hero-eyebrow">📘 &nbsp;Módulo documental</div>
-          <div class="cvn-hero-title">Convenio BCSA</div>
-          <div class="cvn-hero-sub">
-            Módulo documental en preparación. Las referencias normativas se integrarán únicamente desde fuentes verificadas.
+      <!-- VIEW: HOME -->
+      <div id="ck-v-home" class="ck-view">
+        <div class="card" style="padding:0">
+          <div class="ck-home-header">
+            <div class="ck-home-eyebrow">Binter Canarias · BCSA 2026</div>
+            <div class="ck-home-title">Centro laboral</div>
+            <div class="ck-home-sub">Normativa vigente adaptada a tu perfil</div>
           </div>
         </div>
-      </div>
 
-      <!-- ── AVISO PRINCIPAL ── -->
-      <div class="cvn-notice">
-        <div class="cvn-notice-icon">⚠️</div>
-        <div>
-          <div class="cvn-notice-title">CONTENIDO NORMATIVO NO DISPONIBLE</div>
-          <div class="cvn-notice-body">
-            Este módulo no contiene todavía contenido normativo validado. PilotPay no mostrará interpretaciones del convenio, cotización, IRPF, IT, seguros ni conceptos salariales hasta que estén vinculadas a una fuente documental revisada.
+        <!-- Selector de perfil -->
+        <div class="ck-block">
+          <div class="ck-block-label">Tu perfil</div>
+          <div class="card" style="padding:14px 16px">
+            <div class="ck-ctx-row">
+              <div class="ck-ctx-field">
+                <label class="ck-ctx-label">Base</label>
+                <select id="ck-ctx-base" class="ck-ctx-select">
+                  <option value="">Selecciona…</option>
+                  <option value="MAD">MAD — Madrid</option>
+                  <option value="TFN">TFN — Tenerife</option>
+                  <option value="LPA">LPA — Las Palmas</option>
+                </select>
+              </div>
+              <div class="ck-ctx-field">
+                <label class="ck-ctx-label">Función</label>
+                <select id="ck-ctx-grupo" class="ck-ctx-select">
+                  <option value="">Selecciona…</option>
+                  <option value="CMD">CMD — Comandante</option>
+                  <option value="COP">COP — Copiloto</option>
+                  <option value="SCC">SCC — Sobrecargo</option>
+                  <option value="TCP">TCP — TCP</option>
+                </select>
+              </div>
+            </div>
+            <div class="ck-ctx-row">
+              <div class="ck-ctx-field">
+                <label class="ck-ctx-label">Antigüedad (años)</label>
+                <input id="ck-ctx-ant" class="ck-ctx-input" type="number" min="0" max="50" placeholder="ej. 8">
+              </div>
+              <div class="ck-ctx-field">
+                <label class="ck-ctx-label">Fecha</label>
+                <input id="ck-ctx-fecha" class="ck-ctx-input" type="date">
+              </div>
+            </div>
+            <button class="ck-ctx-consultar" onclick="ckConsultar()">Ver mi normativa →</button>
           </div>
         </div>
-      </div>
 
-      <!-- ── PRÓXIMAS FUNCIONES ── -->
-      <div class="card">
-        <div class="cvn-section-label">Próximas funciones</div>
-        <div class="cvn-feat-grid">
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">🔍</span>
-            <div>
-              <div class="cvn-feat-label">Buscador por artículos y conceptos</div>
-              <div class="cvn-feat-desc">Localización directa en el texto del convenio cargado</div>
-            </div>
-          </div>
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">💰</span>
-            <div>
-              <div class="cvn-feat-label">Tablas salariales validadas</div>
-              <div class="cvn-feat-desc">Por cargo y nivel, vinculadas al Anexo I verificado</div>
-            </div>
-          </div>
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">⚙️</span>
-            <div>
-              <div class="cvn-feat-label">Referencias del motor de cálculo</div>
-              <div class="cvn-feat-desc">Qué fuente normativa respalda cada concepto calculado</div>
-            </div>
-          </div>
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">🔗</span>
-            <div>
-              <div class="cvn-feat-label">Trazabilidad concepto → convenio</div>
-              <div class="cvn-feat-desc">Enlace directo entre nómina calculada y artículo fuente</div>
-            </div>
-          </div>
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">🚧</span>
-            <div>
-              <div class="cvn-feat-label">Conceptos pendientes de validación</div>
-              <div class="cvn-feat-desc">Inventario de elementos aún sin respaldo documental revisado</div>
-            </div>
-          </div>
-
-          <div class="cvn-feat-card">
-            <span class="cvn-feat-icon">📐</span>
-            <div>
-              <div class="cvn-feat-label">Comparación cálculo vs. fuente</div>
-              <div class="cvn-feat-desc">Contraste entre el resultado de PilotPay y la norma aplicada</div>
-            </div>
-          </div>
-
+        <!-- Resultados normativa (oculto hasta consulta) -->
+        <div id="ck-results-wrap" style="display:none">
+          <div id="ck-results-inner"></div>
         </div>
-      </div>
 
-      <!-- ── ESTADO DEL MÓDULO ── -->
-      <div class="card">
-        <div class="cvn-section-label">Estado del módulo</div>
-        <table class="cvn-status-table">
-          <tr>
-            <td>Convenio cargado</td>
-            <td><span class="cvn-pill no"><span class="cvn-pill-dot"></span>No</span></td>
-          </tr>
-          <tr>
-            <td>Referencias validadas</td>
-            <td><span class="cvn-pill no"><span class="cvn-pill-dot"></span>No</span></td>
-          </tr>
-          <tr>
-            <td>Tablas salariales conectadas</td>
-            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
-          </tr>
-          <tr>
-            <td>Buscador documental</td>
-            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
-          </tr>
-          <tr>
-            <td>Trazabilidad concepto → fuente</td>
-            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
-          </tr>
-          <tr>
-            <td>Comparación PilotPay vs. norma</td>
-            <td><span class="cvn-pill pending"><span class="cvn-pill-dot"></span>Pendiente</span></td>
-          </tr>
-        </table>
-      </div>
+        <!-- Preguntas frecuentes -->
+        <div class="ck-block" id="ck-block-faqs">
+          <div class="ck-block-label">Preguntas frecuentes</div>
+          <div class="card" style="padding:0">
+            <div id="ck-faqs-list"></div>
+          </div>
+        </div>
 
-      <!-- ── FOOTER ── -->
-      <div style="text-align:center;padding:14px 16px 28px;font-size:11px;color:var(--text3);font-family:var(--mono)">
-        PilotPay Beta 3.0 · Módulo Convenio en preparación · Sin contenido normativo activo
-      </div>
+        <!-- Lo más consultado -->
+        <div class="ck-block" id="ck-block-popular">
+          <div class="ck-block-label">Lo más consultado</div>
+          <div class="card" style="padding:0">
+            <div class="ck-list-rows" id="ck-popular"></div>
+          </div>
+        </div>
+      </div><!-- /ck-v-home -->
+
+      <!-- VIEW: TOPIC -->
+      <div id="ck-v-topic" class="ck-view">
+        <div class="ck-nav"><button class="ck-back" onclick="ckBack()">← Volver</button></div>
+        <div class="ck-topic-header">
+          <div class="ck-topic-title" id="ck-topic-title"></div>
+          <div class="ck-topic-desc" id="ck-topic-desc"></div>
+        </div>
+        <div class="card" style="padding:0;margin:0 16px 16px">
+          <div class="ck-list-rows" id="ck-question-list"></div>
+        </div>
+      </div><!-- /ck-v-topic -->
+
+      <!-- VIEW: ANSWER -->
+      <div id="ck-v-answer" class="ck-view">
+        <div class="ck-nav"><button class="ck-back" onclick="ckBack()">← Volver</button></div>
+        <div id="ck-answer-content"></div>
+      </div><!-- /ck-v-answer -->
 
     </div><!-- /page-convenio -->
 
@@ -4237,6 +4289,17 @@ Complemento de Base MAD: 1500"></textarea>
 <script src="js/fiscalHistory.js"></script>
 <script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
+<script src="js/normativa/meta/norm_layers.js"></script>
+<script src="js/normativa/meta/norm_docs.js"></script>
+<script src="js/normativa/meta/norm_ambiguedades.js"></script>
+<script src="js/normativa/common/convenio_general.js"></script>
+<script src="js/normativa/common/acta_cierre.js"></script>
+<script src="js/normativa/bases/base_mad.js"></script>
+<script src="js/normativa/bases/base_tfn.js"></script>
+<script src="js/normativa/bases/base_lpa.js"></script>
+<script src="js/normativa/acuerdos/productividad_2026.js"></script>
+<script src="js/normativa/engine/normativaEngine.js"></script>
+<script src="js/convenioKnowledge.js"></script>
 
 <!-- ══════════════════════════════════════════
      MÓDULO: HISTORIAL DE AUDITORÍAS
@@ -6802,6 +6865,7 @@ function showTab(name) {
   if (name === 'variables') varsActualizarMesEsperado();
   if (name === 'historial') renderHistorial();
   if (name === 'dashboard') renderDashboard();
+  if (name === 'convenio')  ckRender();
 }
 
 // ── THEMES ──
@@ -13105,6 +13169,452 @@ window.PILOTPAY_BACKEND_READY = true;
       }
     } catch (e) {}
   })();
+</script>
+
+<!-- ══════════════════════════════════════════
+     MÓDULO: CENTRO LABORAL (CONVENIO)
+     Renderizado de la pestaña Convenio.
+     Consume NormativaEngine + convenioKnowledge.js.
+══════════════════════════════════════════ -->
+<script>
+(function(){
+  'use strict';
+
+  // ── Estado ──
+  var _ckView      = 'home';
+  var _ckPrevView  = 'home';
+  var _lastCtx     = null;
+  var _lastResults = null;
+  var _resultMap   = {};
+
+  // ── Categorías normativa ──
+  var CAT_CFG = {
+    'roster':             { label: 'Roster y programación',    ico: '📅' },
+    'programacion':       { label: 'Programación (Art. 80)',   ico: '🗓' },
+    'vacaciones':         { label: 'Vacaciones',               ico: '🌴' },
+    'complementos':       { label: 'Complementos de base',     ico: '💰' },
+    'hv':                 { label: 'Horas de vuelo',           ico: '✈'  },
+    'actividad_descanso': { label: 'Actividad en descanso',    ico: '⏸'  },
+    'productividad':      { label: 'Productividad y DPO',      ico: '📊' },
+    'bajas':              { label: 'IT y bajas',               ico: '🏥' },
+    'licencias':          { label: 'Licencias y permisos',     ico: '📋' },
+    'descansos':          { label: 'Tiempos de descanso',      ico: '🛌' },
+    'formacion':          { label: 'Formación',                ico: '📚' },
+    'uniformidad':        { label: 'Uniformidad',              ico: '👔' },
+    'general':            { label: 'General',                  ico: '📄' },
+  };
+
+  // ── Estado → display ──
+  var ESTADO_CFG = {
+    'activa':       { etiqueta: 'Vigente',        clase: 'nr-activa',       icono: '✓' },
+    'ampliada':     { etiqueta: 'Ampliado',        clase: 'nr-ampliada',     icono: '+' },
+    'condicionada': { etiqueta: 'Condicionado',    clase: 'nr-condicionada', icono: '?' },
+    'suspendida':   { etiqueta: 'Susp. temporal',  clase: 'nr-suspendida',   icono: '⏸' },
+    'sustituida':   { etiqueta: 'Sustituido',      clase: 'nr-sustituida',   icono: '↻' },
+  };
+
+  // ── FAQs normativa — respuestas generadas por el engine ──
+  var NR_FAQS = [
+    {
+      id: 'nr_faq_6dias',
+      pregunta: '¿Puede la empresa programarme 6 días seguidos de actividad?',
+      ruleId: 'cc_art80_seis_dias',
+      buildRespuesta: function(r) {
+        if (!r || !r._resolution) return 'Depende de tu base y del roster activo. Configura tu perfil para ver el estado.';
+        var e = r._resolution.estado;
+        if (e === 'suspendida') return 'Sí — en tu base la protección del Art.80 contra 6 días consecutivos está suspendida por el acuerdo de roster. La empresa puede programarte hasta 6 días seguidos.';
+        if (e === 'sustituida') return 'Esta protección ha sido sustituida por el acuerdo de roster vigente en tu base. Consulta las reglas de roster.';
+        return 'No. La protección del Art.80 está vigente: la empresa no puede programarte 6 días consecutivos sin causa justificada comunicada al comité.';
+      }
+    },
+    {
+      id: 'nr_faq_vac53',
+      pregunta: '¿Cuántos días de vacaciones tengo si hay roster 5+3 en mi base?',
+      ruleIds: ['lpa_roster_vac_23_lab', 'tfn_roster_5_3_vac_23_lab'],
+      buildRespuesta: function(rs) {
+        if (!rs || !rs.length) return 'Con roster 5+3 activo: 23 días laborales (Grupos III y IV). Si se cancela el roster vuelven los 30 días naturales del CC automáticamente.';
+        var op = rs.filter(function(r) { return r._resolution && r._resolution.operativa === true; });
+        if (op.length) return '23 días laborales — el roster 5+3 está activo en tu base. Si se cancela el roster, vuelven los 30 días naturales sin negociación adicional.';
+        var cd = rs.filter(function(r) { return r._resolution && r._resolution.estado === 'condicionada'; });
+        if (cd.length) return '23 días laborales — condicionado a que el roster 5+3 esté efectivamente implantado. Verifica con tu programación.';
+        return '30 días naturales — el roster 5+3 no está activo o no aplica a tu base y fecha.';
+      }
+    },
+    {
+      id: 'nr_faq_finde',
+      pregunta: '¿El Art.80 garantiza un fin de semana libre al mes?',
+      ruleId: 'cc_art80_fin_semana',
+      buildRespuesta: function(r) {
+        if (!r || !r._resolution) return 'Depende del roster activo en tu base. Configura tu perfil para ver el estado actual.';
+        var e = r._resolution.estado;
+        if (e === 'suspendida') return 'No — la garantía del Art.80 sobre fin de semana libre mensual está suspendida por el acuerdo de roster en tu base. La empresa no está obligada.';
+        if (e === 'sustituida') return 'Esta protección ha sido sustituida por el acuerdo de roster vigente.';
+        return 'Sí — si trabajas todos los fines de semana del mes, la empresa debe asignarte al menos uno libre al mes.';
+      }
+    },
+    {
+      id: 'nr_faq_comp_mad',
+      pregunta: '¿Tengo complemento de base por estar en MAD?',
+      ruleIds: ['mad_comp_cmd', 'mad_comp_cop', 'mad_comp_scc', 'mad_comp_tcp'],
+      buildRespuesta: function(rs) {
+        if (!rs || !rs.length) return 'El complemento de base MAD solo aplica si tu base es MAD. No existe para LPA ni TFN.';
+        var r = rs[0];
+        var vt = r.valor_tabla || {};
+        var imp = vt.importe_mensual_bruto;
+        return 'Sí — complemento MAD: ' + (imp ? imp.toLocaleString('es') + ' €/mes brutos' : 'importe según función') + '. Condición: 75 % o más en función asignada ese mes.';
+      }
+    },
+    {
+      id: 'nr_faq_vac_cancel',
+      pregunta: '¿Qué pasa con las vacaciones si la empresa cancela el roster?',
+      ruleIds: ['lpa_roster_vac_23_lab', 'tfn_roster_5_3_vac_23_lab'],
+      buildRespuesta: function() {
+        return 'Si el roster 5+3 se cancela o no se prorroga, las vacaciones vuelven automáticamente a 30 días naturales del CC. Sin negociación adicional. Sin compensación económica. Los acuerdos lo establecen expresamente.';
+      }
+    },
+    {
+      id: 'nr_faq_dpo',
+      pregunta: '¿Se puede calcular el DPO con precisión este año?',
+      ruleId: 'prod_matrices_ausentes',
+      buildRespuesta: function(r) {
+        if (!r) return 'El DPO depende de las matrices de objetivos que la empresa debe comunicar previamente. Sin ellas, no es calculable con precisión.';
+        return 'No por ahora. Las matrices de objetivos de productividad 2026 no han sido publicadas. Cualquier cifra de DPO es estimación — no calcules ni reclames sin esos datos.';
+      }
+    },
+    {
+      id: 'nr_faq_act_descanso',
+      pregunta: '¿Puede la empresa programar actividad en mis días de descanso?',
+      ruleIds: ['mad_actividad_descanso', 'lpa_actividad_descanso', 'tfn_roster_6_3_actividad_descanso', 'tfn_roster_5_3_actividad_descanso'],
+      buildRespuesta: function(rs) {
+        if (!rs || !rs.length) return 'Depende del acuerdo de roster activo. Con roster 5+3 o 6+3, ciertas actividades pueden caer en el 1.er o último día de tus 3 días de descanso.';
+        var act = rs.filter(function(r) { return r._resolution && r._resolution.operativa === true; });
+        if (act.length) return 'Sí — con el roster activo en tu base, algunas actividades pueden programarse en el primer o último día de tus 3 días de descanso: formación online, reconocimiento médico, auditorías... El patrón real puede quedar en 2 días libres.';
+        return 'Con el roster activo sería posible, pero tu contexto actual no muestra esta regla vigente. Comprueba tu base y fecha.';
+      }
+    },
+  ];
+
+  // ── localStorage ──
+  var TOP_KEY = 'pilotpay_ck_consultas';
+  var CTX_KEY = 'pilotpay_ck_ctx';
+
+  function _getConsultas() {
+    try { return JSON.parse(localStorage.getItem(TOP_KEY) || '{}'); } catch(e) { return {}; }
+  }
+  function _incConsulta(id) {
+    var d = _getConsultas(); d[id] = (d[id] || 0) + 1;
+    try { localStorage.setItem(TOP_KEY, JSON.stringify(d)); } catch(e) {}
+  }
+  function _saveCtx(c) { try { localStorage.setItem(CTX_KEY, JSON.stringify(c)); } catch(e) {} }
+  function _loadCtx() { try { return JSON.parse(localStorage.getItem(CTX_KEY) || 'null'); } catch(e) { return null; } }
+
+  // ── UI helpers ──
+
+  function showView(name) {
+    ['home', 'topic', 'answer'].forEach(function(v) {
+      var el = document.getElementById('ck-v-' + v);
+      if (el) el.style.display = (v === name) ? 'block' : 'none';
+    });
+    _ckView = name;
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function badge(estado, operativa) {
+    var c = ESTADO_CFG[estado] || { etiqueta: estado || '?', clase: 'nr-inactiva', icono: '·' };
+    var h = '<span class="nr-badge ' + c.clase + '">' + c.icono + ' ' + c.etiqueta + '</span>';
+    if (operativa === 'desconocida') h += ' <span class="nr-badge nr-condicionada">⚠ Incierto</span>';
+    return h;
+  }
+
+  function vigStr(r) {
+    var m = r._meta || {};
+    var p = [];
+    if (m.vigencia_desde) p.push('Desde ' + m.vigencia_desde);
+    if (m.vigencia_hasta) p.push('hasta ' + m.vigencia_hasta);
+    else if (m.vigencia_desde) p.push('indefinido');
+    if (m.nota_vigencia) p.push('(' + m.nota_vigencia + ')');
+    return p.join(' ');
+  }
+
+  function layerBadge(capa) {
+    var MAP = { 'L1_CC': ['CC', 'ck-src-convenio'], 'L2_ACTA': ['ACTA', 'ck-src-interno'], 'L3_ACUERDO': ['ACUERDO', 'ck-src-interp'] };
+    var e = MAP[capa] || [capa || '?', 'ck-src-pendiente'];
+    return '<span class="ck-source-tag ' + e[1] + '">' + e[0] + '</span>';
+  }
+
+  // ── Render rule detail (answer view) ──
+
+  function renderNormaRule(regla) {
+    if (!regla) return '<div class="ck-empty">Regla no encontrada.</div>';
+    var res  = regla._resolution;
+    var meta = regla._meta || {};
+
+    // Estado header
+    var estadoH = '';
+    if (res) {
+      estadoH = '<div class="nr-answer-estado">' + badge(res.estado, res.operativa);
+      if (res.operativa === true)         estadoH += '<span style="font-size:11px;color:var(--green);font-family:var(--mono)">● Operativa</span>';
+      else if (res.operativa === false)   estadoH += '<span style="font-size:11px;color:var(--red);font-family:var(--mono)">● No operativa</span>';
+      else if (res.operativa === 'desconocida') estadoH += '<span style="font-size:11px;color:var(--amber2);font-family:var(--mono)">● Estado incierto</span>';
+      estadoH += '</div>';
+    } else {
+      estadoH = '<div class="nr-answer-estado"><span style="font-size:12px;color:var(--text3);font-family:var(--mono)">Configura tu perfil para ver el estado vigente</span></div>';
+    }
+
+    // Warnings
+    var warnH = (res && res.operativa === 'desconocida')
+      ? '<div class="nr-operativa-warn">⚠ El estado operativo de esta regla es incierto. Depende de condiciones no verificables automáticamente. Confirma con la empresa o el comité.</div>'
+      : '';
+    var pendH = meta.pendiente_validacion
+      ? '<div class="nr-answer-ambig">⚠ <strong>Pendiente de confirmación</strong><br>Esta regla está pendiente de validación oficial. Puede variar.</div>'
+      : '';
+
+    // Ambigüedad
+    var ambigH = '';
+    if (meta.ambiguedad_id && typeof NORM_AMBIGUEDADES !== 'undefined') {
+      try {
+        for (var ai = 0; ai < NORM_AMBIGUEDADES.length; ai++) {
+          var a = NORM_AMBIGUEDADES[ai];
+          if (a.id === meta.ambiguedad_id && a.estado === 'abierta') {
+            var txt = a.como_mostrar || a.titulo || (Array.isArray(a.descripcion) ? a.descripcion[0] : (a.descripcion || ''));
+            ambigH = '<div class="nr-answer-ambig">⚠ <strong>' + esc(a.titulo || 'Incertidumbre') + '</strong><br>' + esc(txt) + '</div>';
+            break;
+          }
+        }
+      } catch(e2) {}
+    }
+
+    // Condición
+    var condH = '';
+    if (res && res.condicion) {
+      var ci = { '?': '?', 'activa': '✓', 'inactiva': '✗', 'desconocida': '?' }[res.condicion.estado] || '?';
+      condH = '<div class="nr-answer-condicion">Condición: ' + esc(res.condicion.label || res.condicion.id) + ' — <strong style="color:var(--text)">' + ci + ' ' + esc(res.condicion.estado) + '</strong></div>';
+    }
+
+    // Vigencia
+    var vs = vigStr(regla);
+    var vigH = vs ? '<div class="nr-answer-vigencia">📆 ' + esc(vs) + '</div>' : '';
+
+    // Fuente
+    var fuenteH = '<div class="nr-answer-fuente">'
+      + (meta.capa   ? layerBadge(meta.capa) : '')
+      + (meta.articulo ? '<span class="nr-answer-doc">📖 ' + esc(meta.articulo) + '</span>' : '')
+      + (meta.doc    ? '<span class="nr-answer-doc">' + esc(meta.doc) + '</span>' : '')
+      + ((meta.confianza === 'pendiente' || meta.pendiente_validacion) ? '<span class="ck-source-tag ck-src-pendiente">PENDIENTE VALIDAR</span>' : '')
+      + '</div>';
+
+    return '<div class="ck-answer-card">'
+      + '<div class="ck-answer-q">' + esc(regla.titulo || '') + '</div>'
+      + estadoH
+      + '<div class="ck-answer-body"><p>' + esc(regla.texto || '') + '</p></div>'
+      + '</div>'
+      + warnH + pendH + ambigH + condH + vigH + fuenteH;
+  }
+
+  // ── Render category results ──
+
+  function renderResults(reglas, ctx) {
+    if (!reglas || !reglas.length) {
+      return '<div style="padding:24px 16px;text-align:center">'
+        + '<strong style="display:block;font-size:15px;color:var(--text2);margin-bottom:6px">Sin resultados</strong>'
+        + '<span style="font-size:13px;color:var(--text3)">No se encontraron reglas para el perfil y fecha seleccionados.</span>'
+        + '</div>';
+    }
+
+    // Context bar
+    var chips = '';
+    if (ctx.base)  chips += '<span class="nr-ctx-chip">' + esc(ctx.base) + '</span>';
+    if (ctx.grupo) chips += '<span class="nr-ctx-chip">' + esc(ctx.grupo) + '</span>';
+    if (ctx.antiguedad_años !== null && ctx.antiguedad_años !== undefined) chips += '<span class="nr-ctx-chip">' + ctx.antiguedad_años + ' años</span>';
+    chips += '<span class="nr-ctx-chip">' + esc(ctx.fecha || 'Hoy') + '</span>';
+
+    var ctxBar = '<div class="nr-ctx-bar"><span style="font-size:10px;font-family:var(--mono);color:var(--blue);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Normativa para</span>'
+      + chips + '</div>';
+
+    // Warnings count
+    var wc = reglas.filter(function(r) { return r._resolution && r._resolution.operativa === 'desconocida'; }).length;
+    var warnBlock = wc > 0
+      ? '<div class="nr-warn-block" style="margin:10px 16px 0"><div class="nr-warn-title">⚠ ' + wc + ' regla' + (wc > 1 ? 's' : '') + ' con incertidumbre normativa</div>'
+        + '<div class="nr-warn-text">Algunas reglas dependen de condiciones no verificables automáticamente.</div></div>'
+      : '';
+
+    // Group by category
+    var bycat = {}, order = [];
+    reglas.forEach(function(r) {
+      var cat = r.categoria || 'general';
+      if (!bycat[cat]) { bycat[cat] = []; order.push(cat); }
+      bycat[cat].push(r);
+    });
+
+    var catsH = order.map(function(cat) {
+      var cfg = CAT_CFG[cat] || { label: cat, ico: '📄' };
+      var rulesH = bycat[cat].map(function(r) {
+        var res = r._resolution || {};
+        var ec = ESTADO_CFG[res.estado] || ESTADO_CFG['activa'];
+        var ex = (r.texto || '').slice(0, 110);
+        if ((r.texto || '').length > 110) ex += '…';
+        return '<div class="nr-rule-row" onclick="ckShowNormaRule(\'' + r.id + '\')">'
+          + '<div class="nr-rule-body">'
+          + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;flex-wrap:wrap">'
+          + '<span class="nr-badge ' + ec.clase + '">' + ec.icono + ' ' + ec.etiqueta + '</span>'
+          + (res.operativa === 'desconocida' ? '<span class="nr-badge nr-condicionada">⚠ Incierto</span>' : '')
+          + '</div>'
+          + '<div class="nr-rule-title">' + esc(r.titulo || r.id) + '</div>'
+          + '<div class="nr-rule-excerpt">' + esc(ex) + '</div>'
+          + '</div>'
+          + '<span class="nr-rule-arrow">›</span></div>';
+      }).join('');
+      return '<div class="nr-cat-block"><div class="nr-cat-header">'
+        + '<span class="nr-cat-ico">' + cfg.ico + '</span>'
+        + '<span class="nr-cat-label">' + cfg.label + '</span>'
+        + '</div></div>'
+        + '<div class="card" style="padding:0;margin:0 16px 14px">' + rulesH + '</div>';
+    }).join('');
+
+    return ctxBar + '<div style="padding:4px 0 0">' + warnBlock + catsH + '</div>';
+  }
+
+  // ── Render FAQs ──
+
+  function renderFaqs(ctx) {
+    var hasCtx = ctx && (ctx.base || ctx.grupo);
+    var html = NR_FAQS.map(function(faq) {
+      var resp;
+      if (!hasCtx) {
+        resp = 'Configura tu base y función para ver la respuesta adaptada a tu situación.';
+      } else {
+        try {
+          if (faq.ruleId) {
+            resp = faq.buildRespuesta(_resultMap[faq.ruleId] || null);
+          } else if (faq.ruleIds) {
+            resp = faq.buildRespuesta(faq.ruleIds.map(function(id) { return _resultMap[id]; }).filter(Boolean));
+          } else {
+            resp = faq.buildRespuesta();
+          }
+        } catch(e) {
+          resp = 'Consulta las reglas de normativa para tu perfil.';
+        }
+      }
+      return '<div class="ck-faq-item">'
+        + '<div class="ck-faq-q">' + esc(faq.pregunta) + '</div>'
+        + '<div class="ck-faq-a">' + esc(resp) + '</div>'
+        + '</div>';
+    }).join('');
+    var el = document.getElementById('ck-faqs-list');
+    if (el) el.innerHTML = html;
+  }
+
+  // ── Render top consultas ──
+
+  function renderPopular() {
+    var el = document.getElementById('ck-popular');
+    if (!el) return;
+    var data   = _getConsultas();
+    var sorted = Object.keys(data).sort(function(a,b) { return (data[b]||0) - (data[a]||0); });
+    var top    = sorted.slice(0, 6);
+    var eng    = typeof NormativaEngine !== 'undefined' ? NormativaEngine : null;
+    if (!top.length) {
+      el.innerHTML = '<div class="ck-empty" style="padding:14px">Las reglas que consultes aparecerán aquí.</div>';
+      return;
+    }
+    el.innerHTML = top.map(function(id) {
+      var r = eng ? eng.getRegla(id) : null;
+      if (!r) return '';
+      var n = data[id] || 0;
+      return '<div class="ck-list-row" onclick="ckShowNormaRule(\'' + id + '\')">'
+        + '<div class="ck-list-row-text">' + esc(r.titulo || id)
+        + '<div class="ck-list-row-sub">' + n + ' consulta' + (n !== 1 ? 's' : '') + '</div>'
+        + '</div><span class="ck-list-arrow">›</span></div>';
+    }).filter(Boolean).join('');
+  }
+
+  // ── Helpers inicio ──
+
+  function setDefaultDate() {
+    var f = document.getElementById('ck-ctx-fecha');
+    if (!f || f.value) return;
+    var d = new Date();
+    f.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function restoreCtx() {
+    var s = _loadCtx();
+    if (!s) return;
+    var m = { 'ck-ctx-base': s.base, 'ck-ctx-grupo': s.grupo, 'ck-ctx-ant': s.antiguedad_años, 'ck-ctx-fecha': s.fecha };
+    Object.keys(m).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && m[id] !== null && m[id] !== undefined && m[id] !== '') el.value = m[id];
+    });
+  }
+
+  // ── API pública ──
+
+  window.ckRender = function() {
+    showView('home');
+    setDefaultDate();
+    restoreCtx();
+    renderFaqs(_lastCtx);
+    renderPopular();
+    if (_lastResults && _lastCtx) {
+      var wrap  = document.getElementById('ck-results-wrap');
+      var inner = document.getElementById('ck-results-inner');
+      if (inner) inner.innerHTML = renderResults(_lastResults, _lastCtx);
+      if (wrap)  wrap.style.display = 'block';
+    }
+  };
+
+  window.ckConsultar = function() {
+    if (typeof NormativaEngine === 'undefined') { alert('Motor normativo no disponible.'); return; }
+    var base   = (document.getElementById('ck-ctx-base')  || {}).value || '';
+    var grupo  = (document.getElementById('ck-ctx-grupo') || {}).value || '';
+    var antStr = (document.getElementById('ck-ctx-ant')   || {}).value || '';
+    var fecha  = (document.getElementById('ck-ctx-fecha') || {}).value || '';
+    if (!base && !grupo) { alert('Selecciona al menos tu base o tu función.'); return; }
+    var ctx = {
+      base:   base  || null,
+      grupo:  grupo || null,
+      fecha:  fecha || new Date().toISOString().slice(0,10),
+      antiguedad_años: antStr !== '' ? parseFloat(antStr) : null,
+      categorias: null,
+      condicionesActivas: [],
+      condicionesInactivas: [],
+    };
+    _saveCtx({ base: base, grupo: grupo, antiguedad_años: ctx.antiguedad_años, fecha: fecha });
+    var reglas   = NormativaEngine.resolveContext(ctx);
+    _lastCtx     = ctx;
+    _lastResults = reglas;
+    _resultMap   = {};
+    reglas.forEach(function(r) { _resultMap[r.id] = r; });
+    var inner = document.getElementById('ck-results-inner');
+    var wrap  = document.getElementById('ck-results-wrap');
+    if (inner) inner.innerHTML = renderResults(reglas, ctx);
+    if (wrap)  wrap.style.display = 'block';
+    renderFaqs(ctx);
+    renderPopular();
+    var page = document.getElementById('page-convenio');
+    if (page && wrap) page.scrollTo({ top: Math.max(0, wrap.offsetTop - 60), behavior: 'smooth' });
+  };
+
+  window.ckShowNormaRule = function(id) {
+    _ckPrevView = _ckView;
+    var eng   = typeof NormativaEngine !== 'undefined' ? NormativaEngine : null;
+    var regla = _resultMap[id] || (eng ? eng.getRegla(id) : null);
+    var el    = document.getElementById('ck-answer-content');
+    if (el) el.innerHTML = renderNormaRule(regla);
+    _incConsulta(id);
+    showView('answer');
+    var page = document.getElementById('page-convenio');
+    if (page) page.scrollTop = 0;
+  };
+
+  window.ckBack = function() {
+    showView(_ckPrevView !== 'home' && _ckView === 'answer' ? _ckPrevView : 'home');
+  };
+
+})();
 </script>
 </body>
 </html>
