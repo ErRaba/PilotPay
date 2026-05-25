@@ -118,7 +118,7 @@ DB: PilotPayLocalDB  (DB_VERSION = 1)
 Stores: monthlyRecords, auditHistory
 ```
 
-### Firebase RTDB paths
+### Firebase RTDB paths (activos en app)
 ```
 pilotpay/usuarios/{code}
 pilotpay/perfiles/{code}
@@ -126,11 +126,17 @@ pilotpay/permisos/{code}
 pilotpay/historicos/{userId}/monthly/{year}_{month}
 pilotpay/historicos/{userId}/auditorias/{auditId}
 pilotpay/historicos/{userId}/deletedAuditorias/{auditId}
-pilotpay/rutas/{key}
 pilotpay/solicitudes/{key}
 ```
 
 Estos paths son estables. **Cambiarlos rompe el sync multi-device.**
+
+### Firebase RTDB paths (retirados de la app, datos preservados)
+```
+pilotpay/rutas/{key}   ← tabla de rutas ICAO — retirada en Beta 3.0
+                          datos en Firebase conservados para fase futura
+                          regla de seguridad activa pero UI/código eliminados
+```
 
 ---
 
@@ -291,7 +297,7 @@ Crear checkpoint antes de:
 ### Operativo y estable
 - Dashboard con expediente activo y última auditoría separados
 - Calculadora de nómina (CMD/COP/TCP)
-- Variables mensuales (parser PDF)
+- Variables mensuales (parser PDF + pegar texto)
 - Simulador IRPF
 - Comparativa inteligente
 - Historial de auditorías con clasificación causa/derivado/neto
@@ -300,19 +306,40 @@ Crear checkpoint antes de:
 - Gestión de perfiles y avatares
 - Sync multi-device (P4): monthly, auditorías, tombstones, pull, queue
 - Firebase Security Rules (P5): deny-by-default + auth requerida
-- P4 Debug Panel (admin, solo lectura)
+- Monitor de sincronización (admin, solo lectura)
 - Backend motor de cálculo (parcial, en progreso)
+
+### Retirado en Beta 3.0 (sin eliminar datos)
+- **Panel de rutas ICAO (Admin)**: código eliminado; datos en `pilotpay/rutas` preservados en Firebase
+- **Modo "PDF Prog." en Variables**: placeholder eliminado; feature no implementada
 
 ### Limitaciones conocidas
 - Cross-user isolation solo en cliente (no en Firebase rules)
 - Contraseñas en `pilotpay/usuarios` visibles a sesiones anónimas autenticadas
 - Frontend no completamente desacoplado del backend
-- P4 Debug Panel es temporal (retirar cuando no sea necesario)
 - GC de tombstones >180 días pendiente (TODO en código)
 
 ---
 
-## 12. Filosofía general
+## 12. Roadmap — fases futuras (no activas en Beta 3.0)
+
+Funcionalidades identificadas pero explícitamente aplazadas:
+
+### Lectura de programación y forecast mensual
+- Parser de PDF de programación eCrew (sistema de programación de Binter)
+- Carga automática de horas bloque por ruta desde tabla ICAO
+- Forecast de nómina a partir de la programación del mes
+- La tabla `pilotpay/rutas` en Firebase es la infraestructura de datos reservada para esta fase
+- **No desarrollar hasta que Beta 3.0 esté estabilizada y se decida retomar**
+
+### Firebase Custom Auth + backend
+- Aislamiento real por usuario en reglas Firebase (`auth.uid === $userId`)
+- Requiere backend (Cloud Function) que emita custom tokens
+- Documentado en `docs/FIREBASE_SECURITY.md`
+
+---
+
+## 13. Filosofía general
 
 PilotPay no busca añadir funciones rápidamente, llenar pantallas ni parecer complejo.
 
