@@ -1,396 +1,324 @@
-# CLAUDE.md — PilotPay
+# CLAUDE.md — PilotPay Beta 3.0
+
+**Versión**: Beta 3.0  
+**Rama activa**: `avatars-redesign`  
+**Tag estable**: `v3.0.0-beta-sync-stable`  
+**GitHub Pages**: desde `avatars-redesign/docs/`
+
+---
 
 ## 1. Qué es PilotPay
 
-PilotPay es una plataforma de auditoría salarial y simulación financiera orientada principalmente a personal aeronáutico de Binter Canarias.
+PilotPay es una plataforma de auditoría salarial y simulación financiera para personal aeronáutico de Binter Canarias.
 
-No es únicamente una calculadora de nóminas.
+**No es solo una calculadora de nóminas.** Es un sistema de trazabilidad, auditoría y reclamación.
 
-La prioridad del proyecto es:
+Prioridades del proyecto:
+- Trazabilidad y auditoría
+- Precisión financiera
+- Interpretación inteligente de discrepancias
+- Estabilidad técnica
+- Generación profesional de informes y reclamaciones
 
-- trazabilidad,
-- estabilidad,
-- auditoría,
-- precisión financiera,
-- interpretación inteligente de discrepancias,
-- generación profesional de informes y reclamaciones.
-
-Actualmente la app cubre principalmente:
-
+Perfiles cubiertos:
 - CMD (Comandante)
 - COP (Copiloto)
 - TCP (Tripulante de Cabina)
 
-El motor más desarrollado actualmente es el de pilotos (Grupo IV convenio BCSA).
+Motor más desarrollado: pilotos (Grupo IV, convenio BCSA).
 
 ---
 
-# 2. Arquitectura actual
+## 2. Arquitectura actual
 
-PilotPay utiliza actualmente una arquitectura híbrida.
+### 2.1 Capas de datos — local-first / offline-first
 
-## Frontend
+PilotPay es **local-first**. El dispositivo es la fuente de verdad operativa. Firebase es una capa de sincronización secundaria, no autoritativa.
 
-Frontend legacy basado principalmente en:
-
-```text
-frontend/index.html
+```
+localStorage          ← fuente primaria de todos los datos
+IndexedDB (IDB)       ← capa de persistencia secundaria (write-through)
+Firebase RTDB         ← sincronización multi-device (write-through, nunca pull autoritativo)
 ```
 
-Contiene todavía:
+**Invariante crítico**: ninguna lectura de Firebase debe sobrescribir datos locales sin comparación de timestamps. El merge es siempre conservador (`fbMs > localMs` → Firebase gana; en caso de duda → local gana).
 
-- lógica crítica,
-- renderizado,
-- parser visual,
-- dashboard,
-- comparativa,
-- simulador,
-- gestión de historial,
-- UI premium,
-- generación PDF,
-- motor explicativo de discrepancias.
+### 2.2 Módulo de sync — P4
 
-## Backend
+El módulo P4 gestiona toda la sincronización Firebase. Está en `frontend/js/pilotPayStore.js`.
 
-Backend progresivamente desacoplado:
+- **Flag**: `localStorage.getItem('pilotpay_p4_enabled') === '1'`
+- Activable via URL `?p4=1` (solo para testing)
+- Sin flag activo: toda la infraestructura P4 es no-op
 
-```text
-backend/
+**Rutas Firebase usadas por P4:**
+```
+pilotpay/historicos/{userId}/monthly/{year}_{month}
+pilotpay/historicos/{userId}/auditorias/{auditId}
+pilotpay/historicos/{userId}/deletedAuditorias/{auditId}
 ```
 
-Contiene:
+Documentación detallada del flujo sync: `docs/ARCHITECTURE_SYNC.md`
 
-- motor determinista de cálculo,
-- tablas salariales,
-- Seguridad Social,
-- IRPF,
-- endpoints API,
-- parser parcial,
-- tests automatizados.
+### 2.3 Frontend
 
-## Situación real actual
+Monolito en `frontend/index.html`. Contiene:
+- Lógica de UI y renderizado
+- Parser PDF de nóminas
+- Dashboard, Comparativa, Simulador, Historial
+- Generación PDF, reclamaciones
+- Motor explicativo de discrepancias
 
-El frontend todavía NO debe considerarse completamente desacoplado.
+Módulos JS separados en `frontend/js/`:
+- `pilotPayStore.js` — store central, P4, sync
+- `pilotPayLocalDB.js` — IndexedDB (IDB v1)
+- `auditEngine.js` — motor de auditoría puro
+- `userProfile.js` — perfil, aliases canónicos
+- `userAdmin.js` — gestión de usuarios (admin)
+- `financialProfile.js` — perfil financiero
+- `fiscalHistory.js` — historial fiscal
+- `avatarManager.js` — sistema de avatares
 
-Muchas funcionalidades críticas siguen temporalmente en el HTML legacy.
+### 2.4 Backend
 
-No introducir nueva lógica compleja innecesaria en frontend si puede centralizarse posteriormente en backend.
+`backend/` — motor determinista de cálculo (en desarrollo progresivo):
+- Tablas salariales BCSA
+- Seguridad Social, IRPF
+- Endpoints API (Express)
+- Tests automatizados
 
----
-
-# 3. Principios críticos del proyecto
-
-## 3.1 Nunca duplicar conceptos derivados
-
-Separar SIEMPRE:
-
-- causas raíz
-- consecuencias automáticas
-
-Ejemplo:
-
-Causas:
-- Horas de vuelo
-- DPO
-
-Consecuencias derivadas:
-- Total devengado
-- Base IRPF
-- Retención IRPF
-- Líquido neto
-
-Los derivados NO deben sumarse varias veces.
+El frontend **todavía NO está completamente desacoplado** del backend. La lógica de cálculo sigue duplicada parcialmente en el HTML. No introducir nueva lógica de cálculo en frontend si puede centralizarse en backend.
 
 ---
 
-## 3.2 Mantener precisión financiera
+## 3. Claves de almacenamiento — NO CAMBIAR
 
-- No redondear prematuramente.
-- Mantener precisión hasta resultado final.
-- Evitar recalcular bases innecesariamente.
-- Revisar impacto de cualquier cambio sobre:
-  - Base SS
-  - Base IRPF
-  - Retención
-  - Líquido neto
+### localStorage
+```
+pilotpay:{userId}:monthly_v1          ← MonthRecords (fuente de expediente)
+pilotpay:{userId}:audit_history_v1    ← historial de auditorías
+pilotpay:{userId}:p4_queue            ← cola de sync Firebase pendiente
+pilotpay:{userId}:offline_queue       ← cola legacy (perfil/permisos)
+pilotpay:{userId}:last_sync_at        ← timestamp del último sync OK
+pilotpay:{userId}:p4_pull_backup_*    ← backups previos al pull
+pilotpay_v2_{userId}                  ← caché de perfil
+pilotpay_theme_{userId}               ← tema del usuario
+pilotpay_perms_cache                  ← caché de permisos
+pilotpay_admin_perms                  ← permisos admin
+pilotpay_p4_enabled                   ← flag P4 (no escobar por userId)
+pilotpay_device_id                    ← ID único del dispositivo
+pp_ui_mode_v1                         ← modo UI
+```
 
----
+Estas claves son estables. **Cambiarlas rompe la migración de datos existentes.**
 
-## 3.3 Estabilidad > refactor
+### IndexedDB
+```
+DB: PilotPayLocalDB  (DB_VERSION = 1)
+Stores: monthlyRecords, auditHistory
+```
 
-Evitar:
-- reescrituras masivas,
-- refactors innecesarios,
-- cambios estructurales sin motivo real.
+### Firebase RTDB paths
+```
+pilotpay/usuarios/{code}
+pilotpay/perfiles/{code}
+pilotpay/permisos/{code}
+pilotpay/historicos/{userId}/monthly/{year}_{month}
+pilotpay/historicos/{userId}/auditorias/{auditId}
+pilotpay/historicos/{userId}/deletedAuditorias/{auditId}
+pilotpay/rutas/{key}
+pilotpay/solicitudes/{key}
+```
 
-PilotPay prioriza:
-- estabilidad,
-- auditabilidad,
-- continuidad funcional.
-
----
-
-## 3.4 Auditoría > estética
-
-La estética es importante, pero nunca debe comprometer:
-- claridad,
-- trazabilidad,
-- interpretación,
-- estabilidad.
-
----
-
-# 4. Motor de auditoría
-
-PilotPay incluye un sistema de auditoría inteligente.
-
-## Clasificación de discrepancias
-
-### Causa
-Concepto origen de discrepancia real.
-
-Ejemplos:
-- Horas de vuelo
-- DPO
-- salario base
-
-### Derivado
-Consecuencia automática de otros conceptos.
-
-Ejemplos:
-- Total devengado
-- Base IRPF
-- Retención
-- Líquido neto
-
-### Neto
-Impacto económico final percibido por el trabajador.
+Estos paths son estables. **Cambiarlos rompe el sync multi-device.**
 
 ---
 
-## Reglas críticas
+## 4. Seguridad Firebase (P5)
 
-- Los derivados NO generan impacto independiente.
-- La diferencia total NO debe sumar derivados múltiples.
-- La auditoría debe explicar:
-  - origen probable,
-  - impacto real,
-  - consecuencias automáticas.
+### Reglas activas
+Archivo: `firebase-database.rules.json`  
+Documentación: `docs/FIREBASE_SECURITY.md`
 
----
+- **Deny-by-default** en root
+- **`auth != null`** requerido en todos los paths
+- Validación estructural en nodos críticos (monthly, auditorías, tombstones)
+- DELETEs permitidos via `!newData.exists()`
 
-# 5. Parser PDF de nóminas
+### Auth model
+**Firebase Anonymous Auth** via REST API. Sin SDK. Token adjuntado como `?auth=<token>` en cada llamada.
 
-El parser debe priorizar:
-- precisión,
-- seguridad,
-- trazabilidad.
+### Limitación conocida (documentada, no resoluble sin backend)
+El `auth.uid` anónimo no está correlacionado con los códigos de usuario de la app (`ESH`, `COP`…). Firebase **no puede** verificar que el usuario A solo acceda a `historicos/A/`. El aislamiento por usuario es enforced únicamente en cliente.
 
-## Reglas importantes
-
-### NIF trabajador
-Nunca usar:
-- CIF/NIF empresa
-como:
-- NIF trabajador.
-
-Si el NIF no puede detectarse con seguridad:
-- devolver vacío,
-- o "No detectado".
-
-Nunca inferir datos inseguros.
+La solución real (Firebase Custom Auth + backend) está documentada en `docs/FIREBASE_SECURITY.md` pero **no está en el roadmap inmediato**.
 
 ---
 
-## Datos críticos extraídos
+## 5. Principios críticos — NO NEGOCIABLES
 
-- Nombre
-- NIF
-- Nº SS
-- Fecha ingreso
-- Acumulado Base IRPF
-- Acumulado IRPF retenido
-- Días trabajados
-- Códigos:
-  - EN
-  - AC
-  - VA
-  - MA
-  - ER
-  - PA
-  - RE
-  - HU
-  - AU
+### 5.1 Nunca duplicar conceptos derivados
+Separar siempre:
+- **Causas raíz**: horas de vuelo, DPO, salario base
+- **Consecuencias derivadas**: total devengado, base IRPF, retención, líquido neto
 
----
+Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discrepancias como causa / derivado / neto.
 
-## Actualización de perfil/histórico
+### 5.2 Precisión financiera
+- No redondear prematuramente
+- Mantener precisión hasta resultado final
+- Revisar impacto de cualquier cambio sobre Base SS, Base IRPF, Retención, Líquido neto
 
-La actualización NO debe hacerse automáticamente.
+### 5.3 Estabilidad > refactor
+- Sin reescrituras masivas
+- Sin refactors sin motivo real
+- Sin cambios estructurales de storage, schemas, paths
 
-Debe existir:
-- validación visual,
-- selección manual,
-- confirmación explícita del usuario.
+### 5.4 Local-first / offline-first
+- El dispositivo siempre puede operar sin red
+- Firebase es sync, no source of truth
+- El pull nunca puede borrar datos locales sin tombstone
+
+### 5.5 Compatibilidad multi-device
+- PC Chrome, iPhone Safari PWA, iPad Safari PWA
+- Cualquier cambio debe verificarse en los tres
+- El P4 Debug Panel es la herramienta de diagnóstico sin consola móvil
 
 ---
 
-# 6. UI / UX
+## 6. Motor de auditoría
 
-PilotPay debe mantener una imagen:
+### Clasificación de discrepancias
 
-- premium,
-- profesional,
-- limpia,
-- sobria,
-- técnica.
+| Tipo | Descripción | Ejemplo |
+|---|---|---|
+| **Causa** | Origen de la discrepancia real | Horas de vuelo, DPO, salario base |
+| **Derivado** | Consecuencia automática de otra causa | Total devengado, base IRPF, retención |
+| **Neto** | Impacto económico final percibido | Líquido neto diferencial |
 
-Evitar:
-- aspecto gaming,
-- exceso de colores agresivos,
-- ruido visual,
-- exceso de botones,
-- badges innecesarios,
-- bloques redundantes.
+**Reglas críticas:**
+- Los derivados NO generan impacto independiente
+- La diferencia total NO suma derivados múltiples
+- La auditoría debe explicar: origen probable, impacto real, consecuencias automáticas
 
 ---
 
-## Principios visuales
+## 7. Parser PDF de nóminas
 
-- Menos bloques, mejor jerarquía.
-- Priorizar lectura rápida.
-- Mantener alineaciones limpias.
-- Evitar etiquetas desalineadas.
-- Mantener densidad visual equilibrada.
-- El dashboard es un panel operativo, no un menú gigante.
+- Priorizar precisión, seguridad y trazabilidad
+- **Nunca usar NIF empresa como NIF trabajador**
+- Si el NIF no puede detectarse con seguridad: devolver vacío o "No detectado"
+- La actualización de perfil/histórico desde parser NO es automática: requiere validación visual y confirmación explícita del usuario
 
 ---
 
-# 7. Responsive y compatibilidad
+## 8. UI / UX
 
-PilotPay debe funcionar correctamente en:
+Imagen: **premium, profesional, limpia, sobria, técnica.**
 
-- móviles,
-- tablets,
-- portátiles,
-- monitores grandes,
-- Windows,
-- macOS,
-- iPadOS.
+Evitar: aspecto gaming, exceso de colores agresivos, ruido visual, botones redundantes, badges innecesarios.
 
-## Reglas
-
-- No diseñar solo para desktop.
-- Evitar tablas que rompan mobile.
-- Mantener layouts fluidos y responsive.
-- Evitar modales gigantes en móvil.
-- Priorizar legibilidad.
-- Cualquier nuevo módulo debe comprobarse:
-  - desktop,
-  - tablet,
-  - mobile.
+Principios:
+- Menos bloques, mejor jerarquía
+- El dashboard es un panel operativo, no un menú
+- Layouts fluidos y responsive (móvil, tablet, desktop)
+- Cualquier nuevo módulo debe comprobarse en los tres formatos
 
 ---
 
-# 8. Flujo de cambios
+## 9. Flujo de cambios
 
-## Cambios grandes
+### Cambios pequeños (visuales, textos, alineaciones)
+Pueden aplicarse directamente.
 
+### Cambios grandes
 Claude debe:
-1. Explicar primero qué entiende.
-2. Indicar:
-   - archivos afectados,
-   - riesgos,
-   - dependencias.
-3. Esperar confirmación.
+1. Explicar qué entiende del problema
+2. Indicar archivos afectados, riesgos y dependencias
+3. Esperar confirmación antes de implementar
+
+### Cambios críticos — requieren análisis previo
+Antes de tocar cualquiera de estos:
+- Cálculo de nómina o IRPF
+- Parser PDF
+- Motor de auditoría (auditEngine.js)
+- Comparativa
+- Backend
+- Histórico / schemas de MonthRecord o AuditRecord
+- Storage keys, IDB stores, Firebase paths
+- Lógica de sync (P4)
+- Reglas Firebase
+
+Claude debe: analizar dependencias, evitar regresiones silenciosas, proponer diff antes de implementar.
+
+### Diagnóstico antes de fixes
+Antes de cualquier fix de sync o resurrección de datos:
+1. Usar P4 Debug Panel en el dispositivo problemático
+2. Ejecutar `await P4Debug.inspectMonthly()` en consola
+3. Comparar conteos entre dispositivos
+4. Identificar la capa exacta donde divergen los datos
+5. Solo entonces proponer fix quirúrgico
 
 ---
 
-## Cambios pequeños
+## 10. Git y checkpoints
 
-Cambios:
-- visuales,
-- alineaciones,
-- textos,
-- badges,
-- responsive
+Rama activa: `avatars-redesign`  
+Publicación: GitHub Pages desde `avatars-redesign/docs/`  
+Sync: `npm run sync` (copia `frontend/` → `docs/`)
 
-pueden aplicarse directamente.
-
----
-
-## Cambios críticos
-
-Antes de tocar:
-- cálculo,
-- parser,
-- IRPF,
-- comparativa,
-- backend,
-- histórico
-
-Claude debe:
-- analizar dependencias,
-- evitar romper cálculos existentes,
-- evitar regresiones silenciosas.
-
----
-
-# 9. Git y checkpoints
-
-Realizar checkpoints frecuentes:
-
-```bash
-git add .
-git commit -m "mensaje"
+Tags estables:
+```
+v2.2.0-stable
+v2.3.0-p4-write-upload-ok
+v2.4.0-p4-sync-complete
+v2.5.0-p5-security-sync-stable
+v3.0.0-beta-sync-stable          ← actual
 ```
 
-Especialmente antes de:
-- cambios UI grandes,
-- parser,
-- motor cálculo,
-- backend,
-- dashboard,
-- comparativa.
+Crear checkpoint antes de:
+- Cambios UI grandes
+- Parser o comparativa
+- Motor de cálculo
+- Backend
+- Dashboard
+- Cualquier cambio en P4/sync
 
 ---
 
-# 10. Estado funcional actual
+## 11. Estado funcional actual (Beta 3.0)
 
-PilotPay incluye actualmente:
-
-- Dashboard operativo
-- Calculadora de nómina
-- Variables
+### Operativo y estable
+- Dashboard con expediente activo y última auditoría separados
+- Calculadora de nómina (CMD/COP/TCP)
+- Variables mensuales (parser PDF)
 - Simulador IRPF
 - Comparativa inteligente
-- Historial de auditorías
-- Motor explicativo
-- Clasificación causa/derivado/neto
-- Parser PDF de nóminas
-- Extracción de acumulados
-- Actualización controlada de perfil/histórico
-- Generación de reclamaciones
-- Generación PDF de nómina
-- Gestión de perfiles
-- Sistema de avatares
-- Convenio integrado
-- Backend parcial auditable
-- Tests backend iniciales
+- Historial de auditorías con clasificación causa/derivado/neto
+- Parser PDF de nóminas con extracción de acumulados
+- Generación de reclamaciones y PDF de nómina
+- Gestión de perfiles y avatares
+- Sync multi-device (P4): monthly, auditorías, tombstones, pull, queue
+- Firebase Security Rules (P5): deny-by-default + auth requerida
+- P4 Debug Panel (admin, solo lectura)
+- Backend motor de cálculo (parcial, en progreso)
+
+### Limitaciones conocidas
+- Cross-user isolation solo en cliente (no en Firebase rules)
+- Contraseñas en `pilotpay/usuarios` visibles a sesiones anónimas autenticadas
+- Frontend no completamente desacoplado del backend
+- P4 Debug Panel es temporal (retirar cuando no sea necesario)
+- GC de tombstones >180 días pendiente (TODO en código)
 
 ---
 
-# 11. Filosofía general
+## 12. Filosofía general
 
-PilotPay no busca:
-- añadir funciones rápidamente,
-- llenar pantallas,
-- parecer complejo artificialmente.
+PilotPay no busca añadir funciones rápidamente, llenar pantallas ni parecer complejo.
 
 Busca:
-- precisión,
-- claridad,
-- utilidad real,
-- auditoría profesional,
-- experiencia premium,
-- estabilidad técnica.
+- Precisión y claridad
+- Utilidad real para el usuario
+- Auditoría profesional y trazable
+- Experiencia premium y estable
+- Compatibilidad multi-device sin fricciones
