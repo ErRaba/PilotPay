@@ -2960,6 +2960,216 @@
   };
   // ══ fin DEBUG/ADMIN fullLocalReset ══════════════════════════════════════
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // DEBUG — inspectMonthly: estado de monthly en las 4 capas
+  // Uso: await P4Debug.inspectMonthly()
+  // ══════════════════════════════════════════════════════════════════════════
+  window.P4Debug.inspectMonthly = async function () {
+    var PENDING_STATES = ['pending_variables', 'pending_calculation', 'pending_comparison'];
+
+    var _fmt = function (mr) {
+      if (!mr) return { error: 'null' };
+      return {
+        id        : mr.id        || '?',
+        estado    : mr.estado    || '?',
+        year      : mr.year      || '?',
+        month     : mr.month     || '?',
+        pending   : PENDING_STATES.indexOf(mr.estado) !== -1,
+        updatedAt : mr._updatedAt ? mr._updatedAt.slice(0, 19) : '—'
+      };
+    };
+
+    // 1. Memoria
+    var memRows = Object.values(_monthly).map(_fmt);
+
+    // 2. localStorage
+    var lsRows = [];
+    try {
+      var lsRaw = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}');
+      lsRows = Object.values(lsRaw).map(_fmt);
+    } catch (e) { lsRows = [{ error: e && e.message ? e.message : String(e) }]; }
+
+    // 3. IDB
+    var idbRows = [];
+    if (typeof PilotPayLocalDB !== 'undefined' &&
+        typeof PilotPayLocalDB.getMonthlyRecordsByUser === 'function' && _userId) {
+      try {
+        var idbRecs = await PilotPayLocalDB.getMonthlyRecordsByUser(_userId);
+        idbRows = idbRecs.map(_fmt);
+      } catch (e) { idbRows = [{ error: e && e.message ? e.message : String(e) }]; }
+    } else {
+      idbRows = [{ info: _userId ? 'IDB no disponible' : 'sin usuario activo' }];
+    }
+
+    // 4. Firebase
+    var fbRows = [];
+    if (_p4Sink && typeof _p4Sink.get === 'function' && _userId) {
+      try {
+        var fbData = await _p4Sink.get('pilotpay/historicos/' + _userId + '/monthly');
+        if (fbData && typeof fbData === 'object' && Object.keys(fbData).length > 0) {
+          fbRows = Object.values(fbData).map(_fmt);
+        } else {
+          fbRows = [{ info: 'nodo vacío en Firebase' }];
+        }
+      } catch (e) { fbRows = [{ error: e && e.message ? e.message : String(e) }]; }
+    } else {
+      fbRows = [{ info: !_userId ? 'sin usuario' : (!_isP4Enabled() ? 'P4 desactivado' : 'sin sink') }];
+    }
+
+    console.log('══════════════════════════════════════════════════════════');
+    console.log('[P4] inspectMonthly — userId:', _userId || '(sin usuario)');
+
+    console.log('\n  1. MEMORIA (' + memRows.length + '):');
+    if (memRows.length) console.table(memRows); else console.log('     (vacío)');
+
+    console.log('\n  2. localStorage monthly_v1 (' + lsRows.length + '):');
+    if (lsRows.length && !lsRows[0].info && !lsRows[0].error) console.table(lsRows);
+    else console.log('    ', lsRows[0]);
+
+    console.log('\n  3. IDB monthlyRecords (' + idbRows.length + '):');
+    if (idbRows.length && !idbRows[0].info && !idbRows[0].error) console.table(idbRows);
+    else console.log('    ', idbRows[0]);
+
+    console.log('\n  4. Firebase monthly (' + fbRows.length + '):');
+    if (fbRows.length && !fbRows[0].info && !fbRows[0].error) console.table(fbRows);
+    else console.log('    ', fbRows[0]);
+
+    console.log('══════════════════════════════════════════════════════════');
+
+    return { memory: memRows, localStorage: lsRows, idb: idbRows, firebase: fbRows };
+  };
+  // ══ fin DEBUG inspectMonthly ════════════════════════════════════════════
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // DEBUG/ADMIN — nukeLocalMonthlyPending: limpieza local de pending monthly
+  // Solo borra pending_variables / pending_calculation / pending_comparison.
+  // NO toca Firebase. NO toca audit_history. NO toca estados cerrados/auditados.
+  //
+  // Uso:
+  //   P4Debug.nukeLocalMonthlyPending()                → dry-run
+  //   P4Debug.nukeLocalMonthlyPending({ confirm:true }) → ejecuta
+  // ══════════════════════════════════════════════════════════════════════════
+  window.P4Debug.nukeLocalMonthlyPending = async function (opts) {
+    opts = opts || {};
+    var dryRun = opts.confirm !== true;
+
+    var PENDING_STATES = ['pending_variables', 'pending_calculation', 'pending_comparison'];
+
+    // ── Inventario: memoria + localStorage + IDB ──────────────────────────
+    // Usamos un mapa por id para deduplicar entre capas
+    var byId = {};
+
+    // Capa 1: memoria
+    Object.keys(_monthly).forEach(function (k) {
+      var mr = _monthly[k];
+      if (mr && PENDING_STATES.indexOf(mr.estado) !== -1 && mr.id) {
+        byId[mr.id] = { k: k, id: mr.id, year: mr.year, month: mr.month, estado: mr.estado, fuente: 'memoria' };
+      }
+    });
+
+    // Capa 2: localStorage (puede tener registros que no llegaron a memoria — arranque corrupto)
+    try {
+      var lsRaw = JSON.parse(localStorage.getItem(_monthlyKey()) || '{}');
+      Object.values(lsRaw).forEach(function (mr) {
+        if (mr && PENDING_STATES.indexOf(mr.estado) !== -1 && mr.id) {
+          if (!byId[mr.id]) {
+            var k2 = mr.year + ':' + mr.month;
+            byId[mr.id] = { k: k2, id: mr.id, year: mr.year, month: mr.month, estado: mr.estado, fuente: 'solo-ls' };
+          } else {
+            byId[mr.id].fuente = 'memoria+ls';
+          }
+        }
+      });
+    } catch (e) {}
+
+    // Capa 3: IDB (puede tener huérfanos no en localStorage)
+    if (typeof PilotPayLocalDB !== 'undefined' &&
+        typeof PilotPayLocalDB.getMonthlyRecordsByUser === 'function' && _userId) {
+      try {
+        var idbRecs = await PilotPayLocalDB.getMonthlyRecordsByUser(_userId);
+        idbRecs.forEach(function (mr) {
+          if (mr && PENDING_STATES.indexOf(mr.estado) !== -1 && mr.id) {
+            if (!byId[mr.id]) {
+              var k3 = mr.year + ':' + mr.month;
+              byId[mr.id] = { k: k3, id: mr.id, year: mr.year, month: mr.month, estado: mr.estado, fuente: 'solo-idb' };
+            } else {
+              byId[mr.id].fuente = byId[mr.id].fuente.indexOf('idb') === -1
+                ? byId[mr.id].fuente + '+idb' : byId[mr.id].fuente;
+            }
+          }
+        });
+      } catch (e) {}
+    }
+
+    var toDelete = Object.values(byId);
+
+    console.log('══════════════════════════════════════════════════════════');
+    console.log('[P4] nukeLocalMonthlyPending' + (dryRun ? ' — DRY RUN' : ' — EJECUCIÓN REAL'));
+    console.log('  Estados afectados: pending_variables / pending_calculation / pending_comparison');
+    console.log('  ⚠  NO toca Firebase, audit_history, ni estados auditados/cerrados.');
+    console.log('');
+    if (toDelete.length === 0) {
+      console.log('  No hay MonthRecords pending en ninguna capa local.');
+    } else {
+      console.log('  Registros pending encontrados (' + toDelete.length + '):');
+      console.table(toDelete);
+    }
+    console.log('══════════════════════════════════════════════════════════');
+
+    if (dryRun) {
+      console.log('[P4] nukeLocalMonthlyPending: para ejecutar → P4Debug.nukeLocalMonthlyPending({ confirm: true })');
+      return { dryRun: true, pendingCount: toDelete.length, records: toDelete };
+    }
+
+    if (toDelete.length === 0) {
+      console.log('[P4] nukeLocalMonthlyPending: nada que eliminar');
+      return { done: true, deleted: 0 };
+    }
+
+    var errors = [];
+
+    // 1. Eliminar de _monthly en memoria
+    toDelete.forEach(function (d) { delete _monthly[d.k]; });
+
+    // 2. localStorage — _saveMonthly sin changedKey: escribe estado actual (sin los pending)
+    //    NO activa write-through Firebase (changedKey ausente) — intencional.
+    try {
+      _saveMonthly();
+      console.log('[P4] nukeLocalMonthlyPending: ✓ localStorage — ' + toDelete.length + ' registros eliminados');
+    } catch (e) {
+      errors.push('localStorage: ' + (e.message || e));
+      console.warn('[P4] nukeLocalMonthlyPending: ✗ localStorage —', e.message || e);
+    }
+
+    // 3. IDB — delete explícito de cada registro (sin esto hydrateFromIDB los restaura)
+    if (typeof PilotPayLocalDB !== 'undefined' &&
+        typeof PilotPayLocalDB.deleteMonthlyRecord === 'function') {
+      await Promise.all(toDelete.map(function (d) {
+        return PilotPayLocalDB.deleteMonthlyRecord(d.id)
+          .then(function () { console.log('[P4] nukeLocalMonthlyPending: ✓ IDB delete', d.id); })
+          .catch(function (e) {
+            var msg = e && e.message ? e.message : String(e);
+            errors.push('IDB ' + d.id + ': ' + msg);
+            console.warn('[P4] nukeLocalMonthlyPending: ✗ IDB delete', d.id, msg);
+          });
+      }));
+    } else {
+      console.log('[P4] nukeLocalMonthlyPending: IDB no disponible — omitido');
+    }
+
+    console.log('══════════════════════════════════════════════════════════');
+    if (errors.length === 0) {
+      console.log('[P4] nukeLocalMonthlyPending: ✓ LIMPIEZA LOCAL COMPLETADA');
+      console.log('  Firebase NO tocado. Si reaparece tras login = Firebase es la fuente.');
+    } else {
+      console.warn('[P4] nukeLocalMonthlyPending: completado con errores:', errors);
+    }
+    console.log('══════════════════════════════════════════════════════════');
+
+    return { done: true, deleted: toDelete.length, errors: errors };
+  };
+  // ══ fin DEBUG/ADMIN nukeLocalMonthlyPending ═════════════════════════════
+
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
 
 })();
