@@ -1222,8 +1222,44 @@
         console.warn('[PilotPayStore] deletePending: el expediente', k, 'no está en estado pending —', mr.estado);
         return false;
       }
+
+      // Capturar identidad antes de borrar el objeto de _monthly
+      var mrId    = mr.id;
+      var mrYear  = mr.year;
+      var mrMonth = mr.month;
+
+      // 1. _monthly + localStorage (vía _saveMonthly)
       delete _monthly[k];
       _saveMonthly();
+      console.log('[P4] monthly delete local:', k);
+
+      // 2. IDB — borrado explícito; sin esto hydrateFromIDB restaura el registro
+      if (typeof PilotPayLocalDB !== 'undefined' &&
+          typeof PilotPayLocalDB.deleteMonthlyRecord === 'function') {
+        PilotPayLocalDB.deleteMonthlyRecord(mrId)
+          .then(function () { console.log('[P4] monthly delete IDB:', mrId); })
+          .catch(function (e) {
+            console.warn('[P4] monthly delete IDB failed:', mrId, e && e.message ? e.message : e);
+          });
+      }
+
+      // 3. Firebase — DELETE nodo monthly; si offline encolar para retry
+      if (_isP4Enabled() && _userId) {
+        var fbPath = 'pilotpay/historicos/' + _userId + '/monthly/' + mrYear + '_' + mrMonth;
+        if (_p4Sink && typeof _p4Sink.update === 'function') {
+          _p4Sink.update(fbPath, null)
+            .then(function () { console.log('[P4] monthly delete firebase:', fbPath); })
+            .catch(function (err) {
+              _enqueueP4(fbPath, null);
+              console.log('[P4] monthly delete queued (offline):', fbPath,
+                          err && err.message ? err.message : err);
+            });
+        } else {
+          _enqueueP4(fbPath, null);
+          console.log('[P4] monthly delete queued (sin sink):', fbPath);
+        }
+      }
+
       console.log('[PilotPayStore] previsión pendiente eliminada:', k);
       return true;
     }

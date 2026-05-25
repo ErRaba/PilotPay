@@ -545,6 +545,18 @@ var PilotPayLocalDB = (function () {
     });
   }
 
+  function deleteMonthlyRecord(id) {
+    if (!id) return Promise.resolve();
+    return _openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx  = db.transaction(['monthlyRecords'], 'readwrite');
+        tx.objectStore('monthlyRecords').delete(id);
+        tx.oncomplete = function () { resolve(); };
+        tx.onerror    = function () { reject(tx.error); };
+      });
+    });
+  }
+
   // ── API PÚBLICA ───────────────────────────────────────────────────────────────
 
   return {
@@ -556,6 +568,7 @@ var PilotPayLocalDB = (function () {
     putManyMonthlyRecords:   putManyMonthlyRecords,
     getMonthlyRecord:        getMonthlyRecord,
     getMonthlyRecordsByUser: getMonthlyRecordsByUser,
+    deleteMonthlyRecord:     deleteMonthlyRecord,
 
     // auditHistory
     putAuditRecord:         putAuditRecord,
