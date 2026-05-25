@@ -1,8 +1,8 @@
 # PilotPay — Seguridad Firebase RTDB
 
 **Versión**: P5 · **Fecha**: 2026-05-25  
-**Tag de referencia**: `v2.4.0-p4-sync-complete`  
-**Rollback seguro**: `git checkout v2.4.0-p4-sync-complete`
+**Tag de referencia**: `v3.0.0-beta-sync-stable`  
+**Rollback seguro**: `git checkout v3.0.0-beta-sync-stable`
 
 ---
 
@@ -135,7 +135,7 @@ Si algo falla tras aplicar las reglas:
 ```bash
 # En Firebase Console: Rules → History → restaurar versión anterior
 # O revertir el archivo y re-desplegar
-git checkout v2.4.0-p4-sync-complete -- firebase-database.rules.json
+git checkout v3.0.0-beta-sync-stable -- firebase-database.rules.json
 firebase deploy --only database
 ```
 

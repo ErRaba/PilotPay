@@ -1,7 +1,7 @@
 # PilotPay — Auditoría de Arquitectura de Datos
 **Fecha:** 2026-05-20  
-**Estado:** Revisión inicial — pre-migración  
-**Versión app:** Beta 2.2, rama `avatars-redesign`  
+**Estado:** Documento histórico — pre-migración (versión actual: Beta 3.0)  
+**Versión app en el momento de la revisión:** Beta 2.2, rama `avatars-redesign`  
 
 ---
 
