@@ -1785,14 +1785,25 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Grid principal de tarjetas -->
       <div class="dsh-grid">
 
-        <!-- ── Expediente activo — fila completa, dominante ── -->
+        <!-- ── Expediente activo — solo pending_* y con_diferencias ── -->
         <div class="dsh-card accent-amber full-width" id="dsh-audit-card">
           <div class="dsh-card-head">
             <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Expediente activo</span>
             <span class="dsh-status dim" id="dsh-audit-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-audit-body">
-            <div class="dsh-empty">Sin auditorías</div>
+            <div class="dsh-empty">Sin expediente activo</div>
+          </div>
+        </div>
+
+        <!-- ── Última auditoría — estados terminados: auditado/regularizado/reclamado/cerrado ── -->
+        <div class="dsh-card accent-green full-width" id="dsh-last-audit-card" style="display:none">
+          <div class="dsh-card-head">
+            <span class="dsh-card-label"><span class="dsh-card-label-icon">✓</span>Última auditoría</span>
+            <span class="dsh-status dim" id="dsh-last-audit-status">—</span>
+          </div>
+          <div class="dsh-card-body" id="dsh-last-audit-body">
+            <div class="dsh-empty">Sin auditorías previas</div>
           </div>
         </div>
 
@@ -12394,16 +12405,14 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   // ── Selección del expediente activo ──────────────────────────────────────────
-  // Cola de prioridad: el MonthRecord más relevante operativamente.
-  // NO es necesariamente el mes calendario — puede ser el mes anterior
-  // si el usuario aún tiene un ciclo abierto.
+  // Solo devuelve un MonthRecord si hay trabajo real pendiente o diferencias activas.
+  // Estados terminados (auditado/regularizado/cerrado) → null → van a _selectUltimaAuditoria.
   function _selectExpedienteActivo(allMR) {
     if (!allMR || allMR.length === 0) return null;
 
     // Prioridad 1: con_diferencias — requiere acción inmediata
     var conDifs = allMR.filter(function(m) { return m.estado === 'con_diferencias'; });
     if (conDifs.length > 0) {
-      // El más reciente si hay varios
       return conDifs.reduce(function(a, b) {
         return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
       });
@@ -12433,20 +12442,19 @@ window.PILOTPAY_BACKEND_READY = true;
       });
     }
 
-    // Prioridad 5: MonthRecord del mes calendario actual (cualquier estado).
-    // filter() en lugar de find() — determinista si hay múltiples registros del mismo mes
-    // (legacy/corrupción). Se selecciona el más reciente por _updatedAt.
-    var now = new Date();
-    var calYear = now.getFullYear(), calMonth = now.getMonth() + 1;
-    var calCandidates = allMR.filter(function(m) { return m.year === calYear && m.month === calMonth; });
-    if (calCandidates.length > 0) {
-      return calCandidates.reduce(function(a, b) {
-        return (a._updatedAt || '') >= (b._updatedAt || '') ? a : b;
-      });
-    }
+    // Sin trabajo activo — null muestra "Sin expediente activo" en el dashboard
+    return null;
+  }
 
-    // Prioridad 6: el más reciente de cualquier estado
-    return allMR.reduce(function(a, b) {
+  // ── Selección de la última auditoría terminada ────────────────────────────────
+  // Devuelve el MonthRecord más reciente con estado terminado.
+  // con_diferencias NO se incluye — sigue siendo expediente activo que requiere acción.
+  function _selectUltimaAuditoria(allMR) {
+    if (!allMR || allMR.length === 0) return null;
+    var TERMINADOS = ['auditado', 'regularizado', 'reclamado', 'cerrado'];
+    var terminados = allMR.filter(function(m) { return TERMINADOS.indexOf(m.estado) !== -1; });
+    if (terminados.length === 0) return null;
+    return terminados.reduce(function(a, b) {
       return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
     });
   }
@@ -12500,10 +12508,11 @@ window.PILOTPAY_BACKEND_READY = true;
       : [];
     const expedienteActivo = _selectExpedienteActivo(_allMR);
     const nextAction       = _nextAction(expedienteActivo);
+    const ultimaAuditoria  = _selectUltimaAuditoria(_allMR);
 
     return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf,
              storeSummary, statsFinancial, statsAnual,
-             expedienteActivo, nextAction, currentYear };
+             expedienteActivo, nextAction, ultimaAuditoria, currentYear };
   }
 
   /* ══════════════════════════════════════════
@@ -12574,6 +12583,7 @@ window.PILOTPAY_BACKEND_READY = true;
     setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
 
     renderExpedienteActivoCard(derived.expedienteActivo, derived.nextAction, derived.storeSummary);
+    renderUltimaAuditoriaCard(derived.ultimaAuditoria);
     renderSimCard(pd);
     renderResumenAnualCard(derived.statsAnual, derived.currentYear);
     renderAlertsCard(hist, pd, calc, derived);
@@ -12589,7 +12599,7 @@ window.PILOTPAY_BACKEND_READY = true;
     if (!mr) {
       setAttr('dsh-audit-status', 'dim');
       setText('dsh-audit-status', '—');
-      setHTML('dsh-audit-body', '<div class="dsh-empty">No hay expediente activo.<br>Carga las variables del mes para empezar.</div>');
+      setHTML('dsh-audit-body', '<div class="dsh-empty">Sin expediente activo.<br>Carga las variables del mes cuando tengas el PDF de variables.</div>');
       return;
     }
 
@@ -12716,6 +12726,74 @@ window.PILOTPAY_BACKEND_READY = true;
     if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
 
     setHTML('dsh-audit-body', statusLine + bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
+  }
+
+  /* ─────────────────────────────────────────
+     TARJETA: ÚLTIMA AUDITORÍA
+     Estados terminados: auditado / regularizado / reclamado / cerrado.
+     Se oculta si no existe ningún registro terminado.
+  ───────────────────────────────────────── */
+  function renderUltimaAuditoriaCard(mr) {
+    const card = document.getElementById('dsh-last-audit-card');
+    if (!card) return;
+
+    if (!mr) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = '';
+
+    const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+    const _aud   = mr.auditoria      || {};
+    const _reg   = mr.regularizacion || null;
+    const _calc  = mr.calculoTeorico || {};
+
+    // Badge: período
+    setAttr('dsh-last-audit-status', 'ok');
+    setText('dsh-last-audit-status', mesRef || '—');
+
+    // Fecha legible
+    const _fmtFecha = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? iso : d.toLocaleDateString('es-ES');
+    };
+
+    // Etiqueta y neto según estado
+    const _estadoLabel = ({
+      auditado:    'Auditado',
+      regularizado:'Regularizado',
+      reclamado:   'Reclamado',
+      cerrado:     'Cerrado'
+    })[mr.estado] || mr.estado;
+
+    let _neto = null, _netoLabel = 'Neto';
+    if (_reg && _reg.netoFinalAjustado != null) {
+      _neto = _reg.netoFinalAjustado; _netoLabel = 'Neto final';
+    } else if (_aud.liqReal != null) {
+      _neto = _aud.liqReal; _netoLabel = 'Neto oficial';
+    } else if (_calc.liquidoReal != null) {
+      _neto = _calc.liquidoReal; _netoLabel = 'Neto estimado';
+    }
+
+    const statusChip = `<div style="display:inline-block;font-size:10px;font-family:var(--mono);color:var(--pos);background:var(--green-dim);border:1px solid rgba(16,185,129,.2);border-radius:4px;padding:2px 7px;margin-bottom:10px;letter-spacing:.02em">✓ ${_estadoLabel}</div>`;
+
+    const bigHtml = _neto != null
+      ? `<div class="dsh-val-big">${fmt(_neto)}</div>
+         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_netoLabel}</div>`
+      : '';
+
+    const rows = [];
+    const _fechaAudit = _fmtFecha(_aud.fechaAuditoria);
+    if (_reg && _reg.importeNeto != null)
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
+    if (_fechaAudit)
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaAudit}</span></div>`);
+    if (_aud.nDiscrepancias != null && mr.estado === 'auditado')
+      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Discrepancias</span><span class="dsh-kv-v">${_aud.nDiscrepancias}</span></div>`);
+
+    setHTML('dsh-last-audit-body', statusChip + bigHtml +
+      (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
   }
 
   /* ─────────────────────────────────────────
