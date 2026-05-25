@@ -2754,6 +2754,176 @@
   };
   // ══ fin DEBUG/ADMIN nukeAudits ══════════════════════════════════════════
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // DEBUG/ADMIN — fullLocalReset: limpieza completa de almacenamiento local
+  // No toca Firebase en absoluto. Eliminar este bloque cuando ya no sea necesario.
+  //
+  // Cubre: localStorage (claves pilotpay*), IndexedDB (PilotPayLocalDB),
+  //        Cache Storage y Service Workers (future-proof — hoy vacíos).
+  //
+  // Uso:
+  //   P4Debug.fullLocalReset()                → dry-run (muestra qué borraría)
+  //   P4Debug.fullLocalReset({ confirm:true }) → ejecuta el borrado real
+  //
+  // ⚠  REQUIERE RECARGA tras ejecutar — la app queda sin estado inicializado.
+  // ══════════════════════════════════════════════════════════════════════════
+  window.P4Debug.fullLocalReset = async function (opts) {
+    opts = opts || {};
+    var dryRun = opts.confirm !== true;
+
+    // ── Inventario (siempre, antes de actuar) ─────────────────────────────
+
+    // 1. localStorage: todas las claves que empiezan por 'pilotpay'
+    var lsKeys = [];
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf('pilotpay') === 0) lsKeys.push(k);
+      }
+    } catch (e) {}
+
+    // 2. Cache Storage
+    var hasCacheStorage = typeof caches !== 'undefined' && typeof caches.keys === 'function';
+    var cacheNames = [];
+    if (hasCacheStorage) {
+      try { cacheNames = await caches.keys(); } catch (e) {}
+    }
+
+    // 3. Service Workers
+    var hasSW = typeof navigator !== 'undefined' &&
+                navigator.serviceWorker &&
+                typeof navigator.serviceWorker.getRegistrations === 'function';
+    var swRegistrations = [];
+    if (hasSW) {
+      try { swRegistrations = await navigator.serviceWorker.getRegistrations(); } catch (e) {}
+    }
+
+    var idbName = 'PilotPayLocalDB';  // debe coincidir con DB_NAME en pilotPayLocalDB.js
+
+    // ── Informe ───────────────────────────────────────────────────────────
+    console.log('══════════════════════════════════════════════════════════');
+    console.log('[P4] fullLocalReset' + (dryRun ? ' — DRY RUN (sin cambios)' : ' — EJECUCIÓN REAL'));
+    console.log('  ⚠  No toca Firebase. Requiere recarga tras ejecutar.');
+    console.log('');
+    console.log('  localStorage (' + lsKeys.length + ' claves pilotpay*):');
+    lsKeys.forEach(function (k) { console.log('    ' + k); });
+    console.log('');
+    console.log('  IndexedDB: base de datos "' + idbName + '" (eliminación completa)');
+    console.log('');
+    if (cacheNames.length > 0) {
+      console.log('  Cache Storage (' + cacheNames.length + ' caches):');
+      cacheNames.forEach(function (n) { console.log('    ' + n); });
+    } else {
+      console.log('  Cache Storage: ' +
+        (hasCacheStorage ? 'sin caches activos (API disponible, hoy vacío)'
+                         : 'API no disponible en este contexto'));
+    }
+    console.log('');
+    if (swRegistrations.length > 0) {
+      console.log('  Service Workers (' + swRegistrations.length + ' registrados):');
+      swRegistrations.forEach(function (r) { console.log('    ' + r.scope); });
+    } else {
+      console.log('  Service Workers: ' +
+        (hasSW ? 'ninguno registrado (API disponible, hoy sin SW)'
+               : 'API no disponible en este contexto'));
+    }
+    console.log('══════════════════════════════════════════════════════════');
+
+    if (dryRun) {
+      console.log('[P4] fullLocalReset: para ejecutar → P4Debug.fullLocalReset({ confirm: true })');
+      return {
+        dryRun        : true,
+        lsKeys        : lsKeys,
+        idbDatabase   : idbName,
+        cacheNames    : cacheNames,
+        serviceWorkers: swRegistrations.map(function (r) { return r.scope; })
+      };
+    }
+
+    // ── Ejecución real ────────────────────────────────────────────────────
+    console.log('[P4] fullLocalReset: ejecutando…');
+    var errors = [];
+
+    // 1. localStorage — borrar todas las claves pilotpay* (usando array previo, no índices)
+    lsKeys.forEach(function (lk) {
+      try { localStorage.removeItem(lk); }
+      catch (e) { errors.push('localStorage "' + lk + '": ' + (e.message || e)); }
+    });
+    console.log('[P4] fullLocalReset: ✓ localStorage —', lsKeys.length, 'claves eliminadas');
+
+    // 2. IndexedDB — borrar la base de datos completa
+    await new Promise(function (resolve) {
+      if (!window.indexedDB) {
+        console.log('[P4] fullLocalReset: IDB — API no disponible, omitido');
+        resolve(); return;
+      }
+      var req = window.indexedDB.deleteDatabase(idbName);
+      req.onsuccess = function () {
+        console.log('[P4] fullLocalReset: ✓ IDB "' + idbName + '" eliminada');
+        resolve();
+      };
+      req.onerror = function () {
+        var msg = req.error ? req.error.message : 'error desconocido';
+        errors.push('IDB delete: ' + msg);
+        console.warn('[P4] fullLocalReset: ✗ IDB —', msg);
+        resolve();
+      };
+      req.onblocked = function () {
+        // Ocurre si otra pestaña tiene la DB abierta
+        errors.push('IDB delete: bloqueado (cierra otras pestañas de PilotPay y reintenta)');
+        console.warn('[P4] fullLocalReset: ✗ IDB bloqueado — cierra otras pestañas y reintenta');
+        resolve();
+      };
+    });
+
+    // 3. Cache Storage — borrar todos los caches encontrados
+    if (hasCacheStorage && cacheNames.length > 0) {
+      await Promise.all(cacheNames.map(async function (name) {
+        try {
+          await caches.delete(name);
+          console.log('[P4] fullLocalReset: ✓ cache eliminado —', name);
+        } catch (e) {
+          errors.push('cache "' + name + '": ' + (e.message || e));
+          console.warn('[P4] fullLocalReset: ✗ cache', name, '—', e.message || e);
+        }
+      }));
+    } else {
+      console.log('[P4] fullLocalReset: Cache Storage — nada que eliminar');
+    }
+
+    // 4. Service Workers — desregistrar todos
+    if (hasSW && swRegistrations.length > 0) {
+      await Promise.all(swRegistrations.map(async function (reg) {
+        try {
+          await reg.unregister();
+          console.log('[P4] fullLocalReset: ✓ SW desregistrado —', reg.scope);
+        } catch (e) {
+          errors.push('SW "' + reg.scope + '": ' + (e.message || e));
+          console.warn('[P4] fullLocalReset: ✗ SW', reg.scope, '—', e.message || e);
+        }
+      }));
+    } else {
+      console.log('[P4] fullLocalReset: Service Workers — nada que desregistrar');
+    }
+
+    // 5. Invalidar referencias en memoria (evita escrituras fantasma antes de recarga)
+    try { _audit   = []; } catch (e) {}
+    try { _monthly = {}; } catch (e) {}
+    try { _userId  = null; } catch (e) {}
+
+    console.log('══════════════════════════════════════════════════════════');
+    if (errors.length === 0) {
+      console.log('[P4] fullLocalReset: LIMPIEZA COMPLETADA SIN ERRORES');
+    } else {
+      console.warn('[P4] fullLocalReset: LIMPIEZA COMPLETADA CON ' + errors.length + ' ERROR(ES):', errors);
+    }
+    console.log('  ⚠  Recarga la página ahora para iniciar desde cero (login requerido).');
+    console.log('══════════════════════════════════════════════════════════');
+
+    return { done: true, errors: errors };
+  };
+  // ══ fin DEBUG/ADMIN fullLocalReset ══════════════════════════════════════
+
   console.log('[PilotPayStore] módulo cargado v' + VERSION);
 
 })();
