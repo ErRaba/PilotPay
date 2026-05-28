@@ -400,4 +400,21 @@ var CC_REGLAS = [
     },
   },
 
+  // Anchor para renderizado tablas salariales en todos los grupos (incluyendo COP)
+  {
+    id:        'cc_tablas_salariales',
+    categoria: 'tablas_salariales',
+    titulo:    'Tabla retributiva CC BCSA 2026',
+    texto:     'La tabla retributiva define la retribución por función y nivel. CMD/COP: 6 niveles (N1 máx.–N6 entrada). SCC/TCP: 5 niveles (N1–N5). Incluye retribución fija, tarifas HV por tramo, libre volado y gastos compensatorios.',
+    _meta: {
+      doc: 'cc_bcsa2026', capa: 'L1_CC', articulo: 'Anexos I y IV',
+      vigencia_desde: '2026-01-01', vigencia_hasta: null,
+      bases: ['MAD', 'TFN', 'LPA'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
+      condicionado_a: null, overrides: [], tipo_override: null,
+      temporal: false, ambiguedad_id: null, pendiente_validacion: false,
+      confianza: 'documentado', es_informativa: true,
+    },
+    valor_texto: 'Ver tabla retributiva completa por función y nivel.',
+  },
+
 ];

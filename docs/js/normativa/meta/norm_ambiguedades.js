@@ -15,6 +15,7 @@ var NORM_AMBIGUEDADES = [
 
   {
     id:          'ambig_tfn_gap_julio_agosto',
+    nivel_visual: 'critical',
     titulo:      'TFN: posible hueco entre el fin del 6+3 y el inicio del 5+3',
     descripcion: [
       'El roster 6+3 de TFN tiene duración de 6 meses desde 01/01/2026, lo que lo situaría venciendo en torno al 01/07/2026.',
@@ -57,6 +58,7 @@ var NORM_AMBIGUEDADES = [
 
   {
     id:          'ambig_mad_11_dias_periodo',
+    nivel_visual: 'note',
     titulo:      'MAD HV +20%: "media de 11 días de vuelo" — ¿mensual o anual?',
     descripcion: [
       'El Acta de Cierre §SÉPTIMO establece que el HV +20% aplica "siempre y cuando se mantenga una productividad de 11 días de vuelo de media por tripulante".',

@@ -60,18 +60,35 @@ var TFN_REGLAS = [
   {
     id:        'tfn_roster_6_3_franco_5_dia',
     categoria: 'roster',
-    titulo:    'Roster TFN Fase 1 — franco después del 5.º día (ambiguo)',
-    texto:     'El mismo texto del acuerdo MAD+TFN indica que la empresa "procurará" asignar un franco después del 5.º día de actividad. Sin embargo, no queda claro si esta referencia aplica solo a MAD o también a TFN durante el 6+3. Marcado como pendiente de confirmación.',
+    titulo:    'Roster TFN Fase 1 — franco después del 5.º día',
+    texto:     'El PRIMERO del Acuerdo MAD+TFN establece expresamente que aplica "a la Base de Madrid y Tenerife". Ese mismo cláusula incluye el compromiso de que la empresa "procurará" asignar un franco después del 5.º día de servicio, salvo causas organizativas justificadas. El uso de "procurará" indica intención, no obligación.',
     _meta: {
       doc: 'roster_mad_tfn_2026', capa: 'L3_ACUERDO', articulo: 'PRIMERO',
       vigencia_desde: '2026-01-01', vigencia_hasta: '2026-07-01',
       bases: ['TFN'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
       condicionado_a: 'roster_6_3_implantado',
       overrides: ['tfn_roster_6_3'], tipo_override: 'complementa',
-      temporal: true, ambiguedad_id: 'ambig_franco_5_dia_alcance',
-      pendiente_validacion: true, confianza: 'pendiente',
+      temporal: true, ambiguedad_id: null,
+      pendiente_validacion: false, confianza: 'documentado',
     },
-    valor_texto: 'Posiblemente aplica. Requiere confirmación empresa/sindicato.',
+    valor_texto: '"Procurará" — intención, no obligación. Causas organizativas justificadas eximen a la empresa. Aplica a MAD y TFN (cláusula PRIMERO del mismo acuerdo).',
+  },
+
+  {
+    id:        'tfn_roster_6_3_sexto_dia',
+    categoria: 'roster',
+    titulo:    'Roster TFN Fase 1 — compensación si se activa el 6.º día',
+    texto:     'Si se activa el franco correspondiente al 6.º día de actividad en TFN (el tripulante trabaja ese día en lugar del franco), la empresa intentará asignar un día libre al inicio del siguiente ciclo de actividad. El texto usa "intentará" — compromiso de buena fe, no garantía. Esta cláusula está en el PRIMERO del Acuerdo MAD+TFN, que aplica expresamente a ambas bases.',
+    _meta: {
+      doc: 'roster_mad_tfn_2026', capa: 'L3_ACUERDO', articulo: 'PRIMERO',
+      vigencia_desde: '2026-01-01', vigencia_hasta: '2026-07-01',
+      bases: ['TFN'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
+      condicionado_a: 'roster_6_3_implantado',
+      overrides: ['tfn_roster_6_3'], tipo_override: 'complementa',
+      temporal: true, ambiguedad_id: null, pendiente_validacion: false,
+      confianza: 'documentado',
+    },
+    valor_texto: '"Intentará" — compromiso de buena fe. No garantía. La empresa puede no compensar.',
   },
 
   {
@@ -199,7 +216,8 @@ var TFN_REGLAS = [
     titulo:    'Actividades en descanso — TFN Fase 2 (5+3)',
     texto:     'Con el roster 5+3 activo en TFN, las mismas actividades pueden programarse en el PRIMER o ÚLTIMO día del bloque de 3 días de descanso. Cuando ocurre, el patrón efectivo pasa a 6+2 (5+1 de descanso usado = 6 actividad, 2 libres). Las que SÍ cuentan como actividad (afectan FDP): formación online, vuelo posicional simulador/verificaciones, día de oficina (sin función de responsabilidad), auditorías, competencia lingüística. Las que NO cuentan (no afectan FDP): reconocimiento médico, horas sindicales en días de libranza.',
     _meta: {
-      doc: 'roster_tfn_5_3_2026', capa: 'L3_ACUERDO', articulo: 'CUARTO',
+      doc: 'roster_mad_tfn_2026', capa: 'L3_ACUERDO', articulo: 'CUARTO',
+      nota_documental: 'El TERCERO del Acuerdo MAD+TFN establece el roster 5+3 para TFN. El CUARTO del mismo documento regula las actividades en descanso para "esta programación de roster fijo", que incluye ambas fases (6+3 y 5+3).',
       vigencia_desde: '2026-08-01', vigencia_hasta: '2027-02-01',
       bases: ['TFN'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
       condicionado_a: 'roster_5_3_implantado',

@@ -3698,12 +3698,12 @@ Complemento de Base MAD: 1500"></textarea>
         .ck-answer-source { padding: 0 16px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .ck-answer-art { font-size: 11px; font-family: var(--mono); color: var(--text3); }
 
-        /* ── Source tags ── */
-        .ck-source-tag { font-size: 10px; font-family: var(--mono); font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: .04em; white-space: nowrap; }
-        .ck-src-convenio { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
-        .ck-src-interno  { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+        /* ── Source tags — secondary metadata, low visual weight ── */
+        .ck-source-tag { font-size: 9px; font-family: var(--mono); font-weight: 700; padding: 1px 5px; border-radius: 3px; letter-spacing: .05em; white-space: nowrap; }
+        .ck-src-convenio  { background: var(--bg3); color: var(--blue); border: 1px solid var(--border2); }
+        .ck-src-interno   { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
         .ck-src-pendiente { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
-        .ck-src-interp   { background: var(--amber-dim); color: var(--amber2); border: 1px solid var(--amber); }
+        .ck-src-interp    { background: var(--bg3); color: var(--text3); border: 1px solid var(--border2); }
 
         /* ── Tables ── */
         .ck-table-wrap { overflow-x: auto; margin: 10px 0; }
@@ -3754,6 +3754,114 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .ck-ctx-consultar:hover { opacity: .85; }
         .ck-ctx-consultar:active { opacity: .7; }
+
+        /* ── Compact filter panel (replaces selects) ── */
+        .ck-filter-panel { padding: 10px 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+        .ck-filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .ck-filter-sec { display: flex; flex-direction: column; gap: 5px; }
+        .ck-filter-sec-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .09em; color: var(--text3); }
+        .ck-chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+        .ck-chip { background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; padding: 3px 9px; font-size: 11px; font-weight: 600; font-family: var(--mono); color: var(--text3); cursor: pointer; transition: border-color .12s, color .12s, background .12s; letter-spacing: .03em; white-space: nowrap; line-height: 1.5; }
+        .ck-chip:hover { border-color: var(--blue); color: var(--blue); }
+        .ck-chip.active { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+        .ck-filter-input { background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 4px 8px; font-size: 12px; color: var(--text); font-family: inherit; outline: none; width: 100%; box-sizing: border-box; transition: border-color .12s; }
+        .ck-filter-input:focus { border-color: var(--blue); }
+        .ck-filter-sec-lbl { display: flex; align-items: center; justify-content: space-between; }
+        .ck-filter-actions { display: flex; gap: 6px; }
+        .ck-filter-action { background: none; border: none; font-size: 9px; font-family: var(--mono); color: var(--blue); cursor: pointer; padding: 0; letter-spacing: .04em; text-transform: uppercase; opacity: .8; }
+        .ck-filter-action:hover { opacity: 1; text-decoration: underline; }
+        /* ── Editorial section headers ── */
+        .nr-cat-head { padding: 14px 16px 8px; display: flex; align-items: center; gap: 8px; }
+        .nr-cat-head-ico { font-size: 16px; line-height: 1; flex-shrink: 0; }
+        .nr-cat-head-lbl { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -.01em; flex: 1; }
+        .nr-cat-head-meta { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+        /* ── Multi-panel header ── */
+        .ck-panel-head { padding: 10px 16px 6px; border-top: 1px solid var(--border2); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+        .ck-panel-head:first-child { border-top: none; margin-top: 0; }
+        .ck-panel-lbl { font-size: 11px; font-family: var(--mono); font-weight: 700; color: var(--blue); letter-spacing: .06em; text-transform: uppercase; }
+        /* ── DPO / Productividad ── */
+        .nr-dpo-limit { border-left: 2px solid var(--border2); padding: 3px 0 3px 10px; margin: 14px 0 4px; font-size: 11px; color: var(--text3); line-height: 1.55; }
+        /* ── Salary card ── */
+        .nr-sal-card { padding: 14px 16px 12px; border-bottom: 1px solid var(--border2); }
+        .nr-sal-card:last-child { border-bottom: none; }
+        .nr-sal-ctx { font-size: 10px; font-family: var(--mono); color: var(--text3); letter-spacing: .04em; margin-bottom: 9px; }
+        .nr-sal-ctx strong { color: var(--blue); font-weight: 700; }
+        .nr-sal-total-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+        .nr-sal-total-lbl { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 3px; }
+        .nr-sal-total-num { font-size: 21px; font-weight: 700; font-family: var(--mono); color: var(--text); letter-spacing: -.01em; line-height: 1; }
+        .nr-sal-includes { font-size: 11px; color: var(--text3); line-height: 1.7; margin-top: 4px; }
+        .nr-sal-includes em { color: var(--text2); font-style: normal; }
+        .nr-sal-toggle { background: none; border: none; font-size: 10px; font-family: var(--mono); color: var(--blue); cursor: pointer; padding: 0 0 4px; letter-spacing: .04em; opacity: .8; flex-shrink: 0; align-self: flex-end; }
+        .nr-sal-toggle:hover { opacity: 1; }
+        .nr-sal-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border2); }
+        .nr-sal-detail.open { display: block; }
+        .nr-sal-dt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+        .nr-sal-dt-lbl { font-size: 11px; color: var(--text2); flex: 1; }
+        .nr-sal-dt-val { font-size: 11px; font-family: var(--mono); color: var(--text); white-space: nowrap; padding-left: 12px; }
+        .nr-sal-dt-div { height: 1px; background: var(--border2); margin: 5px 0; }
+        .nr-sal-dt-total .nr-sal-dt-lbl { font-weight: 700; color: var(--text); font-size: 12px; }
+        .nr-sal-dt-total .nr-sal-dt-val { font-weight: 700; font-size: 12px; }
+        .nr-sal-hv { font-size: 11px; font-family: var(--mono); color: var(--text3); margin-top: 8px; line-height: 1.65; }
+        .nr-sal-note { font-size: 10px; color: var(--text3); margin-top: 7px; line-height: 1.5; }
+        /* ── Salary reference table ── */
+        .nr-sal-ref-hdr { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 7px; }
+        .nr-sal-ref-row { display: grid; grid-template-columns: 2.5rem 1fr auto; gap: 0 10px; padding: 4px 6px; border-radius: 3px; align-items: baseline; }
+        .nr-sal-ref-row + .nr-sal-ref-row { border-top: 1px solid var(--border); }
+        .nr-sal-ref-row.sel { background: var(--blue-dim); border-top-color: transparent !important; }
+        .nr-sal-ref-row.sel + .nr-sal-ref-row { border-top-color: transparent; }
+        .nr-sal-ref-nivel { font-size: 11px; font-family: var(--mono); font-weight: 700; color: var(--blue); }
+        .nr-sal-ref-base  { font-size: 11px; color: var(--text3); }
+        .nr-sal-ref-total { font-size: 11px; font-family: var(--mono); color: var(--text); text-align: right; }
+        /* ── Salary "otros conceptos económicos" ── */
+        .nr-sal-otros-wrap { margin-top: 10px; }
+        .nr-sal-otros-toggle-btn { display: block; width: 100%; padding: 8px 12px; background: var(--blue-dim); border: 1px solid var(--border2); border-radius: 5px; font-size: 11px; font-family: var(--mono); color: var(--blue); cursor: pointer; text-align: left; letter-spacing: .02em; line-height: 1.3; transition: border-color .15s; }
+        .nr-sal-otros-toggle-btn:hover { border-color: var(--blue); }
+        .nr-sal-otros-body { display: none; padding-top: 8px; }
+        .nr-sal-otros-body.open { display: block; }
+        .nr-sal-otros-sec { margin-top: 10px; }
+        .nr-sal-otros-sec:first-child { margin-top: 0; }
+        .nr-sal-otros-sec-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--blue); opacity: .75; margin-bottom: 3px; }
+        .nr-sal-otros-row { display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; padding: 4px 0; border-top: 1px solid var(--border); }
+        .nr-sal-otros-name { font-size: 11px; color: var(--text2); }
+        .nr-sal-otros-desc { font-size: 10px; color: var(--text3); line-height: 1.5; grid-column: 1 / -1; padding-top: 2px; }
+        .nr-sal-tag { font-size: 9px; font-family: var(--mono); padding: 1px 5px; border-radius: 3px; white-space: nowrap; }
+        .nr-sal-tag-var  { background: var(--blue-dim);  color: var(--blue); }
+        .nr-sal-tag-cond { background: var(--amber-dim); color: var(--amber); }
+        .nr-sal-tag-fijo { background: var(--green-dim); color: var(--green); }
+        .nr-sal-tag-pend { background: var(--border2);   color: var(--text3); }
+        .nr-sal-otros-defs { font-size: 10px; color: var(--text3); line-height: 1.65; padding: 4px 0; }
+        .nr-sal-otros-defs strong { color: var(--text2); }
+        .nr-sal-otros-tags { display: flex; gap: 4px; align-items: flex-start; flex-wrap: wrap; }
+        .nr-sal-ev { font-size: 8px; font-family: var(--mono); padding: 1px 4px; border-radius: 3px; white-space: nowrap; }
+        .nr-sal-ev-doc  { background: var(--green-dim); color: var(--green); }
+        .nr-sal-ev-obs  { background: var(--blue-dim);  color: var(--blue); }
+        .nr-sal-ev-mix  { background: var(--amber-dim); color: var(--amber); }
+        .nr-sal-ev-pend { background: var(--border2);   color: var(--text3); }
+        .nr-sal-n1plus-note { font-size: 10px; color: var(--text3); line-height: 1.55; margin-top: 7px; padding: 5px 8px; border-left: 2px solid var(--blue); opacity: .85; }
+        /* ── Niveles salariales ── */
+        .nr-nivel-row { display: flex; gap: 12px; padding: 7px 0; border-top: 1px solid var(--border); align-items: flex-start; }
+        .nr-nivel-row--plus { background: var(--blue-dim); padding: 10px 12px; border-radius: 6px; border-top: none; margin-top: 6px; }
+        .nr-nivel-badge { font-size: 11px; font-family: var(--mono); font-weight: 700; color: var(--text3); min-width: 2.6rem; padding-top: 2px; flex-shrink: 0; }
+        .nr-nivel-badge-top { color: var(--blue); }
+        .nr-nivel-body { flex: 1; min-width: 0; }
+        .nr-nivel-ctx { font-size: 11px; color: var(--text2); line-height: 1.5; }
+        .nr-nivel-obs { font-size: 10px; color: var(--text3); line-height: 1.55; margin-top: 3px; }
+        .nr-nivel-src { font-size: 9px; font-family: var(--mono); color: var(--text3); opacity: .65; margin-top: 4px; letter-spacing: .03em; }
+        /* ── Tablas retributivas ── */
+        .nr-sal-tbl-wrap { overflow-x: auto; margin: 6px 0 2px; }
+        .nr-sal-tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .nr-sal-tbl thead th { padding: 4px 7px; text-align: right; font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--text3); border-bottom: 2px solid var(--border2); white-space: nowrap; }
+        .nr-sal-tbl thead th:first-child { text-align: left; min-width: 140px; }
+        .nr-sal-tbl thead th.nr-tbl-unit { text-align: left; min-width: 56px; }
+        .nr-sal-tbl thead th.nr-tbl-sel { color: var(--blue); background: var(--blue-dim); }
+        .nr-sal-tbl tbody td { padding: 3px 7px; text-align: right; color: var(--text2); border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+        .nr-sal-tbl tbody td:first-child { text-align: left; color: var(--text2); font-family: var(--font); font-size: 11px; }
+        .nr-sal-tbl tbody td.nr-tbl-unit { text-align: left; font-size: 10px; color: var(--text3); font-family: var(--mono); }
+        .nr-sal-tbl tbody td.nr-tbl-sel { background: var(--blue-dim); color: var(--blue); font-weight: 600; }
+        .nr-sal-tbl tbody tr.nr-tbl-sec td { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--blue); opacity: .75; padding-top: 8px; border-bottom: none; }
+        .nr-tbl-n1plus-wrap { margin-top: 10px; background: var(--blue-dim); border-radius: 6px; padding: 10px 12px; }
+        .nr-tbl-n1plus-title { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--blue); margin-bottom: 5px; font-weight: 700; }
+        .nr-tbl-n1plus-req { font-size: 10px; color: var(--text3); line-height: 1.55; margin-bottom: 7px; }
 
         /* ── Normative state badges ── */
         .nr-badge {
@@ -3813,6 +3921,131 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ── Empty ── */
         .ck-empty { padding: 36px 16px; text-align: center; font-size: 13px; color: var(--text3); font-family: var(--mono); }
+
+        /* ── Source: operativo interno ── */
+        .ck-src-operativo { background: var(--bg3); color: var(--text2); border: 1px solid var(--border2); }
+
+        /* ── Effective regime box ── */
+        .nr-efec-box {
+          background: var(--bg2); border: 1.5px solid var(--border2);
+          border-radius: var(--r); padding: 14px 16px; margin: 12px 16px 0;
+        }
+        .nr-efec-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .nr-efec-label { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text3); }
+        .nr-efec-valor { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -.02em; line-height: 1.2; margin-bottom: 3px; }
+        .nr-efec-sub { font-size: 12px; color: var(--text2); line-height: 1.4; }
+        .nr-efec-dates { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-top: 8px; }
+
+        /* ── Section divider inside card ── */
+        .nr-sec { padding: 10px 16px 12px; border-top: 1px solid var(--border); }
+        .nr-sec-label { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 8px; }
+
+        /* ── Checklist ── */
+        .nr-check-list { list-style: none; padding: 0; margin: 0; }
+        .nr-check-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+        .nr-check-item:last-child { border-bottom: none; }
+        .nr-check-ico { font-size: 12px; font-family: var(--mono); font-weight: 700; flex-shrink: 0; width: 14px; margin-top: 1px; }
+        .nr-check-ok { color: var(--green); }
+        .nr-check-no { color: var(--red); }
+        .nr-check-text { font-size: 12px; color: var(--text2); line-height: 1.45; flex: 1; }
+        .nr-check-sub  { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+        /* ── Activity lists ── */
+        .nr-act-block { padding: 10px 0; }
+        .nr-act-lbl { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 6px; }
+        .nr-act-item { display: flex; align-items: flex-start; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); line-height: 1.4; }
+        .nr-act-item:last-child { border-bottom: none; }
+        .nr-act-dot { flex-shrink: 0; color: var(--text3); margin-top: 1px; }
+        .nr-act-note { font-size: 11px; color: var(--amber2); margin-top: 6px; line-height: 1.4; }
+
+        /* ── Condition block ── */
+        .nr-condicion-block { margin: 8px 0; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--r); padding: 9px 12px; font-size: 12px; color: var(--text2); line-height: 1.5; }
+        .nr-condicion-ico { color: var(--amber2); margin-right: 4px; }
+
+        /* ── Warning inline ── */
+        .nr-warn-inline { background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 8px 12px; font-size: 12px; color: var(--amber2); line-height: 1.5; margin: 8px 0; }
+        /* Ambigüedades — niveles de severidad visual */
+        .nr-ambig-critical { background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--r); padding: 9px 12px; margin: 6px 0; font-size: 12px; color: var(--amber2,#b45309); line-height: 1.5; }
+        .nr-ambig-warning { border-left: 2px solid var(--amber,#d97706); padding: 5px 0 5px 10px; margin: 6px 0; font-size: 12px; color: var(--text2); line-height: 1.5; }
+        .nr-ambig-note { font-size: 11px; color: var(--text2); padding: 3px 0; margin: 3px 0; line-height: 1.5; }
+        .nr-ambig-internal { font-size: 10px; color: var(--text3); font-family: var(--mono); padding: 2px 0; margin: 2px 0; }
+
+        /* ── Fuente footer ── */
+        .nr-fuente-row { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        /* ── Category card ── */
+        .nr-cat-card { margin: 0 16px 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+        .nr-cat-card-header { padding: 11px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--bg2); }
+        .nr-cat-card-title { display: flex; align-items: center; gap: 6px; }
+        .nr-cat-card-ico { font-size: 14px; }
+        .nr-cat-card-lbl { font-size: 11px; font-family: var(--mono); letter-spacing: .07em; color: var(--text3); text-transform: uppercase; font-weight: 700; }
+
+        /* ── CC base section (secondary) ── */
+        .nr-cc-base-block { padding: 8px 16px 12px; background: var(--bg); }
+        .nr-cc-base-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 6px; }
+        .nr-cc-base-item { font-size: 11px; color: var(--text3); padding: 3px 0; display: flex; gap: 5px; }
+
+        /* ── Contact cards (uniformidad) ── */
+        .ck-contact-wrap { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; }
+        .ck-contact-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r); padding: 12px 14px; }
+        .ck-contact-base-tag { font-size: 9px; font-family: var(--mono); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--blue); margin-bottom: 2px; }
+        .ck-contact-loc { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+        .ck-contact-sec { font-size: 9px; font-family: var(--mono); text-transform: uppercase; color: var(--text3); margin: 8px 0 3px; }
+        .ck-contact-name { font-size: 12px; color: var(--text2); padding: 2px 0; }
+        .ck-contact-email { font-size: 11px; color: var(--blue); font-family: var(--mono); display: block; padding: 2px 0; text-decoration: none; word-break: break-all; }
+        .ck-contact-phone-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+        .ck-contact-phone { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--mono); }
+        .ck-contact-exts { display: flex; gap: 5px; flex-wrap: wrap; }
+        .ck-contact-ext { font-size: 10px; font-family: var(--mono); color: var(--text3); background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px; padding: 1px 6px; }
+        .ck-contact-movil { font-size: 12px; font-family: var(--mono); color: var(--text2); margin-top: 3px; }
+
+        /* ── Glosario ── */
+        .ck-glosario-toggle { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; user-select: none; }
+        .ck-glosario-toggle-text { font-size: 13px; font-weight: 600; color: var(--text); }
+        .ck-glosario-toggle-ico { font-size: 12px; color: var(--text3); font-family: var(--mono); transition: transform .2s; }
+        .ck-glosario-toggle-ico.open { transform: rotate(180deg); }
+        .ck-glosario-content { padding: 0 16px 14px; display: none; }
+        .ck-glosario-content.open { display: block; }
+        .ck-glosario-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); align-items: baseline; }
+        .ck-glosario-row:last-child { border-bottom: none; }
+        .ck-glosario-term { font-size: 12px; font-weight: 700; color: var(--blue); font-family: var(--mono); min-width: 46px; flex-shrink: 0; }
+        .ck-glosario-def { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+        /* ── Antigüedad nota ── */
+        .ck-ant-nota { font-size: 10px; color: var(--text3); line-height: 1.45; margin-top: 4px; font-style: italic; }
+
+        /* ── Context: ant full-width row ── */
+
+
+        /* ── Supuesto bar ── */
+        .nr-supuesto { background: var(--bg3); border-bottom: 1px solid var(--border); padding: 8px 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .nr-supuesto-chip { font-size: 10px; font-family: var(--mono); color: var(--text3); display: flex; gap: 4px; align-items: center; }
+        .nr-supuesto-chip strong { color: var(--text2); }
+        .nr-supuesto-sep { color: var(--border2); font-size: 10px; }
+
+        /* ── Literal document quote ── */
+        .nr-lit-quote { font-family: var(--mono); font-size: 11px; color: var(--text3); background: var(--bg3); border-left: 2px solid var(--border2); padding: 7px 10px; margin: 6px 0; line-height: 1.55; }
+        .nr-lit-quote::before { content: '"'; }
+        .nr-lit-quote::after  { content: '"'; }
+
+        /* ── Efecto pattern diagram ── */
+        .nr-efecto-pattern { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 10px 0 4px; }
+        .nr-efecto-box { background: var(--card); border: 1px solid var(--border2); border-radius: 4px; padding: 5px 9px; font-family: var(--mono); font-size: 11px; color: var(--text2); white-space: nowrap; }
+        .nr-efecto-box-hi { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+        .nr-efecto-box-lib { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+        .nr-efecto-arrow { color: var(--text3); font-size: 10px; font-family: var(--mono); }
+        .nr-efecto-eq { color: var(--text3); font-size: 10px; font-family: var(--mono); }
+
+        /* ── Q&A — pregunta práctica + respuesta directa ── */
+        .nr-qa-block { padding: 12px 16px 14px; border-bottom: 1px solid var(--border); }
+        .nr-qa-q { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-bottom: 8px; }
+        .nr-qa-q::before { content: '→ '; color: var(--blue); }
+        .nr-qa-a { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 6px; }
+        .nr-qa-sub { font-size: 11px; color: var(--text2); line-height: 1.5; }
+        .nr-qa-alt { font-size: 11px; color: var(--text3); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); line-height: 1.45; }
+
+        /* ── Section header with badge inline ── */
+        .nr-sec-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
       </style>
 
       <!-- VIEW: HOME -->
@@ -3825,42 +4058,47 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
         </div>
 
-        <!-- Selector de perfil -->
+        <!-- Panel de exploración normativa -->
         <div class="ck-block">
-          <div class="ck-block-label">Tu perfil</div>
-          <div class="card" style="padding:14px 16px">
-            <div class="ck-ctx-row">
-              <div class="ck-ctx-field">
-                <label class="ck-ctx-label">Base</label>
-                <select id="ck-ctx-base" class="ck-ctx-select">
-                  <option value="">Selecciona…</option>
-                  <option value="MAD">MAD — Madrid</option>
-                  <option value="TFN">TFN — Tenerife</option>
-                  <option value="LPA">LPA — Las Palmas</option>
-                </select>
+          <div class="ck-block-label">Explorar normativa</div>
+          <div class="card" style="padding:0">
+            <div class="ck-filter-panel">
+              <div class="ck-filter-row">
+                <div class="ck-filter-sec">
+                  <div class="ck-filter-sec-lbl">Base</div>
+                  <div class="ck-chip-row" id="ck-chips-base">
+                    <button class="ck-chip" onclick="ckChipBase('MAD')">MAD</button>
+                    <button class="ck-chip" onclick="ckChipBase('TFN')">TFN</button>
+                    <button class="ck-chip" onclick="ckChipBase('LPA')">LPA</button>
+                  </div>
+                </div>
+                <div class="ck-filter-sec">
+                  <div class="ck-filter-sec-lbl">Función</div>
+                  <div class="ck-chip-row" id="ck-chips-grupo">
+                    <button class="ck-chip" onclick="ckChipGrupo('CMD')">CMD</button>
+                    <button class="ck-chip" onclick="ckChipGrupo('COP')">COP</button>
+                    <button class="ck-chip" onclick="ckChipGrupo('SCC')">SCC</button>
+                    <button class="ck-chip" onclick="ckChipGrupo('TCP')">TCP</button>
+                  </div>
+                </div>
               </div>
-              <div class="ck-ctx-field">
-                <label class="ck-ctx-label">Función</label>
-                <select id="ck-ctx-grupo" class="ck-ctx-select">
-                  <option value="">Selecciona…</option>
-                  <option value="CMD">CMD — Comandante</option>
-                  <option value="COP">COP — Copiloto</option>
-                  <option value="SCC">SCC — Sobrecargo</option>
-                  <option value="TCP">TCP — TCP</option>
-                </select>
+              <div class="ck-filter-sec">
+                <div class="ck-filter-sec-lbl">Nivel salarial <span class="ck-filter-actions"><button class="ck-filter-action" onclick="ckNivelClear()">Limpiar</button></span></div>
+                <div class="ck-chip-row" id="ck-chips-nivel">
+                  <button class="ck-chip" onclick="ckChipNivel('N1+')">N1+</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N1')">N1</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N2')">N2</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N3')">N3</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N4')">N4</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N5')">N5</button>
+                  <button class="ck-chip" onclick="ckChipNivel('N6')">N6</button>
+                </div>
+              </div>
+              <div class="ck-filter-sec" id="ck-temas-filter" style="display:none">
+                <div class="ck-filter-sec-lbl">Temas <span class="ck-filter-actions"><button class="ck-filter-action" onclick="ckTemasAll()">Todos</button><button class="ck-filter-action" onclick="ckTemasNone()">Limpiar</button></span></div>
+                <div class="ck-chip-row" id="ck-chips-temas"></div>
               </div>
             </div>
-            <div class="ck-ctx-row">
-              <div class="ck-ctx-field">
-                <label class="ck-ctx-label">Antigüedad (años)</label>
-                <input id="ck-ctx-ant" class="ck-ctx-input" type="number" min="0" max="50" placeholder="ej. 8">
-              </div>
-              <div class="ck-ctx-field">
-                <label class="ck-ctx-label">Fecha</label>
-                <input id="ck-ctx-fecha" class="ck-ctx-input" type="date">
-              </div>
-            </div>
-            <button class="ck-ctx-consultar" onclick="ckConsultar()">Ver mi normativa →</button>
           </div>
         </div>
 
@@ -3884,6 +4122,19 @@ Complemento de Base MAD: 1500"></textarea>
             <div class="ck-list-rows" id="ck-popular"></div>
           </div>
         </div>
+
+        <!-- Leyenda y abreviaturas -->
+        <div class="ck-block" style="padding-bottom:24px">
+          <div class="ck-block-label">Leyenda y abreviaturas</div>
+          <div class="card" style="padding:0">
+            <div class="ck-glosario-toggle" onclick="ckToggleGlosario()">
+              <span class="ck-glosario-toggle-text">Ver glosario completo</span>
+              <span class="ck-glosario-toggle-ico" id="ck-glosario-ico">▼</span>
+            </div>
+            <div class="ck-glosario-content" id="ck-glosario-content"></div>
+          </div>
+        </div>
+
       </div><!-- /ck-v-home -->
 
       <!-- VIEW: TOPIC -->
@@ -13186,6 +13437,11 @@ window.PILOTPAY_BACKEND_READY = true;
   var _lastCtx     = null;
   var _lastResults = null;
   var _resultMap   = {};
+  var _ckBases     = new Set();
+  var _ckGrupos    = new Set();
+  var _ckNivel     = null;
+  var _ckTemas     = null;
+  var _allPanels   = [];
 
   // ── Categorías normativa ──
   var CAT_CFG = {
@@ -13196,11 +13452,14 @@ window.PILOTPAY_BACKEND_READY = true;
     'hv':                 { label: 'Horas de vuelo',           ico: '✈'  },
     'actividad_descanso': { label: 'Actividad en descanso',    ico: '⏸'  },
     'productividad':      { label: 'Productividad y DPO',      ico: '📊' },
-    'bajas':              { label: 'IT y bajas',               ico: '🏥' },
+    'it_bajas':           { label: 'IT / Bajas',               ico: '🏥' },
     'licencias':          { label: 'Licencias y permisos',     ico: '📋' },
     'descansos':          { label: 'Tiempos de descanso',      ico: '🛌' },
     'formacion':          { label: 'Formación',                ico: '📚' },
     'uniformidad':        { label: 'Uniformidad',              ico: '👔' },
+    'reduccion_jornada':  { label: 'Reducción de jornada',    ico: '⏱' },
+    'dias_libres':        { label: 'Días libres',              ico: '🗓' },
+    'tablas_salariales':  { label: 'Niveles salariales',       ico: '📊' },
     'general':            { label: 'General',                  ico: '📄' },
   };
 
@@ -13414,13 +13673,1014 @@ window.PILOTPAY_BACKEND_READY = true;
       + warnH + pendH + ambigH + condH + vigH + fuenteH;
   }
 
-  // ── Render category results ──
+  // ── Datos operativos internos ──
+
+  var UNIFORMIDAD_CONTACTOS = [
+    {
+      base: 'LPA', centro: 'El Corte Inglés — Mesa y López',
+      contactos: [
+        { nombre: 'Sonia Carrascosa Guillén',   email: 'soniacandel.carrascosaguillen@elcorteingles.es' },
+        { nombre: 'Iván San Pablo Carreño',      email: 'ivansanpablo_carrenovega@elcorteingles.es' },
+        { nombre: 'Jessica Calderín',            email: 'jessica_calderin@elcorteingles.es' },
+      ],
+      telefono: '928 263000', extensiones: ['2156'], movil: '616598094',
+    },
+    {
+      base: 'TFN', centro: 'El Corte Inglés — Tres de Mayo',
+      contactos: [
+        { nombre: 'Maximiliano Machín Martín', email: 'maximiliano.machinmartin@elcorteingles.es' },
+        { nombre: null,                        email: 'resparea03_tenerife3demayo@elcorteingles.es' },
+      ],
+      telefono: '922 849400', extensiones: ['2196'],
+    },
+    {
+      base: 'MAD', centro: 'El Corte Inglés — Castellana',
+      contactos: [
+        { nombre: 'Ascencio Sanz Almaraz',      email: 'ascension_sanz@elcorteingles.es' },
+        { nombre: 'José Antonio Silva Nodar',   email: 'josea.silvanodar@elcorteingles.es' },
+        { nombre: 'Manuel Rufian Domínguez',    email: 'manuel.rufiandominguez@elcorteingles.es' },
+      ],
+      telefono: '91 4188800', extensiones: ['1241', '1206', '1220'],
+    },
+  ];
+
+  var GLOSARIO = [
+    ['CC',   'Convenio Colectivo'],
+    ['CMD',  'Comandante'],
+    ['COP',  'Copiloto'],
+    ['SCC',  'Sobrecargo Jefe de Cabina'],
+    ['TCP',  'Tripulante de Cabina de Pasajeros'],
+    ['HV',   'Horas de Vuelo'],
+    ['FDP',  'Flight Duty Period — período de actividad de vuelo'],
+    ['DPO',  'Dirección por Objetivos (productividad variable)'],
+    ['IT',   'Incapacidad Temporal (baja médica)'],
+    ['ROFF', 'Día libre (Rest Off)'],
+    ['LRC',  'Licencia Retribuida por Circunstancias'],
+    ['LPA',  'Base Las Palmas de Gran Canaria'],
+    ['TFN',  'Base Tenerife Norte'],
+    ['MAD',  'Base Madrid'],
+    ['L1',   'Capa normativa: Convenio Colectivo (base)'],
+    ['L2',   'Capa normativa: Acta de Cierre (mejoras sobre CC)'],
+    ['L3',   'Capa normativa: Acuerdos específicos de base'],
+    ['AT',   'Accidente de Trabajo'],
+  ];
+
+  // ── Síntesis: situaciones operativas efectivas por categoría ──
+
+  function resolverSituacionesEfectivas(reglas) {
+    var bycat = {}, order = [];
+    reglas.forEach(function(r) {
+      var cat = r.categoria || 'general';
+      if (!bycat[cat]) { bycat[cat] = []; order.push(cat); }
+      bycat[cat].push(r);
+    });
+    return order.map(function(cat) {
+      var rs = bycat[cat];
+      var soloCC   = rs.filter(function(r) { return (r._meta || {}).capa === 'L1_CC'; });
+      var overrides = rs.filter(function(r) { var c = (r._meta || {}).capa; return c && c !== 'L1_CC'; });
+      var operativos  = overrides.filter(function(r) { return (r._resolution || {}).operativa !== false; });
+      var adiciones   = operativos.filter(function(r) { var t = (r._meta || {}).tipo_override; return t === 'adiciona' || t === 'complementa'; });
+      var principales = operativos.filter(function(r) { var t = (r._meta || {}).tipo_override; return t !== 'adiciona' && t !== 'complementa'; });
+      var pendientes  = rs.filter(function(r) { return (r._meta || {}).pendiente_validacion; });
+      var ambIds = [];
+      rs.forEach(function(r) {
+        var aid = (r._meta || {}).ambiguedad_id;
+        if (aid && ambIds.indexOf(aid) < 0) ambIds.push(aid);
+      });
+      return {
+        categoria: cat,
+        reglas: rs,
+        regimen_principal: principales,
+        adiciones: adiciones,
+        base_cc: soloCC,
+        pendientes: pendientes,
+        temporal: rs.some(function(r) { return (r._meta || {}).temporal; }),
+        ambiguedades: ambIds,
+      };
+    });
+  }
+
+  // ── Helpers ──
+
+  function ambigHtml(ambIds) {
+    if (!ambIds || !ambIds.length || typeof NORM_AMBIGUEDADES === 'undefined') return '';
+    var URGENCIA_NIVEL = { critica: 'critical', alta: 'warning', media: 'note', baja: 'internal' };
+    var items = '';
+    ambIds.forEach(function(aid) {
+      for (var i = 0; i < NORM_AMBIGUEDADES.length; i++) {
+        var a = NORM_AMBIGUEDADES[i];
+        if (a.id === aid && a.estado === 'abierta') {
+          var nivel = a.nivel_visual || URGENCIA_NIVEL[a.urgencia] || 'note';
+          var txt = esc(a.como_mostrar || a.titulo || '');
+          if (nivel === 'critical') {
+            items += '<div class="nr-ambig-critical">⚠ <strong>' + esc(a.titulo || 'Incertidumbre') + '</strong><br>' + txt + '</div>';
+          } else if (nivel === 'warning') {
+            items += '<div class="nr-ambig-warning">⚑ ' + txt + '</div>';
+          } else if (nivel === 'internal') {
+            items += '<div class="nr-ambig-internal">' + txt + '</div>';
+          } else {
+            items += '<div class="nr-ambig-note">ℹ ' + txt + '</div>';
+          }
+          break;
+        }
+      }
+    });
+    return items ? '<div class="nr-sec"><div class="nr-sec-label">Pendiente de aclaración</div>' + items + '</div>' : '';
+  }
+
+  function fuenteHtml(reglas) {
+    var seen = {};
+    var h = '';
+    reglas.forEach(function(r) {
+      var m = r._meta || {};
+      var key = (m.capa || '') + (m.articulo || '') + (m.doc || '');
+      if (seen[key]) return;
+      seen[key] = true;
+      var MAP = { 'L1_CC': ['CC', 'ck-src-convenio'], 'L2_ACTA': ['ACTA', 'ck-src-interno'], 'L3_ACUERDO': ['ACUERDO', 'ck-src-interp'] };
+      var e = MAP[m.capa] || [m.capa || '?', 'ck-src-pendiente'];
+      h += '<span class="ck-source-tag ' + e[1] + '">' + e[0] + '</span>';
+      if (m.articulo) h += '<span style="font-size:10px;font-family:var(--mono);color:var(--text3)">' + esc(m.articulo) + '</span>';
+    });
+    return h ? '<div class="nr-fuente-row">' + h + '</div>' : '';
+  }
+
+  function vigenciaHtml(r) {
+    var m = r._meta || {};
+    var parts = [];
+    if (m.vigencia_desde) parts.push('Desde ' + m.vigencia_desde);
+    if (m.vigencia_hasta) parts.push('hasta ' + m.vigencia_hasta);
+    else if (m.vigencia_desde) parts.push('indefinido');
+    if (m.nota_vigencia) parts.push('(' + m.nota_vigencia + ')');
+    return parts.length ? '<div class="nr-efec-dates">' + esc(parts.join(' · ')) + '</div>' : '';
+  }
+
+  // ── Helper: barra de supuesto ──
+  function supuestoBar(chips) {
+    // chips: array de { lbl, val }
+    return '<div class="nr-supuesto">'
+      + chips.map(function(c, i) {
+          return (i > 0 ? '<span class="nr-supuesto-sep">·</span>' : '')
+            + '<span class="nr-supuesto-chip"><strong>' + esc(c.lbl) + '</strong> ' + esc(c.val) + '</span>';
+        }).join('')
+      + '</div>';
+  }
+
+  // ── Renderers específicos por categoría ──
+
+  function renderSituacionVacaciones(sit) {
+    var h = '';
+    var tieneOverride = sit.regimen_principal.length > 0;
+    var rOverride = tieneOverride ? sit.regimen_principal[0] : null;
+    var vtO = rOverride ? (rOverride.valor_tabla || {}) : {};
+    var rCC = sit.base_cc.find(function(r) { return r.id === 'cc_vac_duracion'; });
+    var metaO = rOverride ? (rOverride._meta || {}) : {};
+    var roster53 = metaO.condicionado_a === 'roster_5_3_implantado';
+
+    // ── Contexto
+    if (rOverride) {
+      var chips = [];
+      if (metaO.bases && metaO.bases[0]) chips.push({ lbl: 'Base', val: metaO.bases[0] });
+      chips.push({ lbl: 'Roster', val: roster53 ? '5+3 activo' : 'Activo' });
+      if (metaO.vigencia_desde) chips.push({ lbl: 'Desde', val: metaO.vigencia_desde });
+      if (metaO.vigencia_hasta) chips.push({ lbl: 'Hasta', val: metaO.vigencia_hasta });
+      h += supuestoBar(chips);
+    }
+
+    // ── Pregunta + respuesta directa
+    h += '<div class="nr-qa-block">'
+      + '<div class="nr-qa-q">¿Cuántos días de vacaciones me corresponden?</div>';
+    if (rOverride) {
+      h += '<div class="nr-qa-a">' + (vtO.dias_vacaciones || 23) + ' días ' + esc(vtO.tipo_dias || 'laborales') + ' — mientras el roster ' + (roster53 ? '5+3' : '') + ' esté efectivamente implantado.</div>'
+        + '<div class="nr-qa-sub">Fraccionamiento: hasta ' + (vtO.max_periodos || 4) + ' períodos.</div>'
+        + '<div class="nr-qa-alt">Si el roster no está activo: aplican los <strong>30 días naturales</strong> del CC (art. 41).</div>';
+    } else if (rCC) {
+      h += '<div class="nr-qa-a">30 días naturales — régimen general del CC (art. 41).</div>'
+        + '<div class="nr-qa-sub">Fraccionamiento: hasta 4 períodos · Hasta 4 días como "días personales" con preaviso ≥ 45 días.</div>';
+    }
+    h += '</div>';
+
+    // ── Condición
+    if (rOverride) {
+      h += '<div class="nr-sec" style="border-top:none"><div class="nr-condicion-block">'
+        + '<span class="nr-condicion-ico">⚑</span>'
+        + '<strong>Condición</strong> — Los ' + (vtO.dias_vacaciones || 23) + ' días laborales aplican únicamente mientras el roster esté <strong>efectivamente implantado</strong>.'
+        + '<br><span style="font-size:11px;color:var(--amber2,#b45309)">⚠ El acuerdo no define qué significa "efectivamente implantado". La determinación corresponde a la empresa y el comité.</span>'
+        + '</div></div>';
+    }
+
+    // ── Caducidad
+    var rCad = sit.reglas.find(function(r) { return r.id === 'cc_vac_caducidad'; });
+    if (rCad) {
+      h += '<div class="nr-sec' + (!rOverride ? ' style="border-top:none"' : '') + '"><div class="nr-sec-label">Caducidad</div>'
+        + '<ul class="nr-check-list"><li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text">Antes del <strong>31 de enero del año siguiente</strong>. Los días pendientes del año anterior tienen prioridad en enero sobre los del año en curso.</div></li></ul></div>';
+    }
+
+    // ── Baja durante vacaciones
+    var rIT = sit.reglas.find(function(r) { return r.id === 'cc_vac_recuperacion_it'; });
+    if (rIT) {
+      var vtIT = rIT.valor_tabla || {};
+      h += '<div class="nr-sec"><div class="nr-sec-label">Baja médica durante vacaciones</div>'
+        + '<ul class="nr-check-list">'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text"><strong>Condición:</strong> comunicar en las primeras <strong>' + (vtIT.comunicacion_horas || 24) + 'h</strong> con documento oficial.</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span><div class="nr-check-text"><strong>Efecto:</strong> los días no disfrutados se recuperan cuando el servicio lo permita.</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text"><strong>Plazo:</strong> hasta ' + (vtIT.limite_recuperacion_meses || 18) + ' meses desde el final del año en que se originaron.<div class="nr-check-sub">Baja por embarazo, parto o lactancia: sin límite de año natural.</div></div></li>'
+        + '</ul></div>';
+    }
+
+    // ── Remuneración
+    var rMedia = sit.reglas.find(function(r) { return r.id === 'cc_media_variables'; });
+    if (rMedia) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Remuneración durante vacaciones</div>'
+        + '<ul class="nr-check-list"><li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text">El CC establece el cobro de una <strong>media de variables</strong> calculada sobre meses anteriores. Se abona en la nómina del mes <em>siguiente</em> al disfrute.</div></li></ul></div>';
+    }
+
+    // ── Normativa que sustenta la respuesta
+    if (rOverride) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Normativa</div>'
+        + '<div class="nr-lit-quote">La duración de las vacaciones anuales será de 23 días laborales para el acuerdo de roster de 5 días de actividad seguidos de 3 días de descanso, fijando su disfrute de común acuerdo entre la Empresa y la persona trabajadora, pudiendo fraccionar su disfrute en cuatro períodos.</div>'
+        + '<p style="font-size:10px;color:var(--text3);margin:4px 0 0">Art. ' + esc(metaO.articulo || 'QUINTO') + ' — ' + esc(metaO.doc || '') + '</p>'
+        + '</div>';
+    }
+
+    // ── CC base sustituido
+    if (tieneOverride && rCC) {
+      h += '<div class="nr-cc-base-block">'
+        + '<div class="nr-cc-base-lbl">Convenio Colectivo base (sustituido mientras dure el roster)</div>'
+        + '<div class="nr-cc-base-item"><span>·</span><span>' + esc(rCC.titulo) + ' — 30 días naturales <span class="nr-badge nr-sustituida" style="font-size:9px">↻ sustituido</span></span></div>'
+        + '</div>';
+    }
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionRoster(sit) {
+    var h = '';
+    var rPatron = sit.regimen_principal.find(function(r) { return (r.valor_tabla || {}).patron; });
+    if (!rPatron) rPatron = sit.reglas.find(function(r) { return (r.valor_tabla || {}).patron; });
+
+    var vt   = rPatron ? (rPatron.valor_tabla  || {}) : {};
+    var res  = rPatron ? (rPatron._resolution  || {}) : {};
+    var meta = rPatron ? (rPatron._meta        || {}) : {};
+
+    // Context chips
+    var chips = [];
+    if (rPatron) {
+      if (meta.bases && meta.bases[0]) chips.push({ lbl: 'Base', val: meta.bases[0] });
+      chips.push({ lbl: 'Patrón', val: vt.patron || '?' });
+      if (meta.vigencia_desde) chips.push({ lbl: 'Desde', val: meta.vigencia_desde });
+      if (meta.vigencia_hasta) chips.push({ lbl: 'Hasta (aprox.)', val: meta.vigencia_hasta });
+      if (meta.temporal) chips.push({ lbl: 'Carácter', val: 'Temporal' });
+    } else {
+      chips.push({ lbl: 'Régimen', val: 'CC estándar' });
+    }
+    h += supuestoBar(chips);
+
+    // Q&A block
+    h += '<div class="nr-qa-block">'
+      + '<div class="nr-qa-q">¿Cuál es mi patrón de trabajo en esta base y período?</div>';
+
+    if (rPatron) {
+      h += '<div class="nr-qa-a">Patrón ' + esc(vt.patron || '?') + ' — ' + (vt.dias_actividad || '?') + ' días de actividad seguidos de ' + (vt.dias_descanso || '?') + ' días de descanso.</div>'
+        + '<div class="nr-qa-sub">'
+        + (meta.temporal ? 'Carácter temporal — prórroga requiere acuerdo expreso de ambas partes.' : 'Régimen de aplicación general.')
+        + (meta.suspension_sin_compensacion ? ' Suspensión o no renovación: sin derecho a compensación económica.' : '')
+        + '</div>'
+        + (meta.temporal ? '<div class="nr-qa-alt">Si el roster no se prorroga o se cancela: vuelve a aplicar el CC estándar íntegramente, con todas las protecciones del Art. 80.</div>' : '');
+    } else {
+      h += '<div class="nr-qa-a">Convenio Colectivo estándar — no existe acuerdo de roster específico para esta base y período.</div>'
+        + '<div class="nr-qa-sub">Las protecciones del Art. 80 CC están íntegramente vigentes. La programación sigue el régimen general.</div>';
+    }
+    h += '</div>';
+
+    if (rPatron) {
+      // Efecto operativo — patrón activo
+      h += '<div class="nr-efec-box">'
+        + '<div class="nr-efec-top"><span class="nr-efec-label">Patrón activo</span>' + badge(res.estado || 'activa', res.operativa) + '</div>'
+        + '<div class="nr-efec-valor">' + esc(vt.patron || '?') + '</div>'
+        + '<div class="nr-efec-sub">' + (vt.dias_actividad || '?') + ' días de actividad · ' + (vt.dias_descanso || '?') + ' días de descanso</div>'
+        + vigenciaHtml(rPatron)
+        + '</div>';
+
+      // Compromisos del acuerdo — franco 5.º / 6.º día
+      var rFranco = sit.reglas.find(function(r) { return r.id === 'mad_roster_franco_5_dia' || r.id === 'tfn_roster_6_3_franco_5_dia'; });
+      var rSexto  = sit.reglas.find(function(r) { return r.id === 'mad_roster_sexto_dia_compensacion' || r.id === 'tfn_roster_6_3_sexto_dia'; });
+
+      if (rFranco || rSexto) {
+        h += '<div class="nr-sec"><div class="nr-sec-label">Compromisos del acuerdo</div><ul class="nr-check-list">';
+        if (rFranco) {
+          h += '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span>'
+            + '<div class="nr-check-text"><strong>Franco tras el 5.º día</strong> — el acuerdo usa <em>"procurará"</em>: intención, no obligación. Causas organizativas justificadas eximen a la empresa.'
+            + '</div></li>';
+        }
+        if (rSexto) {
+          h += '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span>'
+            + '<div class="nr-check-text"><strong>Si se trabaja el 6.º día</strong> — el acuerdo usa <em>"intentará"</em>: compromiso de buena fe, no garantía. La empresa puede no compensar con un libre al inicio del ciclo siguiente.'
+            + '</div></li>';
+        }
+        h += '</ul></div>';
+      }
+
+      // Cupos máximos
+      if (vt.cupos_max_actividades_no_vuelo) {
+        h += '<div class="nr-sec"><div class="nr-condicion-block">'
+          + '<span class="nr-condicion-ico">⚑</span>'
+          + '<strong>Cupos máximos para actividades no de vuelo</strong> — El acuerdo limita el número de cupos diarios para actividades no de vuelo en el período de descanso. '
+          + '<span style="color:var(--amber2,#b45309)">El número exacto no está cuantificado en el documento.</span>'
+          + '</div></div>';
+      }
+
+      // Normativa (moved down as backstop)
+      h += '<div class="nr-sec"><div class="nr-sec-label">Normativa</div>'
+        + '<div class="nr-lit-quote">' + (vt.dias_actividad || '?') + ' días de actividad seguidos de ' + (vt.dias_descanso || '?') + ' días de descanso como patrón de programación del roster.</div>'
+        + '<p style="font-size:10px;color:var(--text3);margin:4px 0 0">Art. ' + esc(meta.articulo || 'PRIMERO') + ' — ' + esc(meta.doc || '') + '</p>'
+        + '</div>';
+    }
+
+    // GAP TFN
+    var rGap = sit.reglas.find(function(r) { return r.id === 'tfn_gap_julio_agosto'; });
+    if (rGap) {
+      h += '<div style="padding:0 16px 8px"><div class="nr-warn-inline">⚠ <strong>Zona de transición TFN (jul–ago 2026).</strong> El acuerdo no especifica qué régimen aplica en TFN en ese intervalo. No afirmar nada sin confirmación oficial.</div></div>';
+    }
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionProgramacion(sit) {
+    var h = '';
+    var r6   = sit.reglas.find(function(r) { return r.id === 'cc_art80_seis_dias'; });
+    var rFin = sit.reglas.find(function(r) { return r.id === 'cc_art80_fin_semana'; });
+
+    var r6Susp   = r6   && ((r6._resolution   || {}).estado === 'suspendida' || (r6._resolution   || {}).estado === 'sustituida');
+    var rFinSusp = rFin && ((rFin._resolution || {}).estado === 'suspendida' || (rFin._resolution || {}).estado === 'sustituida');
+    var haySuspension = r6Susp || rFinSusp;
+
+    // Supuesto
+    var chips = [];
+    if (haySuspension) {
+      chips.push({ lbl: 'Estado', val: 'Art. 80 parcialmente suspendido' });
+      chips.push({ lbl: 'Causa', val: 'Acuerdo de roster vigente' });
+      chips.push({ lbl: 'Carácter', val: 'Temporal · pactado bilateralmente' });
+    } else {
+      chips.push({ lbl: 'Estado', val: 'Art. 80 íntegramente vigente' });
+    }
+    h += supuestoBar(chips);
+
+    // Contexto normativo
+    h += '<div class="nr-sec" style="border-top:none">'
+      + '<div class="nr-sec-label">Contexto normativo</div>'
+      + '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0">El Art. 80 del Convenio Colectivo establece protecciones sobre la programación de actividades. Cuando existe un acuerdo de roster vigente, las partes pueden pactar bilateralmente la suspensión temporal de algunas de estas protecciones. Esta suspensión '
+      + (haySuspension
+          ? 'está <strong>activa en tu contexto</strong>, acordada expresamente en el acuerdo de roster.'
+          : 'no aplica en tu contexto actual — las protecciones del Art. 80 están íntegramente vigentes.')
+      + '</p></div>';
+
+    // Protecciones
+    h += '<div class="nr-sec"><div class="nr-sec-label">Protecciones Art. 80 CC</div><ul class="nr-check-list">';
+
+    if (r6) {
+      var ok6 = !r6Susp;
+      h += '<li class="nr-check-item">'
+        + '<span class="nr-check-ico ' + (ok6 ? 'nr-check-ok' : 'nr-check-no') + '">' + (ok6 ? '✓' : '✗') + '</span>'
+        + '<div class="nr-check-text"><strong>Máximo 5 días consecutivos de actividad</strong>'
+        + '<div class="nr-check-sub">Qué dice el CC: la empresa no puede programar 6 o más días seguidos de actividad sin causa justificada.</div>'
+        + (ok6
+            ? '<div class="nr-check-sub" style="color:var(--green)">Vigente en tu contexto.</div>'
+            : '<div class="nr-check-sub" style="color:var(--red,#dc2626)">Suspendida por el acuerdo de roster. El roster puede exigir 6 días consecutivos. Vigente mientras dure el acuerdo.</div>'
+          )
+        + '</div></li>';
+    }
+
+    if (rFin) {
+      var okF = !rFinSusp;
+      h += '<li class="nr-check-item">'
+        + '<span class="nr-check-ico ' + (okF ? 'nr-check-ok' : 'nr-check-no') + '">' + (okF ? '✓' : '✗') + '</span>'
+        + '<div class="nr-check-text"><strong>Fin de semana libre mensual</strong>'
+        + '<div class="nr-check-sub">Qué dice el CC: si se trabaja todos los fines de semana del mes, la empresa debe garantizar al menos uno libre.</div>'
+        + (okF
+            ? '<div class="nr-check-sub" style="color:var(--green)">Vigente en tu contexto.</div>'
+            : '<div class="nr-check-sub" style="color:var(--red,#dc2626)">Suspendida por el acuerdo de roster. Vigente mientras dure el acuerdo.</div>'
+          )
+        + '</div></li>';
+    }
+
+    var rLibres = sit.reglas.find(function(r) { return r.id === 'cc_dias_libres_99'; });
+    if (rLibres) {
+      h += '<li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span>'
+        + '<div class="nr-check-text"><strong>Mínimo 99 días libres anuales (Art. 79)</strong>'
+        + '<div class="nr-check-sub">No afectado por los acuerdos de roster. Incluye ROFF, vacaciones y demás descansos.</div>'
+        + '</div></li>';
+    }
+
+    h += '</ul></div>';
+
+    if (haySuspension) {
+      h += '<div class="nr-sec"><div class="nr-condicion-block">'
+        + '<span class="nr-condicion-ico">ℹ</span>'
+        + 'La suspensión es temporal y pactada bilateralmente. Cuando el acuerdo de roster caduque o no se prorrogue, las protecciones del Art. 80 recuperan su plena vigencia automáticamente.'
+        + '</div></div>';
+    }
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionComplementos(sit) {
+    var h = '';
+    var rComp = sit.regimen_principal.filter(function(r) { return (r.valor_tabla || {}).importe_mensual_bruto; });
+
+    if (rComp.length) {
+      var r0 = rComp[0];
+      var vt0 = r0.valor_tabla || {};
+      var res0 = r0._resolution || {};
+      var meta0 = r0._meta || {};
+
+      // Supuesto
+      var chips = [];
+      if (meta0.bases && meta0.bases[0]) chips.push({ lbl: 'Base', val: meta0.bases[0] });
+      if (meta0.grupos && meta0.grupos[0]) chips.push({ lbl: 'Grupo', val: meta0.grupos[0] });
+      if (meta0.vigencia_desde) chips.push({ lbl: 'Desde', val: meta0.vigencia_desde });
+      chips.push({ lbl: 'Duración', val: 'Sin fecha fin documentada' });
+      h += supuestoBar(chips);
+
+      // Qué establece
+      h += '<div class="nr-sec" style="border-top:none">'
+        + '<div class="nr-sec-label">Qué establece el acuerdo</div>'
+        + '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0 0 8px">El §SÉPTIMO del Acta de Cierre establece un complemento salarial de base para el personal destinado en MAD. Es permanente — no está vinculado a la vigencia del roster.</p>'
+        + '<div class="nr-lit-quote">Los trabajadores con destino en la base de Madrid percibirán un complemento salarial de base con efectos económicos desde el 1 de enero de 2026.</div>'
+        + '</div>';
+
+      // Importe
+      h += '<div class="nr-efec-box">'
+        + '<div class="nr-efec-top"><span class="nr-efec-label">Complemento de base — ' + esc((meta0.grupos||['?'])[0]) + '</span>' + badge(res0.estado || 'activa', res0.operativa) + '</div>'
+        + '<div class="nr-efec-valor">' + (vt0.importe_mensual_bruto ? vt0.importe_mensual_bruto.toLocaleString('es') + ' €/mes' : '—') + '</div>'
+        + '<div class="nr-efec-sub">' + (vt0.importe_anual_bruto ? vt0.importe_anual_bruto.toLocaleString('es') + ' € anuales brutos' : '') + ' · Permanente (sin fecha fin documentada)</div>'
+        + vigenciaHtml(r0)
+        + '</div>';
+
+      // Condición
+      h += '<div class="nr-sec"><div class="nr-condicion-block">'
+        + '<span class="nr-condicion-ico">⚑</span>'
+        + '<strong>Condición para percibir el complemento</strong> — El trabajador debe haber desempeñado al menos el <strong>75% de la función asignada</strong> mensualmente.'
+        + '<br><span style="font-size:11px;color:var(--amber2,#b45309)">⚠ La empresa no ha definido qué constituye "función asignada". Esta ambigüedad determina si el complemento se percibe o no.</span>'
+        + '</div></div>';
+
+      // Tabla todos los grupos
+      h += '<div class="nr-sec"><div class="nr-sec-label">Complemento por función (base MAD)</div>'
+        + '<div class="ck-table-wrap"><table class="ck-table"><thead><tr><th>Función</th><th>Mensual</th><th>Anual</th></tr></thead><tbody>'
+        + [['mad_comp_cmd','CMD',1500,18000],['mad_comp_cop','COP',833.33,10000],['mad_comp_scc','SCC',1250,15000],['mad_comp_tcp','TCP',400,4800]].map(function(row) {
+            var active = rComp.some(function(r) { return r.id === row[0]; });
+            var style = active ? 'color:var(--text);font-weight:700' : '';
+            return '<tr><td style="' + style + '">' + row[1] + '</td><td>' + row[2].toLocaleString('es') + ' €</td><td>' + row[3].toLocaleString('es') + ' €</td></tr>';
+          }).join('')
+        + '</tbody></table></div></div>';
+    }
+
+    // HV +20%
+    var rHV = sit.reglas.find(function(r) { return r.id === 'mad_hv_20pct'; });
+    if (rHV) {
+      h += '<div class="nr-sec"' + (!rComp.length ? ' style="border-top:none"' : '') + '>'
+        + '<div class="nr-sec-label">HV +20% MAD</div>'
+        + '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin:0 0 8px">El §SÉPTIMO del Acta de Cierre incrementa el valor de todas las horas de vuelo en un 20% para la base MAD.</p>'
+        + '<div class="nr-condicion-block">'
+        + '<span class="nr-condicion-ico">⚑</span>'
+        + '<strong>Condición — colectiva, no individual</strong> — El +20% aplica mientras la productividad media del colectivo MAD se mantenga en ≥ 11 días de vuelo por tripulante.'
+        + '<br><span style="font-size:11px;opacity:.7">No depende del desempeño individual. Si la productividad varía, se revisa formalmente con la RLT — no cae automáticamente.</span>'
+        + '</div>'
+        + '<ul class="nr-check-list" style="margin-top:8px">'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--blue)">+</span><div class="nr-check-text">Afecta a todos los tramos de HV (T1, T2, T3 y T4).</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text">PilotPay no puede verificar en tiempo real si la condición colectiva se cumple — es un dato que gestiona la empresa.</div></li>'
+        + '</ul></div>';
+    }
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionActividadDescanso(sit) {
+    var h = '';
+    var rAct = sit.regimen_principal.concat(sit.adiciones).find(function(r) { return (r.valor_tabla || {}).actividades_cuentan_fdp; });
+    if (!rAct) rAct = sit.reglas.find(function(r) { return (r.valor_tabla || {}).actividades_cuentan_fdp; });
+    if (!rAct) { h += fuenteHtml(sit.reglas); return h; }
+
+    var vt = rAct.valor_tabla || {};
+    var meta = rAct._meta || {};
+    var is5_3 = (rAct.id || '').indexOf('5_3') >= 0 || (rAct.id || '').indexOf('lpa_') === 0;
+    var diasAct = is5_3 ? 5 : 6;
+
+    var LABELS = {
+      'formacion_no_presencial_online':            'Formación online (no presencial)',
+      'vuelo_posicional_simulador_verificaciones': 'Vuelo posicional — simulador / verificaciones',
+      'dia_oficina_sin_funcion_responsabilidad':   'Día de oficina',
+      'auditorias_e_inspecciones':                 'Auditorías e inspecciones',
+      'competencia_linguistica':                   'Competencia lingüística',
+      'reconocimiento_medico':                     'Reconocimiento médico',
+      'horas_sindicales_en_libranza':              'Horas sindicales en días de libranza',
+    };
+
+    // ── Contexto
+    var chips = [];
+    if (meta.bases && meta.bases[0]) chips.push({ lbl: 'Base', val: meta.bases[0] });
+    chips.push({ lbl: 'Roster', val: is5_3 ? '5+3' : '6+3' });
+    if (meta.vigencia_desde) chips.push({ lbl: 'Desde', val: meta.vigencia_desde });
+    if (meta.vigencia_hasta) chips.push({ lbl: 'Hasta (aprox.)', val: meta.vigencia_hasta });
+    if (meta.temporal) chips.push({ lbl: 'Carácter', val: 'Temporal' });
+    h += supuestoBar(chips);
+
+    // ── Pregunta + respuesta directa
+    h += '<div class="nr-qa-block">'
+      + '<div class="nr-qa-q">¿Me pueden programar actividades en mis días de descanso?</div>'
+      + '<div class="nr-qa-a">Sí — pero solo en supuestos concretos y con actividades tasadas en el acuerdo.</div>'
+      + '<div class="nr-qa-sub">Solo en el <strong>primero o último día</strong> del bloque de descanso. La empresa es quien programa — no el tripulante quien solicita.</div>'
+      + (meta.temporal ? '<div class="nr-qa-alt">Régimen temporal — vigente mientras el roster ' + (is5_3 ? '5+3' : '6+3') + ' esté activo.</div>' : '')
+      + '</div>';
+
+    // ── Efecto operativo
+    h += '<div class="nr-sec" style="border-top:none"><div class="nr-sec-label">Efecto operativo</div>'
+      + '<div class="nr-efecto-pattern">'
+      + '<div class="nr-efecto-box nr-efecto-box-hi">' + diasAct + ' días<br><span style="font-size:9px;opacity:.8">actividad</span></div>'
+      + '<span class="nr-efecto-arrow" style="font-size:14px">+</span>'
+      + '<div class="nr-efecto-box" style="border-style:dashed">1 día<br><span style="font-size:9px;opacity:.8">desc. programado</span></div>'
+      + '<span class="nr-efecto-arrow" style="font-size:14px">+</span>'
+      + '<div class="nr-efecto-box nr-efecto-box-lib">2 días<br><span style="font-size:9px;opacity:.8">libres</span></div>'
+      + '<span class="nr-efecto-arrow">→</span>'
+      + '<span class="nr-efecto-eq"><strong>6 act. + 2 libres</strong></span>'
+      + '</div>'
+      + '<p style="font-size:11px;color:var(--text3);margin:6px 0 0">'
+      + (is5_3
+          ? 'Patrón 5+3: el día de actividad en descanso convierte el ciclo en 5+1=6 días de actividad y 2 días libres.'
+          : 'Patrón 6+3: el día de actividad en descanso reduce los días libres de 3 a 2.')
+      + '</p></div>';
+
+    // ── Actividades operativas
+    h += '<div class="nr-sec"><div class="nr-sec-label">Actividades — el acuerdo las declara operativas</div>'
+      + '<p style="font-size:11px;color:var(--text3);margin:0 0 8px">Afectan al cómputo de FDP y al descanso mínimo posterior.</p>'
+      + '<div class="nr-act-block">'
+      + (vt.actividades_cuentan_fdp || []).map(function(a) {
+          var lbl = LABELS[a] || a;
+          var nota = (a === 'dia_oficina_sin_funcion_responsabilidad')
+            ? '<span style="font-size:10px;font-weight:500;color:var(--amber2,#b45309)"> ⚠ solo personal sin función de responsabilidad</span>'
+            : '';
+          return '<div class="nr-act-item"><span class="nr-act-dot">·</span><span>' + esc(lbl) + nota + '</span></div>';
+        }).join('')
+      + '</div></div>';
+
+    // ── Actividades no operativas
+    h += '<div class="nr-sec"><div class="nr-sec-label">Actividades — el acuerdo las declara no operativas</div>'
+      + '<p style="font-size:11px;color:var(--text3);margin:0 0 8px">No afectan a FDP ni al descanso mínimo posterior.</p>'
+      + '<div class="nr-act-block">'
+      + (vt.actividades_no_cuentan_fdp || []).map(function(a) {
+          return '<div class="nr-act-item"><span class="nr-act-dot">·</span><span>' + esc(LABELS[a] || a) + '</span></div>';
+        }).join('')
+      + (vt.horas_sindicales_nota ? '<div class="nr-act-note">ℹ ' + esc(vt.horas_sindicales_nota) + '</div>' : '')
+      + '</div></div>';
+
+    // ── Limitaciones
+    h += '<div class="nr-sec"><div class="nr-sec-label">Limitaciones</div>'
+      + '<ul class="nr-check-list">'
+      + '<li class="nr-check-item"><span class="nr-check-ico nr-check-no">!</span><div class="nr-check-text">Solo primer o último día del bloque de descanso — no en días intermedios.</div></li>'
+      + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--amber,#f59e0b)">⚑</span><div class="nr-check-text">Cupos diarios máximos establecidos en el acuerdo — el número exacto no está cuantificado en el documento.</div></li>'
+      + '</ul></div>';
+
+    // ── Normativa
+    h += '<div class="nr-sec"><div class="nr-sec-label">Normativa</div>'
+      + '<div class="nr-lit-quote">Las actividades que se indican a continuación podrán realizarse en el primer o último día del bloque de días libres correspondiente al periodo de descanso, adaptándose de esta manera el patrón a ' + diasAct + ' días de actividad y 2 días libres.</div>'
+      + '<p style="font-size:10px;color:var(--text3);margin:4px 0 0">Art. ' + esc(meta.articulo || '?') + ' — ' + esc(meta.doc || '') + '</p>'
+      + '</div>';
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionUniformidad(sit, ctxBase) {
+    var h = '';
+    var rPilotos = sit.reglas.find(function(r) { return r.id === 'cc_uniformidad_pilotos'; });
+    var rTCP     = sit.reglas.find(function(r) { return r.id === 'cc_uniformidad_tcp'; });
+
+    if (rPilotos && (rPilotos.valor_tabla || {}).ciclos) {
+      var vt = rPilotos.valor_tabla;
+      h += '<div class="nr-efec-box">'
+        + '<div class="nr-efec-top"><span class="nr-efec-label">Pilotos — sistema de puntos</span>' + badge('activa', true) + '</div>'
+        + '<div class="nr-efec-sub">Ciclo de 3 renovaciones anuales. Lo que supere el límite es a cargo del piloto.</div>'
+        + '</div>';
+
+      h += '<div class="nr-sec"><div class="nr-sec-label">Límite de puntos por renovación</div>'
+        + '<div class="ck-uni-cycle">'
+        + vt.ciclos.map(function(c, i) {
+            return '<div class="ck-uni-year"><div class="ck-uni-yr-n">Año ' + c.renovacion + '</div>'
+              + '<div class="ck-uni-pts">' + c.limite_pts + '</div>'
+              + '<div class="ck-uni-prenda-pts-label">pts</div></div>'
+              + (i < vt.ciclos.length - 1 ? '<span class="ck-uni-arrow">→</span>' : '');
+          }).join('')
+        + '<span class="ck-uni-restart">↺ reinicia en 66</span></div>';
+
+      h += '<div class="nr-sec"><div class="nr-sec-label">Coste por prenda</div>'
+        + '<div class="ck-uni-prenda-grid">'
+        + vt.prendas.map(function(p) {
+            return '<div class="ck-uni-prenda-card">'
+              + '<span class="ck-uni-prenda-name">' + esc(p.nombre) + '</span>'
+              + '<div><div class="ck-uni-prenda-pts">' + p.pts + '</div><div class="ck-uni-prenda-pts-label">pts</div></div>'
+              + '</div>';
+          }).join('')
+        + '</div></div>';
+    }
+
+    if (rTCP && (rTCP.valor_tabla || {}).prendas) {
+      var vtT = rTCP.valor_tabla;
+      h += '<div class="nr-sec"><div class="nr-sec-label">TCP / SCC — dotación inicial</div>'
+        + '<div class="ck-tcp-dotacion">'
+        + vtT.prendas.map(function(p) {
+            return '<div class="ck-tcp-prenda-row">'
+              + '<span class="ck-tcp-prenda-name">' + esc(p.nombre) + '</span>'
+              + '<span class="ck-tcp-prenda-qty">' + (p.cantidad !== null ? p.cantidad : '—') + '</span>'
+              + '</div>';
+          }).join('')
+        + '</div>'
+        + '<div style="padding:0 16px 12px"><div class="ck-renovacion-note">ℹ Renovación por deterioro justificado — sin sistema de puntos ni ciclos anuales.</div></div>';
+    }
+
+    // Centros El Corte Inglés
+    var contactosFiltrados = ctxBase
+      ? UNIFORMIDAD_CONTACTOS.filter(function(c) { return c.base === ctxBase; })
+      : UNIFORMIDAD_CONTACTOS;
+
+    if (contactosFiltrados.length) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Centros El Corte Inglés <span class="ck-source-tag ck-src-operativo" style="margin-left:6px">Recurso operativo</span></div>'
+        + '<div class="ck-contact-wrap">'
+        + contactosFiltrados.map(function(c) {
+            var extH = c.extensiones && c.extensiones.length
+              ? '<div class="ck-contact-exts">' + c.extensiones.map(function(e) { return '<span class="ck-contact-ext">Ext. ' + e + '</span>'; }).join('') + '</div>'
+              : '';
+            var movilH = c.movil ? '<div class="ck-contact-movil">' + esc(c.movil) + ' (móvil)</div>' : '';
+            return '<div class="ck-contact-card">'
+              + '<div class="ck-contact-base-tag">' + esc(c.base) + '</div>'
+              + '<div class="ck-contact-loc">' + esc(c.centro) + '</div>'
+              + '<div class="ck-contact-sec">Contactos</div>'
+              + c.contactos.filter(function(p) { return p.nombre; }).map(function(p) {
+                  return '<div class="ck-contact-name">' + esc(p.nombre) + '</div>';
+                }).join('')
+              + '<div class="ck-contact-sec">Email</div>'
+              + c.contactos.map(function(p) {
+                  return '<a class="ck-contact-email" href="mailto:' + esc(p.email) + '">' + esc(p.email) + '</a>';
+                }).join('')
+              + '<div class="ck-contact-sec">Teléfono</div>'
+              + '<div class="ck-contact-phone-row"><span class="ck-contact-phone">' + esc(c.telefono) + '</span>' + extH + '</div>'
+              + movilH
+              + '</div>';
+          }).join('')
+        + '</div></div>';
+    }
+
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionIT(sit) {
+    var h = '';
+    var r7    = sit.reglas.find(function(r) { return r.id === 'cc_it_carencia_7_dias'; });
+    var rCond = sit.reglas.find(function(r) { return r.id === 'cc_it_condiciones_complemento'; });
+    var rAT   = sit.reglas.find(function(r) { return r.id === 'cc_it_accidente_laboral'; });
+
+    // Supuesto
+    h += supuestoBar([{ lbl: 'Fuente', val: 'CC' }, { lbl: 'Carácter', val: 'Permanente' }]);
+
+    if (r7) {
+      var vt = r7.valor_tabla || {};
+      h += '<div class="nr-sec" style="border-top:none"><div class="nr-sec-label">Enfermedad común / Accidente no laboral</div>'
+        + '<ul class="nr-check-list">'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span>'
+        + '<div class="nr-check-text"><strong>Días 1 al ' + (vt.dias_sin_complemento||7) + ':</strong> solo prestación de la Seguridad Social.'
+        + '<div class="nr-check-sub">La empresa no complementa durante este período de carencia.</div>'
+        + '</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span>'
+        + '<div class="nr-check-text"><strong>Desde el día ' + (vt.complemento_desde_dia||8) + ':</strong> la empresa complementa hasta el 100% de los conceptos fijos.'
+        + '<div class="nr-check-sub">Los conceptos variables (HV, dietas, imaginarias…) no forman parte del complemento de empresa — el acuerdo no extiende la obligación a cubrir las variables durante la baja.</div>'
+        + '</div></li>'
+        + '</ul></div>';
+    }
+
+    if (rAT) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Accidente laboral / Enfermedad profesional</div>'
+        + '<ul class="nr-check-list"><li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span>'
+        + '<div class="nr-check-text">El complemento aplica desde el <strong>primer día</strong>. No existe período de carencia en estos supuestos.'
+        + '</div></li></ul></div>';
+    }
+
+    if (rCond) {
+      var vtC = rCond.valor_tabla || {};
+      h += '<div class="nr-sec"><div class="nr-sec-label">Condiciones para que la empresa complemente</div>'
+        + '<ul class="nr-check-list">'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text">No haber acumulado más de <strong>' + (vtC.max_bajas_3_meses||2) + ' bajas</strong> en los 3 meses anteriores a la baja actual.</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico" style="color:var(--text3)">·</span><div class="nr-check-text">Acudir a las citas de control del servicio médico de la empresa durante la baja.</div></li>'
+        + '<li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span><div class="nr-check-text"><strong>Excepción:</strong> si el médico de empresa considera la baja de carácter grave, el complemento puede mantenerse aunque se haya superado el criterio de acumulación.</div></li>'
+        + '</ul></div>';
+    }
+
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionLicencias(sit) {
+    var h = '';
+    var rBase = sit.reglas.find(function(r) { return r.id === 'cc_licencias_base'; });
+    if (rBase) {
+      var licencias = [
+        ['Matrimonio / pareja de hecho', '15 días'],
+        ['Nacimiento de hijo', '10 días (otro progenitor)'],
+        ['Fallecimiento familiar', '2–4 días (según parentesco y desplazamiento)'],
+        ['Hospitalización grave familiar', '3 días + desplazamiento si aplica'],
+        ['Traslado de domicilio', '1 día'],
+        ['Exámenes oficiales', 'Tiempo necesario'],
+        ['Consulta médica propia', 'Tiempo necesario en jornada'],
+        ['Consulta médica familiar', 'Hasta 20 h/año'],
+      ];
+      h += '<div class="nr-sec" style="border-top:none"><div class="nr-sec-label">Licencias retribuidas — causas CC</div>'
+        + '<div class="ck-table-wrap"><table class="ck-table"><thead><tr><th>Causa</th><th>Duración</th></tr></thead><tbody>'
+        + licencias.map(function(l) { return '<tr><td>' + esc(l[0]) + '</td><td>' + esc(l[1]) + '</td></tr>'; }).join('')
+        + '</tbody></table></div>'
+        + '<div style="font-size:11px;color:var(--text3);padding:4px 0">El Acta de Cierre añade LRC adicionales por antigüedad para Grupos III y IV.</div>'
+        + '</div>';
+    }
+    var rMat = sit.reglas.find(function(r) { return r.id === 'cc_maternidad_vacaciones'; });
+    if (rMat) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Maternidad / paternidad</div>'
+        + '<ul class="nr-check-list"><li class="nr-check-item"><span class="nr-check-ico nr-check-ok">✓</span><div class="nr-check-text">Si la baja por embarazo, parto o lactancia impide disfrutar vacaciones, puedes disfrutarlas una vez terminada la suspensión del contrato aunque haya terminado el año natural.</div></li></ul></div>';
+    }
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  function renderSituacionGeneral(sit) {
+    var h = '';
+    var activas = sit.reglas.filter(function(r) { return (r._resolution || {}).operativa !== false; });
+    if (!activas.length) activas = sit.reglas;
+    h += '<div class="nr-sec" style="border-top:none">';
+    activas.forEach(function(r) {
+      var res = r._resolution || {};
+      var ec = ESTADO_CFG[res.estado] || ESTADO_CFG['activa'];
+      h += '<div style="padding:7px 0;border-bottom:1px solid var(--border)">'
+        + '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">'
+        + '<span class="nr-badge ' + ec.clase + '">' + ec.icono + ' ' + ec.etiqueta + '</span>'
+        + (res.operativa === 'desconocida' ? '<span class="nr-badge nr-condicionada">⚠ Incierto</span>' : '')
+        + '</div>'
+        + '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px" onclick="ckShowNormaRule(\'' + r.id + '\')" style="cursor:pointer">' + esc(r.titulo || r.id) + '</div>'
+        + '<div style="font-size:12px;color:var(--text3);line-height:1.4">' + esc((r.texto||'').slice(0,140)) + ((r.texto||'').length > 140 ? '…' : '') + '</div>'
+        + '</div>';
+    });
+    h += '</div>';
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  // ── Productividad / DPO ──
+  function renderSituacionProductividad(sit, ctxGrupo, mergedGrupos) {
+    var h = '';
+    var esTDV, esTCP, esSCC;
+    if (mergedGrupos) {
+      esTDV = mergedGrupos.indexOf('CMD') !== -1 || mergedGrupos.indexOf('COP') !== -1;
+      esTCP = mergedGrupos.indexOf('SCC') !== -1 || mergedGrupos.indexOf('TCP') !== -1;
+      esSCC = mergedGrupos.indexOf('SCC') !== -1;
+    } else {
+      esTDV = !ctxGrupo || ctxGrupo === 'CMD' || ctxGrupo === 'COP';
+      esTCP = !ctxGrupo || ctxGrupo === 'SCC' || ctxGrupo === 'TCP';
+      esSCC = ctxGrupo === 'SCC';
+    }
+
+    // Lead — idea clave: el DPO no depende solo del individuo
+    h += '<div class="nr-qa-block">'
+      + '<div class="nr-qa-q">→ ¿Qué es el DPO y de qué depende?</div>'
+      + '<div class="nr-qa-a">Tu bono de productividad mensual <strong>no depende de tu desempeño individual</strong>. '
+      + 'Depende de indicadores colectivos de toda tu base — si tu base no alcanza el objetivo, pierdes bono aunque tú hayas volado perfecto ese mes.</div>'
+      + '</div>';
+
+    // ── TDV (CMD / COP) ──
+    if (esTDV) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Pilotos (CMD / COP)</div>';
+      h += '<div class="nr-qa-sub"><strong>70 %</strong> eficiencia de combustible de la base &nbsp;+&nbsp; <strong>30 %</strong> puntualidad colectiva</div>';
+      h += '<div class="nr-qa-sub">Objetivo de combustible: ≤ 1.628,18 kg CO₂ / hora de bloque, medición mensual por base.</div>';
+      h += '<div class="nr-qa-sub"><strong>Penalización colectiva:</strong> si la base no alcanza el objetivo ese mes, todos los pilotos de la base pierden el <strong>10 %</strong> del DPO de ese mes — sin excepción individual.</div>';
+      h += '</div>';
+    }
+
+    // ── TCP (SCC / TCP) ──
+    if (esTCP) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Cabina (SCC / TCP)</div>';
+      h += '<div class="nr-qa-sub"><strong>70 %</strong> calidad de servicio a bordo de la base &nbsp;+&nbsp; <strong>30 %</strong> puntualidad colectiva</div>';
+      h += '<div class="nr-qa-sub">Calidad medida por evaluación externa. El sistema de medición no está especificado en el acuerdo de productividad.</div>';
+      h += '<div class="nr-qa-sub"><strong>Penalización colectiva:</strong> si la base no alcanza el objetivo de calidad ese mes, todo el colectivo de cabina pierde el <strong>10 %</strong> del DPO de ese mes.</div>';
+      if (esSCC) {
+        h += '<div class="nr-qa-sub"><strong>SCC además:</strong> debes haber ejercido la función de Sobrecargo como mínimo el 75 % del período de devengo para cobrar el DPO completo.</div>';
+      }
+      h += '</div>';
+    }
+
+    // ── Puntualidad (shared) ──
+    h += '<div class="nr-sec"><div class="nr-sec-label">Puntualidad — indicador compartido (pilotos y cabina)</div>';
+    h += '<div class="nr-qa-sub"><strong>Cota 15</strong> — porcentaje de vuelos con salida en los primeros 15 minutos de la ventana. '
+      + 'Colectivo de base: tu vuelo individual no mueve el indicador.</div>';
+    h += '<div class="nr-qa-sub">Mínimo de activación: <strong>80 %</strong> — por debajo no genera bono de puntualidad. '
+      + 'Objetivo máximo: <strong>85 %</strong> — por encima consolida en el techo de la matriz.</div>';
+    h += '</div>';
+
+    // Qué depende de la empresa / límite PilotPay — sin caja, como párrafo de contexto
+    h += '<div class="nr-qa-alt">La empresa es quien mide los indicadores y determina si aplica la penalización. '
+      + 'Las matrices de consecución que fijan el importe exacto del bono no están publicadas en el acuerdo — '
+      + 'PilotPay puede explicar el sistema y los factores, pero no puede calcular la cuantía real del DPO.</div>';
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+
+    // Nota técnica al pie — discreta, sin caja
+    h += '<div class="nr-dpo-limit">Nota técnica — Acuerdo de Productividad 2026: matrices eficiencia × puntualidad (TDV) y calidad × puntualidad (TCP) no publicadas en el documento. Sin ellas el importe exacto es incalculable.</div>';
+
+    return h;
+  }
+
+  // ── Tablas retributivas — helpers ───────────────────────────────
+  // selNivel: 'N1+'|'N1'|...|'N6'|null  — highlights that column
+  // n1pData:  valor_tabla of the N1+ rule for this group, or null
+  function _renderRetributiva(tabKey, selNivel, n1pData) {
+    if (typeof TABLAS === 'undefined' || !TABLAS[tabKey]) return '';
+    var T        = TABLAS[tabKey];
+    var niv      = T.salbase.length;
+    var isPiloto = (tabKey === 'CMD' || tabKey === 'COP');
+    var isSCC    = (tabKey === 'SCC');
+    var hasN1p   = n1pData != null;
+    var ncols    = 2 + (hasN1p ? 1 : 0) + niv;
+
+    function colSel(key) { return key === selNivel ? ' class="nr-tbl-sel"' : ''; }
+    function hdr() {
+      var s = '<tr><th style="text-align:left">Concepto</th><th class="nr-tbl-unit">Unidad</th>';
+      if (hasN1p) s += '<th' + colSel('N1+') + ' title="Nivel adicional — Acta §QUINTO">N1+</th>';
+      for (var i = 0; i < niv; i++) s += '<th' + colSel('N' + (i+1)) + '>N' + (i+1) + '</th>';
+      return s + '</tr>';
+    }
+    function sec(label) {
+      return '<tr class="nr-tbl-sec"><td colspan="' + ncols + '">' + esc(label) + '</td></tr>';
+    }
+    function row(label, unit, arr, n1pVal) {
+      var s = '<tr><td>' + esc(label) + '</td><td class="nr-tbl-unit">' + esc(unit) + '</td>';
+      if (hasN1p) {
+        var v = (n1pVal == null) ? '—' : (typeof n1pVal === 'string' ? n1pVal : _fmtEur(n1pVal));
+        s += '<td' + colSel('N1+') + '>' + v + '</td>';
+      }
+      for (var i = 0; i < niv; i++) {
+        var av = arr ? arr[i] : null;
+        s += '<td' + colSel('N' + (i+1)) + '>' + (av != null ? _fmtEur(av) : '—') + '</td>';
+      }
+      return s + '</tr>';
+    }
+    function uni(val) { var a = []; for (var i = 0; i < niv; i++) a.push(val); return a; }
+
+    var rows = '';
+    if (isPiloto) {
+      var p = n1pData || {};
+      var D = (typeof DIETAS !== 'undefined') ? DIETAS : {};
+      rows += sec('Retribución fija (mensual)');
+      rows += row('Salario base',            '€/mes',    T.salbase, p.salario_base_mes);
+      rows += row('Extra (prorr.)',          '€/mes',    T.extra,   p.extra1_mes);
+      rows += row('Plus transporte',         '€/mes',    T.plus_tr, p.plus_transporte_mes);
+      rows += sec('Horas de vuelo (variable desde hora 61)');
+      rows += row('T1 (61–70 h)',            '€/HV', T.hv_t1, hasN1p ? p.hv_60_70  : null);
+      rows += row('T2 (71–80 h)',            '€/HV', T.hv_t2, hasN1p ? p.hv_70_80  : null);
+      rows += row('T3 (81–90 h)',            '€/HV', T.hv_t3, hasN1p ? p.hv_80_90  : null);
+      rows += row('T4 (>90 h)',              '€/HV', T.hv_t4, hasN1p ? p.hv_mas_90 : null);
+      rows += sec('Libre volado');
+      rows += row('<24 h ausencia',          '€/tramo', T.lv1, p.libre_volado_menos_24h);
+      rows += row('24–72 h ausencia',        '€/tramo', T.lv2, p.libre_volado_24_72h);
+      rows += row('>72 h ausencia',          '€/tramo', T.lv3, p.libre_volado_mas_72h);
+      rows += sec('Gastos compensatorios');
+      rows += row('Dieta vuelo nac.',        '€/período', uni(D.mant_nac ? D.mant_nac.total : null), p.dieta_nac_dia);
+      rows += row('Desplaz. NAC s/pernoc.', '€/día',     uni(D.nac_sp  ? D.nac_sp.total  : null), null);
+      rows += row('Desplaz. NAC c/pernoc.', '€/día',     uni(D.nac_cp  ? D.nac_cp.total  : null), null);
+      rows += row('Desplaz. INT s/pernoc.', '€/día',     uni(D.int_sp  ? D.int_sp.total  : null), null);
+      rows += row('Desplaz. INT c/pernoc.', '€/día',     uni(D.int_cp  ? D.int_cp.total  : null), null);
+      rows += row('Dest. nacional/día',     '€/día',     uni(D.dest_nac ? D.dest_nac.total : null), p.destacamento_nac_dia);
+      rows += row('Dest. internacional/día','€/día',     uni(D.dest_int ? D.dest_int.total : null), p.destacamento_int_dia);
+      rows += row('Pernoc. nac./día',       '€/día',     null, p.supl_pernocta_nac_dia);
+      rows += row('Pernoc. int./día',       '€/día',     null, p.supl_pernocta_int_dia);
+    } else {
+      var p = n1pData || {};
+      rows += sec('Retribución fija (mensual)');
+      rows += row('Salario base',            '€/mes',   T.salbase,  p.salario_base_mes);
+      rows += row('Extra (prorr.)',          '€/mes',   T.extra,    p.extra1_mes);
+      rows += sec('HV ordinaria (días O)');
+      rows += row('T1 (61–70 h)',            '€/HV', T.hv_t1_o, p.hv_t1_ord);
+      rows += row('T2 (71–80 h)',            '€/HV', T.hv_t2_o, p.hv_t2_ord);
+      rows += row('T3 (81–90 h)',            '€/HV', T.hv_t3_o, p.hv_t3_ord);
+      rows += row('T4 (>90 h)',              '€/HV', T.hv_t4_o, p.hv_t4_ord);
+      rows += sec('HV reforzada (días R)');
+      rows += row('T1 (61–70 h)',            '€/HV', T.hv_t1_r, p.hv_t1_rot);
+      rows += row('T2 (71–80 h)',            '€/HV', T.hv_t2_r, p.hv_t2_rot);
+      rows += row('T3 (81–90 h)',            '€/HV', T.hv_t3_r, p.hv_t3_rot);
+      rows += row('T4 (>90 h)',              '€/HV', T.hv_t4_r, p.hv_t4_rot);
+      rows += sec('Libre volado');
+      rows += row('<24 h ausencia',          '€/tramo', T.lv1, p.libre_volado_menos_24h);
+      rows += row('24–72 h ausencia',        '€/tramo', T.lv2, p.libre_volado_24_72h);
+      rows += row('>72 h ausencia',          '€/tramo', T.lv3, p.libre_volado_mas_72h);
+      rows += sec('Gastos compensatorios');
+      rows += row('Dieta nacional/día',      '€/día', T.dieta_nac,            p.dieta_nac_dia);
+      rows += row('Supl. internacional/día', '€/día', T.supl_int,             p.supl_int_dia);
+      if (isSCC && T.plus_sobrecargo) rows += row('Plus sobrecargo/día', '€/día', T.plus_sobrecargo, p.plus_sobrecargo_reactor_dia);
+      rows += row('Dest. nacional/día',      '€/día', uni(T.dest_nac),         p.destacamento_nac_dia);
+      rows += row('Dest. internacional/día', '€/día', uni(T.dest_int),         p.destacamento_int_dia);
+      rows += row('Pernoc. nacional/día',    '€/día', uni(T.supl_pernoc_nac), p.supl_pernocta_nac_dia);
+      rows += row('Pernoc. int./día',        '€/día', uni(T.supl_pernoc_int), p.supl_pernocta_int_dia);
+      rows += sec('Otros fijos');
+      rows += row('Plus transporte',         '€/año', uni(T.plus_tr_anual),   null);
+    }
+
+    return '<div class="nr-sal-tbl-wrap">'
+      + '<table class="nr-sal-tbl"><thead>' + hdr() + '</thead><tbody>' + rows + '</tbody></table>'
+      + '</div>';
+  }
+
+  // ── Niveles salariales (tablas reales) ──────────────────────────
+  function renderSituacionTablasSalariales(sit, ctxGrupo, mergedGrupos) {
+    var grupos   = mergedGrupos || (ctxGrupo ? [ctxGrupo] : []);
+    var esPiloto = grupos.some(function(g) { return g === 'CMD' || g === 'COP'; });
+    var esTCP    = grupos.some(function(g) { return g === 'SCC' || g === 'TCP' || g === 'CC'; });
+
+    if (!esPiloto && !esTCP) {
+      return '<div class="nr-qa-block"><div class="nr-qa-q">→ Selecciona tu función</div>'
+        + '<div class="nr-qa-a">Selecciona función (CMD, COP, SCC o TCP) en el filtro superior para ver la tabla retributiva.</div>'
+        + '</div>';
+    }
+
+    var selNivel = _ckNivel || null;
+    var r1pCMD   = sit.reglas.find(function(r) { return r.id === 'acta_nivel_1_plus_cmd'; });
+    var r1pTCP   = sit.reglas.find(function(r) { return r.id === 'acta_nivel_1_plus_tcp'; });
+
+    var h = '<div style="font-size:10px;color:var(--text3);line-height:1.5;margin-bottom:8px">Tabla retributiva CC BCSA 2026. PilotPay no infiere progresión de nivel.</div>';
+
+    if (grupos.indexOf('CMD') !== -1) {
+      var n1pCMD = r1pCMD ? (r1pCMD.valor_tabla || null) : null;
+      h += '<div class="nr-sec"><div class="nr-sec-label">Comandante — Grupo IV</div>';
+      h += _renderRetributiva('CMD', selNivel, n1pCMD);
+      if (n1pCMD) {
+        var req = n1pCMD.requisitos || {};
+        h += '<div class="nr-sal-n1plus-note">N1+ CMD (Acta §QUINTO, L2) — nivel sobre el N1 del CC. No automático. Requisitos simultáneos: '
+          + (req.antiguedad_minima_años ? 'antigüedad ≥' + req.antiguedad_minima_años + ' años en empresa · ' : '')
+          + (req.años_en_nivel_1 ? req.años_en_nivel_1 + ' años en N1 del CC · ' : '')
+          + 'cargo CMD activo asignado · informe técnico y desempeño favorable. '
+          + 'HV variable desde hora 61 (0–60h incluidas en salario base superior a N1). '
+          + 'Pernoctas con importes propios. Desde 01/01/2026.</div>';
+      }
+      h += '</div>';
+    }
+    if (grupos.indexOf('COP') !== -1) {
+      h += '<div class="nr-sec"><div class="nr-sec-label">Copiloto — Grupo IV</div>';
+      h += _renderRetributiva('COP', selNivel, null);
+      h += '</div>';
+    }
+    if (esTCP) {
+      var tabKey  = (grupos.indexOf('SCC') !== -1) ? 'SCC' : 'CC';
+      var grpLbl  = (tabKey === 'SCC') ? 'Sobrecargo (SCC)' : 'TCP';
+      var n1pTCP  = r1pTCP ? (r1pTCP.valor_tabla || null) : null;
+      h += '<div class="nr-sec"><div class="nr-sec-label">' + esc(grpLbl) + ' — Grupo III</div>';
+      h += _renderRetributiva(tabKey, selNivel, n1pTCP);
+      if (n1pTCP) {
+        h += '<div class="nr-sal-n1plus-note">N1+ — nivel adicional Grupo III (Acta §QUINTO, L2). No automático. Condiciones de acceso no detalladas explícitamente en el documento. Desde 01/01/2026.</div>';
+      }
+      h += '</div>';
+    }
+
+    h += ambigHtml(sit.ambiguedades);
+    h += fuenteHtml(sit.reglas);
+    return h;
+  }
+
+  // ── Dispatch por categoría ──
+  function renderSituacion(sit, ctxBase, ctxGrupo, mergedGrupos) {
+    switch (sit.categoria) {
+      case 'vacaciones':          return renderSituacionVacaciones(sit);
+      case 'roster':              return renderSituacionRoster(sit);
+      case 'programacion':        return renderSituacionProgramacion(sit);
+      case 'complementos': case 'hv': return renderSituacionComplementos(sit);
+      case 'actividad_descanso':  return renderSituacionActividadDescanso(sit);
+      case 'uniformidad':         return renderSituacionUniformidad(sit, ctxBase);
+      case 'it_bajas':            return renderSituacionIT(sit);
+      case 'licencias':           return renderSituacionLicencias(sit);
+      case 'productividad':       return renderSituacionProductividad(sit, ctxGrupo, mergedGrupos);
+      case 'tablas_salariales':   return renderSituacionTablasSalariales(sit, ctxGrupo, mergedGrupos);
+      default:                    return renderSituacionGeneral(sit);
+    }
+  }
+
+  // ── Render resultados ──
 
   function renderResults(reglas, ctx) {
     if (!reglas || !reglas.length) {
       return '<div style="padding:24px 16px;text-align:center">'
         + '<strong style="display:block;font-size:15px;color:var(--text2);margin-bottom:6px">Sin resultados</strong>'
-        + '<span style="font-size:13px;color:var(--text3)">No se encontraron reglas para el perfil y fecha seleccionados.</span>'
+        + '<span style="font-size:13px;color:var(--text3)">No se encontraron reglas para este perfil.</span>'
         + '</div>';
     }
 
@@ -13428,53 +14688,31 @@ window.PILOTPAY_BACKEND_READY = true;
     var chips = '';
     if (ctx.base)  chips += '<span class="nr-ctx-chip">' + esc(ctx.base) + '</span>';
     if (ctx.grupo) chips += '<span class="nr-ctx-chip">' + esc(ctx.grupo) + '</span>';
-    if (ctx.antiguedad_años !== null && ctx.antiguedad_años !== undefined) chips += '<span class="nr-ctx-chip">' + ctx.antiguedad_años + ' años</span>';
-    chips += '<span class="nr-ctx-chip">' + esc(ctx.fecha || 'Hoy') + '</span>';
+    var ctxBar = '<div class="nr-ctx-bar"><span style="font-size:10px;font-family:var(--mono);color:var(--blue);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Normativa para</span>' + chips + '</div>';
 
-    var ctxBar = '<div class="nr-ctx-bar"><span style="font-size:10px;font-family:var(--mono);color:var(--blue);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Normativa para</span>'
-      + chips + '</div>';
+    // Síntesis
+    var situaciones = resolverSituacionesEfectivas(reglas);
 
-    // Warnings count
-    var wc = reglas.filter(function(r) { return r._resolution && r._resolution.operativa === 'desconocida'; }).length;
-    var warnBlock = wc > 0
-      ? '<div class="nr-warn-block" style="margin:10px 16px 0"><div class="nr-warn-title">⚠ ' + wc + ' regla' + (wc > 1 ? 's' : '') + ' con incertidumbre normativa</div>'
-        + '<div class="nr-warn-text">Algunas reglas dependen de condiciones no verificables automáticamente.</div></div>'
-      : '';
-
-    // Group by category
-    var bycat = {}, order = [];
-    reglas.forEach(function(r) {
-      var cat = r.categoria || 'general';
-      if (!bycat[cat]) { bycat[cat] = []; order.push(cat); }
-      bycat[cat].push(r);
+    var CAT_ORDER = ['roster','programacion','vacaciones','complementos','hv','actividad_descanso','uniformidad','it_bajas','licencias','productividad','reduccion_jornada','dias_libres','tablas_salariales','general'];
+    situaciones.sort(function(a, b) {
+      var ia = CAT_ORDER.indexOf(a.categoria), ib = CAT_ORDER.indexOf(b.categoria);
+      if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+      return ia - ib;
     });
 
-    var catsH = order.map(function(cat) {
-      var cfg = CAT_CFG[cat] || { label: cat, ico: '📄' };
-      var rulesH = bycat[cat].map(function(r) {
-        var res = r._resolution || {};
-        var ec = ESTADO_CFG[res.estado] || ESTADO_CFG['activa'];
-        var ex = (r.texto || '').slice(0, 110);
-        if ((r.texto || '').length > 110) ex += '…';
-        return '<div class="nr-rule-row" onclick="ckShowNormaRule(\'' + r.id + '\')">'
-          + '<div class="nr-rule-body">'
-          + '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;flex-wrap:wrap">'
-          + '<span class="nr-badge ' + ec.clase + '">' + ec.icono + ' ' + ec.etiqueta + '</span>'
-          + (res.operativa === 'desconocida' ? '<span class="nr-badge nr-condicionada">⚠ Incierto</span>' : '')
-          + '</div>'
-          + '<div class="nr-rule-title">' + esc(r.titulo || r.id) + '</div>'
-          + '<div class="nr-rule-excerpt">' + esc(ex) + '</div>'
-          + '</div>'
-          + '<span class="nr-rule-arrow">›</span></div>';
-      }).join('');
-      return '<div class="nr-cat-block"><div class="nr-cat-header">'
-        + '<span class="nr-cat-ico">' + cfg.ico + '</span>'
-        + '<span class="nr-cat-label">' + cfg.label + '</span>'
-        + '</div></div>'
-        + '<div class="card" style="padding:0;margin:0 16px 14px">' + rulesH + '</div>';
+    // Filtro de temas
+    if (_ckTemas) {
+      situaciones = situaciones.filter(function(s) { return _ckTemas.has(s.categoria); });
+    }
+
+    var catsH = situaciones.map(function(sit) {
+      var cfg   = CAT_CFG[sit.categoria] || { label: sit.categoria, ico: '📄' };
+      var metaH = sit.temporal ? ' <span class="nr-cat-head-meta">temporal</span>' : '';
+      return '<div class="nr-cat-head"><span class="nr-cat-head-ico">' + cfg.ico + '</span><span class="nr-cat-head-lbl">' + esc(cfg.label) + '</span>' + metaH + '</div>'
+        + '<div class="nr-cat-card">' + renderSituacion(sit, ctx.base) + '</div>';
     }).join('');
 
-    return ctxBar + '<div style="padding:4px 0 0">' + warnBlock + catsH + '</div>';
+    return ctxBar + '<div style="padding:4px 0 0">' + catsH + '</div>';
   }
 
   // ── Render FAQs ──
@@ -13533,69 +14771,709 @@ window.PILOTPAY_BACKEND_READY = true;
 
   // ── Helpers inicio ──
 
-  function setDefaultDate() {
-    var f = document.getElementById('ck-ctx-fecha');
-    if (!f || f.value) return;
-    var d = new Date();
-    f.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  // ── Smart Merge ──
+  function _mergeReglas(a, b) {
+    var seen = {}, result = [];
+    a.concat(b).forEach(function(r) { if (!seen[r.id]) { seen[r.id] = true; result.push(r); } });
+    return result;
   }
+
+  function _smartMerge(panels) {
+    var byBase = {}, baseOrder = [];
+    panels.forEach(function(p) {
+      var key = p.ctx.base || '';
+      if (!byBase[key]) { byBase[key] = { CMD:null, COP:null, SCC:null, TCP:null, rest:[] }; baseOrder.push(key); }
+      var g = p.ctx.grupo;
+      if      (g === 'CMD') byBase[key].CMD = p;
+      else if (g === 'COP') byBase[key].COP = p;
+      else if (g === 'SCC') byBase[key].SCC = p;
+      else if (g === 'TCP') byBase[key].TCP = p;
+      else                  byBase[key].rest.push(p);
+    });
+    var result = [];
+    baseOrder.forEach(function(key) {
+      var g = byBase[key];
+      if (g.CMD && g.COP) {
+        result.push({ reglas: _mergeReglas(g.CMD.reglas, g.COP.reglas),
+          ctx: Object.assign({}, g.CMD.ctx, { grupo: null, mergedGrupos: ['CMD','COP'], grupoLabel: 'Pilotos (CMD / COP)' }) });
+      } else {
+        if (g.CMD) result.push(g.CMD);
+        if (g.COP) result.push(g.COP);
+      }
+      if (g.SCC && g.TCP) {
+        result.push({ reglas: _mergeReglas(g.SCC.reglas, g.TCP.reglas),
+          ctx: Object.assign({}, g.SCC.ctx, { grupo: null, mergedGrupos: ['SCC','TCP'], grupoLabel: 'Cabina (SCC / TCP)' }) });
+      } else {
+        if (g.SCC) result.push(g.SCC);
+        if (g.TCP) result.push(g.TCP);
+      }
+      g.rest.forEach(function(p) { result.push(p); });
+    });
+    return result;
+  }
+
+  function _setChipActiveMulti(rowId, activeSet) {
+    var row = document.getElementById(rowId);
+    if (!row) return;
+    Array.prototype.forEach.call(row.querySelectorAll('.ck-chip'), function(c) {
+      c.classList.toggle('active', activeSet.has(c.textContent.trim()));
+    });
+  }
+
+  function _renderTemaChips(situaciones) {
+    var row  = document.getElementById('ck-chips-temas');
+    var wrap = document.getElementById('ck-temas-filter');
+    if (!row || !wrap || !situaciones.length) { if (wrap) wrap.style.display = 'none'; return; }
+    var TEMA_LBL = {
+      roster: 'Roster', programacion: 'Programación', vacaciones: 'Vacaciones',
+      complementos: 'Complementos', hv: 'Horas de vuelo', actividad_descanso: 'Act. en descanso',
+      productividad: 'Productividad', it_bajas: 'IT / Bajas', uniformidad: 'Uniformidad', licencias: 'Licencias',
+    };
+    row.innerHTML = situaciones.map(function(s) {
+      return '<button class="ck-chip active" data-tema="' + esc(s.categoria) + '" onclick="ckChipTema(\'' + s.categoria + '\')">'
+        + esc(TEMA_LBL[s.categoria] || s.categoria) + '</button>';
+    }).join('');
+    wrap.style.display = 'flex';
+  }
+
+  // ── Tablas salariales ──
+  var _SAL = {
+    CMD: { label:'Comandante', niveles:6,
+      salbase:[5156.11,4784.02,4314.56,4033.05,3788.03,3371.19],
+      extra:  [429.68, 398.67, 359.55, 336.09, 315.67, 280.93],
+      hv:{ T1:[95.51,85.96,82.52,79.22,74.47,65.53], T2:[106.02,95.41,91.60,87.93,82.66,72.74],
+           T3:[115.57,104.01,99.85,95.86,90.10,79.29], T4:[127.98,115.19,110.58,106.15,99.79,87.81] },
+      plus_tr:200.70, dpo_anual:10000 },
+    COP: { label:'Copiloto', niveles:6,
+      salbase:[2731.55,2490.54,2252.36,1863.32,1671.95,1349.08],
+      extra:  [227.63, 207.54, 187.70, 155.28, 139.33, 112.42],
+      hv:{ T1:[34.21,31.47,27.38,21.90,21.03,18.92], T2:[37.97,34.93,30.39,24.31,23.34,21.01],
+           T3:[41.39,38.08,33.13,26.50,25.44,22.90], T4:[45.84,42.17,36.69,29.35,28.18,25.36] },
+      plus_tr:167.25, dpo_anual:0 },
+    SCC: { label:'Sobrecargo', niveles:5,
+      salbase:[950.10,940.50,932.00,913.60,891.60], extra:[79.20,78.40,77.70,76.10,74.30],
+      hv:{ T1o:[11.00,10.63,10.29,9.57,8.71], T2o:[14.85,14.34,13.89,12.92,11.76],
+           T1r:[13.44,12.99,12.58,11.70,10.65], T2r:[18.15,17.53,16.98,15.79,14.37] },
+      plus_scc:[20.80,19.50,17.17,14.27,10.93], plus_tr:9.76, dpo_anual:0 },
+    TCP: { label:'TCP', niveles:5,
+      salbase:[950.10,940.50,932.00,913.60,891.60], extra:[79.20,78.40,77.70,76.10,74.30],
+      hv:{ T1o:[11.00,10.63,10.29,9.57,8.71], T2o:[14.85,14.34,13.89,12.92,11.76],
+           T1r:[13.44,12.99,12.58,11.70,10.65], T2r:[18.15,17.53,16.98,15.79,14.37] },
+      plus_scc:[0,0,0,0,0], plus_tr:9.76, dpo_anual:0 },
+  };
+  var _MAD_COMP = { CMD:1500, COP:833.33, SCC:1250, TCP:400 };
+
+  function _fmtEur(n) {
+    return (Math.round(n * 100) / 100).toLocaleString('es-ES', { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €';
+  }
+
+  function _nivelIdx(grupo, años) {
+    if (años == null || isNaN(años)) return null;
+    if (grupo === 'CMD' || grupo === 'COP') {
+      if (años >= 15) return 0;
+      if (años >= 12) return 1;
+      if (años >= 9)  return 2;
+      if (años >= 6)  return 3;
+      if (años >= 3)  return 4;
+      return 5;
+    }
+    if (años >= 12) return 0;
+    if (años >= 9)  return 1;
+    if (años >= 6)  return 2;
+    if (años >= 3)  return 3;
+    return 4;
+  }
+
+  function renderSalaryBlock(panel) {
+    var grupos = panel.ctx.mergedGrupos
+      ? panel.ctx.mergedGrupos
+      : (panel.ctx.grupo ? [panel.ctx.grupo] : []);
+    if (!grupos.length) return '';
+    var base      = panel.ctx.base;
+    var hayMAD    = base === 'MAD';
+    var nivelSel  = _ckNivel; // explicit user selection ('N1'–'N6') or null
+
+    var cards = grupos.map(function(grupo) {
+      var d = _SAL[grupo];
+      if (!d) return '';
+      var plusTr  = d.plus_tr || 0;
+      var compMAD = hayMAD && _MAD_COMP[grupo] ? _MAD_COMP[grupo] : 0;
+      var detId   = 'sal-det-' + grupo + '-' + (base || 'X');
+
+      // ── MODE A: nivel explicitly selected ─────────────────────────
+      if (nivelSel) {
+        var ni = parseInt(nivelSel.replace('N', ''), 10) - 1; // 0-based
+        if (ni >= d.niveles) {
+          return '<div class="nr-sal-card">'
+            + '<div class="nr-sal-ctx"><strong>' + esc(grupo) + '</strong> · ' + esc(d.label)
+            + (base ? ' · ' + esc(base) : '') + '</div>'
+            + '<div class="nr-sal-includes">' + esc(d.label) + ' tiene ' + d.niveles
+            + ' niveles (N1–N' + d.niveles + '). ' + esc(nivelSel) + ' no existe para este perfil.</div>'
+            + '</div>';
+        }
+        var salbase = d.salbase[ni];
+        var extra   = d.extra[ni];
+        var plusSCC = (grupo === 'SCC') ? d.plus_scc[ni] : 0;
+        var total   = salbase + extra + plusTr + compMAD + plusSCC;
+        var ctxHtml = '<div class="nr-sal-ctx"><strong>' + esc(grupo) + '</strong> · '
+          + esc(d.label) + ' · ' + esc(nivelSel) + (base ? ' · ' + esc(base) : '') + '</div>';
+
+        // Big total + toggle
+        var totalHtml = '<div class="nr-sal-total-row">'
+          + '<div><div class="nr-sal-total-lbl">Fijo mensual</div>'
+          + '<div class="nr-sal-total-num">' + _fmtEur(total) + '</div></div>'
+          + '<button class="nr-sal-toggle" onclick="ckToggleSalDetail(\'' + esc(detId) + '\')">Ver detalle ↓</button>'
+          + '</div>';
+
+        // Compact includes/excludes
+        var incl = ['salario base', 'extra prorrateada'];
+        if (plusSCC) incl.push('plus sobrecargo');
+        incl.push('plus transporte');
+        if (compMAD) incl.push('<em>complemento MAD (' + _fmtEur(compMAD) + ', cond.)</em>');
+        var inclHtml = '<div class="nr-sal-includes">Incluye: ' + incl.join(' · ') + '</div>'
+          + '<div class="nr-sal-includes">No incluye: HV variable'
+          + (hayMAD ? ' +20% MAD' : '') + ' · DPO colectivo · guardia · dietas</div>';
+
+        // Detail block
+        var detRows = '';
+        detRows += salDtRow('Salario base', salbase);
+        detRows += salDtRow('Extra (prorrateada)', extra);
+        if (plusSCC) detRows += salDtRow('Plus sobrecargo', plusSCC);
+        detRows += salDtRow('Plus transporte', plusTr);
+        if (compMAD) detRows += salDtRow('Complemento MAD (75% función)', compMAD);
+        detRows += '<div class="nr-sal-dt-div"></div>';
+        detRows += salDtRowTotal('Total fijo', total);
+        if (d.hv) {
+          var pct = hayMAD ? 1.20 : 1.00;
+          var sfx = hayMAD ? ' (+20% MAD)' : '';
+          var hvStr = '';
+          if (d.hv.T1) {
+            hvStr = 'HV/h' + sfx + ': T1 ' + _fmtEur(d.hv.T1[ni]*pct) + ' · T2 ' + _fmtEur(d.hv.T2[ni]*pct) + ' · T3 ' + _fmtEur(d.hv.T3[ni]*pct) + ' · T4 ' + _fmtEur(d.hv.T4[ni]*pct);
+          } else if (d.hv.T1o) {
+            hvStr = 'HV ord: T1 ' + _fmtEur(d.hv.T1o[ni]) + ' · T2 ' + _fmtEur(d.hv.T2o[ni]) + '  |  HV rem: T1 ' + _fmtEur(d.hv.T1r[ni]) + ' · T2 ' + _fmtEur(d.hv.T2r[ni]);
+          }
+          if (hvStr) detRows += '<div class="nr-sal-hv">' + esc(hvStr) + '</div>';
+        }
+        var noteStr = 'CC BCSA 2026. Nivel ' + nivelSel + ' seleccionado — verifica siempre con tu nómina.';
+        if (compMAD) noteStr += ' Complemento MAD condicionado a 75% función asignada mensual.';
+        if (hayMAD && d.hv && d.hv.T1) noteStr += ' HV +20% MAD condicionado a productividad colectiva ≥ 11 días/mes.';
+        detRows += '<div class="nr-sal-note">' + esc(noteStr) + '</div>';
+
+        return '<div class="nr-sal-card">' + ctxHtml + totalHtml + inclHtml
+          + '<div class="nr-sal-detail" id="' + esc(detId) + '">' + detRows + '</div>'
+          + _renderOtrosConceptos(grupo, base, ni)
+          + '</div>';
+
+      // ── MODE B: no nivel selected → full reference table ──────────
+      } else {
+        var ctxHtml2 = '<div class="nr-sal-ctx"><strong>' + esc(grupo) + '</strong> · '
+          + esc(d.label) + (base ? ' · ' + esc(base) : '') + '</div>';
+        var hdrHtml = '<div class="nr-sal-ref-hdr">Tabla retributiva — CC BCSA 2026'
+          + (compMAD ? ' · incluye complemento MAD' : '') + '</div>';
+
+        var tableRows = '';
+        for (var i = 0; i < d.niveles; i++) {
+          var rowTotal = d.salbase[i] + d.extra[i] + plusTr + compMAD
+            + (grupo === 'SCC' ? d.plus_scc[i] : 0);
+          tableRows += '<div class="nr-sal-ref-row">'
+            + '<span class="nr-sal-ref-nivel">N' + (i + 1) + '</span>'
+            + '<span class="nr-sal-ref-base">' + _fmtEur(d.salbase[i]) + '</span>'
+            + '<span class="nr-sal-ref-total">' + _fmtEur(rowTotal) + '</span>'
+            + '</div>';
+        }
+        var noteRef = 'Total fijo = base + extra + plus TR'
+          + (compMAD ? ' + comp. MAD ' + _fmtEur(compMAD) + '/mes (cond. 75% función)' : '')
+          + '. HV, DPO, guardia y dietas no incluidos. Selecciona tu nivel para ver el desglose personalizado.';
+
+        return '<div class="nr-sal-card">' + ctxHtml2 + hdrHtml + tableRows
+          + '<div class="nr-sal-note">' + esc(noteRef) + '</div>'
+          + _renderOtrosConceptos(grupo, base, null)
+          + '</div>';
+      }
+    }).join('');
+
+    return cards;
+  }
+
+  function salDtRow(lbl, val) {
+    return '<div class="nr-sal-dt-row"><span class="nr-sal-dt-lbl">' + esc(lbl) + '</span><span class="nr-sal-dt-val">' + _fmtEur(val) + '</span></div>';
+  }
+  function salDtRowTotal(lbl, val) {
+    return '<div class="nr-sal-dt-row nr-sal-dt-total"><span class="nr-sal-dt-lbl">' + esc(lbl) + '</span><span class="nr-sal-dt-val">' + _fmtEur(val) + '</span></div>';
+  }
+
+  window.ckToggleSalDetail = function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('open');
+    var card = el.parentElement;
+    var btn  = card ? card.querySelector('.nr-sal-toggle') : null;
+    if (btn) btn.textContent = el.classList.contains('open') ? 'Ocultar ↑' : 'Ver detalle ↓';
+  };
+
+  window.ckToggleSalOtros = function(id) {
+    var el  = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('open');
+    var btn = document.getElementById('btn-otros-' + id);
+    if (btn) btn.textContent = el.classList.contains('open') ? 'Ocultar conceptos ↑' : 'Conceptos variables, dietas y complementos ↓';
+  };
+
+  function _otroRow(name, tipo, desc, evidencia) {
+    var tagCls = tipo === 'fijo'         ? 'nr-sal-tag nr-sal-tag-fijo'
+               : tipo === 'condicionado' ? 'nr-sal-tag nr-sal-tag-cond'
+               : tipo === 'variable'     ? 'nr-sal-tag nr-sal-tag-var'
+               :                          'nr-sal-tag nr-sal-tag-pend';
+    var evHtml = '';
+    if (evidencia) {
+      var evCls = evidencia === 'documentado' ? 'nr-sal-ev nr-sal-ev-doc'
+                : evidencia === 'observado'   ? 'nr-sal-ev nr-sal-ev-obs'
+                : evidencia === 'mixto'       ? 'nr-sal-ev nr-sal-ev-mix'
+                :                              'nr-sal-ev nr-sal-ev-pend';
+      evHtml = '<span class="' + evCls + '">' + esc(evidencia) + '</span>';
+    }
+    return '<div class="nr-sal-otros-row">'
+      + '<span class="nr-sal-otros-name">' + name + '</span>'
+      + '<span class="nr-sal-otros-tags"><span class="' + tagCls + '">' + esc(tipo) + '</span>' + evHtml + '</span>'
+      + '<span class="nr-sal-otros-desc">' + desc + '</span>'
+      + '</div>';
+  }
+
+  function _renderOtrosConceptos(grupo, base, ni) {
+    var d = _SAL[grupo];
+    if (!d) return '';
+    var esPiloto = grupo === 'CMD' || grupo === 'COP';
+    var esSCC    = grupo === 'SCC';
+    var hayMAD   = base === 'MAD';
+    var T        = (typeof TABLAS !== 'undefined') ? TABLAS[grupo] : null;
+    var D        = (typeof DIETAS !== 'undefined') ? DIETAS : {};
+    var pctMAD   = hayMAD ? 1.20 : 1.00;
+    var sfxMAD   = hayMAD ? ' (+20% cond. product. colectiva)' : '';
+    var otrosId  = 'sal-otros-' + grupo + '-' + (base || 'X');
+
+    var body = '';
+
+    // ── Variables / actividad ──────────────────────────────────────
+    body += '<div class="nr-sal-otros-sec">';
+    body += '<div class="nr-sal-otros-sec-lbl">Variables — por actividad</div>';
+
+    if (esPiloto) {
+      if (ni != null && d.hv) {
+        var hv = d.hv;
+        body += _otroRow('HV T1 (61–70 h)', 'variable',
+          _fmtEur(hv.T1[ni]*pctMAD) + '/h' + sfxMAD + '. Variable por hora de bloque efectiva. Activa desde la hora 61 mensual. Art. 45 CC.', 'documentado');
+        body += _otroRow('HV T2 (71–80 h)', 'variable',
+          _fmtEur(hv.T2[ni]*pctMAD) + '/h' + sfxMAD + '. Tarifa superior al T1 por mayor acumulado mensual.', 'documentado');
+        body += _otroRow('HV T3 (81–90 h)', 'variable',
+          _fmtEur(hv.T3[ni]*pctMAD) + '/h' + sfxMAD + '.', 'documentado');
+        body += _otroRow('HV T4 (>90 h)', 'variable',
+          _fmtEur(hv.T4[ni]*pctMAD) + '/h' + sfxMAD + '. Tarifa máxima. Cada hora contabiliza individualmente al tramo activo.', 'documentado');
+      } else {
+        body += _otroRow('Horas de vuelo T1–T4', 'variable',
+          'Variable por hora de bloque efectiva. Tramos 61–70h · 71–80h · 81–90h · >90h. Activa desde hora 61 mensual. Art. 45 CC. Selecciona nivel para ver tarifas.', 'documentado');
+      }
+      body += _otroRow('Imaginaria (guardia pasiva)', 'variable',
+        '3 HV garantizadas por imaginaria programada, se active o no. '
+        + 'Si activa sin vuelo: +1 dieta nacional +1 HV adicional por cada 2h en sala de firmas. '
+        + 'Aplica: tripulante programado en imaginaria por la empresa. Art. 46/47 CC.', 'documentado');
+    } else {
+      if (ni != null && T) {
+        body += _otroRow('HV ordinaria T1 (61–70 h)', 'variable',
+          _fmtEur(T.hv_t1_o[ni]) + '/h · días ordinarios. No incluida en fijo. Activa desde hora 61.', 'documentado');
+        body += _otroRow('HV ordinaria T2–T4', 'variable',
+          'T2: ' + _fmtEur(T.hv_t2_o[ni]) + ' · T3: ' + _fmtEur(T.hv_t3_o[ni]) + ' · T4: ' + _fmtEur(T.hv_t4_o[ni]) + ' €/h · días ordinarios.', 'documentado');
+        body += _otroRow('HV reforzada T1 (61–70 h)', 'variable',
+          _fmtEur(T.hv_t1_r[ni]) + '/h · días de especial relevancia. Tarifa ~22% superior a ordinaria. No incluida en fijo.', 'documentado');
+        body += _otroRow('HV reforzada T2–T4', 'variable',
+          'T2: ' + _fmtEur(T.hv_t2_r[ni]) + ' · T3: ' + _fmtEur(T.hv_t3_r[ni]) + ' · T4: ' + _fmtEur(T.hv_t4_r[ni]) + ' €/h · días de especial relevancia.', 'documentado');
+      } else {
+        body += _otroRow('HV ordinaria (días O)', 'variable',
+          'Variable por hora de bloque. 4 tramos: 61–70 · 71–80 · 81–90 · >90h. Días tipo O. Selecciona nivel para ver tarifas.', 'documentado');
+        body += _otroRow('HV reforzada (días R)', 'variable',
+          'Tarifa ~22% superior a ordinaria. Aplica en días de especial relevancia asignados por la empresa. Selecciona nivel para ver tarifas.', 'documentado');
+      }
+    }
+
+    if (ni != null && T) {
+      body += _otroRow('Libre Volado &lt;24h',         'variable',
+        _fmtEur(T.lv1[ni]) + '/ud · vuelo realizado en día libre. Voluntario. Duración de ausencia de base inferior a 24h. Art. 46 CC.', 'documentado');
+      body += _otroRow('Libre Volado 24–72h',          'variable',
+        _fmtEur(T.lv2[ni]) + '/ud · ausencia de base entre 24 y 72h. Voluntario.', 'documentado');
+      body += _otroRow('Libre Volado &gt;72h',         'variable',
+        _fmtEur(T.lv3[ni]) + '/ud · ausencia de base superior a 72h. Voluntario.', 'documentado');
+    } else {
+      body += _otroRow('Libre Volado (&lt;24h · 24–72h · &gt;72h)', 'variable',
+        'Importe por unidad varía por nivel y duración de la ausencia de base. Voluntario. Selecciona nivel para ver tarifas. Art. 46 CC.', 'documentado');
+    }
+    body += '</div>';
+
+    // ── Dietas e indemnizaciones ───────────────────────────────────
+    body += '<div class="nr-sal-otros-sec">';
+    body += '<div class="nr-sal-otros-sec-lbl">Dietas e indemnizaciones</div>';
+
+    if (esPiloto) {
+      body += _otroRow('Dieta vuelo (manutención nac.)', 'variable',
+        '40,14 €/período · 36,06 € exento IRPF/SS. Por período de vuelo efectivo dentro del territorio nacional. No acumulable por hora. Art. 53 CC.', 'documentado');
+      body += _otroRow('Desplazamiento NAC sin pernocta', 'variable',
+        '54,64 €/día · 36,06 € exento. Actividad fuera de base habitual en territorio nacional, sin pernoctar. Aplica: el tripulante regresa a base el mismo día.', 'documentado');
+      body += _otroRow('Desplazamiento NAC con pernocta', 'variable',
+        '54,64 €/día · 53,34 € exento. Actividad fuera de base habitual en nacional, con pernocta incluida. Aplica: al menos una noche fuera de base.', 'documentado');
+      body += _otroRow('Desplazamiento INT sin pernocta', 'variable',
+        '72,48 €/día · 66,11 € exento. Actividad en ámbito internacional sin pernocta. Aplica: operación fuera del territorio nacional, vuelta el mismo día.', 'documentado');
+      body += _otroRow('Desplazamiento INT con pernocta', 'variable',
+        '72,48 €/pernoctación · exenta completa. Aplica: al menos una noche fuera en internacional.', 'documentado');
+      body += _otroRow('Destacamento NAC/día', 'variable',
+        '44,65 €/día · exento IRPF/SS. Asignación temporal a base nacional distinta a la habitual. No es dieta de vuelo — compensa el coste de vida en la base temporal. Aplica: por cada día efectivo en destacamento.', 'documentado');
+      body += _otroRow('Destacamento INT/día', 'variable',
+        '44,65 €/día · exento IRPF/SS. Mismo concepto en ámbito internacional. Mismo importe que NAC.', 'documentado');
+    } else {
+      // TCP/SCC: dietas son nivel-dependientes para dieta_nac y supl_int
+      if (ni != null && T) {
+        body += _otroRow('Dieta nacional/día', 'variable',
+          _fmtEur(T.dieta_nac[ni]) + ' €/día. Compensación por actividad. Nivel-dependiente. No acumulable por hora.', 'documentado');
+        body += _otroRow('Suplemento internacional/día', 'variable',
+          _fmtEur(T.supl_int[ni]) + ' €/día. Adicional a dieta nacional en operaciones internacionales. Nivel-dependiente.', 'documentado');
+      } else {
+        body += _otroRow('Dieta nacional/día', 'variable',
+          'Nivel-dependiente: N1 ' + (T ? _fmtEur(T.dieta_nac[0]) : '?') + ' → N5 ' + (T ? _fmtEur(T.dieta_nac[4]) : '?') + '. Selecciona nivel para ver tarifa exacta.', 'documentado');
+        body += _otroRow('Suplemento internacional/día', 'variable',
+          'Nivel-dependiente: N1 ' + (T ? _fmtEur(T.supl_int[0]) : '?') + ' → N5 ' + (T ? _fmtEur(T.supl_int[4]) : '?') + '. Adicional a dieta nacional.', 'documentado');
+      }
+      body += _otroRow('Pernoc. nacional/día', 'variable',
+        (T ? _fmtEur(T.supl_pernoc_nac) : '?') + ' €/día · uniforme todos los niveles. Por cada noche fuera de base en nacional.', 'documentado');
+      body += _otroRow('Pernoc. internacional/día', 'variable',
+        (T ? _fmtEur(T.supl_pernoc_int) : '?') + ' €/día · uniforme todos los niveles. Por cada noche fuera de base en internacional.', 'documentado');
+      body += _otroRow('Destacamento NAC/día', 'variable',
+        (T ? _fmtEur(T.dest_nac) : '?') + ' €/día · uniforme. Asignación temporal a base nacional distinta. Compensa coste de vida en base temporal. No es dieta de vuelo.', 'documentado');
+      body += _otroRow('Destacamento INT/día', 'variable',
+        (T ? _fmtEur(T.dest_int) : '?') + ' €/día · uniforme. Mismo concepto en internacional.', 'documentado');
+    }
+    body += '</div>';
+
+    // ── Complementos y bonos ───────────────────────────────────────
+    body += '<div class="nr-sal-otros-sec">';
+    body += '<div class="nr-sal-otros-sec-lbl">Complementos y bonos</div>';
+
+    if (hayMAD) {
+      body += _otroRow('Complemento base MAD', 'fijo',
+        _fmtEur(_MAD_COMP[grupo] || 0) + '/mes. Incluido en fijo mostrado. '
+        + 'Condición: ≥75% función asignada mensual. '
+        + 'Definición de "función asignada" no publicada por la empresa. L2 Acta §SÉPTIMO. Vigente desde 01/01/2026.',
+        'mixto');
+    }
+
+    if (esSCC) {
+      body += _otroRow('Plus sobrecargo', 'fijo',
+        ni != null
+          ? _fmtEur(d.plus_scc[ni]) + '/mes. Incluido en el fijo mostrado. Por ejercicio activo de función de Sobrecargo. Nivel-dependiente.'
+          : 'Nivel-dependiente. Incluido en el fijo mensual. Por ejercicio de función de Sobrecargo.',
+        'documentado');
+    }
+
+    if (esPiloto) {
+      if ((d.dpo_anual || 0) > 0) {
+        body += _otroRow('DPO — Productividad', 'condicionado',
+          _fmtEur(d.dpo_anual) + '/año máx. No incluido en fijo. Colectivo: eficiencia combustible (70%) + puntualidad Cota 15 (30%). '
+          + 'Matrices de consecución no publicadas en el acuerdo. PilotPay no puede calcular el importe real.',
+          'mixto');
+      } else {
+        body += _otroRow('DPO — Productividad', 'pendiente',
+          'Importe máximo no especificado para COP en las tablas disponibles. Colectivo, no individual. Pendiente de verificar.',
+          'pendiente');
+      }
+      if (hayMAD) {
+        body += _otroRow('HV +20% MAD', 'condicionado',
+          'Aplicado en tarifas HV mostradas. Condición colectiva: productividad media ≥11 días/mes en base MAD. '
+          + 'No cae automáticamente — requiere revisión formal con RLT. L2 Acta §SÉPTIMO.',
+          'documentado');
+      }
+    } else {
+      body += _otroRow('DPO — Productividad cabina', 'condicionado',
+        'No incluido en fijo. Colectivo: calidad de servicio (70%) + puntualidad Cota 15 (30%). '
+        + 'Matrices de consecución no publicadas. PilotPay no puede calcular el importe.',
+        'mixto');
+    }
+
+    body += _otroRow('Media de variables en vacaciones', 'condicionado',
+      'Durante las vacaciones se percibe la media de variables de los meses anteriores al disfrute. '
+      + 'Se abona en la nómina del mes siguiente al período disfrutado. Art. 46/47 CC.',
+      'documentado');
+
+    body += '</div>';
+
+    // ── Definiciones operativas ────────────────────────────────────
+    body += '<div class="nr-sal-otros-sec">';
+    body += '<div class="nr-sal-otros-sec-lbl">Definiciones operativas</div>';
+    body += '<div class="nr-sal-otros-defs">'
+      + '<strong>Salario base:</strong> fijo mensual por función y nivel. Sujeto íntegro a IRPF y SS. '
+      + '· <strong>Extra prorrateada:</strong> doce partes de las pagas extra. Incluida en el fijo mostrado. '
+      + '· <strong>Plus transporte:</strong> fijo de desplazamiento a base. Incluido en el fijo. '
+      + (esSCC ? '· <strong>Plus sobrecargo:</strong> fijo mensual por ejercer como SCC. Incluido en el fijo. ' : '')
+      + '· <strong>HV:</strong> variable por hora de bloque efectiva. Tramo determinado por acumulado mensual desde hora 61. No es fijo. '
+      + (esPiloto ? '· <strong>Imaginaria:</strong> guardia de disponibilidad. Genera HV mínimas se active o no. No es fijo. ' : '')
+      + '· <strong>Libre Volado:</strong> vuelo realizado en día libre. Voluntario. Importe por unidad, no por hora. '
+      + '· <strong>Dieta:</strong> compensación por actividad fuera de base. No es salario. Mayoritariamente exenta de IRPF/SS. '
+      + '· <strong>Destacamento:</strong> asignación temporal a base distinta. Compensa coste de vida. Exento IRPF/SS. Distinto a la dieta de vuelo. '
+      + '· <strong>DPO:</strong> bono de productividad colectivo. No fijo. No depende del desempeño individual. '
+      + (hayMAD ? '· <strong>Comp. MAD:</strong> complemento de base. Condicionado a ≥75% función asignada. Definición de "función" pendiente de empresa. ' : '')
+      + '</div>';
+    body += '</div>';
+
+    return '<div class="nr-sal-otros-wrap">'
+      + '<button id="btn-otros-' + otrosId + '" class="nr-sal-otros-toggle-btn" onclick="ckToggleSalOtros(\'' + otrosId + '\')">Conceptos variables, dietas y complementos ↓</button>'
+      + '<div class="nr-sal-otros-body" id="' + otrosId + '">' + body + '</div>'
+      + '</div>';
+  }
+
+  function renderAllPanels() {
+    if (!_allPanels.length) {
+      return '<div style="padding:24px 16px;text-align:center">'
+        + '<strong style="display:block;font-size:15px;color:var(--text2);margin-bottom:6px">Sin resultados</strong>'
+        + '<span style="font-size:13px;color:var(--text3)">Selecciona base y función para explorar la normativa.</span>'
+        + '</div>';
+    }
+
+    // Global context bar
+    var chips = '';
+    _ckBases.forEach(function(b)  { chips += '<span class="nr-ctx-chip">' + esc(b) + '</span>'; });
+    _ckGrupos.forEach(function(g) { chips += '<span class="nr-ctx-chip">' + esc(g) + '</span>'; });
+    if (_ckNivel) chips += '<span class="nr-ctx-chip">' + esc(_ckNivel) + '</span>';
+    var ctxBar = '<div class="nr-ctx-bar"><span style="font-size:10px;font-family:var(--mono);color:var(--blue);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0">Normativa para</span>' + chips + '</div>';
+
+    var CAT_ORDER = ['roster','programacion','vacaciones','complementos','hv','actividad_descanso','uniformidad','it_bajas','licencias','productividad','reduccion_jornada','dias_libres','tablas_salariales','general'];
+    var showHeader = _allPanels.length > 1;
+    var panelsHtml = _allPanels.map(function(p) {
+      var header = '';
+      if (showHeader) {
+        var lbl = p.ctx.grupoLabel || ([p.ctx.base, p.ctx.grupo].filter(Boolean).join(' · ') || 'General');
+        header = '<div class="ck-panel-head"><span class="ck-panel-lbl">' + esc(lbl) + '</span></div>';
+      }
+      var salaryHtml = renderSalaryBlock(p);
+      if (!p.reglas || !p.reglas.length) {
+        return header + salaryHtml + '<div style="padding:12px 16px;font-size:13px;color:var(--text3)">Sin normativa para este perfil.</div>';
+      }
+      var sits = resolverSituacionesEfectivas(p.reglas);
+      sits.sort(function(a, b) {
+        var ia = CAT_ORDER.indexOf(a.categoria), ib = CAT_ORDER.indexOf(b.categoria);
+        if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+        return ia - ib;
+      });
+      if (_ckTemas) {
+        sits = sits.filter(function(s) { return _ckTemas.has(s.categoria); });
+      }
+      var mergedGrupos = p.ctx.mergedGrupos || null;
+      var catsH = sits.map(function(sit) {
+        var cfg   = CAT_CFG[sit.categoria] || { label: sit.categoria, ico: '📄' };
+        var metaH = sit.temporal ? ' <span class="nr-cat-head-meta">temporal</span>' : '';
+        return '<div class="nr-cat-head"><span class="nr-cat-head-ico">' + cfg.ico + '</span><span class="nr-cat-head-lbl">' + esc(cfg.label) + '</span>' + metaH + '</div>'
+          + '<div class="nr-cat-card">' + renderSituacion(sit, p.ctx.base, p.ctx.grupo, mergedGrupos) + '</div>';
+      }).join('');
+      return header + salaryHtml + '<div style="padding:4px 0 0">' + catsH + '</div>';
+    }).join('');
+
+    return ctxBar + panelsHtml;
+  }
+
+  function _reRenderInner() {
+    var inner = document.getElementById('ck-results-inner');
+    if (inner) inner.innerHTML = renderAllPanels();
+  }
+
+  window.ckChipBase = function(val) {
+    if (_ckBases.has(val)) _ckBases.delete(val);
+    else _ckBases.add(val);
+    _setChipActiveMulti('ck-chips-base', _ckBases);
+    _ckTemas = null;
+    ckConsultar();
+  };
+
+  function _updateNivelChips() {
+    var hasCMD  = _ckGrupos.has('CMD');
+    var hasCOP  = _ckGrupos.has('COP');
+    var noGrup  = _ckGrupos.size === 0;
+    var piloto  = hasCMD || hasCOP || noGrup;
+    var cmdCtx  = hasCMD || noGrup;
+    var row     = document.getElementById('ck-chips-nivel');
+    if (!row) return;
+    Array.prototype.forEach.call(row.querySelectorAll('.ck-chip'), function(c) {
+      var txt = c.textContent.trim();
+      if (txt === 'N1+') c.style.display = cmdCtx ? '' : 'none';
+      if (txt === 'N6')  c.style.display = piloto  ? '' : 'none';
+    });
+    if (_ckNivel === 'N1+' && !cmdCtx) { _ckNivel = null; _setChipActiveNivel(null); }
+    if (_ckNivel === 'N6'  && !piloto) { _ckNivel = null; _setChipActiveNivel(null); }
+  }
+
+  window.ckChipGrupo = function(val) {
+    if (_ckGrupos.has(val)) _ckGrupos.delete(val);
+    else _ckGrupos.add(val);
+    _setChipActiveMulti('ck-chips-grupo', _ckGrupos);
+    _updateNivelChips();
+    _ckTemas = null;
+    ckConsultar();
+  };
+
+  window.ckChipNivel = function(val) {
+    _ckNivel = (_ckNivel === val) ? null : val;
+    _setChipActiveNivel(_ckNivel);
+    _reRenderInner();
+  };
+
+  window.ckNivelClear = function() {
+    _ckNivel = null;
+    _setChipActiveNivel(null);
+    _reRenderInner();
+  };
+
+  function _setChipActiveNivel(val) {
+    Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-nivel .ck-chip'), function(c) {
+      c.classList.toggle('active', c.textContent.trim() === val);
+    });
+  }
+
+  window.ckChipTema = function(val) {
+    if (!_ckTemas) {
+      _ckTemas = new Set();
+      Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
+        _ckTemas.add(c.getAttribute('data-tema'));
+      });
+    }
+    if (_ckTemas.has(val)) _ckTemas.delete(val);
+    else _ckTemas.add(val);
+    Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
+      c.classList.toggle('active', _ckTemas.has(c.getAttribute('data-tema')));
+    });
+    _reRenderInner();
+  };
+
+  window.ckTemasAll = function() {
+    _ckTemas = null;
+    Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
+      c.classList.add('active');
+    });
+    _reRenderInner();
+  };
+
+  window.ckTemasNone = function() {
+    _ckTemas = new Set();
+    Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
+      c.classList.remove('active');
+    });
+    _reRenderInner();
+  };
 
   function restoreCtx() {
     var s = _loadCtx();
     if (!s) return;
-    var m = { 'ck-ctx-base': s.base, 'ck-ctx-grupo': s.grupo, 'ck-ctx-ant': s.antiguedad_años, 'ck-ctx-fecha': s.fecha };
-    Object.keys(m).forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && m[id] !== null && m[id] !== undefined && m[id] !== '') el.value = m[id];
-    });
+    var savedBases  = s.bases  || (s.base  ? [s.base]  : []);
+    var savedGrupos = s.grupos || (s.grupo ? [s.grupo] : []);
+    savedBases.forEach(function(b)  { if (b) _ckBases.add(b); });
+    savedGrupos.forEach(function(g) { if (g) _ckGrupos.add(g); });
+    _setChipActiveMulti('ck-chips-base',  _ckBases);
+    _setChipActiveMulti('ck-chips-grupo', _ckGrupos);
+    if (s.nivel) { _ckNivel = s.nivel; _setChipActiveNivel(_ckNivel); }
+    _updateNivelChips();
   }
 
   // ── API pública ──
 
-  window.ckRender = function() {
-    showView('home');
-    setDefaultDate();
-    restoreCtx();
-    renderFaqs(_lastCtx);
-    renderPopular();
-    if (_lastResults && _lastCtx) {
-      var wrap  = document.getElementById('ck-results-wrap');
-      var inner = document.getElementById('ck-results-inner');
-      if (inner) inner.innerHTML = renderResults(_lastResults, _lastCtx);
-      if (wrap)  wrap.style.display = 'block';
+  function renderGlosario() {
+    var el = document.getElementById('ck-glosario-content');
+    if (!el || el.innerHTML) return;
+    el.innerHTML = GLOSARIO.map(function(g) {
+      return '<div class="ck-glosario-row"><span class="ck-glosario-term">' + esc(g[0]) + '</span><span class="ck-glosario-def">' + esc(g[1]) + '</span></div>';
+    }).join('');
+  }
+
+  window.ckToggleGlosario = function() {
+    var content = document.getElementById('ck-glosario-content');
+    var ico     = document.getElementById('ck-glosario-ico');
+    if (!content) return;
+    var open = content.classList.contains('open');
+    if (open) {
+      content.classList.remove('open');
+      if (ico) { ico.textContent = '▼'; ico.classList.remove('open'); }
+    } else {
+      renderGlosario();
+      content.classList.add('open');
+      if (ico) { ico.textContent = '▲'; ico.classList.add('open'); }
     }
   };
 
+  window.ckRender = function() {
+    showView('home');
+    restoreCtx();
+    ckConsultar();
+  };
+
   window.ckConsultar = function() {
-    if (typeof NormativaEngine === 'undefined') { alert('Motor normativo no disponible.'); return; }
-    var base   = (document.getElementById('ck-ctx-base')  || {}).value || '';
-    var grupo  = (document.getElementById('ck-ctx-grupo') || {}).value || '';
-    var antStr = (document.getElementById('ck-ctx-ant')   || {}).value || '';
-    var fecha  = (document.getElementById('ck-ctx-fecha') || {}).value || '';
-    if (!base && !grupo) { alert('Selecciona al menos tu base o tu función.'); return; }
-    var ctx = {
-      base:   base  || null,
-      grupo:  grupo || null,
-      fecha:  fecha || new Date().toISOString().slice(0,10),
-      antiguedad_años: antStr !== '' ? parseFloat(antStr) : null,
-      categorias: null,
-      condicionesActivas: [],
-      condicionesInactivas: [],
-    };
-    _saveCtx({ base: base, grupo: grupo, antiguedad_años: ctx.antiguedad_años, fecha: fecha });
-    var reglas   = NormativaEngine.resolveContext(ctx);
-    _lastCtx     = ctx;
-    _lastResults = reglas;
-    _resultMap   = {};
-    reglas.forEach(function(r) { _resultMap[r.id] = r; });
+    if (typeof NormativaEngine === 'undefined') {
+      renderFaqs(null);
+      renderPopular();
+      return;
+    }
+    var bases  = _ckBases.size  ? Array.from(_ckBases)  : [null];
+    var grupos = _ckGrupos.size ? Array.from(_ckGrupos) : [null];
+    var today  = new Date().toISOString().slice(0,10);
+
+    _saveCtx({
+      bases:  Array.from(_ckBases), grupos: Array.from(_ckGrupos),
+      base:   bases[0]  || '', grupo: grupos[0] || '',
+      nivel: _ckNivel || '',
+    });
+
+    _allPanels = [];
+    _resultMap = {};
+    var allReglas = [];
+
+    bases.forEach(function(base) {
+      grupos.forEach(function(grupo) {
+        var ctx = {
+          base:   base  || null,
+          grupo:  grupo || null,
+          fecha:  today,
+          antiguedad_años: null,
+          categorias: null,
+          condicionesActivas: [],
+          condicionesInactivas: [],
+        };
+        var reglas = NormativaEngine.resolveContext(ctx);
+        _allPanels.push({ reglas: reglas, ctx: ctx });
+        reglas.forEach(function(r) { _resultMap[r.id] = r; allReglas.push(r); });
+      });
+    });
+
+    // Merge CMD+COP and SCC+TCP pairs (same base) into single semantic panels
+    _allPanels = _smartMerge(_allPanels);
+    // Rebuild allReglas and _resultMap from merged panels to keep consistent
+    allReglas = [];
+    _resultMap = {};
+    _allPanels.forEach(function(p) {
+      p.reglas.forEach(function(r) { if (!_resultMap[r.id]) { _resultMap[r.id] = r; allReglas.push(r); } });
+    });
+
+    _lastCtx     = _allPanels.length === 1 ? _allPanels[0].ctx
+      : { base: bases[0]||null, grupo: grupos[0]||null, fecha: today, antiguedad_años: null };
+    _lastResults = allReglas;
+    _ckTemas     = null;
+
+    // Tema chips: unique categories across all panels
+    var CAT_ORDER = ['roster','programacion','vacaciones','complementos','hv','actividad_descanso','uniformidad','it_bajas','licencias','productividad','reduccion_jornada','dias_libres','tablas_salariales','general'];
+    var temaCats = new Set();
+    _allPanels.forEach(function(p) {
+      resolverSituacionesEfectivas(p.reglas).forEach(function(s) { temaCats.add(s.categoria); });
+    });
+    var temasSits = Array.from(temaCats)
+      .sort(function(a, b) { var ia=CAT_ORDER.indexOf(a),ib=CAT_ORDER.indexOf(b);if(ia<0)ia=99;if(ib<0)ib=99;return ia-ib; })
+      .map(function(cat) { return { categoria: cat }; });
+    _renderTemaChips(temasSits);
+
     var inner = document.getElementById('ck-results-inner');
     var wrap  = document.getElementById('ck-results-wrap');
-    if (inner) inner.innerHTML = renderResults(reglas, ctx);
-    if (wrap)  wrap.style.display = 'block';
-    renderFaqs(ctx);
+    if (inner) inner.innerHTML = renderAllPanels();
+    if (wrap)  wrap.style.display = _allPanels.length ? 'block' : 'none';
+    renderFaqs(_lastCtx);
     renderPopular();
-    var page = document.getElementById('page-convenio');
-    if (page && wrap) page.scrollTo({ top: Math.max(0, wrap.offsetTop - 60), behavior: 'smooth' });
   };
 
   window.ckShowNormaRule = function(id) {

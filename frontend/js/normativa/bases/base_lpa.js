@@ -101,7 +101,7 @@ var LPA_REGLAS = [
     titulo:    'Actividades en descanso — LPA (roster 5+3)',
     texto:     'Con el roster 5+3 activo en LPA, las siguientes actividades pueden programarse en el PRIMER o ÚLTIMO día del bloque de 3 días de descanso, convirtiendo el patrón efectivo en 6+2. Las que SÍ cuentan como actividad operativa (afectan a FDP): formación online, vuelo posicional para simulador/verificaciones, día de oficina (solo personal sin función de responsabilidad), auditorías e inspecciones, competencia lingüística. Las que NO cuentan como actividad operativa (NO afectan a FDP ni descanso mínimo): reconocimiento médico, horas sindicales en días de libranza (si no hay hueco en el bloque de 3, pueden ir al bloque de actividad).',
     _meta: {
-      doc: 'roster_lpa_2026', capa: 'L3_ACUERDO', articulo: 'CUARTO',
+      doc: 'roster_lpa_2026', capa: 'L3_ACUERDO', articulo: 'SEGUNDO',
       vigencia_desde: '2026-05-01', vigencia_hasta: '2026-11-01',
       bases: ['LPA'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
       condicionado_a: 'roster_5_3_implantado',
