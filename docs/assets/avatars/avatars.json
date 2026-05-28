@@ -123,6 +123,30 @@
       "active": true
     },
     {
+      "id": "cop_m_005",
+      "role": "cop",
+      "gender": "male",
+      "name": "Copiloto hombre 005",
+      "src": "assets/avatars/cop/male/cop_m_005.png",
+      "active": true
+    },
+    {
+      "id": "cop_m_006",
+      "role": "cop",
+      "gender": "male",
+      "name": "Copiloto hombre 006",
+      "src": "assets/avatars/cop/male/cop_m_006.png",
+      "active": true
+    },
+    {
+      "id": "cop_m_007",
+      "role": "cop",
+      "gender": "male",
+      "name": "Copiloto hombre 007",
+      "src": "assets/avatars/cop/male/cop_m_007.png",
+      "active": true
+    },
+    {
       "id": "cop_f_001",
       "role": "cop",
       "gender": "female",
@@ -148,19 +172,27 @@
     },
     {
       "id": "tcp_f_002",
-      "role": "TCP",
+      "role": "tcp",
       "gender": "female",
       "name": "Tripulante mujer 002",
       "src": "assets/avatars/tcp/female/tcp_f_002.png",
-      "active": false
+      "active": true
     },
     {
       "id": "tcp_f_003",
-      "role": "TCP",
+      "role": "tcp",
       "gender": "female",
       "name": "Tripulante mujer 003",
       "src": "assets/avatars/tcp/female/tcp_f_003.png",
-      "active": false
+      "active": true
+    },
+    {
+      "id": "tcp_f_004",
+      "role": "tcp",
+      "gender": "female",
+      "name": "Tripulante mujer 004",
+      "src": "assets/avatars/tcp/female/tcp_f_004.png",
+      "active": true
     }
   ]
 }
