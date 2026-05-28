@@ -3863,6 +3863,311 @@ Complemento de Base MAD: 1500"></textarea>
         .nr-tbl-n1plus-title { font-size: 10px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--blue); margin-bottom: 5px; font-weight: 700; }
         .nr-tbl-n1plus-req { font-size: 10px; color: var(--text3); line-height: 1.55; margin-bottom: 7px; }
 
+        /* ── Convenio Colectivo — home entry ── */
+        .ck-cc-entry { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; transition: background .1s; }
+        .ck-cc-entry:hover { background: var(--bg2); }
+        .ck-cc-entry-ico { font-size: 20px; flex-shrink: 0; }
+        .ck-cc-entry-meta { flex: 1; min-width: 0; }
+        .ck-cc-entry-title { font-size: 13px; font-weight: 600; color: var(--text1); line-height: 1.3; }
+        .ck-cc-entry-sub { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-top: 3px; }
+        .ck-cc-entry-arrow { color: var(--text3); font-size: 14px; flex-shrink: 0; }
+
+        /* ── CC Reader — 3-panel layout ── */
+        .cc-reader-layout { display: flex; align-items: flex-start; min-height: 100%; }
+        .cc-reader-main   { flex: 1; min-width: 0; }
+
+        /* ===== SIDEBAR ===== */
+        .cc-sidebar {
+          width: 300px; flex-shrink: 0;
+          position: sticky; top: 0; height: 100vh;
+          overflow-y: auto; overflow-x: hidden;
+          border-right: 1px solid var(--border);
+          background: var(--bg);
+          display: none; flex-direction: column;
+          scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        @media (min-width: 900px) { .cc-sidebar { display: flex; } }
+        .cc-sidebar::-webkit-scrollbar { width: 3px; }
+        .cc-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .cc-sidebar.cc-sidebar-open {
+          display: flex; flex-direction: column;
+          position: fixed; top: 0; left: 0; bottom: 0;
+          width: 300px; z-index: 300;
+          box-shadow: 4px 0 20px rgba(0,0,0,.12);
+        }
+        .cc-toc-hd { display: none; flex-shrink: 0; }
+        .cc-sidebar.cc-sidebar-open .cc-toc-hd {
+          display: flex; align-items: center; justify-content: flex-end;
+          padding: 14px 16px 10px;
+        }
+        .cc-toc-hd-lbl { display: none; }
+        .cc-toc-close {
+          font-size: 14px; color: var(--text3); background: none;
+          border: none; cursor: pointer; padding: 4px; line-height: 1; opacity: .5;
+          transition: opacity .1s;
+        }
+        .cc-toc-close:hover { opacity: .9; }
+        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 16px 0 40px; scrollbar-width: thin; }
+        .cc-toc-section { margin-bottom: 0; }
+        .cc-toc-section + .cc-toc-section { margin-top: 18px; }
+        .cc-toc-cap-hd {
+          display: flex; align-items: baseline; gap: 10px;
+          padding: 4px 20px 4px; cursor: pointer; user-select: none;
+        }
+        .cc-toc-cap-hd:hover .cc-toc-cap-name { color: var(--text1); }
+        .cc-toc-cap-num {
+          font-size: 7px; font-family: var(--mono); color: var(--text3);
+          text-transform: uppercase; letter-spacing: .06em; font-weight: 600;
+          min-width: 26px; flex-shrink: 0; padding-top: 2px; opacity: .6;
+        }
+        .cc-toc-cap-name {
+          font-size: 11.5px; font-weight: 600; color: var(--text2);
+          line-height: 1.35; transition: color .12s;
+        }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num { opacity: .6; }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text1); font-weight: 700; }
+        .cc-toc-arts { padding-bottom: 4px; }
+        .cc-toc-art-item {
+          display: flex; align-items: baseline; gap: 8px;
+          padding: 4px 20px 4px 44px;
+          cursor: pointer; border-left: 2px solid transparent;
+          transition: color .1s, border-color .1s;
+        }
+        .cc-toc-art-item:hover .cc-toc-art-name { color: var(--text2); }
+        .cc-toc-art-num {
+          font-size: 8px; font-family: var(--mono); color: var(--text3);
+          min-width: 16px; flex-shrink: 0; padding-top: 1px; opacity: .55;
+        }
+        .cc-toc-art-name { font-size: 10.5px; color: var(--text3); line-height: 1.5; }
+        .cc-toc-art-item.cc-toc-art-active { border-left-color: var(--blue); }
+        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-num { opacity: .8; }
+        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text1); font-weight: 500; }
+        .cc-nav-bar { display: flex; align-items: center; justify-content: space-between; }
+        .cc-toc-btn {
+          font-size: 9px; font-family: var(--mono); color: var(--text3);
+          background: none; border: 1px solid var(--border); border-radius: 4px;
+          padding: 3px 10px; cursor: pointer; letter-spacing: .04em; opacity: .75;
+          transition: opacity .1s;
+        }
+        .cc-toc-btn:hover { opacity: 1; }
+
+        /* ===== CENTER READER ===== */
+        .cc-art-display { max-width: 680px; margin: 0 auto; padding: 0 44px 100px; }
+        .cc-welcome { padding: 52px 0 32px; }
+        .cc-welcome-title {
+          font-size: 18px; font-weight: 600; color: var(--text1);
+          line-height: 1.35; margin-bottom: 10px; letter-spacing: -.01em;
+        }
+        .cc-welcome-boe {
+          font-size: 7.5px; font-family: var(--mono); color: var(--text3);
+          margin-bottom: 20px; letter-spacing: .09em; text-transform: uppercase; opacity: .7;
+        }
+        .cc-welcome-note {
+          font-size: 12.5px; color: var(--text3); line-height: 1.8;
+          padding-bottom: 24px; border-bottom: 1px solid var(--border); max-width: 460px;
+        }
+        .cc-welcome-caps { margin-top: 20px; display: flex; flex-direction: column; }
+        .cc-welcome-cap {
+          display: flex; align-items: baseline; gap: 16px;
+          padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+        }
+        .cc-welcome-cap:hover .cc-welcome-cap-title { color: var(--text1); }
+        .cc-welcome-cap-num {
+          font-size: 7.5px; font-family: var(--mono); color: var(--text3);
+          text-transform: uppercase; letter-spacing: .08em; min-width: 44px;
+          flex-shrink: 0; opacity: .65;
+        }
+        .cc-welcome-cap-title {
+          font-size: 13px; font-weight: 400; color: var(--text2);
+          flex: 1; line-height: 1.4; transition: color .12s;
+        }
+        .cc-welcome-cap-count {
+          font-size: 7.5px; font-family: var(--mono); color: var(--text3);
+          white-space: nowrap; flex-shrink: 0; opacity: .5;
+        }
+        .cc-breadcrumb {
+          display: flex; align-items: center; gap: 5px;
+          padding: 28px 0 0; flex-wrap: wrap;
+        }
+        .cc-bc-item { font-size: 10px; color: var(--text3); cursor: pointer; transition: color .1s; opacity: .7; }
+        .cc-bc-item:hover { color: var(--text2); opacity: 1; }
+        .cc-bc-sep { color: var(--border2); font-size: 10px; user-select: none; opacity: .5; }
+        .cc-bc-current { color: var(--text2); cursor: default; opacity: .9; }
+        .cc-bc-current:hover { color: var(--text2); opacity: .9; }
+        .cc-art-reader-num {
+          font-size: 7.5px; font-family: var(--mono); color: var(--text3);
+          text-transform: uppercase; letter-spacing: .16em; margin-top: 28px; opacity: .45;
+        }
+        .cc-art-reader-title {
+          font-size: 21px; font-weight: 700; color: var(--text1);
+          line-height: 1.25; margin: 8px 0 12px; letter-spacing: -.02em;
+        }
+        .cc-art-reader-meta {
+          display: flex; align-items: center; gap: 6px;
+          flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--border);
+        }
+        .cc-art-reader-section { margin-top: 32px; }
+        .cc-art-reader-section-lbl {
+          font-size: 7px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .18em; color: var(--text3); font-weight: 500;
+          opacity: .45; margin-bottom: 16px;
+        }
+        .cc-art-reader-txt { font-size: 15.5px; color: var(--text1); line-height: 1.9; }
+        .cc-art-reader-txt p { margin: 0 0 1.2em; }
+        .cc-art-reader-txt p:last-child { margin-bottom: 0; }
+        .cc-art-pend-txt { font-size: 12.5px; color: var(--text3); font-style: italic; line-height: 1.65; opacity: .75; }
+        .cc-art-reader-pilotpay-sec { margin-top: 48px; }
+        .cc-art-reader-pilotpay-sec .cc-art-reader-section-lbl { margin-bottom: 14px; }
+        .cc-art-reader-resumen { font-size: 12.5px; color: var(--text2); line-height: 1.8; margin-bottom: 18px; }
+        .cc-art-reader-afect-lbl {
+          font-size: 7px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .12em; color: var(--amber); font-weight: 600; opacity: .8;
+          margin-bottom: 12px;
+        }
+        .cc-art-reader-afect-item { font-size: 12.5px; color: var(--text2); margin-top: 14px; line-height: 1.7; }
+        .cc-art-reader-afect-item:first-of-type { margin-top: 0; }
+        .cc-art-afect-src {
+          font-size: 6.5px; font-family: var(--mono); color: var(--amber);
+          text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; opacity: .75;
+        }
+        .cc-art-reader-related-lbl {
+          font-size: 7px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .12em; color: var(--text3); font-weight: 500; margin: 20px 0 9px; opacity: .6;
+        }
+        .cc-art-related-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+        .cc-art-related-tag {
+          font-size: 9.5px; color: var(--text3); cursor: pointer; font-family: var(--mono);
+          padding: 2px 7px; border: 1px solid var(--border); border-radius: 3px; opacity: .8;
+          transition: opacity .1s, color .1s, border-color .1s;
+        }
+        .cc-art-related-tag:hover { opacity: 1; color: var(--blue); border-color: var(--blue); }
+        .cc-art-faq-item { margin-top: 18px; }
+        .cc-art-faq-item:first-of-type { margin-top: 0; }
+        .cc-art-faq-q { font-size: 13px; font-weight: 600; color: var(--text1); margin-bottom: 5px; line-height: 1.4; }
+        .cc-art-faq-a { font-size: 12.5px; color: var(--text2); line-height: 1.75; }
+        .cc-art-reader-nav {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--border); gap: 12px;
+        }
+        .cc-art-reader-nav-btn {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+          background: none; border: none; padding: 0; cursor: pointer; opacity: .65;
+          transition: opacity .1s; white-space: nowrap;
+          overflow: hidden; text-overflow: ellipsis; max-width: 48%;
+        }
+        .cc-art-reader-nav-btn:hover { opacity: 1; color: var(--text2); }
+
+        /* ===== TABLA DE UNIFORMIDAD ===== */
+        .cc-uniforme-table {
+          width: 100%; border-collapse: collapse;
+          margin: 4px 0 8px;
+        }
+        .cc-uniforme-table th {
+          font-size: 7.5px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .13em; color: var(--text3); font-weight: 600; opacity: .7;
+          text-align: left; padding: 0 16px 10px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .cc-uniforme-table th:last-child { padding-right: 0; }
+        .cc-uniforme-table td {
+          font-size: 13.5px; color: var(--text2);
+          padding: 9px 16px 9px 0;
+          border-bottom: 1px solid var(--border);
+          line-height: 1.4; vertical-align: top;
+        }
+        .cc-uniforme-table td:last-child { padding-right: 0; }
+        .cc-uniforme-table tbody tr:last-child td { border-bottom: none; }
+        .cc-uniforme-table tbody tr:hover td { color: var(--text1); }
+        .cc-uniforme-table td:first-child { color: var(--text1); }
+        .cc-uniforme-table td:nth-child(2) {
+          font-family: var(--mono); font-size: 12px; color: var(--text3);
+          white-space: nowrap; width: 88px;
+        }
+        .cc-uniforme-table td:nth-child(3) {
+          font-family: var(--mono); font-size: 12px; color: var(--text3); white-space: nowrap;
+        }
+        .cc-uniforme-intro { margin-bottom: 20px; }
+        .cc-uniforme-footer { margin-top: 24px; }
+
+        /* ===== PANEL CONTEXTUAL ===== */
+        .cc-ctx-panel {
+          width: 236px; flex-shrink: 0;
+          position: sticky; top: 0; height: 100vh;
+          overflow-y: auto; border-left: 1px solid var(--border);
+          padding: 28px 20px 40px; display: none; scrollbar-width: thin;
+          scrollbar-color: var(--border) transparent;
+        }
+        @media (min-width: 1200px) { .cc-ctx-panel { display: block; } }
+        .cc-ctx-panel::-webkit-scrollbar { width: 3px; }
+        .cc-ctx-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .cc-ctx-section { margin-bottom: 0; padding: 18px 0; border-bottom: 1px solid var(--border); }
+        .cc-ctx-section:first-child { padding-top: 0; }
+        .cc-ctx-section:last-child { border-bottom: none; }
+        .cc-ctx-lbl {
+          font-size: 7.5px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .14em; color: var(--text3); font-weight: 700;
+          margin-bottom: 10px;
+        }
+        .cc-ctx-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+        .cc-ctx-tag {
+          font-size: 9px; font-family: var(--mono); padding: 2px 7px; border-radius: 3px;
+          border: 1px solid var(--border2); color: var(--text2);
+          text-transform: uppercase; letter-spacing: .05em;
+        }
+        .cc-ctx-afect-item {
+          font-size: 11px; color: var(--text2); line-height: 1.65;
+          margin-top: 12px;
+        }
+        .cc-ctx-afect-item:first-of-type { margin-top: 0; }
+        .cc-ctx-afect-src {
+          font-size: 7px; font-family: var(--mono); color: var(--amber);
+          text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
+        }
+        .cc-ctx-related-tag {
+          font-size: 11px; color: var(--blue); cursor: pointer;
+          display: inline-block; margin-bottom: 6px; transition: opacity .1s;
+          opacity: .85; text-decoration: underline; text-underline-offset: 2px;
+          text-decoration-color: color-mix(in srgb, var(--blue) 30%, transparent);
+        }
+        .cc-ctx-related-tag:hover { opacity: 1; }
+        .cc-ctx-fuente {
+          font-size: 9px; font-family: var(--mono); color: var(--text3); line-height: 1.5;
+        }
+        .cc-ctx-panel .cc-art-estado {
+          padding: 3px 7px; border-radius: 3px; display: inline-block;
+        }
+        .cc-ctx-panel .cc-art-estado-vigente       { background: var(--green-dim); }
+        .cc-ctx-panel .cc-art-estado-complementado { background: var(--blue-dim); }
+        .cc-ctx-panel .cc-art-estado-matizado      { background: var(--amber-dim); }
+        .cc-ctx-panel .cc-art-estado-corregido     { background: var(--red-dim); }
+        .cc-ctx-panel .cc-art-estado-pendiente     { background: var(--bg3); }
+        .cc-ctx-panel .cc-art-estado-modificado    { background: var(--red-dim); }
+        .cc-ctx-panel .cc-art-estado-suspendido    { background: var(--amber-dim); }
+        .cc-ctx-panel .cc-art-estado-condicionado  { background: var(--amber-dim); }
+        .cc-ctx-panel .cc-art-estado-interpretado  { background: var(--blue-dim); }
+
+        /* ===== ESTADO Y COLECTIVOS (en articulo) ===== */
+        .cc-art-estado {
+          font-size: 7px; font-family: var(--mono);
+          white-space: nowrap; text-transform: uppercase; letter-spacing: .08em; font-weight: 700;
+        }
+        .cc-art-estado-vigente       { color: var(--green); }
+        .cc-art-estado-complementado { color: var(--blue); }
+        .cc-art-estado-matizado      { color: var(--amber); }
+        .cc-art-estado-corregido     { color: var(--red); }
+        .cc-art-estado-pendiente     { color: var(--text3); opacity: .6; }
+        .cc-art-estado-modificado    { color: var(--red); }
+        .cc-art-estado-suspendido    { color: var(--amber); }
+        .cc-art-estado-condicionado  { color: var(--amber2,#b45309); }
+        .cc-art-estado-interpretado  { color: var(--blue); }
+        .cc-art-col-tag {
+          font-size: 7px; font-family: var(--mono); color: var(--text3);
+          text-transform: uppercase; letter-spacing: .06em; opacity: .6;
+        }
+
+        @keyframes cc-art-flash { 0% { opacity: .45; } 100% { opacity: 1; } }
+        .cc-art-reader-hl { animation: cc-art-flash .4s ease-out forwards; }
+
         /* ── Normative state badges ── */
         .nr-badge {
           display: inline-flex; align-items: center; gap: 3px;
@@ -4058,9 +4363,24 @@ Complemento de Base MAD: 1500"></textarea>
           </div>
         </div>
 
-        <!-- Panel de exploración normativa -->
+        <!-- Convenio Colectivo — PRIMERO (fuente normativa madre) -->
         <div class="ck-block">
-          <div class="ck-block-label">Explorar normativa</div>
+          <div class="ck-block-label">Convenio Colectivo · Fuente base</div>
+          <div class="card" style="padding:0">
+            <div class="ck-cc-entry" onclick="ckOpenCC()">
+              <div class="ck-cc-entry-ico">📋</div>
+              <div class="ck-cc-entry-meta">
+                <div class="ck-cc-entry-title">Convenio Colectivo Binter Canarias 2026–2031</div>
+                <div class="ck-cc-entry-sub">Texto oficial BOE-A-2026-6389 · Índice por capítulos · Artículos · Notas de afectación</div>
+              </div>
+              <div class="ck-cc-entry-arrow">→</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acuerdos y aplicación -->
+        <div class="ck-block">
+          <div class="ck-block-label">Acuerdos y aplicación</div>
           <div class="card" style="padding:0">
             <div class="ck-filter-panel">
               <div class="ck-filter-row">
@@ -4154,6 +4474,19 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="ck-nav"><button class="ck-back" onclick="ckBack()">← Volver</button></div>
         <div id="ck-answer-content"></div>
       </div><!-- /ck-v-answer -->
+
+      <!-- VIEW: CONVENIO COLECTIVO -->
+      <div id="ck-v-cc" class="ck-view">
+        <div class="ck-nav cc-nav-bar">
+          <button class="ck-back" onclick="ckBack()">← Volver</button>
+          <button class="cc-toc-btn" onclick="ccToggleSidebar()">≡ Índice</button>
+        </div>
+        <div class="cc-reader-layout">
+          <nav id="cc-sidebar" class="cc-sidebar"></nav>
+          <div id="ck-cc-content" class="cc-reader-main"></div>
+          <aside id="cc-ctx-panel" class="cc-ctx-panel"></aside>
+        </div>
+      </div><!-- /ck-v-cc -->
 
     </div><!-- /page-convenio -->
 
@@ -4550,6 +4883,7 @@ Complemento de Base MAD: 1500"></textarea>
 <script src="js/normativa/bases/base_lpa.js"></script>
 <script src="js/normativa/acuerdos/productividad_2026.js"></script>
 <script src="js/normativa/engine/normativaEngine.js"></script>
+<script src="js/normativa/convenio_colectivo_data.js"></script>
 <script src="js/convenioKnowledge.js"></script>
 
 <!-- ══════════════════════════════════════════
@@ -13570,7 +13904,7 @@ window.PILOTPAY_BACKEND_READY = true;
   // ── UI helpers ──
 
   function showView(name) {
-    ['home', 'topic', 'answer'].forEach(function(v) {
+    ['home', 'topic', 'answer', 'cc'].forEach(function(v) {
       var el = document.getElementById('ck-v-' + v);
       if (el) el.style.display = (v === name) ? 'block' : 'none';
     });
@@ -15492,6 +15826,460 @@ window.PILOTPAY_BACKEND_READY = true;
     showView(_ckPrevView !== 'home' && _ckView === 'answer' ? _ckPrevView : 'home');
   };
 
+  // ══════════════════════════════════════════════════════════════
+  // CONVENIO COLECTIVO — visor documental premium
+  // ══════════════════════════════════════════════════════════════
+
+  var _ccNav = { flat: [], current: -1 };
+  var _ccActiveArtNum = null;
+
+  // ── Abrir el visor ─────────────────────────────────────────
+  window.ckOpenCC = function() {
+    _ccBuildNav();
+    _buildCCSidebar();
+    var el = document.getElementById('ck-cc-content');
+    if (el) el.innerHTML = '<div class="cc-art-display" id="cc-art-display">' + _renderCCWelcome() + '</div>';
+    var panel = document.getElementById('cc-ctx-panel');
+    if (panel) panel.innerHTML = '';
+    _ckPrevView = _ckView;
+    showView('cc');
+    var page = document.getElementById('page-convenio');
+    if (page) page.scrollTop = 0;
+    // Hash deep link
+    try {
+      var m = window.location.hash.match(/^#art-(\d+)$/);
+      if (m) setTimeout(function() { ccGotoArt(parseInt(m[1])); }, 80);
+    } catch(e) {}
+  };
+
+  // ── Índice de navegación plano (todos los artículos) ────────
+  function _ccBuildNav() {
+    _ccNav.flat = [];
+    if (typeof CONVENIO_CC === 'undefined') return;
+    CONVENIO_CC.capitulos.forEach(function(cap) {
+      if (!cap._pendiente && cap.articulos) {
+        cap.articulos.forEach(function(art) {
+          _ccNav.flat.push({ cap: cap, art: art, flatIdx: _ccNav.flat.length });
+        });
+      }
+    });
+  }
+
+  // ── Sidebar: índice documental ───────────────────────────────
+  function _buildCCSidebar() {
+    var nav = document.getElementById('cc-sidebar');
+    if (!nav || typeof CONVENIO_CC === 'undefined') return;
+    var h = '<div class="cc-toc-hd">'
+      + '<span class="cc-toc-hd-lbl">Índice</span>'
+      + '<button class="cc-toc-close" onclick="ccToggleSidebar()">✕</button>'
+      + '</div><div class="cc-toc-scroll">';
+    CONVENIO_CC.capitulos.forEach(function(cap) {
+      h += '<div class="cc-toc-section">'
+        + '<div class="cc-toc-cap-hd" id="cc-toc-cap-' + esc(cap.id) + '"'
+        + ' onclick="ccGotoCap(\'' + esc(cap.id) + '\')">'
+        + '<span class="cc-toc-cap-num">Cap.' + esc(cap.numero) + '</span>'
+        + '<span class="cc-toc-cap-name">' + esc(cap.titulo) + '</span>'
+        + '</div>';
+      if (!cap._pendiente && cap.articulos && cap.articulos.length) {
+        h += '<div class="cc-toc-arts">';
+        cap.articulos.forEach(function(art) {
+          var t = art.titulo ? art.titulo.replace(/[,;(].*/,'').trim() : '';
+          h += '<div class="cc-toc-art-item" id="cc-toc-art-' + art.numero + '"'
+            + ' onclick="ccGotoArt(' + art.numero + ')"'
+            + ' title="' + esc(art.titulo || '') + '">'
+            + '<span class="cc-toc-art-num">' + art.numero + '</span>'
+            + '<span class="cc-toc-art-name">' + esc(t) + '</span>'
+            + '</div>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+    h += '</div>';
+    nav.innerHTML = h;
+  }
+
+  // ── Bienvenida / vista general ──────────────────────────────
+  function _renderCCWelcome() {
+    if (typeof CONVENIO_CC === 'undefined') return '<div style="padding:24px;font-size:12px;color:var(--text3)">Datos no disponibles.</div>';
+    var m = CONVENIO_CC.meta;
+    var h = '<div class="cc-welcome">';
+    h += '<div class="cc-welcome-title">' + esc(m.nombre) + '</div>';
+    h += '<div class="cc-welcome-boe">' + esc(m.boe) + ' \xb7 Vigencia ' + esc(m.vigencia_desde.slice(0,4)) + '–' + esc(m.vigencia_hasta.slice(0,4)) + '</div>';
+    h += '<div class="cc-welcome-note">Fuente normativa base. Los acuerdos particulares pueden complementar o matizar art\xedculos concretos. Las notas PilotPay son interpretaci\xf3n operativa. Selecciona un art\xedculo del \xedndice para comenzar la lectura.</div>';
+    h += '<div class="cc-welcome-caps">';
+    CONVENIO_CC.capitulos.forEach(function(cap) {
+      var cnt = cap._pendiente ? '—' : cap.articulos.length;
+      var cntStr = cnt === '—' ? '—' : (cnt + (cnt === 1 ? ' art.' : ' arts.'));
+      h += '<div class="cc-welcome-cap" onclick="ccGotoCap(\'' + esc(cap.id) + '\')">'
+        + '<span class="cc-welcome-cap-num">Cap. ' + esc(cap.numero) + '</span>'
+        + '<span class="cc-welcome-cap-title">' + esc(cap.titulo) + '</span>'
+        + '<span class="cc-welcome-cap-count">' + cntStr + '</span>'
+        + '</div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  // ── Navegar a artículo por número ───────────────────────────
+  window.ccGotoArt = function(num) {
+    for (var i = 0; i < _ccNav.flat.length; i++) {
+      if (_ccNav.flat[i].art.numero === num) {
+        _ccNav.current = i;
+        _showCCArt(_ccNav.flat[i]);
+        try { history.replaceState(null, '', '#art-' + num); } catch(e) {}
+        return;
+      }
+    }
+  };
+
+  // ── Navegar a capítulo → primer artículo ────────────────────
+  window.ccGotoCap = function(id) {
+    if (typeof CONVENIO_CC === 'undefined') return;
+    for (var i = 0; i < CONVENIO_CC.capitulos.length; i++) {
+      var cap = CONVENIO_CC.capitulos[i];
+      if (cap.id === id && !cap._pendiente && cap.articulos && cap.articulos.length) {
+        ccGotoArt(cap.articulos[0].numero);
+        return;
+      }
+    }
+    // Close sidebar on mobile if no article found
+    var sb = document.getElementById('cc-sidebar');
+    if (sb && window.innerWidth < 800) sb.classList.remove('cc-sidebar-open');
+  };
+
+  // ── Mostrar un artículo en el visor ─────────────────────────
+  function _showCCArt(entry) {
+    _ccActiveArtNum = entry.art.numero;
+    var display = document.getElementById('cc-art-display');
+    if (display) {
+      display.innerHTML = _renderArtReader(entry);
+      // Scroll al inicio
+      var page = document.getElementById('page-convenio');
+      if (page) page.scrollTop = 0;
+      // Flash de entrada
+      display.querySelector('.cc-art-display-inner').classList.add('cc-art-reader-hl');
+      setTimeout(function() {
+        var el = display.querySelector('.cc-art-display-inner');
+        if (el) el.classList.remove('cc-art-reader-hl');
+      }, 1600);
+    }
+    // Panel contextual
+    var panel = document.getElementById('cc-ctx-panel');
+    if (panel) panel.innerHTML = _renderCtxPanel(entry);
+    // Sidebar activo
+    _ccMarkSidebarActive(entry.art.numero, entry.cap.id);
+    // Cerrar sidebar en móvil
+    var sb = document.getElementById('cc-sidebar');
+    if (sb && window.innerWidth < 800) sb.classList.remove('cc-sidebar-open');
+  }
+
+  // ── Renderizar artículo completo ─────────────────────────────
+  function _renderArtReader(entry) {
+    var cap = entry.cap;
+    var art = entry.art;
+    var fi  = _ccNav.current;
+    var prev = fi > 0                        ? _ccNav.flat[fi - 1] : null;
+    var next = fi < _ccNav.flat.length - 1   ? _ccNav.flat[fi + 1] : null;
+    var estado = art.estado || 'pendiente';
+    var hasAfect = art.afectaciones && art.afectaciones.length;
+    var hasRel   = art.related   && art.related.length;
+    var hasFaqs  = art.faqs      && art.faqs.length;
+    var hasPilot = hasAfect || art.resumen_operativo || hasRel;
+
+    var h = '<div class="cc-art-display-inner">';
+
+    // Breadcrumb
+    h += '<nav class="cc-breadcrumb">'
+      + '<span class="cc-bc-item" onclick="ccShowWelcome()">Convenio Colectivo</span>'
+      + '<span class="cc-bc-sep">›</span>'
+      + '<span class="cc-bc-item" onclick="ccGotoCap(\'' + esc(cap.id) + '\')">'
+        + 'Cap. ' + esc(cap.numero) + ' — ' + esc(cap.titulo)
+      + '</span>'
+      + '<span class="cc-bc-sep">›</span>'
+      + '<span class="cc-bc-item cc-bc-current">Art. ' + art.numero + '</span>'
+      + '</nav>';
+
+    // Encabezado del artículo
+    h += '<div class="cc-art-reader-num">Art\xedculo ' + art.numero + '</div>';
+    h += '<h1 class="cc-art-reader-title">' + esc(art.titulo || 'Art\xedculo ' + art.numero) + '</h1>';
+    h += '<div class="cc-art-reader-meta">';
+    h += '<span class="cc-art-estado cc-art-estado-' + esc(estado) + '">' + esc(estado) + '</span>';
+    if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
+      art.colectivos.forEach(function(c) {
+        h += '<span class="cc-art-col-tag">' + esc(c.toUpperCase()) + '</span>';
+      });
+    }
+    h += '</div>';
+
+    // Texto oficial
+    h += '<section class="cc-art-reader-section">';
+    h += '<div class="cc-art-reader-section-lbl">Texto oficial · BOE-A-2026-6389</div>';
+    if (art.texto_oficial) {
+      h += _ccRenderTextoOficial(art.texto_oficial);
+    } else {
+      h += '<div class="cc-art-pend-txt">Texto pendiente de extracci\xf3n desde BOE-A-2026-6389.pdf</div>';
+    }
+    h += '</section>';
+
+    // Notas PilotPay
+    if (hasPilot) {
+      h += '<section class="cc-art-reader-section cc-art-reader-pilotpay-sec">';
+      h += '<div class="cc-art-reader-section-lbl">Notas PilotPay</div>';
+      if (art.resumen_operativo) {
+        h += '<div class="cc-art-reader-resumen">' + esc(art.resumen_operativo) + '</div>';
+      }
+      if (hasAfect) {
+        h += '<div class="cc-art-reader-afect-lbl">Afectado por acuerdos posteriores</div>';
+        art.afectaciones.forEach(function(nota) {
+          h += '<div class="cc-art-reader-afect-item">'
+            + '<div class="cc-art-afect-src">' + esc(nota.fuente || nota.tipo || '') + '</div>'
+            + esc(nota.texto || nota.descripcion || '')
+            + '</div>';
+        });
+      }
+      if (hasRel) {
+        h += '<div class="cc-art-reader-related-lbl">Ver tambi\xe9n</div>';
+        h += '<div class="cc-art-related-tags">';
+        art.related.forEach(function(v) {
+          h += '<span class="cc-art-related-tag" onclick="ckVerTambienCC(\'' + esc(v) + '\')">'
+            + esc(v.replace(/_/g, ' ')) + '</span>';
+        });
+        h += '</div>';
+      }
+      h += '</section>';
+    }
+
+    // FAQs
+    if (hasFaqs) {
+      h += '<section class="cc-art-reader-section">';
+      h += '<div class="cc-art-reader-section-lbl">Preguntas frecuentes</div>';
+      art.faqs.forEach(function(faq) {
+        h += '<div class="cc-art-faq-item">'
+          + '<div class="cc-art-faq-q">' + esc(faq.q) + '</div>'
+          + '<div class="cc-art-faq-a">' + esc(faq.a) + '</div>'
+          + '</div>';
+      });
+      h += '</section>';
+    }
+
+    // Navegación anterior / siguiente
+    h += '<nav class="cc-art-reader-nav">';
+    if (prev) {
+      h += '<button class="cc-art-reader-nav-btn" onclick="ccGotoArt(' + prev.art.numero + ')"'
+        + ' title="' + esc(prev.art.titulo || '') + '">'
+        + '← Art. ' + prev.art.numero
+        + (prev.art.titulo ? ' · ' + prev.art.titulo.split(/[,;(]/)[0].trim().substring(0,24) : '')
+        + '</button>';
+    } else { h += '<span></span>'; }
+    if (next) {
+      h += '<button class="cc-art-reader-nav-btn" onclick="ccGotoArt(' + next.art.numero + ')"'
+        + ' title="' + esc(next.art.titulo || '') + '">'
+        + 'Art. ' + next.art.numero
+        + (next.art.titulo ? ' · ' + next.art.titulo.split(/[,;(]/)[0].trim().substring(0,24) : '')
+        + ' →</button>';
+    } else { h += '<span></span>'; }
+    h += '</nav>';
+
+    h += '</div>';
+    return h;
+  }
+
+  // ── Panel contextual derecho ─────────────────────────────────
+  function _renderCtxPanel(entry) {
+    var art = entry.art;
+    var estado = art.estado || 'pendiente';
+    var h = '';
+
+    // Estado
+    h += '<div class="cc-ctx-section">'
+      + '<div class="cc-ctx-lbl">Estado</div>'
+      + '<span class="cc-art-estado cc-art-estado-' + esc(estado) + '">' + esc(estado) + '</span>'
+      + '</div>';
+
+    // Colectivos
+    if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
+      h += '<div class="cc-ctx-section"><div class="cc-ctx-lbl">Colectivos</div><div class="cc-ctx-tags">';
+      art.colectivos.forEach(function(c) {
+        h += '<span class="cc-ctx-tag">' + esc(c.toUpperCase()) + '</span>';
+      });
+      h += '</div></div>';
+    }
+
+    // Acuerdos relacionados
+    if (art.afectaciones && art.afectaciones.length) {
+      h += '<div class="cc-ctx-section"><div class="cc-ctx-lbl">Acuerdos</div>';
+      art.afectaciones.forEach(function(nota) {
+        var txt = nota.texto || nota.descripcion || '';
+        h += '<div class="cc-ctx-afect-item">'
+          + (nota.fuente || nota.tipo ? '<div class="cc-ctx-afect-src">' + esc(nota.fuente || nota.tipo) + '</div>' : '')
+          + esc(txt.substring(0, 110)) + (txt.length > 110 ? '…' : '')
+          + '</div>';
+      });
+      h += '</div>';
+    }
+
+    // Ver también
+    if (art.related && art.related.length) {
+      h += '<div class="cc-ctx-section"><div class="cc-ctx-lbl">Ver tambi\xe9n</div>';
+      art.related.forEach(function(v) {
+        h += '<div><span class="cc-ctx-related-tag" onclick="ckVerTambienCC(\'' + esc(v) + '\')">'
+          + esc(v.replace(/_/g, ' ')) + '</span></div>';
+      });
+      h += '</div>';
+    }
+
+    // Fuente
+    h += '<div class="cc-ctx-section">'
+      + '<div class="cc-ctx-lbl">Fuente</div>'
+      + '<div class="cc-ctx-fuente">' + esc(art.fuente || (typeof CONVENIO_CC !== 'undefined' ? CONVENIO_CC.meta.boe : '')) + '</div>'
+      + '</div>';
+
+    return h;
+  }
+
+  // ── Marcar artículo activo en sidebar ───────────────────────
+  function _ccMarkSidebarActive(artNum, capId) {
+    document.querySelectorAll('.cc-toc-art-item.cc-toc-art-active').forEach(function(el) {
+      el.classList.remove('cc-toc-art-active');
+    });
+    document.querySelectorAll('.cc-toc-cap-hd.cc-toc-cap-active').forEach(function(el) {
+      el.classList.remove('cc-toc-cap-active');
+    });
+    var artEl = document.getElementById('cc-toc-art-' + artNum);
+    if (artEl) { artEl.classList.add('cc-toc-art-active'); artEl.scrollIntoView({ block: 'nearest' }); }
+    var capEl = document.getElementById('cc-toc-cap-' + capId);
+    if (capEl) capEl.classList.add('cc-toc-cap-active');
+  }
+
+  // ── Volver a la bienvenida ───────────────────────────────────
+  window.ccShowWelcome = function() {
+    var display = document.getElementById('cc-art-display');
+    if (display) display.innerHTML = _renderCCWelcome();
+    var panel = document.getElementById('cc-ctx-panel');
+    if (panel) panel.innerHTML = '';
+    _ccActiveArtNum = null;
+    _ccNav.current = -1;
+    document.querySelectorAll('.cc-toc-art-item.cc-toc-art-active').forEach(function(el) { el.classList.remove('cc-toc-art-active'); });
+    document.querySelectorAll('.cc-toc-cap-hd.cc-toc-cap-active').forEach(function(el)  { el.classList.remove('cc-toc-cap-active'); });
+    try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
+    var page = document.getElementById('page-convenio');
+    if (page) page.scrollTop = 0;
+  };
+
+  // ── Toggle sidebar (móvil) ───────────────────────────────────
+  window.ccToggleSidebar = function() {
+    var sb = document.getElementById('cc-sidebar');
+    if (sb) sb.classList.toggle('cc-sidebar-open');
+  };
+
+  // ── Párrafos del texto oficial ───────────────────────────────
+// ── Deteccion y render de texto con tablas (Arts. 92, 93, etc.) ─────
+  function _ccIsTablaValue(line) {
+    if (!line) return false;
+    if (/^\d+(\.\d+)?(\ [\w.\/\-]+)*$/.test(line)) return true;
+    if (/^(N\/A|\u2013|\-|\u2014)$/.test(line)) return true;
+    if (/puntos\/ud/i.test(line)) return true;
+    if (/Por deterioro/i.test(line)) return true;
+    if (/a elegir/i.test(line)) return true;
+    if (/entre las dos/i.test(line)) return true;
+    if (/^\d+ pares/.test(line)) return true;
+    if (/^\d+ pack/.test(line)) return true;
+    return false;
+  }
+  function _ccIsTablaInicial(val) {
+    return /^(\d|N\/A|\u2013|\-)/.test(val) &&
+           !/puntos\/ud/i.test(val) &&
+           !/Por deterioro/i.test(val);
+  }
+  function _ccIsTablaFooter(line) {
+    return !_ccIsTablaValue(line) &&
+           line.split(' ').length > 9 &&
+           /^(El |La |Los |Las |A |Dado|Debido|En |Todo|As\u00ed|Aquel|Las prendas|El n\u00famero)/.test(line);
+  }
+  function _ccParseTablaSection(lines) {
+    var rows = [], footerStart = lines.length;
+    var i = 0;
+    while (i < lines.length) {
+      var line = lines[i].trim();
+      if (!line) { i++; continue; }
+      if (_ccIsTablaFooter(line)) { footerStart = i; break; }
+      var row = { nombre: line, inicial: '', renovacion: '' };
+      if (i + 1 < lines.length) {
+        var next = lines[i + 1].trim();
+        if (_ccIsTablaValue(next)) {
+          if (_ccIsTablaInicial(next)) {
+            row.inicial = next; i++;
+            if (i + 1 < lines.length && _ccIsTablaValue(lines[i + 1].trim())) {
+              row.renovacion = lines[i + 1].trim(); i++;
+            }
+          } else {
+            row.renovacion = next; i++;
+          }
+        }
+      }
+      rows.push(row); i++;
+    }
+    return { rows: rows, footer: lines.slice(footerStart) };
+  }
+  function _ccRenderTablaHtml(rows) {
+    var h = '<table class="cc-uniforme-table"><thead><tr>';
+    h += '<th>Prenda / Equipo</th><th>Inicial</th><th>Renovación</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(function(r) {
+      h += '<tr><td>' + esc(r.nombre) + '</td>';
+      h += '<td>' + esc(r.inicial) + '</td>';
+      h += '<td>' + esc(r.renovacion) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    return h;
+  }
+  function _ccRenderTextoOficial(texto) {
+    var TABLE_HEADER = 'Equipo\nInicial\nRenovaci';
+    if (!texto || texto.indexOf(TABLE_HEADER) === -1) {
+      return '<div class="cc-art-reader-txt">' + _ccParas(texto) + '</div>';
+    }
+    var parts = texto.split(/Equipo\s*\nInicial\s*\nRenovaci[o\u00f3]n\s*\n/);
+    var h = '';
+    if (parts[0].trim()) {
+      h += '<div class="cc-art-reader-txt cc-uniforme-intro">' + _ccParas(parts[0].trim()) + '</div>';
+    }
+    for (var t = 1; t < parts.length; t++) {
+      var lines = parts[t].split('\n');
+      var parsed = _ccParseTablaSection(lines);
+      h += _ccRenderTablaHtml(parsed.rows);
+      if (parsed.footer.length) {
+        var footerTxt = parsed.footer.join('\n').trim();
+        if (footerTxt) {
+          h += '<div class="cc-art-reader-txt cc-uniforme-footer">' + _ccParas(footerTxt) + '</div>';
+        }
+      }
+    }
+    return h;
+  }
+
+  function _ccParas(txt) {
+    if (!txt) return '';
+    return txt.split(/\n\n+/).map(function(p) {
+      var t = p.trim();
+      if (!t) return '';
+      return '<p>' + esc(t).replace(/\n/g, '<br>') + '</p>';
+    }).filter(Boolean).join('');
+  }
+
+  // ── Relacionado con: navegar al tema ────────────────────────
+  window.ckVerTambienCC = function(categoria) {
+    showView('home');
+    ckConsultar();
+    // ckConsultar resetea _ckTemas=null — aplicar filtro después del reset
+    _ckTemas = new Set([categoria]);
+    Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
+      c.classList.toggle('active', c.getAttribute('data-tema') === categoria);
+    });
+    _reRenderInner();
+    var page = document.getElementById('page-convenio');
+    if (page) page.scrollTop = 0;
+  };
 })();
 </script>
 </body>
