@@ -3675,7 +3675,7 @@ Complemento de Base MAD: 1500"></textarea>
         .ck-list-arrow { font-size: 14px; color: var(--text3); flex-shrink: 0; }
 
         /* ── Nav ── */
-        .ck-nav { padding: 12px 16px 0; }
+        .ck-nav { padding: 4px 16px 0; }
         .ck-back {
           background: none; border: 1px solid var(--border2);
           border-radius: var(--r); padding: 6px 12px;
@@ -3938,23 +3938,25 @@ Complemento de Base MAD: 1500"></textarea>
           flex: 1; min-width: 0;
         }
         .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num  { opacity: 1; color: var(--blue); }
-        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text2); font-weight: 500; }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text); font-weight: 600; }
 
         /* Capítulo activo plegado — acento izquierdo */
         .cc-toc-section:not(.cc-toc-open) .cc-toc-cap-hd.cc-toc-cap-active {
-          border-left: 2px solid var(--blue);
-          padding-left: 11px;
-          background: color-mix(in srgb, var(--blue) 6%, var(--bg));
+          border-left: 3px solid var(--blue);
+          padding-left: 10px;
+          background: color-mix(in srgb, var(--blue) 12%, var(--bg));
         }
         /* Header cuando capítulo está abierto */
         .cc-toc-section.cc-toc-open > .cc-toc-cap-hd {
-          background: var(--bg2);
-          border-bottom: 1px solid var(--border);
+          background: color-mix(in srgb, var(--blue) 8%, var(--bg2));
+          border-bottom: 1px solid color-mix(in srgb, var(--blue) 20%, var(--border));
+          border-left: 3px solid color-mix(in srgb, var(--blue) 70%, transparent);
+          padding-left: 10px;
         }
         .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-name {
-          color: var(--text2); font-weight: 500;
+          color: var(--text); font-weight: 600;
         }
-        .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-num { opacity: .7; }
+        .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-num { opacity: .85; color: var(--blue); }
 
         /* Contador — muted number sin pill */
         .cc-toc-cap-count {
@@ -3988,8 +3990,8 @@ Complemento de Base MAD: 1500"></textarea>
           position: absolute;
           left: 22px; top: 8px; bottom: 8px; width: 1px;
           background: linear-gradient(to bottom,
-            color-mix(in srgb, var(--blue) 35%, transparent),
-            color-mix(in srgb, var(--blue) 8%, transparent)
+            color-mix(in srgb, var(--blue) 55%, transparent),
+            color-mix(in srgb, var(--blue) 18%, transparent)
           );
         }
 
@@ -4000,7 +4002,7 @@ Complemento de Base MAD: 1500"></textarea>
           cursor: pointer; transition: background .12s;
         }
         .cc-toc-art-item:hover { background: var(--bg2); }
-        .cc-toc-art-item:hover .cc-toc-art-name { color: var(--text2); }
+        .cc-toc-art-item:hover .cc-toc-art-name { color: var(--text2); opacity: 1; }
 
         /* Dot en la línea */
         .cc-toc-art-item::before {
@@ -4014,22 +4016,23 @@ Complemento de Base MAD: 1500"></textarea>
 
         .cc-toc-art-num {
           font-size: 8.5px; font-family: var(--mono); color: var(--text3);
-          min-width: 18px; flex-shrink: 0; opacity: .38;
+          min-width: 18px; flex-shrink: 0; opacity: .25;
           transition: opacity .12s, color .12s;
         }
         .cc-toc-art-name {
-          font-size: 12px; color: var(--text3); line-height: 1.35;
-          transition: color .12s;
+          font-size: 12px; color: var(--text3); line-height: 1.35; opacity: .6;
+          transition: color .12s, opacity .12s;
         }
 
         /* Artículo activo */
         .cc-toc-art-item.cc-toc-art-active::before {
           background: var(--blue);
-          width: 8px; height: 8px; margin-left: 4px;
-          box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 22%, transparent);
+          width: 9px; height: 9px; margin-left: 4px;
+          box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 30%, transparent),
+                      0 0 10px color-mix(in srgb, var(--blue) 25%, transparent);
         }
-        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-num { opacity: .9; color: var(--blue); }
-        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text); font-weight: 500; }
+        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-num { opacity: 1; color: var(--blue); }
+        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text); font-weight: 600; opacity: 1; }
 
         /* Botón índice — solo visible en móvil */
         .cc-nav-bar { display: flex; align-items: center; justify-content: space-between; }
@@ -4044,7 +4047,7 @@ Complemento de Base MAD: 1500"></textarea>
         /* ═══ ZONA CENTRAL DE LECTURA ════════════════════════════════ */
         .cc-art-display { max-width: 700px; margin: 0 auto; padding: 0 48px 100px; }
         .cc-art-display-inner { padding-bottom: 56px; }
-        .cc-welcome { padding: 56px 0 36px; }
+        .cc-welcome { padding: 24px 0 24px; }
         .cc-welcome-title {
           font-size: 19px; font-weight: 600; color: var(--text1);
           line-height: 1.35; margin-bottom: 10px; letter-spacing: -.02em;
@@ -4080,7 +4083,7 @@ Complemento de Base MAD: 1500"></textarea>
         /* Breadcrumb */
         .cc-breadcrumb {
           display: flex; align-items: center; gap: 6px;
-          padding: 28px 0 0; flex-wrap: wrap;
+          padding: 6px 0 0; flex-wrap: wrap;
         }
         .cc-bc-item { font-size: 11px; color: var(--text3); cursor: pointer; opacity: .6; transition: opacity .1s; }
         .cc-bc-item:hover { opacity: 1; }
@@ -4220,7 +4223,7 @@ Complemento de Base MAD: 1500"></textarea>
           width: 290px; flex-shrink: 0;
           position: sticky; top: 0; height: 100vh;
           overflow-y: auto; border-left: 1px solid var(--border);
-          background: var(--bg);
+          background: color-mix(in srgb, var(--bg) 60%, var(--bg2));
           padding: 0 0 48px; display: none;
           scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
@@ -4228,17 +4231,22 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-ctx-panel::-webkit-scrollbar { width: 2px; }
         .cc-ctx-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Cards */
+        /* Cards — cajas individuales */
         .cc-ctx-card {
-          padding: 16px 17px 18px;
-          border-bottom: 1px solid var(--border);
+          margin: 0 9px 7px;
+          background: var(--bg2);
+          border: 1px solid var(--border);
+          border-radius: 7px;
+          padding: 13px 14px 15px;
         }
-        .cc-ctx-card:last-child { border-bottom: none; }
+        .cc-ctx-card:first-child { margin-top: 10px; }
+        .cc-ctx-card:last-child  { margin-bottom: 10px; }
         .cc-ctx-card-hd {
           display: flex; align-items: center; gap: 6px;
           font-size: 8.5px; font-family: var(--mono); text-transform: uppercase;
-          letter-spacing: .16em; color: var(--text3); font-weight: 700;
-          margin-bottom: 12px;
+          letter-spacing: .16em; color: var(--text2); font-weight: 700;
+          margin-bottom: 12px; padding-bottom: 10px;
+          border-bottom: 1px solid var(--border);
         }
         .cc-ctx-card-ico {
           opacity: .55; font-size: 11px; font-family: var(--mono);
@@ -4246,7 +4254,8 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* Card 1 — Contexto */
         .cc-ctx-resumen {
-          font-size: 12.5px; color: var(--text2); line-height: 1.75; margin-top: 10px;
+          font-size: 12.5px; color: var(--text2); line-height: 1.75;
+          margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
         }
         .cc-ctx-empty {
           font-size: 11.5px; color: var(--text3); font-style: italic; line-height: 1.6; opacity: .8;
@@ -4270,6 +4279,10 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* Colectivos */
         .cc-ctx-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        .cc-ctx-tags-lbl {
+          font-size: 8px; font-family: var(--mono); color: var(--text3); opacity: .6;
+          text-transform: uppercase; letter-spacing: .12em; margin-top: 8px; display: block;
+        }
         .cc-ctx-tag {
           font-size: 8.5px; font-family: var(--mono); padding: 2px 8px; border-radius: 3px;
           border: 1px solid var(--border); color: var(--text2);
@@ -4329,7 +4342,7 @@ Complemento de Base MAD: 1500"></textarea>
           transition: background .12s;
         }
         .cc-ctx-ref:hover { background: color-mix(in srgb, var(--blue) 11%, transparent); }
-        .cc-ctx-ref::before { content: '92'; opacity: .55; font-size: 10px; }
+        .cc-ctx-ref::before { content: '→'; opacity: .55; font-size: 10px; }
 
         /* Card 4 — FAQs */
         .cc-ctx-faq-item { margin-bottom: 13px; }
@@ -16329,16 +16342,18 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 1: Contexto del artículo ─────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">§</span> Contexto</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Contexto</div>';
     h += '<span class="cc-ctx-estado cc-ctx-estado-' + esc(estado) + '">' + esc(estado) + '</span>';
     if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
+      h += '<span class="cc-ctx-tags-lbl">Afecta a</span>';
       h += '<div class="cc-ctx-tags">';
       art.colectivos.forEach(function(c) {
         h += '<span class="cc-ctx-tag">' + esc(c.toUpperCase()) + '</span>';
       });
       h += '</div>';
     } else if (!art.colectivos || !art.colectivos.length) {
-      h += '<div class="cc-ctx-tags"><span class="cc-ctx-tag" style="opacity:.5">General</span></div>';
+      h += '<span class="cc-ctx-tags-lbl">Colectivo</span>';
+      h += '<div class="cc-ctx-tags"><span class="cc-ctx-tag" style="opacity:.45">General</span></div>';
     }
     if (art.resumen_operativo) {
       h += '<div class="cc-ctx-resumen" style="margin-top:10px">' + esc(art.resumen_operativo) + '</div>';
@@ -16349,7 +16364,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 2: Acuerdos relacionados ─────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">≡</span> Acuerdos</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◈</span> Acuerdos</div>';
     if (art.afectaciones && art.afectaciones.length) {
       art.afectaciones.forEach(function(nota) {
         var tipo  = nota.tipo || nota.fuente || 'general';
@@ -16371,7 +16386,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 3: Referencias cruzadas ──────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↔</span> Referencias</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↗</span> Referencias</div>';
     if (art.related && art.related.length) {
       h += '<div class="cc-ctx-refs">';
       art.related.forEach(function(v) {
@@ -16392,7 +16407,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 4: FAQs operativas ────────────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">?</span> FAQs</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">？</span> FAQs</div>';
     if (art.faqs && art.faqs.length) {
       art.faqs.forEach(function(faq) {
         h += '<div class="cc-ctx-faq-item">'
@@ -16407,7 +16422,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 5: Fuente normativa ───────────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">¶</span> Fuente</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">⊙</span> Fuente</div>';
     var fuente = art.fuente || (typeof CONVENIO_CC !== 'undefined' ? CONVENIO_CC.meta.boe : '');
     h += '<div class="cc-ctx-fuente">' + esc(fuente) + '</div>';
     h += '</div>';
