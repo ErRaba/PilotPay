@@ -4495,6 +4495,52 @@ Complemento de Base MAD: 1500"></textarea>
         .ac-doc-vigencia { font-size: 11px; color: var(--green); font-family: var(--mono); }
         .ac-doc-expirado { color: var(--text3); }
 
+        /* Tarjetas de regla dentro del visor Acuerdos */
+        .ac-rule-card {
+          margin-bottom: 18px; padding: 16px 18px;
+          border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+          border-radius: 7px;
+          background: color-mix(in srgb, var(--bg2) 28%, transparent);
+          transition: border-color .12s;
+        }
+        .ac-rule-card:last-child { margin-bottom: 0; }
+        .ac-rule-card-hd {
+          display: flex; align-items: center; gap: 7px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .ac-rule-title {
+          font-size: 13.5px; font-weight: 600; color: var(--text);
+          flex: 1; min-width: 140px; line-height: 1.35;
+        }
+        .ac-rule-badge {
+          font-family: var(--mono); font-size: 9px; font-weight: 700;
+          padding: 2px 7px; border-radius: 3px; text-transform: uppercase;
+          letter-spacing: .06em; flex-shrink: 0;
+        }
+        .ac-rule-badge-adiciona    { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+        .ac-rule-badge-sustituye   { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
+        .ac-rule-badge-suspende    { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
+        .ac-rule-badge-complementa { background: color-mix(in srgb, var(--blue)  15%, transparent); color: var(--blue); }
+        .ac-rule-badge-temporal    { border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--border)); color: var(--amber); }
+        .ac-rule-badge-pendiente   { border: 1px solid color-mix(in srgb, var(--red)   40%, var(--border)); color: var(--red); }
+        .ac-rule-cond {
+          font-size: 12px; color: var(--amber); margin-top: 11px; line-height: 1.6;
+          padding: 8px 11px; border-left: 2px solid color-mix(in srgb, var(--amber) 50%, var(--border));
+          background: color-mix(in srgb, var(--amber) 5%, transparent); border-radius: 0 4px 4px 0;
+        }
+        .ac-rule-nota {
+          font-size: 12px; color: var(--text3); margin-top: 9px; line-height: 1.6;
+          padding: 8px 11px; border-left: 2px solid color-mix(in srgb, var(--blue) 35%, var(--border));
+          border-radius: 0 4px 4px 0;
+        }
+        .ac-rule-nota-critica {
+          font-size: 12px; color: var(--red); margin-top: 9px; line-height: 1.6;
+          padding: 8px 11px; border-left: 2px solid color-mix(in srgb, var(--red) 50%, var(--border));
+          background: color-mix(in srgb, var(--red) 5%, transparent); border-radius: 0 4px 4px 0;
+        }
+        /* Cross-link desde CC panel → Acuerdos */
+        .cc-ctx-acuerdo { cursor: pointer; border-radius: 5px; transition: background .12s; }
+        .cc-ctx-acuerdo:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); }
+
         /* ── Normative state badges ── */
         .nr-badge {
           display: inline-flex; align-items: center; gap: 3px;
@@ -16452,15 +16498,15 @@ window.PILOTPAY_BACKEND_READY = true;
   // ── Panel contextual derecho ─────────────────────────────────
   // Mapeo de tipo de afectación → nombre legible y badge
   var _ACUERDO_MAP = {
-    rosterMAD:     { nombre: 'Roster MAD + TFN', badge: 'modifica' },
-    rosterLPA:     { nombre: 'Roster LPA',            badge: 'modifica' },
-    rosterTFN:     { nombre: 'Roster TFN',            badge: 'modifica' },
-    productividad: { nombre: 'Acuerdo Productividad', badge: 'complementa' },
-    actaCierre:    { nombre: 'Acta de Cierre',        badge: 'complementa' },
-    uniformidad:   { nombre: 'Uniformidad',           badge: 'complementa' },
-    jornada:       { nombre: 'Jornada / FDP',         badge: 'condiciona'  },
-    licencias:     { nombre: 'Licencias',             badge: 'complementa' },
-    general:       { nombre: 'Acuerdo general',       badge: 'complementa' },
+    rosterMAD:     { nombre: 'Roster MAD + TFN',      badge: 'modifica',    docId: 'roster_mad_tfn_2026',  itemId: 'roster_mad_tfn' },
+    rosterLPA:     { nombre: 'Roster LPA',            badge: 'modifica',    docId: 'roster_lpa_2026',      itemId: 'roster_lpa'     },
+    rosterTFN:     { nombre: 'Roster TFN 5+3',        badge: 'modifica',    docId: 'roster_tfn_5_3_2026',  itemId: 'roster_tfn53'   },
+    productividad: { nombre: 'Acuerdo Productividad', badge: 'complementa', docId: 'productividad_2026',    itemId: 'prod_2026'      },
+    actaCierre:    { nombre: 'Acta de Cierre',        badge: 'complementa', docId: 'acta_cierre_2025',      itemId: 'doc_acta'       },
+    uniformidad:   { nombre: 'Uniformidad',           badge: 'complementa', docId: null,                    itemId: null             },
+    jornada:       { nombre: 'Jornada / FDP',         badge: 'condiciona',  docId: 'roster_mad_tfn_2026',  itemId: 'roster_mad_tfn' },
+    licencias:     { nombre: 'Licencias',             badge: 'complementa', docId: 'acta_cierre_2025',      itemId: 'lic_ant'        },
+    general:       { nombre: 'Acuerdo general',       badge: 'complementa', docId: 'acta_cierre_2025',      itemId: 'doc_acta'       },
   };
 
   function _renderCtxPanel(entry) {
@@ -16499,7 +16545,8 @@ window.PILOTPAY_BACKEND_READY = true;
         var cfg   = _ACUERDO_MAP[tipo] || { nombre: tipo.replace(/_/g,' '), badge: 'complementa' };
         var desc  = nota.texto || nota.descripcion || '';
         var short = desc.length > 90 ? desc.substring(0, 87) + '…' : desc;
-        h += '<div class="cc-ctx-acuerdo">'
+        var onclk = cfg.docId ? ' onclick="openAgreementRule('' + cfg.docId + '','' + cfg.itemId + '')"' : '';
+        h += '<div class="cc-ctx-acuerdo"' + onclk + '>'
           + '<span class="cc-ctx-acuerdo-ico">▸</span>'
           + '<div class="cc-ctx-acuerdo-body">'
           + '<span class="cc-ctx-acuerdo-nombre">' + esc(cfg.nombre) + '</span>'
@@ -16772,31 +16819,49 @@ window.PILOTPAY_BACKEND_READY = true;
   var _acOpenDocId  = null;
 
   // Árbol temático del índice lateral (navegación principal por tema, no por documento)
+  // Árbol temático del índice lateral
   var _AC_TREE = [
     { id: 'jornada', label: 'Jornada / Roster', items: [
-      { id: 'roster_mad_tfn', label: 'MAD + TFN  \xb7  6+3', badge: 'L3', docId: 'roster_mad_tfn_2026' },
-      { id: 'roster_lpa',     label: 'LPA  \xb7  5+3',        badge: 'L3', docId: 'roster_lpa_2026' },
-      { id: 'roster_tfn53',   label: 'TFN  \xb7  5+3',        badge: 'L3', docId: 'roster_tfn_5_3_2026' },
+      { id: 'roster_mad_tfn', label: 'MAD\xa0+\xa0TFN \xb7 6+3', badge: 'L3', docId: 'roster_mad_tfn_2026',
+        ruleIds: ['mad_roster_patron','mad_roster_franco_5_dia','mad_roster_sexto_dia_compensacion',
+                  'mad_actividad_descanso','mad_art80_suspendido',
+                  'tfn_roster_6_3','tfn_roster_6_3_franco_5_dia','tfn_roster_6_3_sexto_dia',
+                  'tfn_roster_6_3_actividad_descanso','tfn_roster_6_3_art80_suspendido',
+                  'tfn_gap_julio_agosto'] },
+      { id: 'roster_lpa', label: 'LPA \xb7 5+3', badge: 'L3', docId: 'roster_lpa_2026',
+        ruleIds: ['lpa_roster_patron','lpa_actividad_descanso','lpa_art80_suspendido','lpa_roster_vac_23_lab'] },
+      { id: 'roster_tfn53', label: 'TFN \xb7 5+3', badge: 'L3', docId: 'roster_tfn_5_3_2026',
+        ruleIds: ['tfn_roster_5_3','tfn_roster_5_3_vac_23_lab','tfn_roster_5_3_actividad_descanso','tfn_roster_5_3_art80_suspendido'] },
     ]},
     { id: 'retribucion', label: 'Retribuci\xf3n', items: [
-      { id: 'prod_2026', label: 'DPO / Productividad', badge: 'L3', docId: 'productividad_2026' },
-      { id: 'media_var', label: 'Media de Variables',   badge: 'L2', docId: 'acta_cierre_2025' },
+      { id: 'prod_2026', label: 'DPO / Productividad', badge: 'L3', docId: 'productividad_2026',
+        ruleIds: ['prod_vigencia','prod_tdv_co2_objetivo','prod_tdv_ponderacion','prod_tdv_penalizacion_10pct',
+                  'prod_puntualidad_comun','prod_tcp_servicio_bordo','prod_tcp_scc_75pct',
+                  'prod_tcp_penalizacion_10pct','prod_matrices_ausentes'] },
+      { id: 'mad_comp', label: 'Complemento MAD', badge: 'L2', docId: 'acta_cierre_2025',
+        ruleIds: ['mad_comp_cmd','mad_comp_cop','mad_comp_scc','mad_comp_tcp','mad_hv_20pct'] },
+      { id: 'media_var', label: 'Media de Variables', badge: 'L2', docId: 'acta_cierre_2025',
+        ruleIds: ['acta_media_variables_ampliada','acta_media_variables_ajuste_12m'] },
     ]},
     { id: 'ausencias', label: 'Ausencias / Licencias', items: [
-      { id: 'lic_ant', label: 'Licencias por antig\xfcedad', badge: 'L2', docId: 'acta_cierre_2025' },
+      { id: 'lic_ant', label: 'Licencias por antig\xfcedad', badge: 'L2', docId: 'acta_cierre_2025',
+        ruleIds: ['acta_licencias_ant_7_14','acta_licencias_ant_14_20','acta_licencias_ant_20_plus'] },
+      { id: 'vac_ant', label: 'Vacaciones por antig\xfcedad', badge: 'L2', docId: 'acta_cierre_2025',
+        ruleIds: ['acta_vac_ant_14_20','acta_vac_ant_20_plus'] },
+      { id: 'red_jornada', label: 'Reducci\xf3n de jornada', badge: 'L2', docId: 'acta_cierre_2025',
+        ruleIds: ['acta_reduccion_hv_vacaciones_lnr'] },
     ]},
     { id: 'documentos', label: 'Documentos fuente', items: [
-      { id: 'doc_acta',   label: 'Acta de Cierre',   badge: 'L2', docId: 'acta_cierre_2025' },
-      { id: 'doc_mad',    label: 'Roster MAD + TFN',  badge: 'L3', docId: 'roster_mad_tfn_2026' },
-      { id: 'doc_tfn53',  label: 'Roster TFN 5+3',    badge: 'L3', docId: 'roster_tfn_5_3_2026' },
-      { id: 'doc_lpa',    label: 'Roster LPA 5+3',    badge: 'L3', docId: 'roster_lpa_2026' },
-      { id: 'doc_prod',   label: 'Productividad 2026', badge: 'L3', docId: 'productividad_2026' },
+      { id: 'doc_acta',   label: 'Acta de Cierre',      badge: 'L2', docId: 'acta_cierre_2025',      ruleIds: null },
+      { id: 'doc_mad',    label: 'Roster MAD\xa0+\xa0TFN', badge: 'L3', docId: 'roster_mad_tfn_2026', ruleIds: null },
+      { id: 'doc_tfn53',  label: 'Roster TFN 5+3',      badge: 'L3', docId: 'roster_tfn_5_3_2026',   ruleIds: null },
+      { id: 'doc_lpa',    label: 'Roster LPA 5+3',      badge: 'L3', docId: 'roster_lpa_2026',       ruleIds: null },
+      { id: 'doc_prod',   label: 'Productividad 2026',  badge: 'L3', docId: 'productividad_2026',    ruleIds: null },
     ]},
   ];
 
   // ── Helpers ─────────────────────────────────────────────────
   function _acFindItemForDoc(docId) {
-    // Prefer 'documentos' section for direct document navigation
     for (var s = 0; s < _AC_TREE.length; s++) {
       if (_AC_TREE[s].id !== 'documentos') continue;
       for (var i = 0; i < _AC_TREE[s].items.length; i++) {
@@ -16811,9 +16876,269 @@ window.PILOTPAY_BACKEND_READY = true;
     return null;
   }
 
+  function _acFindItem(itemId) {
+    for (var s = 0; s < _AC_TREE.length; s++) {
+      for (var i = 0; i < _AC_TREE[s].items.length; i++) {
+        if (_AC_TREE[s].items[i].id === itemId) return _AC_TREE[s].items[i];
+      }
+    }
+    return null;
+  }
+
+  function _acGetRulesForItem(item) {
+    var pools = [];
+    if (typeof ACTA_REGLAS !== 'undefined') pools = pools.concat(ACTA_REGLAS);
+    if (typeof MAD_REGLAS  !== 'undefined') pools = pools.concat(MAD_REGLAS);
+    if (typeof TFN_REGLAS  !== 'undefined') pools = pools.concat(TFN_REGLAS);
+    if (typeof LPA_REGLAS  !== 'undefined') pools = pools.concat(LPA_REGLAS);
+    if (typeof PROD_REGLAS !== 'undefined') pools = pools.concat(PROD_REGLAS);
+    if (item.ruleIds) {
+      return item.ruleIds.map(function(id) {
+        return pools.filter(function(r) { return r.id === id; })[0];
+      }).filter(Boolean);
+    }
+    return pools.filter(function(r) { return r._meta && r._meta.doc === item.docId; });
+  }
+
+  function _acGetArtNumFromRuleId(ccRuleId) {
+    var rule = (typeof NormativaEngine !== 'undefined') ? NormativaEngine.getRegla(ccRuleId) : null;
+    if (!rule || !rule._meta || !rule._meta.articulo) return null;
+    var m = rule._meta.articulo.match(/Art\.\s*(\d+)/i);
+    return m ? parseInt(m[1]) : null;
+  }
+
+  function _acLabelKey(k) {
+    var map = {
+      dias_actividad:                   'D\xedas activos',
+      dias_descanso:                    'D\xedas descanso',
+      patron:                           'Patr\xf3n',
+      dias_vacaciones:                  'D\xedas de vacaciones',
+      tipo_dias:                        'Tipo de d\xedas',
+      max_periodos:                     'M\xe1x. per\xedodos',
+      condicion:                        'Condici\xf3n',
+      dia_en_descanso:                  'D\xeda en descanso',
+      patron_resultante:                'Patr\xf3n resultante',
+      actividades_cuentan_fdp:          'Cuentan FDP',
+      actividades_no_cuentan_fdp:       'No cuentan FDP',
+      base_piloto_para_tfn:             'Base piloto TFN',
+      prorroga_posible:                 'Pr\xf3rroga posible',
+      suspension_sin_compensacion:      'Sin compensaci\xf3n si cancela',
+      si_se_cancela_roster:             'Si cancela roster',
+      cupos_max_actividades_no_vuelo:   'Cupos m\xe1x. no vuelo',
+      compensacion_euros:               'Compensaci\xf3n (€)',
+      compensacion_dia_festivo_euros:   'Compensaci\xf3n festivo (€)',
+      horas_sindicales_nota:            'Nota horas sindicales',
+      oficina_nota:                     'Nota d\xeda de oficina',
+    };
+    return map[k] || k.replace(/_/g, ' ');
+  }
+
+  function _acRenderValorTabla(vt) {
+    if (!vt || typeof vt !== 'object') return '';
+    var keys = Object.keys(vt).filter(function(k) {
+      return vt[k] !== null && vt[k] !== undefined;
+    });
+    if (!keys.length) return '';
+    var h = '<div class="ac-meta-table" style="margin-top:10px">';
+    keys.forEach(function(k) {
+      var v = vt[k];
+      var displayVal;
+      if (Array.isArray(v)) {
+        displayVal = v.map(function(vi) { return vi.replace(/_/g, ' '); }).join(', ');
+      } else if (typeof v === 'boolean') {
+        displayVal = v ? 'S\xed' : 'No';
+      } else {
+        displayVal = String(v);
+      }
+      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">' + esc(_acLabelKey(k)) + '</span>'
+        + '<span class="ac-meta-val">' + esc(displayVal) + '</span></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  function _renderAcuerdoRuleCard(rule) {
+    var meta  = rule._meta || {};
+    var tipo  = meta.tipo_override || '';
+    var cond  = meta.condicionado_a;
+    var condLabel = cond
+      ? ((typeof NORM_CONDICIONES !== 'undefined' && NORM_CONDICIONES[cond])
+          ? NORM_CONDICIONES[cond]
+          : cond.replace(/_/g, ' '))
+      : null;
+    var h = '<div class="ac-rule-card">';
+    h += '<div class="ac-rule-card-hd">';
+    h += '<span class="ac-rule-title">' + esc(rule.titulo || rule.id) + '</span>';
+    if (tipo) h += '<span class="ac-rule-badge ac-rule-badge-' + esc(tipo) + '">' + esc(tipo) + '</span>';
+    if (meta.temporal) h += '<span class="ac-rule-badge ac-rule-badge-temporal">temporal</span>';
+    if (meta.pendiente_validacion) h += '<span class="ac-rule-badge ac-rule-badge-pendiente">pendiente</span>';
+    h += '</div>';
+    if (condLabel) {
+      h += '<div class="ac-rule-cond"><span style="font-weight:600">Condici\xf3n:</span> ' + esc(condLabel) + '</div>';
+    }
+    if (rule.texto) h += _ccParas(rule.texto);
+    if (rule.valor_tabla) h += _acRenderValorTabla(rule.valor_tabla);
+    if (meta.ambiguedad_id) {
+      h += '<div class="ac-rule-nota-critica">Ambig\xfcedad documentada: ' + esc(meta.ambiguedad_id.replace(/_/g, ' ')) + '</div>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function _renderAcuerdoItemContent(item, rules) {
+    var doc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[item.docId] : null;
+    var h = '<div class="cc-art-display-inner">';
+    h += '<nav class="cc-breadcrumb">'
+      + '<span class="cc-bc-item" onclick="ckOpenAcuerdos()">Acuerdos</span>'
+      + '<span class="cc-bc-sep">›</span>'
+      + '<span class="cc-bc-item cc-bc-current">' + esc(item.label) + '</span>'
+      + '</nav>';
+    var capaLabel = item.badge === 'L2' ? 'Acta de Cierre 2025' : 'Acuerdo espec\xedfico 2026';
+    h += '<div class="cc-art-reader-num">' + esc(item.badge) + ' \xb7 ' + esc(capaLabel) + '</div>';
+    h += '<h1 class="cc-art-reader-title">' + esc(item.label) + '</h1>';
+    if (doc && doc.nombre_corto && doc.nombre_corto !== item.label) {
+      h += '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">' + esc(doc.nombre_corto) + '</div>';
+    }
+    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
+    if (rules.length) {
+      h += '<section class="cc-art-reader-section">';
+      h += '<div class="cc-art-reader-section-lbl">Reglas aplicables</div>';
+      rules.forEach(function(rule) { h += _renderAcuerdoRuleCard(rule); });
+      h += '</section>';
+    } else {
+      h += '<section class="cc-art-reader-section">';
+      h += '<div class="cc-art-pend-txt">No hay reglas registradas para este apartado.</div>';
+      h += '</section>';
+    }
+    if (!item.ruleIds && doc) {
+      h += '<section class="cc-art-reader-section">';
+      h += '<div class="cc-art-reader-section-lbl">Ficha del documento</div>';
+      h += '<div class="ac-meta-table">';
+      if (doc.referencia) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Referencia</span><span class="ac-meta-val">' + esc(doc.referencia) + '</span></div>';
+      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Firma</span><span class="ac-meta-val">' + esc(doc.fecha_firma || '—') + '</span></div>';
+      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Desde</span><span class="ac-meta-val">' + esc(doc.vigencia_desde || '—') + '</span></div>';
+      if (doc.vigencia_hasta) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Hasta</span><span class="ac-meta-val">' + esc(doc.vigencia_hasta) + '</span></div>';
+      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Bases</span><span class="ac-meta-val">' + esc((doc.bases || []).join(', ')) + '</span></div>';
+      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Colectivos</span><span class="ac-meta-val">' + esc((doc.grupos || []).join(', ')) + '</span></div>';
+      h += '</div>';
+      if (doc.nota_vigencia) h += '<p style="font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.6">* ' + esc(doc.nota_vigencia) + '</p>';
+      if (doc.nota) h += '<div style="font-size:13px;color:var(--text2);margin-top:13px;line-height:1.7;padding:12px 14px;background:color-mix(in srgb,var(--bg2) 45%,transparent);border-left:2px solid color-mix(in srgb,var(--blue) 40%,var(--border));border-radius:0 4px 4px 0">' + esc(doc.nota) + '</div>';
+      h += '</section>';
+    }
+    h += '</div>';
+    return h;
+  }
+
+  function _renderAcuerdoItemCtxPanel(item, rules) {
+    var doc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[item.docId] : null;
+    var h = '';
+    var vigente = !doc || !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
+    h += '<div class="cc-ctx-card">';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Vigencia</div>';
+    h += '<span class="cc-ctx-estado cc-ctx-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
+    if (doc && doc.vigencia_hasta) {
+      h += '<div style="margin-top:9px;font-size:12.5px;color:var(--text3);line-height:1.6">Hasta ' + esc(doc.vigencia_hasta);
+      if (doc.prorroga) h += '<br><span style="color:var(--amber);font-size:11.5px">Pr\xf3rroga requiere acuerdo expreso</span>';
+      h += '</div>';
+    }
+    h += '</div>';
+    if (doc) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◈</span> \xc1mbito</div>';
+      h += '<span class="cc-ctx-tags-lbl">Bases</span><div class="cc-ctx-tags">';
+      (doc.bases || []).forEach(function(b) { h += '<span class="cc-ctx-tag">' + esc(b) + '</span>'; });
+      h += '</div>';
+      h += '<span class="cc-ctx-tags-lbl" style="margin-top:9px">Colectivos</span><div class="cc-ctx-tags">';
+      (doc.grupos || []).forEach(function(g) { h += '<span class="cc-ctx-tag">' + esc(g) + '</span>'; });
+      h += '</div></div>';
+    }
+    var artNums = {};
+    rules.forEach(function(rule) {
+      ((rule._meta && rule._meta.overrides) || []).forEach(function(ccId) {
+        var num = _acGetArtNumFromRuleId(ccId);
+        if (num) artNums[num] = true;
+      });
+    });
+    var artList = Object.keys(artNums).map(Number).sort(function(a, b) { return a - b; });
+    if (artList.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↗</span> Arts. CC afectados</div>';
+      artList.forEach(function(num) {
+        h += '<div class="cc-ctx-ref" onclick="openConvenioArticle(' + num + ')">Art.\xa0' + num + '</div>';
+      });
+      h += '</div>';
+    }
+    return h;
+  }
+
+  function _acOpenItem(item) {
+    var rules   = _acGetRulesForItem(item);
+    var content = document.getElementById('ac-content');
+    if (!content) return;
+    var display = document.getElementById('ac-art-display');
+    if (!display) {
+      content.innerHTML = '<div class="cc-art-display" id="ac-art-display"></div>';
+      display = document.getElementById('ac-art-display');
+    }
+    if (display) {
+      display.innerHTML = _renderAcuerdoItemContent(item, rules);
+      var inner = display.querySelector('.cc-art-display-inner');
+      if (inner) {
+        inner.classList.add('cc-art-reader-hl');
+        setTimeout(function() { if (inner) inner.classList.remove('cc-art-reader-hl'); }, 1600);
+      }
+    }
+    content.scrollTop = 0;
+    var panel = document.getElementById('ac-ctx-panel');
+    if (panel) panel.innerHTML = _renderAcuerdoItemCtxPanel(item, rules);
+    var sb = document.getElementById('ac-sidebar');
+    if (sb && window.innerWidth < 800) sb.classList.remove('cc-sidebar-open');
+  }
+
+  // ── Pantalla de bienvenida ───────────────────────────────────
+  function _renderAcuerdosWelcome() {
+    var h = '<div class="cc-art-display-inner">';
+    h += '<nav class="cc-breadcrumb"><span class="cc-bc-item cc-bc-current">Acuerdos y aplicaci\xf3n</span></nav>';
+    h += '<div class="cc-art-reader-num">BCSA \xb7 Binter Canarias 2026</div>';
+    h += '<h1 class="cc-art-reader-title">Acuerdos y aplicaci\xf3n</h1>';
+    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
+    h += '<section class="cc-art-reader-section cc-art-texto-sec">';
+    h += '<div class="cc-art-reader-section-lbl">Jerarqu\xeda normativa activa</div>';
+    if (typeof NORM_DOCS !== 'undefined') {
+      [{ capa: 'L2_ACTA', label: 'Capa 2 — Acta de Cierre' },
+       { capa: 'L3_ACUERDO', label: 'Capa 3 — Acuerdos espec\xedficos de base' }]
+      .forEach(function(layer) {
+        var docs = Object.keys(NORM_DOCS).map(function(k) { return NORM_DOCS[k]; })
+          .filter(function(d) { return d.capa === layer.capa; });
+        if (!docs.length) return;
+        h += '<div class="ac-layer-group">';
+        h += '<div class="ac-layer-lbl">' + esc(layer.label) + '</div>';
+        docs.forEach(function(doc) {
+          var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
+          h += '<div class="ac-doc-row">'
+            + '<span class="ac-doc-badge ac-doc-badge-' + esc(doc.capa) + '">'
+            + (doc.capa === 'L2_ACTA' ? 'L2' : 'L3') + '</span>'
+            + '<span class="ac-doc-nombre">' + esc(doc.nombre_corto) + '</span>'
+            + '<span class="ac-doc-vigencia' + (vigente ? '' : ' ac-doc-expirado') + '">'
+            + (vigente ? 'vigente' : 'vencido') + '</span></div>';
+        });
+        h += '</div>';
+      });
+    }
+    h += '<p style="margin-top:20px;font-size:13px;color:var(--text3);line-height:1.75">'
+      + 'Esta secci\xf3n recoge las modificaciones, complementos y acuerdos de base '
+      + 'que se aplican sobre el Convenio Colectivo. '
+      + 'Selecciona un tema en el \xeddice para consultar las reglas aplicables.'
+      + '</p>';
+    h += '</section></div>';
+    return h;
+  }
+
   // ── Abrir el visor ──────────────────────────────────────────
   window.ckOpenAcuerdos = function() {
     _ckPrevView = _ckView;
+    _acOpenItemId = null;
+    _acOpenDocId  = null;
     _buildAcuerdosSidebar();
     var el = document.getElementById('ac-content');
     if (el) el.innerHTML = '<div class="cc-art-display" id="ac-art-display">' + _renderAcuerdosWelcome() + '</div>';
@@ -16824,8 +17149,7 @@ window.PILOTPAY_BACKEND_READY = true;
     if (mainCol) mainCol.scrollTop = 0;
   };
 
-  // ── API de navegación cruzada ────────────────────────────────
-  // Abre el visor CC directamente en un artículo concreto (desde cualquier vista)
+  // ── API de navegaci\xf3n cruzada ────────────────────────────────
   window.openConvenioArticle = function(artNum) {
     if (_ckView === 'cc') { ccGotoArt(artNum); return; }
     _ckPrevView = _ckView;
@@ -16841,17 +17165,25 @@ window.PILOTPAY_BACKEND_READY = true;
     setTimeout(function() { ccGotoArt(artNum); }, 60);
   };
 
-  // Abre el visor Acuerdos directamente en un documento/regla (desde cualquier vista)
   window.openAgreementRule = function(docId, ruleId) {
     _ckPrevView = _ckView;
-    var itemId = _acFindItemForDoc(docId);
-    if (itemId) _acOpenItemId = itemId;
+    var item = null;
+    if (ruleId) {
+      for (var si = 0; si < _AC_TREE.length && !item; si++) {
+        for (var ii = 0; ii < _AC_TREE[si].items.length && !item; ii++) {
+          var it = _AC_TREE[si].items[ii];
+          if (it.ruleIds && it.ruleIds.indexOf(ruleId) !== -1 && it.docId === docId) item = it;
+        }
+      }
+    }
+    if (!item) item = _acFindItem(_acFindItemForDoc(docId));
+    if (item) _acOpenItemId = item.id;
     _acOpenDocId = docId;
     _buildAcuerdosSidebar();
     showView('acuerdos');
     var mainCol = document.getElementById('ac-content');
     if (mainCol) mainCol.scrollTop = 0;
-    setTimeout(function() { _acOpenDoc(docId, ruleId); }, 60);
+    if (item) setTimeout(function() { _acOpenItem(item); }, 60);
   };
 
   // ── Sidebar ─────────────────────────────────────────────────
@@ -16872,8 +17204,8 @@ window.PILOTPAY_BACKEND_READY = true;
       h += '<div class="cc-toc-arts" id="ac-arts-' + esc(section.id) + '" style="display:' + (isOpen ? 'block' : 'none') + '">';
       h += '<div style="height:2px"></div>';
       section.items.forEach(function(item) {
-        var isActive  = item.id === _acOpenItemId;
-        var badgeClr  = item.badge === 'L2' ? 'var(--blue)' : 'var(--amber)';
+        var isActive = item.id === _acOpenItemId;
+        var badgeClr = item.badge === 'L2' ? 'var(--blue)' : 'var(--amber)';
         h += '<div class="cc-toc-art-item' + (isActive ? ' cc-toc-art-active' : '') + '" id="ac-item-' + esc(item.id) + '"'
           + ' onclick="acSelectItem(\'' + esc(item.id) + '\',\'' + esc(item.docId) + '\')">'
           + '<span class="cc-toc-art-num" style="color:' + badgeClr + ';font-size:9px;min-width:22px;letter-spacing:.02em">' + esc(item.badge) + '</span>'
@@ -16898,159 +17230,14 @@ window.PILOTPAY_BACKEND_READY = true;
   window.acSelectItem = function(itemId, docId) {
     _acOpenItemId = itemId;
     _acOpenDocId  = docId;
-    document.querySelectorAll('#ac-sidebar .cc-toc-art-item').forEach(function(el) { el.classList.remove('cc-toc-art-active'); });
+    document.querySelectorAll('#ac-sidebar .cc-toc-art-item').forEach(function(el) {
+      el.classList.remove('cc-toc-art-active');
+    });
     var el = document.getElementById('ac-item-' + itemId);
     if (el) { el.classList.add('cc-toc-art-active'); el.scrollIntoView({ block: 'nearest' }); }
-    _acOpenDoc(docId, null);
+    var item = _acFindItem(itemId);
+    if (item) _acOpenItem(item);
   };
-
-  function _acOpenDoc(docId, ruleId) {
-    var doc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[docId] : null;
-    var content = document.getElementById('ac-content');
-    if (!content) return;
-    var display = document.getElementById('ac-art-display');
-    if (!display) {
-      content.innerHTML = '<div class="cc-art-display" id="ac-art-display"></div>';
-      display = document.getElementById('ac-art-display');
-    }
-    if (display) {
-      display.innerHTML = _renderAcuerdoDoc(doc, docId, ruleId);
-      var inner = display.querySelector('.cc-art-display-inner');
-      if (inner) {
-        inner.classList.add('cc-art-reader-hl');
-        setTimeout(function() { if (inner) inner.classList.remove('cc-art-reader-hl'); }, 1600);
-      }
-    }
-    content.scrollTop = 0;
-    var panel = document.getElementById('ac-ctx-panel');
-    if (panel) panel.innerHTML = _renderAcuerdoCtxPanel(doc);
-    var sb = document.getElementById('ac-sidebar');
-    if (sb && window.innerWidth < 800) sb.classList.remove('cc-sidebar-open');
-  }
-
-  // ── Pantalla de bienvenida ───────────────────────────────────
-  function _renderAcuerdosWelcome() {
-    var h = '<div class="cc-art-display-inner">';
-    h += '<nav class="cc-breadcrumb"><span class="cc-bc-item cc-bc-current">Acuerdos y aplicaci\xf3n</span></nav>';
-    h += '<div class="cc-art-reader-num">BCSA · Binter Canarias 2026</div>';
-    h += '<h1 class="cc-art-reader-title">Acuerdos y aplicaci\xf3n</h1>';
-    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
-    h += '<section class="cc-art-reader-section cc-art-texto-sec">';
-    h += '<div class="cc-art-reader-section-lbl">Jerarqu\xeda normativa activa</div>';
-    if (typeof NORM_DOCS !== 'undefined') {
-      [{ capa: 'L2_ACTA', label: 'Capa 2 — Acta de Cierre' },
-       { capa: 'L3_ACUERDO', label: 'Capa 3 — Acuerdos espec\xedficos de base' }]
-      .forEach(function(layer) {
-        var docs = Object.keys(NORM_DOCS).map(function(k){ return NORM_DOCS[k]; })
-          .filter(function(d){ return d.capa === layer.capa; });
-        if (!docs.length) return;
-        h += '<div class="ac-layer-group">';
-        h += '<div class="ac-layer-lbl">' + esc(layer.label) + '</div>';
-        docs.forEach(function(doc) {
-          var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
-          h += '<div class="ac-doc-row">'
-            + '<span class="ac-doc-badge ac-doc-badge-' + esc(doc.capa) + '">'
-            + (doc.capa === 'L2_ACTA' ? 'L2' : 'L3') + '</span>'
-            + '<span class="ac-doc-nombre">' + esc(doc.nombre_corto) + '</span>'
-            + '<span class="ac-doc-vigencia' + (vigente ? '' : ' ac-doc-expirado') + '">'
-            + (vigente ? 'vigente' : 'vencido') + '</span></div>';
-        });
-        h += '</div>';
-      });
-    }
-    h += '<p style="margin-top:20px;font-size:13px;color:var(--text3);line-height:1.75">'
-      + 'Esta secci\xf3n recoge las modificaciones, complementos y acuerdos de base '
-      + 'que se aplican sobre el Convenio Colectivo. '
-      + 'Selecciona un tema en el \xeddice para consultar los acuerdos aplicables.'
-      + '</p>';
-    h += '</section></div>';
-    return h;
-  }
-
-  // ── Render de documento ─────────────────────────────────────
-  function _renderAcuerdoDoc(doc, docId, ruleId) {
-    if (!doc) return '<div class="cc-art-display-inner"><div class="cc-art-pend-txt">Documento no encontrado.</div></div>';
-    var vigente    = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
-    var capaLabel  = (typeof NORM_LAYERS !== 'undefined' && NORM_LAYERS[doc.capa]) ? NORM_LAYERS[doc.capa].label : doc.capa;
-    var capaCodigo = doc.capa === 'L2_ACTA' ? 'L2' : 'L3';
-    var h = '<div class="cc-art-display-inner">';
-    // Breadcrumb
-    h += '<nav class="cc-breadcrumb">'
-      + '<span class="cc-bc-item" onclick="ckOpenAcuerdos()">Acuerdos</span>'
-      + '<span class="cc-bc-sep">›</span>'
-      + '<span class="cc-bc-item cc-bc-current">' + esc(doc.nombre_corto) + '</span>'
-      + '</nav>';
-    // Header
-    h += '<div class="cc-art-reader-num">' + esc(capaCodigo) + ' \xb7 ' + esc(capaLabel) + '</div>';
-    h += '<h1 class="cc-art-reader-title">' + esc(doc.nombre) + '</h1>';
-    h += '<div class="cc-art-reader-meta">';
-    h += '<span class="cc-art-estado cc-art-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
-    if (doc.temporal) h += '<span class="cc-art-col-tag" style="color:var(--amber)">temporal</span>';
-    h += '</div>';
-    // Metadata
-    h += '<section class="cc-art-reader-section">';
-    h += '<div class="cc-art-reader-section-lbl">Datos del documento</div>';
-    h += '<div class="ac-meta-table">';
-    if (doc.referencia) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Referencia</span><span class="ac-meta-val">' + esc(doc.referencia) + '</span></div>';
-    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Firma</span><span class="ac-meta-val">' + esc(doc.fecha_firma || '—') + '</span></div>';
-    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Desde</span><span class="ac-meta-val">' + esc(doc.vigencia_desde || '—') + '</span></div>';
-    if (doc.vigencia_hasta) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Hasta</span><span class="ac-meta-val">' + esc(doc.vigencia_hasta) + (doc.nota_vigencia ? ' *' : '') + '</span></div>';
-    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Bases</span><span class="ac-meta-val">' + esc((doc.bases || []).join(', ')) + '</span></div>';
-    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Colectivos</span><span class="ac-meta-val">' + esc((doc.grupos || []).join(', ')) + '</span></div>';
-    h += '</div>';
-    if (doc.nota_vigencia) h += '<p style="font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.6">* ' + esc(doc.nota_vigencia) + '</p>';
-    if (doc.nota) h += '<div style="font-size:13px;color:var(--text2);margin-top:13px;line-height:1.7;padding:12px 14px;background:color-mix(in srgb,var(--bg2) 45%,transparent);border-left:2px solid color-mix(in srgb,var(--blue) 40%,var(--border));border-radius:0 4px 4px 0">' + esc(doc.nota) + '</div>';
-    h += '</section>';
-    // Reglas — placeholder Fase 2
-    h += '<section class="cc-art-reader-section">';
-    h += '<div class="cc-art-reader-section-lbl">Reglas espec\xedficas</div>';
-    h += '<div class="cc-art-pend-txt" style="text-align:center;padding:28px 0">'
-      + 'El detalle de reglas se incorporar\xe1 en la siguiente fase del visor.'
-      + '<br><span style="font-size:12px;color:var(--text3)">Las reglas est\xe1n cargadas en el motor normativo.</span>'
-      + '</div>';
-    h += '</section></div>';
-    return h;
-  }
-
-  // ── Panel contextual derecho ─────────────────────────────────
-  function _renderAcuerdoCtxPanel(doc) {
-    if (!doc) return '';
-    var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
-    var h = '';
-    // Vigencia
-    h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Vigencia</div>';
-    h += '<span class="cc-ctx-estado cc-ctx-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
-    h += '<div style="margin-top:9px;font-size:12.5px;color:var(--text3);line-height:1.6">';
-    if (doc.vigencia_hasta) {
-      h += 'Hasta ' + esc(doc.vigencia_hasta);
-      if (doc.prorroga) h += '<br><span style="color:var(--amber);font-size:11.5px">Pr\xf3rroga requiere acuerdo expreso</span>';
-    } else {
-      h += 'Sin fecha de vencimiento';
-    }
-    h += '</div></div>';
-    // Ámbito
-    h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◈</span> \xc1mbito</div>';
-    h += '<span class="cc-ctx-tags-lbl">Bases</span><div class="cc-ctx-tags">';
-    (doc.bases || []).forEach(function(b) { h += '<span class="cc-ctx-tag">' + esc(b) + '</span>'; });
-    h += '</div>';
-    h += '<span class="cc-ctx-tags-lbl" style="margin-top:9px">Colectivos</span><div class="cc-ctx-tags">';
-    (doc.grupos || []).forEach(function(g) { h += '<span class="cc-ctx-tag">' + esc(g) + '</span>'; });
-    h += '</div></div>';
-    // Modifica (cross-ref → CC)
-    if (doc.overrides_sobre && doc.overrides_sobre.length) {
-      h += '<div class="cc-ctx-card">';
-      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↗</span> Modifica</div>';
-      doc.overrides_sobre.forEach(function(target) {
-        var targetDoc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[target] : null;
-        h += '<span class="cc-ctx-ref" onclick="ckOpenCC()">'
-          + esc(targetDoc ? targetDoc.nombre_corto : target) + '</span>';
-      });
-      h += '</div>';
-    }
-    return h;
-  }
 
   window.acToggleSidebar = function() {
     var sb = document.getElementById('ac-sidebar');
