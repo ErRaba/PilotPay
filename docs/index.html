@@ -750,6 +750,10 @@ body {
 
 /* ── LAYOUT ── */
 #app { display: flex; flex-direction: column; min-height: 100dvh; }
+/* Viewport lock when CC reader is active — prevents #app from growing past viewport */
+html:has(#page-convenio.active),
+body:has(#page-convenio.active) { overflow: hidden; }
+:has(#page-convenio.active) #app { height: 100dvh; min-height: unset; overflow: hidden; }
 
 /* ── HEADER ── */
 header {
@@ -3878,13 +3882,14 @@ Complemento de Base MAD: 1500"></textarea>
         /* ── CC Reader — scroll independiente por columna ── */
         #page-convenio.active {
           padding: 0; display: flex; flex-direction: column; overflow: hidden;
+          flex: 1; min-height: 0;
         }
         #page-convenio #ck-v-home,
         #page-convenio #ck-v-topic,
         #page-convenio #ck-v-answer {
           flex: 1; overflow-y: auto; padding: 16px;
         }
-        #ck-v-cc { flex: 1; flex-direction: column; overflow: hidden; }
+        #ck-v-cc { flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
         .cc-reader-layout {
           display: flex; align-items: stretch;
           flex: 1; overflow: hidden; min-height: 0;
@@ -4285,22 +4290,11 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .cc-uniforme-intro { margin-bottom: 22px; }
         .cc-uniforme-footer { margin-top: 24px; font-size: 15px; }
-        /* Agrupación visual BOE combined cells */
-        .cc-uniforme-table tr.cc-tr-grp-s td,
-        .cc-uniforme-table tr.cc-tr-grp-m td,
-        .cc-uniforme-table tr.cc-tr-grp-e td {
-          background: color-mix(in srgb, var(--blue) 5%, transparent);
+        /* Separador entre grupos de dotación uniforme */
+        .cc-uniforme-table tr.cc-tr-sep td {
+          border-top: 1px solid var(--border);
+          padding-top: 14px;
         }
-        .cc-uniforme-table tr.cc-tr-grp-s td,
-        .cc-uniforme-table tr.cc-tr-grp-m td {
-          border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
-        }
-        .cc-uniforme-table tr.cc-tr-grp-s td:first-child,
-        .cc-uniforme-table tr.cc-tr-grp-m td:first-child,
-        .cc-uniforme-table tr.cc-tr-grp-e td:first-child {
-          border-left: 2px solid color-mix(in srgb, var(--blue) 40%, transparent);
-        }
-        .cc-td-ini-dup { visibility: hidden; }
         @media (max-width: 600px) {
           .cc-uniforme-table td:nth-child(2) { width: 60px; padding-right: 14px; }
           .cc-uniforme-table td { padding: 10px 14px 10px 0; }
@@ -16646,15 +16640,10 @@ window.PILOTPAY_BACKEND_READY = true;
     h += '<th>Prenda / Equipo</th><th>Inicial</th><th>Renovaci\xf3n</th>';
     h += '</tr></thead><tbody>';
     rows.forEach(function(r, i) {
-      var prevSame = i > 0 && rows[i-1].inicial === r.inicial && r.inicial !== '';
-      var nextSame = i < rows.length - 1 && rows[i+1].inicial === r.inicial && r.inicial !== '';
-      var cls = (prevSame || nextSame)
-        ? (!prevSame ? 'cc-tr-grp-s' : (!nextSame ? 'cc-tr-grp-e' : 'cc-tr-grp-m'))
-        : '';
-      h += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+      var isSep = i > 0 && rows[i-1].inicial !== r.inicial && r.inicial !== '';
+      h += '<tr' + (isSep ? ' class="cc-tr-sep"' : '') + '>';
       h += '<td>' + esc(r.nombre) + '</td>';
-      h += '<td' + (prevSame ? ' class="cc-td-ini-dup"' : '') + '>'
-         + (prevSame ? '' : esc(r.inicial)) + '</td>';
+      h += '<td>' + esc(r.inicial) + '</td>';
       h += '<td>' + esc(r.renovacion) + '</td></tr>';
     });
     h += '</tbody></table>';
