@@ -3910,44 +3910,57 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .15s;
         }
         .cc-toc-close:hover { opacity: .9; }
-        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 24px 0 56px; scrollbar-width: thin; }
-        .cc-toc-section { margin-bottom: 0; }
-        .cc-toc-section + .cc-toc-section { margin-top: 18px; }
+        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 16px 0 56px; scrollbar-width: thin; }
+
+        /* ── Chapter rows ─────────────────────────────────────── */
+        .cc-toc-section { border-bottom: 1px solid var(--border); }
+        .cc-toc-section:first-child { border-top: 1px solid var(--border); }
+        .cc-toc-section + .cc-toc-section { margin-top: 0; }
         .cc-toc-cap-hd {
-          display: flex; align-items: baseline; gap: 10px;
-          padding: 8px 18px; cursor: pointer; user-select: none;
+          display: flex; align-items: center; gap: 10px;
+          padding: 11px 16px; cursor: pointer; user-select: none;
           transition: background .12s;
+          min-height: 46px;
         }
-        .cc-toc-cap-hd:hover .cc-toc-cap-name { color: var(--text1); }
+        .cc-toc-cap-hd:hover { background: var(--bg2); }
+        .cc-toc-cap-hd:hover .cc-toc-cap-name { color: var(--text2); }
         .cc-toc-cap-num {
           font-size: 9px; font-family: var(--mono); color: var(--text3);
-          text-transform: uppercase; letter-spacing: .07em; font-weight: 600;
-          min-width: 30px; flex-shrink: 0; padding-top: 2px; opacity: .55;
-          transition: opacity .12s;
+          text-transform: uppercase; letter-spacing: .07em; font-weight: 700;
+          width: 38px; flex-shrink: 0; opacity: .45;
+          transition: opacity .12s, color .12s;
         }
         .cc-toc-cap-name {
-          font-size: 13px; font-weight: 600; color: var(--text3);
+          font-size: 13px; font-weight: 500; color: var(--text3);
           line-height: 1.35; transition: color .12s;
           flex: 1; min-width: 0;
         }
-        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num { opacity: .8; color: var(--blue); }
-        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text1); font-weight: 700; }
-        .cc-toc-arts { display: none; padding-bottom: 4px; }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num { opacity: .9; color: var(--blue); }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text1); font-weight: 600; }
+        /* Capítulo activo pero plegado — fondo azul sutil */
+        .cc-toc-section:not(.cc-toc-open) .cc-toc-cap-hd.cc-toc-cap-active {
+          background: color-mix(in srgb, var(--blue) 6%, transparent);
+        }
+        /* Articles list */
+        .cc-toc-arts { display: none; padding-bottom: 6px; }
         .cc-toc-section.cc-toc-open .cc-toc-arts { display: block; }
-        /* Contador artículos (visible cuando capítulo plegado) */
+        /* Contador pill — visible solo cuando plegado */
         .cc-toc-cap-count {
-          font-size: 9px; font-family: var(--mono); color: var(--text3);
-          opacity: .35; flex-shrink: 0; white-space: nowrap;
+          font-size: 9px; font-family: var(--mono);
+          color: var(--text3); background: var(--bg2);
+          border: 1px solid var(--border); border-radius: 4px;
+          padding: 2px 7px; flex-shrink: 0; white-space: nowrap; opacity: .75;
         }
         .cc-toc-section.cc-toc-open .cc-toc-cap-count { display: none; }
-        /* Chevron accordion */
+        /* Chevron */
         .cc-toc-cap-chevron {
-          font-size: 11px; color: var(--text3); opacity: .35;
-          flex-shrink: 0; margin-left: auto; padding-left: 4px;
-          transition: opacity .15s, color .15s;
+          font-size: 12px; color: var(--text3); opacity: .3;
+          flex-shrink: 0; transition: opacity .15s, color .15s;
         }
-        .cc-toc-cap-hd:hover .cc-toc-cap-chevron { opacity: .7; }
+        .cc-toc-cap-hd:hover .cc-toc-cap-chevron { opacity: .65; }
         .cc-toc-section.cc-toc-open .cc-toc-cap-hd .cc-toc-cap-chevron { opacity: .85; color: var(--blue); }
+
+        /* ── Article items (inside open chapter) ──────────────── */
         .cc-toc-art-item {
           display: flex; align-items: baseline; gap: 9px;
           padding: 5px 18px 5px 36px;
@@ -3979,7 +3992,6 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .1s;
         }
         .cc-toc-btn:hover { opacity: 1; }
-
         /* ═══ ZONA CENTRAL DE LECTURA ════════════════════════════════ */
         .cc-art-display { max-width: 700px; margin: 0 auto; padding: 0 48px 100px; }
         .cc-art-display-inner { padding-bottom: 56px; }
@@ -16375,6 +16387,7 @@ window.PILOTPAY_BACKEND_READY = true;
 // ── Deteccion y render de texto con tablas (Arts. 92, 93, etc.) ─────
   function _ccIsTablaValue(line) {
     if (!line) return false;
+    if (/^\d+\.$/.test(line)) return true;  // e.g. "4.", "1."
     if (/^\d+(\.\d+)?(\ [\w.\/\-]+)*$/.test(line)) return true;
     if (/^(N\/A|\u2013|\-|\u2014)$/.test(line)) return true;
     if (/puntos\/ud/i.test(line)) return true;
