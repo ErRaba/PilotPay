@@ -3875,14 +3875,31 @@ Complemento de Base MAD: 1500"></textarea>
         .ck-cc-entry-sub { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-top: 3px; }
         .ck-cc-entry-arrow { color: var(--text3); font-size: 14px; flex-shrink: 0; }
 
-        /* ── CC Reader — 3-panel layout ── */
-        .cc-reader-layout { display: flex; align-items: flex-start; min-height: 100%; }
-        .cc-reader-main   { flex: 1; min-width: 0; }
+        /* ── CC Reader — scroll independiente por columna ── */
+        #page-convenio.active {
+          padding: 0; display: flex; flex-direction: column; overflow: hidden;
+        }
+        #page-convenio #ck-v-home,
+        #page-convenio #ck-v-topic,
+        #page-convenio #ck-v-answer {
+          flex: 1; overflow-y: auto; padding: 16px;
+        }
+        #ck-v-cc { flex: 1; flex-direction: column; overflow: hidden; }
+        .cc-reader-layout {
+          display: flex; align-items: stretch;
+          flex: 1; overflow: hidden; min-height: 0;
+        }
+        .cc-reader-main {
+          flex: 1; min-width: 0;
+          overflow-y: auto; scroll-behavior: smooth;
+          scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .cc-reader-main::-webkit-scrollbar { width: 3px; }
+        .cc-reader-main::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
         /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
         .cc-sidebar {
           width: 280px; flex-shrink: 0;
-          position: sticky; top: 0; height: 100vh;
           overflow-y: auto; overflow-x: hidden;
           border-right: 1px solid var(--border);
           background: var(--bg);
@@ -3958,10 +3975,12 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-num { opacity: .85; color: var(--blue); }
 
-        /* Contador — muted number sin pill */
+        /* Contador — pill sutil */
         .cc-toc-cap-count {
           font-size: 8px; font-family: var(--mono); color: var(--text3);
-          opacity: .35; flex-shrink: 0; white-space: nowrap;
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 8px; padding: 1px 6px;
+          flex-shrink: 0; white-space: nowrap; opacity: .5;
         }
         .cc-toc-section.cc-toc-open .cc-toc-cap-count { display: none; }
 
@@ -4134,6 +4153,23 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-art-reader-txt { font-size: 17px; color: var(--text1); line-height: 1.85; }
         .cc-art-reader-txt p { margin: 0 0 1.3em; }
         .cc-art-reader-txt p:last-child { margin-bottom: 0; }
+        /* Estructura legal: a), b), 1., 2., A., B. */
+        .cc-legal-item {
+          display: flex; gap: 14px; padding: 4px 0; margin: 2px 0;
+        }
+        .cc-legal-marker {
+          font-family: var(--mono); font-size: 11px; color: var(--blue);
+          opacity: .65; min-width: 22px; flex-shrink: 0;
+          padding-top: 4px; font-weight: 700;
+        }
+        .cc-legal-text { line-height: 1.82; font-size: inherit; }
+        .cc-legal-intro { margin-bottom: 6px; }
+        /* Texto oficial: separador visual entre label y cuerpo */
+        .cc-art-texto-sec > .cc-art-reader-section-lbl {
+          opacity: .55; padding-bottom: 14px;
+          border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+          margin-bottom: 20px;
+        }
         .cc-art-pend-txt { font-size: 13px; color: var(--text3); font-style: italic; line-height: 1.7; opacity: .7; }
         /* Sección PilotPay */
         .cc-art-reader-pilotpay-sec { margin-top: 44px; }
@@ -4212,6 +4248,22 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .cc-uniforme-intro { margin-bottom: 22px; }
         .cc-uniforme-footer { margin-top: 24px; font-size: 15px; }
+        /* Agrupación visual BOE combined cells */
+        .cc-uniforme-table tr.cc-tr-grp-s td,
+        .cc-uniforme-table tr.cc-tr-grp-m td,
+        .cc-uniforme-table tr.cc-tr-grp-e td {
+          background: color-mix(in srgb, var(--blue) 5%, transparent);
+        }
+        .cc-uniforme-table tr.cc-tr-grp-s td,
+        .cc-uniforme-table tr.cc-tr-grp-m td {
+          border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
+        }
+        .cc-uniforme-table tr.cc-tr-grp-s td:first-child,
+        .cc-uniforme-table tr.cc-tr-grp-m td:first-child,
+        .cc-uniforme-table tr.cc-tr-grp-e td:first-child {
+          border-left: 2px solid color-mix(in srgb, var(--blue) 40%, transparent);
+        }
+        .cc-td-ini-dup { visibility: hidden; }
         @media (max-width: 600px) {
           .cc-uniforme-table td:nth-child(2) { width: 60px; padding-right: 14px; }
           .cc-uniforme-table td { padding: 10px 14px 10px 0; }
@@ -4221,7 +4273,6 @@ Complemento de Base MAD: 1500"></textarea>
         /* ═══ PANEL CONTEXTUAL DERECHO ═══════════════════════════════ */
         .cc-ctx-panel {
           width: 290px; flex-shrink: 0;
-          position: sticky; top: 0; height: 100vh;
           overflow-y: auto; border-left: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg) 60%, var(--bg2));
           padding: 0 0 48px; display: none;
@@ -14117,7 +14168,7 @@ window.PILOTPAY_BACKEND_READY = true;
   function showView(name) {
     ['home', 'topic', 'answer', 'cc'].forEach(function(v) {
       var el = document.getElementById('ck-v-' + v);
-      if (el) el.style.display = (v === name) ? 'block' : 'none';
+      if (el) el.style.display = (v === name) ? (v === 'cc' ? 'flex' : 'block') : 'none';
     });
     _ckView = name;
   }
@@ -16187,9 +16238,9 @@ window.PILOTPAY_BACKEND_READY = true;
     var display = document.getElementById('cc-art-display');
     if (display) {
       display.innerHTML = _renderArtReader(entry);
-      // Scroll al inicio
-      var page = document.getElementById('page-convenio');
-      if (page) page.scrollTop = 0;
+      // Scroll al inicio de la columna central
+      var mainCol = document.getElementById('ck-cc-content');
+      if (mainCol) mainCol.scrollTop = 0;
       // Flash de entrada
       display.querySelector('.cc-art-display-inner').classList.add('cc-art-reader-hl');
       setTimeout(function() {
@@ -16246,7 +16297,7 @@ window.PILOTPAY_BACKEND_READY = true;
     h += '</div>';
 
     // Texto oficial
-    h += '<section class="cc-art-reader-section">';
+    h += '<section class="cc-art-reader-section cc-art-texto-sec">';
     h += '<div class="cc-art-reader-section-lbl">Texto oficial · BOE-A-2026-6389</div>';
     if (art.texto_oficial) {
       h += _ccRenderTextoOficial(art.texto_oficial);
@@ -16546,11 +16597,18 @@ window.PILOTPAY_BACKEND_READY = true;
   }
   function _ccRenderTablaHtml(rows) {
     var h = '<table class="cc-uniforme-table"><thead><tr>';
-    h += '<th>Prenda / Equipo</th><th>Inicial</th><th>Renovación</th>';
+    h += '<th>Prenda / Equipo</th><th>Inicial</th><th>Renovaci\xf3n</th>';
     h += '</tr></thead><tbody>';
-    rows.forEach(function(r) {
-      h += '<tr><td>' + esc(r.nombre) + '</td>';
-      h += '<td>' + esc(r.inicial) + '</td>';
+    rows.forEach(function(r, i) {
+      var prevSame = i > 0 && rows[i-1].inicial === r.inicial && r.inicial !== '';
+      var nextSame = i < rows.length - 1 && rows[i+1].inicial === r.inicial && r.inicial !== '';
+      var cls = (prevSame || nextSame)
+        ? (!prevSame ? 'cc-tr-grp-s' : (!nextSame ? 'cc-tr-grp-e' : 'cc-tr-grp-m'))
+        : '';
+      h += '<tr' + (cls ? ' class="' + cls + '"' : '') + '>';
+      h += '<td>' + esc(r.nombre) + '</td>';
+      h += '<td' + (prevSame ? ' class="cc-td-ini-dup"' : '') + '>'
+         + (prevSame ? '' : esc(r.inicial)) + '</td>';
       h += '<td>' + esc(r.renovacion) + '</td></tr>';
     });
     h += '</tbody></table>';
@@ -16582,10 +16640,35 @@ window.PILOTPAY_BACKEND_READY = true;
 
   function _ccParas(txt) {
     if (!txt) return '';
-    return txt.split(/\n\n+/).map(function(p) {
-      var t = p.trim();
+    var LEG = /^([a-z]\)|[0-9]+\.|[A-Z]\.)\s/;
+    return txt.split(/\n\n+/).map(function(para) {
+      var t = para.trim();
       if (!t) return '';
-      return '<p>' + esc(t).replace(/\n/g, '<br>') + '</p>';
+      var lines = t.split('\n');
+      var hasItems = lines.some(function(l) { return LEG.test(l.trim()); });
+      if (!hasItems) return '<p>' + esc(t).replace(/\n/g, '<br>') + '</p>';
+      var html = '', intro = [];
+      lines.forEach(function(line) {
+        var l = line.trim();
+        if (!l) return;
+        if (LEG.test(l)) {
+          if (intro.length) {
+            html += '<p class="cc-legal-intro">' + esc(intro.join(' ')) + '</p>';
+            intro = [];
+          }
+          var m = l.match(/^([a-z]\)|[0-9]+\.|[A-Z]\.)\s+([\s\S]*)/);
+          if (m) {
+            html += '<div class="cc-legal-item"><span class="cc-legal-marker">'
+                  + esc(m[1]) + '</span><span class="cc-legal-text">' + esc(m[2]) + '</span></div>';
+          } else {
+            html += '<div class="cc-legal-item"><span class="cc-legal-text">' + esc(l) + '</span></div>';
+          }
+        } else {
+          intro.push(l);
+        }
+      });
+      if (intro.length) html += '<p class="cc-legal-intro">' + esc(intro.join(' ')) + '</p>';
+      return html;
     }).filter(Boolean).join('');
   }
 
