@@ -16252,16 +16252,19 @@ window.PILOTPAY_BACKEND_READY = true;
     if (prev) {
       h += '<button class="cc-art-reader-nav-btn" onclick="ccGotoArt(' + prev.art.numero + ')"'
         + ' title="' + esc(prev.art.titulo || '') + '">'
-        + '← Art. ' + prev.art.numero
-        + (prev.art.titulo ? ' · ' + prev.art.titulo.split(/[,;(]/)[0].trim().substring(0,24) : '')
-        + '</button>';
+        + '<span class="cc-nav-dir">← Anterior</span>'
+        + '<span class="cc-nav-lbl">Art. ' + prev.art.numero
+        + (prev.art.titulo ? ' · ' + prev.art.titulo.split(/[,;(]/)[0].trim().substring(0,22) : '')
+        + '</span></button>';
     } else { h += '<span></span>'; }
     if (next) {
-      h += '<button class="cc-art-reader-nav-btn" onclick="ccGotoArt(' + next.art.numero + ')"'
+      h += '<button class="cc-art-reader-nav-btn cc-nav-next" onclick="ccGotoArt(' + next.art.numero + ')"'
         + ' title="' + esc(next.art.titulo || '') + '">'
-        + 'Art. ' + next.art.numero
-        + (next.art.titulo ? ' · ' + next.art.titulo.split(/[,;(]/)[0].trim().substring(0,24) : '')
-        + ' →</button>';
+        + '<span class="cc-nav-lbl">Art. ' + next.art.numero
+        + (next.art.titulo ? ' · ' + next.art.titulo.split(/[,;(]/)[0].trim().substring(0,22) : '')
+        + '</span>'
+        + '<span class="cc-nav-dir">Siguiente →</span>'
+        + '</button>';
     } else { h += '<span></span>'; }
     h += '</nav>';
 
@@ -16302,7 +16305,7 @@ window.PILOTPAY_BACKEND_READY = true;
     if (art.resumen_operativo) {
       h += '<div class="cc-ctx-resumen" style="margin-top:10px">' + esc(art.resumen_operativo) + '</div>';
     } else {
-      h += '<div class="cc-ctx-empty" style="margin-top:10px">Sin resumen operativo a\xf1adido.</div>';
+      h += '<div class="cc-ctx-empty" style="margin-top:10px">Sin interpretaci\xf3n operativa cargada.</div>';
     }
     h += '</div>';
 
@@ -16324,7 +16327,7 @@ window.PILOTPAY_BACKEND_READY = true;
           + '</div></div>';
       });
     } else {
-      h += '<div class="cc-ctx-empty">Sin acuerdos espec\xedficos que afecten a este art\xedculo.</div>';
+      h += '<div class="cc-ctx-empty">No hay acuerdos espec\xedficos registrados para este art\xedculo.</div>';
     }
     h += '</div>';
 
@@ -16345,7 +16348,7 @@ window.PILOTPAY_BACKEND_READY = true;
       });
       h += '</div>';
     } else {
-      h += '<div class="cc-ctx-empty">Sin referencias cruzadas.</div>';
+      h += '<div class="cc-ctx-empty">Sin referencias a otros artículos.</div>';
     }
     h += '</div>';
 
@@ -16360,7 +16363,7 @@ window.PILOTPAY_BACKEND_READY = true;
           + '</div>';
       });
     } else {
-      h += '<div class="cc-ctx-empty">No existen FAQs para este art\xedculo.</div>';
+      h += '<div class="cc-ctx-empty">Sin preguntas frecuentes registradas.</div>';
     }
     h += '</div>';
 
