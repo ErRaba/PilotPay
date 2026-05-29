@@ -16545,7 +16545,7 @@ window.PILOTPAY_BACKEND_READY = true;
         var cfg   = _ACUERDO_MAP[tipo] || { nombre: tipo.replace(/_/g,' '), badge: 'complementa' };
         var desc  = nota.texto || nota.descripcion || '';
         var short = desc.length > 90 ? desc.substring(0, 87) + '…' : desc;
-        var onclk = cfg.docId ? ' onclick="openAgreementRule('' + cfg.docId + '','' + cfg.itemId + '')"' : '';
+        var onclk = cfg.docId ? ' onclick="openAgreementRule(\'' + cfg.docId + '\',\'' + cfg.itemId + '\')"' : '';
         h += '<div class="cc-ctx-acuerdo"' + onclk + '>'
           + '<span class="cc-ctx-acuerdo-ico">▸</span>'
           + '<div class="cc-ctx-acuerdo-body">'
