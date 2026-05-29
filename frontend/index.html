@@ -3881,7 +3881,7 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
         .cc-sidebar {
-          width: 300px; flex-shrink: 0;
+          width: 280px; flex-shrink: 0;
           position: sticky; top: 0; height: 100vh;
           overflow-y: auto; overflow-x: hidden;
           border-right: 1px solid var(--border);
@@ -3895,8 +3895,8 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-sidebar.cc-sidebar-open {
           display: flex; flex-direction: column;
           position: fixed; top: 0; left: 0; bottom: 0;
-          width: 300px; z-index: 300;
-          box-shadow: 4px 0 24px rgba(0,0,0,.15);
+          width: 280px; z-index: 300;
+          box-shadow: 4px 0 28px rgba(0,0,0,.18);
         }
         .cc-toc-hd { display: none; flex-shrink: 0; }
         .cc-sidebar.cc-sidebar-open .cc-toc-hd {
@@ -3910,109 +3910,137 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .15s;
         }
         .cc-toc-close:hover { opacity: .9; }
-        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 12px 0 56px; scrollbar-width: thin; }
+        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 4px 0 56px; scrollbar-width: thin; }
 
         /* ── Chapter rows ─────────────────────────────────────── */
         .cc-toc-section { border-bottom: 1px solid var(--border); }
         .cc-toc-section:first-child { border-top: 1px solid var(--border); }
-        .cc-toc-section + .cc-toc-section { margin-top: 0; }
 
-        /* Base row — bg2 da presencia visual sin ruido */
         .cc-toc-cap-hd {
-          display: flex; align-items: center; gap: 10px;
-          padding: 13px 16px 13px 13px;
+          display: flex; align-items: center; gap: 8px;
+          padding: 9px 13px;
           cursor: pointer; user-select: none;
-          transition: background .12s, border-left-color .12s;
-          min-height: 48px;
-          background: var(--bg2);
-          border-left: 3px solid transparent;
+          transition: background .12s;
+          min-height: 40px;
         }
-        .cc-toc-cap-hd:hover {
-          background: color-mix(in srgb, var(--bg2) 60%, var(--bg3));
-        }
-        .cc-toc-cap-hd:hover .cc-toc-cap-name { color: var(--text1); }
-        .cc-toc-cap-hd:hover .cc-toc-cap-chevron { opacity: .75; }
+        .cc-toc-cap-hd:hover { background: var(--bg2); }
+        .cc-toc-cap-hd:hover .cc-toc-cap-name { color: var(--text2); }
 
-        /* Número de capítulo */
         .cc-toc-cap-num {
-          font-size: 9px; font-family: var(--mono); color: var(--text3);
+          font-size: 8.5px; font-family: var(--mono); color: var(--text3);
           text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
-          width: 40px; flex-shrink: 0; opacity: .65;
+          width: 34px; flex-shrink: 0; opacity: .45;
           transition: opacity .12s, color .12s;
         }
-        /* Título del capítulo */
         .cc-toc-cap-name {
-          font-size: 13px; font-weight: 500; color: var(--text2);
-          line-height: 1.4; transition: color .12s;
+          font-size: 12.5px; font-weight: 400; color: var(--text3);
+          line-height: 1.35; transition: color .12s;
           flex: 1; min-width: 0;
         }
-        /* Capítulo activo — estado general */
         .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num  { opacity: 1; color: var(--blue); }
-        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text1); font-weight: 600; }
+        .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text2); font-weight: 500; }
 
-        /* Capítulo activo PLEGADO — acento azul izquierdo + fondo sutil */
+        /* Capítulo activo plegado — acento izquierdo */
         .cc-toc-section:not(.cc-toc-open) .cc-toc-cap-hd.cc-toc-cap-active {
-          border-left-color: var(--blue);
-          background: color-mix(in srgb, var(--blue) 9%, var(--bg2));
+          border-left: 2px solid var(--blue);
+          padding-left: 11px;
+          background: color-mix(in srgb, var(--blue) 6%, var(--bg));
         }
-        /* Capítulo ABIERTO — cabecera ligeramente diferenciada */
+        /* Header cuando capítulo está abierto */
         .cc-toc-section.cc-toc-open > .cc-toc-cap-hd {
-          background: color-mix(in srgb, var(--blue) 5%, var(--bg));
-          border-bottom: 1px solid color-mix(in srgb, var(--blue) 15%, var(--border));
+          background: var(--bg2);
+          border-bottom: 1px solid var(--border);
         }
+        .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-name {
+          color: var(--text2); font-weight: 500;
+        }
+        .cc-toc-section.cc-toc-open > .cc-toc-cap-hd .cc-toc-cap-num { opacity: .7; }
 
-        /* Articles list */
-        .cc-toc-arts { display: none; padding-bottom: 6px; }
-        .cc-toc-section.cc-toc-open .cc-toc-arts { display: block; }
-
-        /* Contador pill */
+        /* Contador — muted number sin pill */
         .cc-toc-cap-count {
-          font-size: 9px; font-family: var(--mono);
-          color: var(--text2); background: var(--bg);
-          border: 1px solid var(--border); border-radius: 4px;
-          padding: 2px 7px; flex-shrink: 0; white-space: nowrap; opacity: .8;
+          font-size: 8px; font-family: var(--mono); color: var(--text3);
+          opacity: .35; flex-shrink: 0; white-space: nowrap;
         }
         .cc-toc-section.cc-toc-open .cc-toc-cap-count { display: none; }
 
         /* Chevron */
         .cc-toc-cap-chevron {
-          font-size: 12px; color: var(--text3); opacity: .5;
+          font-size: 10px; color: var(--text3); opacity: .25;
           flex-shrink: 0; transition: opacity .15s, color .15s;
         }
-        .cc-toc-section.cc-toc-open .cc-toc-cap-hd .cc-toc-cap-chevron { opacity: .9; color: var(--blue); }
+        .cc-toc-cap-hd:hover .cc-toc-cap-chevron { opacity: .55; }
+        .cc-toc-section.cc-toc-open .cc-toc-cap-hd .cc-toc-cap-chevron {
+          opacity: .75; color: var(--blue);
+        }
 
-        /* ── Article items (inside open chapter) ──────────────── */
+        /* ── Timeline de artículos ────────────────────────────── */
+        .cc-toc-arts {
+          display: block; max-height: 0; overflow: hidden;
+          padding-bottom: 0; position: relative;
+          transition: max-height .28s ease, padding-bottom .15s ease;
+        }
+        .cc-toc-section.cc-toc-open .cc-toc-arts {
+          max-height: 1400px; padding-bottom: 6px;
+        }
+        /* Línea vertical de timeline */
+        .cc-toc-arts::before {
+          content: '';
+          position: absolute;
+          left: 22px; top: 8px; bottom: 8px; width: 1px;
+          background: linear-gradient(to bottom,
+            color-mix(in srgb, var(--blue) 35%, transparent),
+            color-mix(in srgb, var(--blue) 8%, transparent)
+          );
+        }
+
+        /* ── Artículo individual ──────────────────────────────── */
         .cc-toc-art-item {
-          display: flex; align-items: baseline; gap: 9px;
-          padding: 5px 18px 5px 36px;
-          cursor: pointer; border-left: 3px solid transparent;
-          transition: border-color .15s, background .12s;
+          display: flex; align-items: center; gap: 9px;
+          padding: 5px 13px;
+          cursor: pointer; transition: background .12s;
         }
         .cc-toc-art-item:hover { background: var(--bg2); }
         .cc-toc-art-item:hover .cc-toc-art-name { color: var(--text2); }
+
+        /* Dot en la línea */
+        .cc-toc-art-item::before {
+          content: ''; flex-shrink: 0;
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--border);
+          margin-left: 5px;
+          transition: background .15s, width .15s, height .15s, margin-left .15s, box-shadow .15s;
+        }
+        .cc-toc-art-item:hover::before { background: var(--text3); }
+
         .cc-toc-art-num {
-          font-size: 9px; font-family: var(--mono); color: var(--text3);
-          min-width: 20px; flex-shrink: 0; opacity: .5; padding-top: 1px;
+          font-size: 8.5px; font-family: var(--mono); color: var(--text3);
+          min-width: 18px; flex-shrink: 0; opacity: .38;
           transition: opacity .12s, color .12s;
         }
         .cc-toc-art-name {
-          font-size: 12px; color: var(--text2); line-height: 1.45;
+          font-size: 12px; color: var(--text3); line-height: 1.35;
           transition: color .12s;
         }
-        .cc-toc-art-item.cc-toc-art-active {
-          border-left-color: var(--blue);
-          background: color-mix(in srgb, var(--blue) 8%, transparent);
+
+        /* Artículo activo */
+        .cc-toc-art-item.cc-toc-art-active::before {
+          background: var(--blue);
+          width: 8px; height: 8px; margin-left: 4px;
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 22%, transparent);
         }
         .cc-toc-art-item.cc-toc-art-active .cc-toc-art-num { opacity: .9; color: var(--blue); }
-        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text1); font-weight: 600; }
+        .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text); font-weight: 500; }
+
+        /* Botón índice — solo visible en móvil */
         .cc-nav-bar { display: flex; align-items: center; justify-content: space-between; }
         .cc-toc-btn {
-          font-size: 10px; font-family: var(--mono); color: var(--text3);
-          background: none; border: 1px solid var(--border); border-radius: 4px;
-          padding: 4px 12px; cursor: pointer; letter-spacing: .04em; opacity: .7;
-          transition: opacity .1s;
+          font-size: 10px; font-family: var(--mono); color: var(--text2);
+          background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 4px; padding: 5px 12px; cursor: pointer;
+          letter-spacing: .04em; opacity: .85; transition: opacity .1s;
         }
         .cc-toc-btn:hover { opacity: 1; }
+        @media (min-width: 900px) { .cc-toc-btn { display: none; } }
         /* ═══ ZONA CENTRAL DE LECTURA ════════════════════════════════ */
         .cc-art-display { max-width: 700px; margin: 0 auto; padding: 0 48px 100px; }
         .cc-art-display-inner { padding-bottom: 56px; }
@@ -4189,10 +4217,10 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ═══ PANEL CONTEXTUAL DERECHO ═══════════════════════════════ */
         .cc-ctx-panel {
-          width: 320px; flex-shrink: 0;
+          width: 290px; flex-shrink: 0;
           position: sticky; top: 0; height: 100vh;
           overflow-y: auto; border-left: 1px solid var(--border);
-          background: var(--bg2);
+          background: var(--bg);
           padding: 0 0 48px; display: none;
           scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
@@ -4200,37 +4228,41 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-ctx-panel::-webkit-scrollbar { width: 2px; }
         .cc-ctx-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Cards del panel */
+        /* Cards */
         .cc-ctx-card {
-          padding: 16px 20px 18px;
+          padding: 16px 17px 18px;
           border-bottom: 1px solid var(--border);
         }
         .cc-ctx-card:last-child { border-bottom: none; }
-        /* Título de sección — más visible */
         .cc-ctx-card-hd {
-          font-size: 9px; font-family: var(--mono); text-transform: uppercase;
-          letter-spacing: .18em; color: var(--text2); font-weight: 700;
-          opacity: .8; margin-bottom: 12px;
+          display: flex; align-items: center; gap: 6px;
+          font-size: 8.5px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .16em; color: var(--text3); font-weight: 700;
+          margin-bottom: 12px;
+        }
+        .cc-ctx-card-ico {
+          opacity: .55; font-size: 11px; font-family: var(--mono);
         }
 
         /* Card 1 — Contexto */
         .cc-ctx-resumen {
-          font-size: 13px; color: var(--text1); line-height: 1.75; opacity: .85;
+          font-size: 12.5px; color: var(--text2); line-height: 1.75; margin-top: 10px;
         }
         .cc-ctx-empty {
-          font-size: 12px; color: var(--text3); opacity: .65; font-style: italic; line-height: 1.6;
+          font-size: 11.5px; color: var(--text3); font-style: italic; line-height: 1.6; opacity: .8;
         }
-        /* Estado con fondo */
+
+        /* Estado — badge coloreado */
         .cc-ctx-estado {
           display: inline-block; font-size: 9px; font-family: var(--mono);
           text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
-          padding: 4px 10px; border-radius: 3px; margin-bottom: 12px;
+          padding: 3px 9px; border-radius: 3px;
         }
         .cc-ctx-estado-vigente       { color: var(--green); background: var(--green-dim); }
         .cc-ctx-estado-complementado { color: var(--blue); background: var(--blue-dim); }
         .cc-ctx-estado-matizado      { color: var(--amber); background: var(--amber-dim); }
         .cc-ctx-estado-corregido     { color: var(--red); background: var(--red-dim); }
-        .cc-ctx-estado-pendiente     { color: var(--text3); background: var(--bg3); opacity: .9; }
+        .cc-ctx-estado-pendiente     { color: var(--text3); background: var(--bg3); }
         .cc-ctx-estado-modificado    { color: var(--red); background: var(--red-dim); }
         .cc-ctx-estado-suspendido    { color: var(--amber); background: var(--amber-dim); }
         .cc-ctx-estado-condicionado  { color: var(--amber2,#b45309); background: var(--amber-dim); }
@@ -4239,79 +4271,83 @@ Complemento de Base MAD: 1500"></textarea>
         /* Colectivos */
         .cc-ctx-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .cc-ctx-tag {
-          font-size: 9px; font-family: var(--mono); padding: 3px 9px; border-radius: 3px;
-          border: 1px solid var(--border2,var(--border)); color: var(--text2);
+          font-size: 8.5px; font-family: var(--mono); padding: 2px 8px; border-radius: 3px;
+          border: 1px solid var(--border); color: var(--text2);
           text-transform: uppercase; letter-spacing: .05em;
-          background: color-mix(in srgb, var(--bg) 60%, transparent);
         }
 
         /* Card 2 — Acuerdos */
         .cc-ctx-acuerdo {
-          display: flex; align-items: flex-start; gap: 10px;
-          margin-bottom: 12px; padding-bottom: 12px;
+          display: flex; align-items: flex-start; gap: 9px;
+          margin-bottom: 11px; padding-bottom: 11px;
           border-bottom: 1px solid var(--border);
         }
         .cc-ctx-acuerdo:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .cc-ctx-acuerdo-ico { font-size: 14px; flex-shrink: 0; margin-top: 1px; opacity: .85; }
+        .cc-ctx-acuerdo-ico {
+          font-size: 10px; font-family: var(--mono); flex-shrink: 0; margin-top: 2px;
+          color: var(--text3); opacity: .6;
+        }
         .cc-ctx-acuerdo-body { flex: 1; min-width: 0; }
         .cc-ctx-acuerdo-nombre {
-          font-size: 12.5px; color: var(--text1); font-weight: 500;
-          line-height: 1.4; display: block; margin-bottom: 4px;
+          font-size: 12px; color: var(--text); font-weight: 500;
+          line-height: 1.35; display: block; margin-bottom: 4px;
         }
         .cc-ctx-acuerdo-desc {
-          font-size: 11px; color: var(--text2); line-height: 1.6; opacity: .8;
+          font-size: 11px; color: var(--text2); line-height: 1.6;
         }
 
-        /* Badges — con borde para más legibilidad */
+        /* Badges */
         .cc-ctx-badge {
           display: inline-block; font-size: 8px; font-family: var(--mono);
-          text-transform: uppercase; letter-spacing: .1em; font-weight: 700;
+          text-transform: uppercase; letter-spacing: .09em; font-weight: 700;
           padding: 2px 7px; border-radius: 2px; margin-top: 5px;
           border: 1px solid transparent;
         }
         .cc-ctx-badge-complementa {
           color: var(--blue); background: var(--blue-dim);
-          border-color: color-mix(in srgb, var(--blue) 22%, transparent);
+          border-color: color-mix(in srgb, var(--blue) 25%, transparent);
         }
         .cc-ctx-badge-modifica {
           color: var(--amber); background: var(--amber-dim);
-          border-color: color-mix(in srgb, var(--amber) 22%, transparent);
+          border-color: color-mix(in srgb, var(--amber) 25%, transparent);
         }
         .cc-ctx-badge-condiciona {
           color: var(--text2); background: var(--bg3); border-color: var(--border);
         }
         .cc-ctx-badge-suspende {
           color: var(--red); background: var(--red-dim);
-          border-color: color-mix(in srgb, var(--red) 22%, transparent);
+          border-color: color-mix(in srgb, var(--red) 25%, transparent);
         }
 
         /* Card 3 — Referencias */
-        .cc-ctx-refs { display: flex; flex-wrap: wrap; gap: 6px; }
+        .cc-ctx-refs { display: flex; flex-direction: column; gap: 3px; }
         .cc-ctx-ref {
+          display: flex; align-items: center; gap: 7px;
           font-size: 11.5px; font-family: var(--mono); color: var(--blue);
-          cursor: pointer; opacity: .9; text-decoration: underline;
-          text-underline-offset: 2px;
-          text-decoration-color: color-mix(in srgb, var(--blue) 30%, transparent);
-          transition: opacity .1s;
-          display: block; margin-bottom: 5px;
+          cursor: pointer; padding: 5px 8px; border-radius: 4px;
+          background: color-mix(in srgb, var(--blue) 6%, transparent);
+          transition: background .12s;
         }
-        .cc-ctx-ref:hover { opacity: 1; }
+        .cc-ctx-ref:hover { background: color-mix(in srgb, var(--blue) 11%, transparent); }
+        .cc-ctx-ref::before { content: '92'; opacity: .55; font-size: 10px; }
 
         /* Card 4 — FAQs */
-        .cc-ctx-faq-item { margin-bottom: 14px; }
+        .cc-ctx-faq-item { margin-bottom: 13px; }
         .cc-ctx-faq-item:last-child { margin-bottom: 0; }
         .cc-ctx-faq-q {
-          font-size: 12.5px; font-weight: 600; color: var(--text1);
-          margin-bottom: 4px; line-height: 1.45;
+          font-size: 12px; font-weight: 600; color: var(--text);
+          margin-bottom: 4px; line-height: 1.4;
         }
         .cc-ctx-faq-a {
-          font-size: 11.5px; color: var(--text1); line-height: 1.65; opacity: .7;
+          font-size: 11.5px; color: var(--text2); line-height: 1.65;
         }
 
-        /* Fuente */
+        /* Card 5 — Fuente */
         .cc-ctx-fuente {
-          font-size: 10px; font-family: var(--mono);
-          color: var(--text2); line-height: 1.5; opacity: .75;
+          font-size: 10.5px; font-family: var(--mono); color: var(--text2);
+          padding: 5px 9px; background: var(--bg2);
+          border: 1px solid var(--border); border-radius: 4px;
+          display: inline-block; letter-spacing: .03em;
         }
         /* ═══ RESPONSIVE ═════════════════════════════════════════════ */
         @media (max-width: 899px) {
@@ -16293,7 +16329,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 1: Contexto del artículo ─────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd">Contexto del art\xedculo</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">§</span> Contexto</div>';
     h += '<span class="cc-ctx-estado cc-ctx-estado-' + esc(estado) + '">' + esc(estado) + '</span>';
     if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
       h += '<div class="cc-ctx-tags">';
@@ -16301,6 +16337,8 @@ window.PILOTPAY_BACKEND_READY = true;
         h += '<span class="cc-ctx-tag">' + esc(c.toUpperCase()) + '</span>';
       });
       h += '</div>';
+    } else if (!art.colectivos || !art.colectivos.length) {
+      h += '<div class="cc-ctx-tags"><span class="cc-ctx-tag" style="opacity:.5">General</span></div>';
     }
     if (art.resumen_operativo) {
       h += '<div class="cc-ctx-resumen" style="margin-top:10px">' + esc(art.resumen_operativo) + '</div>';
@@ -16311,7 +16349,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 2: Acuerdos relacionados ─────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd">Acuerdos relacionados</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">≡</span> Acuerdos</div>';
     if (art.afectaciones && art.afectaciones.length) {
       art.afectaciones.forEach(function(nota) {
         var tipo  = nota.tipo || nota.fuente || 'general';
@@ -16319,7 +16357,7 @@ window.PILOTPAY_BACKEND_READY = true;
         var desc  = nota.texto || nota.descripcion || '';
         var short = desc.length > 90 ? desc.substring(0, 87) + '…' : desc;
         h += '<div class="cc-ctx-acuerdo">'
-          + '<span class="cc-ctx-acuerdo-ico">📄</span>'
+          + '<span class="cc-ctx-acuerdo-ico">▸</span>'
           + '<div class="cc-ctx-acuerdo-body">'
           + '<span class="cc-ctx-acuerdo-nombre">' + esc(cfg.nombre) + '</span>'
           + (short ? '<span class="cc-ctx-acuerdo-desc">' + esc(short) + '</span>' : '')
@@ -16333,7 +16371,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 3: Referencias cruzadas ──────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd">Referencias cruzadas</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↔</span> Referencias</div>';
     if (art.related && art.related.length) {
       h += '<div class="cc-ctx-refs">';
       art.related.forEach(function(v) {
@@ -16354,7 +16392,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 4: FAQs operativas ────────────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd">FAQs operativas</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">?</span> FAQs</div>';
     if (art.faqs && art.faqs.length) {
       art.faqs.forEach(function(faq) {
         h += '<div class="cc-ctx-faq-item">'
@@ -16369,7 +16407,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── CARD 5: Fuente normativa ───────────────────────────────────
     h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd">Fuente</div>';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">¶</span> Fuente</div>';
     var fuente = art.fuente || (typeof CONVENIO_CC !== 'undefined' ? CONVENIO_CC.meta.boe : '');
     h += '<div class="cc-ctx-fuente">' + esc(fuente) + '</div>';
     h += '</div>';
@@ -16482,6 +16520,12 @@ window.PILOTPAY_BACKEND_READY = true;
         }
       }
       rows.push(row); i++;
+    }
+    // Carry-forward: rows with empty inicial inherit from previous (BOE combined cells)
+    for (var j = 1; j < rows.length; j++) {
+      if (rows[j].inicial === '' && rows[j-1].inicial !== '') {
+        rows[j].inicial = rows[j-1].inicial;
+      }
     }
     return { rows: rows, footer: lines.slice(footerStart) };
   }
