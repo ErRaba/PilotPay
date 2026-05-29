@@ -624,7 +624,7 @@ var CONVENIO_CC = {
         },
         {
           numero: 45, titulo: 'Retribuci\xf3n Grupos I y II',
-          estado: 'vigente', colectivos: ['CMD','COP','SCC','TCP'],
+          estado: 'vigente', colectivos: [],
           fuente: 'BOE-A-2026-6389',
           texto_oficial:
             'El personal encuadrado dentro de los Grupos I y II ser\xe1n retribuidos por los siguientes conceptos:\n\n'
@@ -1126,7 +1126,7 @@ var CONVENIO_CC = {
         },
         {
           numero: 92, titulo: 'Uniformidad Grupo Laboral III',
-          estado: 'vigente', colectivos: ['SCC'],
+          estado: 'vigente', colectivos: ['SCC','TCP'],
           fuente: 'BOE-A-2026-6389',
           texto_oficial:
             'Los trabajadores del Grupo Laboral III recibirán al iniciar su relación laboral las \nprendas de uniforme que se relacionan en este anexo, y en el que se especifica la \nduración y reposición de las mismas.\nEquipo\nInicial\nRenovación\nVestido manga larga/corta o camisa y pantalón.\n5\nPor deterioro.\nChaqueta bienvenida.\n1\nPor deterioro.\nCorbata.\n2\nPor deterioro.\nChaqueta a bordo.\n1\nPor deterioro.\nAbrigo.\n1\nPor deterioro.\nChaleco rojo.\n1\nPor deterioro.\nTocado.\n1\nPor deterioro.\nDelantal.\n1\nPor deterioro.\nBolso.\n1\nPor deterioro.\nTrolley Samsonite.\n1\nPor deterioro.\nNevera.\n1\nPor deterioro.\nPlaca identificativa.\n4\nPor deterioro.\nEquipo\nInicial\nRenovación\nPañuelo Celeste.\n2\nPor deterioro.\nPañuelo Azul.\n2\nPor deterioro.\nGuantes.\n1\nPor deterioro.\nMedias 20 DEN.\n6\nPor deterioro.\nMedias 40 DEN.\nN/A\nPor deterioro.\nZapatos.\n2\nPor deterioro.\nVestido de verano.\n3\nPor deterioro.\nEl número de prendas será proporcional a la duración de los contratos de un TCP por \naño.\nLa decisión de gabardina o abrigo, será a criterio de la dirección y aplicable al \nconjunto del colectivo.\nLa decisión de bolso de viaje o maleta, será a criterio de la dirección y aplicable al \nconjunto del colectivo. En caso de robo debidamente justificado, o deterioro, podrá \nsustituirse por uno nuevo a criterio de la dirección.\nLas prendas que por mal uso o lavado incorrecto se deterioren, serán abonadas por \nel TCP.\nA aquellos TCP que no puedan hacer uso de las medías o calcetines normales, la \nCompañía les facilitará una dotación de medías o calcetines de descanso, cuya cantidad \nsea equivalente por su precio a los normales.\nDebido a que la empresa vela por la imagen de Binter Canarias en todo momento, y \nen especial, por la imagen que proyecta el Colectivo de TCPs ya que es personal de \nprimera línea, si durante la vigencia del presente convenio la Compañía decidiera \nmodificar, prescindir o añadir, alguna prenda o el uniforme en su totalidad, podrá hacerlo \nprevia comunicación a los representantes del Colectivo de TCPs, informándoles de la \ndotación inicial y renovaciones que aplique.\nLa Dirección de la compañía velará en todo momento por mantener la buena imagen. \nPor este motivo, independientemente de este acuerdo proporcionará la uniformidad \nnecesaria para que esto se cumpla.\nToda la dotación de uniformidad proporcionada, no podrá ser utilizada para otros \nfines que no sean los laborales estipulados y asignados por la compañía.',
