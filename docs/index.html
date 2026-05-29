@@ -4073,8 +4073,15 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-toc-btn:hover { opacity: 1; }
         @media (min-width: 900px) { .cc-toc-btn { display: none; } }
         /* ═══ ZONA CENTRAL DE LECTURA ════════════════════════════════ */
-        .cc-art-display { max-width: 700px; margin: 0 auto; padding: 0 48px 100px; }
-        .cc-art-display-inner { padding-bottom: 56px; }
+        .cc-art-display { max-width: 720px; margin: 0 auto; padding: 0 20px 48px; }
+        /* Documento — hoja oscura dentro del visor */
+        .cc-art-display-inner {
+          background: color-mix(in srgb, var(--bg2) 32%, transparent);
+          border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+          border-radius: 8px;
+          padding: 24px 34px 52px;
+          margin-top: 6px;
+        }
         .cc-welcome { padding: 24px 0 24px; }
         .cc-welcome-title {
           font-size: 19px; font-weight: 600; color: var(--text1);
@@ -4111,25 +4118,26 @@ Complemento de Base MAD: 1500"></textarea>
         /* Breadcrumb */
         .cc-breadcrumb {
           display: flex; align-items: center; gap: 6px;
-          padding: 6px 0 0; flex-wrap: wrap;
+          padding: 2px 0 10px; flex-wrap: wrap;
         }
         .cc-bc-item { font-size: 11px; color: var(--text3); cursor: pointer; opacity: .6; transition: opacity .1s; }
         .cc-bc-item:hover { opacity: 1; }
         .cc-bc-sep { color: var(--border2); font-size: 11px; user-select: none; opacity: .4; }
         .cc-bc-current { color: var(--text2); cursor: default; opacity: .85; }
         .cc-bc-current:hover { opacity: .85; }
-        /* Cabecera artículo */
+        /* Cabecera artículo — bloque cohesionado */
         .cc-art-reader-num {
           font-size: 9px; font-family: var(--mono); color: var(--text3);
-          text-transform: uppercase; letter-spacing: .2em; margin-top: 24px; opacity: .4;
+          text-transform: uppercase; letter-spacing: .22em; margin-top: 14px; opacity: .4;
         }
         .cc-art-reader-title {
-          font-size: 23px; font-weight: 700; color: var(--text1);
-          line-height: 1.2; margin: 8px 0 12px; letter-spacing: -.025em;
+          font-size: 22px; font-weight: 700; color: var(--text1);
+          line-height: 1.22; margin: 5px 0 10px; letter-spacing: -.022em;
         }
         .cc-art-reader-meta {
-          display: flex; align-items: center; gap: 6px;
-          flex-wrap: wrap; padding-bottom: 22px; border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; gap: 8px;
+          flex-wrap: wrap; padding-bottom: 18px;
+          border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
         }
         /* Estado — solo en encabezado del artículo */
         .cc-art-estado {
@@ -4152,32 +4160,33 @@ Complemento de Base MAD: 1500"></textarea>
           border: 1px solid var(--border); border-radius: 3px; padding: 2px 7px;
         }
         /* Secciones del artículo */
-        .cc-art-reader-section { margin-top: 34px; }
+        .cc-art-reader-section { margin-top: 32px; }
         .cc-art-reader-section-lbl {
-          font-size: 9px; font-family: var(--mono); text-transform: uppercase;
-          letter-spacing: .2em; color: var(--text3); font-weight: 600;
+          font-size: 8.5px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .22em; color: var(--text3); font-weight: 600;
           opacity: .4; margin-bottom: 16px;
         }
         /* Texto legal */
-        .cc-art-reader-txt { font-size: 17px; color: var(--text1); line-height: 1.85; }
-        .cc-art-reader-txt p { margin: 0 0 1.3em; }
+        .cc-art-reader-txt { font-size: 16.5px; color: var(--text1); line-height: 1.88; }
+        .cc-art-reader-txt p { margin: 0 0 1.4em; }
         .cc-art-reader-txt p:last-child { margin-bottom: 0; }
-        /* Estructura legal: a), b), 1., 2., A., B. */
-        .cc-legal-item {
-          display: flex; gap: 14px; padding: 4px 0; margin: 2px 0;
-        }
+        /* Apartados jurídicos: a), b), 1., 2., A., B. */
+        .cc-legal-item { display: flex; gap: 0; padding: 5px 0; margin: 0; }
         .cc-legal-marker {
-          font-family: var(--mono); font-size: 11px; color: var(--blue);
-          opacity: .65; min-width: 22px; flex-shrink: 0;
-          padding-top: 4px; font-weight: 700;
+          font-family: var(--mono); font-size: 11.5px; color: var(--text3);
+          opacity: .75; min-width: 30px; flex-shrink: 0;
+          padding-top: 3px; font-weight: 500;
         }
-        .cc-legal-text { line-height: 1.82; font-size: inherit; }
-        .cc-legal-intro { margin-bottom: 6px; }
-        /* Texto oficial: separador visual entre label y cuerpo */
+        .cc-legal-text { line-height: 1.82; font-size: inherit; flex: 1; }
+        .cc-legal-intro { margin-bottom: 8px; }
+        /* Texto oficial — label con línea extendida */
         .cc-art-texto-sec > .cc-art-reader-section-lbl {
-          opacity: .55; padding-bottom: 14px;
-          border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-          margin-bottom: 20px;
+          display: flex; align-items: center; gap: 12px;
+          opacity: .65; margin-bottom: 22px;
+        }
+        .cc-art-texto-sec > .cc-art-reader-section-lbl::after {
+          content: ''; flex: 1; height: 1px;
+          background: color-mix(in srgb, var(--border) 50%, transparent);
         }
         .cc-art-pend-txt { font-size: 13px; color: var(--text3); font-style: italic; line-height: 1.7; opacity: .7; }
         /* Sección PilotPay */
@@ -4211,18 +4220,37 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-art-faq-item:first-of-type { margin-top: 0; }
         .cc-art-faq-q { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 5px; line-height: 1.4; }
         .cc-art-faq-a { font-size: 13px; color: var(--text2); line-height: 1.75; }
-        /* Navegación prev/next */
+        /* Navegación prev/next — cards documentales */
         .cc-art-reader-nav {
-          display: flex; align-items: center; justify-content: space-between;
-          margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--border); gap: 14px;
+          display: flex; align-items: stretch; justify-content: space-between;
+          margin-top: 40px; gap: 10px;
         }
+        .cc-art-reader-nav > span { flex: 1; }
         .cc-art-reader-nav-btn {
-          font-size: 11px; font-family: var(--mono); color: var(--text3);
-          background: none; border: none; padding: 0; cursor: pointer; opacity: .6;
-          transition: opacity .1s; white-space: nowrap;
-          overflow: hidden; text-overflow: ellipsis; max-width: 48%;
+          flex: 1; max-width: 48%;
+          display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+          padding: 11px 14px;
+          background: color-mix(in srgb, var(--bg2) 55%, transparent);
+          border: 1px solid var(--border); border-radius: 6px;
+          cursor: pointer; text-align: left;
+          transition: border-color .12s, background .12s;
         }
-        .cc-art-reader-nav-btn:hover { opacity: 1; color: var(--text2); }
+        .cc-art-reader-nav-btn:hover {
+          border-color: color-mix(in srgb, var(--blue) 45%, var(--border));
+          background: color-mix(in srgb, var(--blue) 5%, var(--bg2));
+        }
+        .cc-nav-next { align-items: flex-end; text-align: right; }
+        .cc-nav-dir {
+          font-size: 8px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .16em; color: var(--text3); opacity: .45;
+          display: block; line-height: 1;
+        }
+        .cc-nav-lbl {
+          font-size: 11px; font-family: var(--mono); color: var(--text2);
+          display: block; font-weight: 500; line-height: 1.35;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          max-width: 100%;
+        }
 
         /* ═══ TABLA DE UNIFORMIDAD (Art. 92/93 y reutilizable) ══════ */
         .cc-uniforme-table {
@@ -4424,13 +4452,16 @@ Complemento de Base MAD: 1500"></textarea>
         }
         /* ═══ RESPONSIVE ═════════════════════════════════════════════ */
         @media (max-width: 899px) {
-          .cc-art-display { padding: 0 22px 80px; }
+          .cc-art-display { padding: 0 10px 40px; }
           .cc-art-reader-txt { font-size: 16px; }
         }
         @media (max-width: 599px) {
-          .cc-art-display { padding: 0 16px 64px; }
+          .cc-art-display { padding: 0 6px 32px; }
+          .cc-art-display-inner { padding: 18px 18px 40px; }
           .cc-art-reader-title { font-size: 19px; }
           .cc-art-reader-txt { font-size: 15px; line-height: 1.8; }
+          .cc-art-reader-nav-btn { padding: 9px 11px; }
+          .cc-nav-lbl { font-size: 10.5px; }
         }
 
         @keyframes cc-art-flash { 0% { opacity: .35; } 100% { opacity: 1; } }
