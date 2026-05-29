@@ -3889,7 +3889,8 @@ Complemento de Base MAD: 1500"></textarea>
         #page-convenio #ck-v-answer {
           flex: 1; overflow-y: auto; padding: 16px;
         }
-        #ck-v-cc { flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+        #ck-v-cc,
+        #ck-v-acuerdos { flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
         .cc-reader-layout {
           display: flex; align-items: stretch;
           flex: 1; overflow: hidden; min-height: 0;
@@ -4461,6 +4462,39 @@ Complemento de Base MAD: 1500"></textarea>
         @keyframes cc-art-flash { 0% { opacity: .35; } 100% { opacity: 1; } }
         .cc-art-reader-hl { animation: cc-art-flash .4s ease-out forwards; }
 
+        /* ── Acuerdos y aplicación — visor documental ── */
+        .ac-meta-table { display: flex; flex-direction: column; }
+        .ac-meta-row {
+          display: flex; gap: 12px; align-items: baseline;
+          padding: 7px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+        }
+        .ac-meta-row:last-child { border-bottom: none; }
+        .ac-meta-lbl {
+          color: var(--text3); min-width: 110px; flex-shrink: 0;
+          font-size: 11.5px; font-family: var(--mono);
+        }
+        .ac-meta-val { color: var(--text2); font-size: 13px; line-height: 1.5; }
+        .ac-layer-group { margin-bottom: 18px; }
+        .ac-layer-lbl {
+          font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .12em; color: var(--text3); margin-bottom: 9px;
+        }
+        .ac-doc-row {
+          display: flex; align-items: center; gap: 9px;
+          padding: 8px 10px; border-radius: 5px; margin-bottom: 5px;
+          border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+          background: color-mix(in srgb, var(--bg2) 35%, transparent);
+        }
+        .ac-doc-badge {
+          font-family: var(--mono); font-size: 9px; font-weight: 700;
+          padding: 2px 5px; border-radius: 3px; flex-shrink: 0;
+        }
+        .ac-doc-badge-L2_ACTA    { background: color-mix(in srgb, var(--blue)  18%, transparent); color: var(--blue); }
+        .ac-doc-badge-L3_ACUERDO { background: color-mix(in srgb, var(--amber) 18%, transparent); color: var(--amber); }
+        .ac-doc-nombre   { flex: 1; font-size: 13px; color: var(--text2); }
+        .ac-doc-vigencia { font-size: 11px; color: var(--green); font-family: var(--mono); }
+        .ac-doc-expirado { color: var(--text3); }
+
         /* ── Normative state badges ── */
         .nr-badge {
           display: inline-flex; align-items: center; gap: 3px;
@@ -4675,44 +4709,39 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="ck-block">
           <div class="ck-block-label">Acuerdos y aplicación</div>
           <div class="card" style="padding:0">
-            <div class="ck-filter-panel">
-              <div class="ck-filter-row">
-                <div class="ck-filter-sec">
-                  <div class="ck-filter-sec-lbl">Base</div>
-                  <div class="ck-chip-row" id="ck-chips-base">
-                    <button class="ck-chip" onclick="ckChipBase('MAD')">MAD</button>
-                    <button class="ck-chip" onclick="ckChipBase('TFN')">TFN</button>
-                    <button class="ck-chip" onclick="ckChipBase('LPA')">LPA</button>
-                  </div>
-                </div>
-                <div class="ck-filter-sec">
-                  <div class="ck-filter-sec-lbl">Función</div>
-                  <div class="ck-chip-row" id="ck-chips-grupo">
-                    <button class="ck-chip" onclick="ckChipGrupo('CMD')">CMD</button>
-                    <button class="ck-chip" onclick="ckChipGrupo('COP')">COP</button>
-                    <button class="ck-chip" onclick="ckChipGrupo('SCC')">SCC</button>
-                    <button class="ck-chip" onclick="ckChipGrupo('TCP')">TCP</button>
-                  </div>
-                </div>
+            <div class="ck-cc-entry" onclick="ckOpenAcuerdos()">
+              <div class="ck-cc-entry-ico">📑</div>
+              <div class="ck-cc-entry-meta">
+                <div class="ck-cc-entry-title">Acuerdos y aplicación · BCSA 2026</div>
+                <div class="ck-cc-entry-sub">Acta de Cierre · Roster MAD / TFN / LPA · Productividad · Modificaciones sobre Convenio</div>
               </div>
-              <div class="ck-filter-sec">
-                <div class="ck-filter-sec-lbl">Nivel salarial <span class="ck-filter-actions"><button class="ck-filter-action" onclick="ckNivelClear()">Limpiar</button></span></div>
-                <div class="ck-chip-row" id="ck-chips-nivel">
-                  <button class="ck-chip" onclick="ckChipNivel('N1+')">N1+</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N1')">N1</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N2')">N2</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N3')">N3</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N4')">N4</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N5')">N5</button>
-                  <button class="ck-chip" onclick="ckChipNivel('N6')">N6</button>
-                </div>
-              </div>
-              <div class="ck-filter-sec" id="ck-temas-filter" style="display:none">
-                <div class="ck-filter-sec-lbl">Temas <span class="ck-filter-actions"><button class="ck-filter-action" onclick="ckTemasAll()">Todos</button><button class="ck-filter-action" onclick="ckTemasNone()">Limpiar</button></span></div>
-                <div class="ck-chip-row" id="ck-chips-temas"></div>
-              </div>
+              <div class="ck-cc-entry-arrow">→</div>
             </div>
           </div>
+        </div>
+        <!-- Filtros ocultos — preservados para compatibilidad interna con motor normativo -->
+        <div style="display:none">
+          <div id="ck-chips-base">
+            <button class="ck-chip" onclick="ckChipBase('MAD')">MAD</button>
+            <button class="ck-chip" onclick="ckChipBase('TFN')">TFN</button>
+            <button class="ck-chip" onclick="ckChipBase('LPA')">LPA</button>
+          </div>
+          <div id="ck-chips-grupo">
+            <button class="ck-chip" onclick="ckChipGrupo('CMD')">CMD</button>
+            <button class="ck-chip" onclick="ckChipGrupo('COP')">COP</button>
+            <button class="ck-chip" onclick="ckChipGrupo('SCC')">SCC</button>
+            <button class="ck-chip" onclick="ckChipGrupo('TCP')">TCP</button>
+          </div>
+          <div id="ck-chips-nivel">
+            <button class="ck-chip" onclick="ckChipNivel('N1+')">N1+</button>
+            <button class="ck-chip" onclick="ckChipNivel('N1')">N1</button>
+            <button class="ck-chip" onclick="ckChipNivel('N2')">N2</button>
+            <button class="ck-chip" onclick="ckChipNivel('N3')">N3</button>
+            <button class="ck-chip" onclick="ckChipNivel('N4')">N4</button>
+            <button class="ck-chip" onclick="ckChipNivel('N5')">N5</button>
+            <button class="ck-chip" onclick="ckChipNivel('N6')">N6</button>
+          </div>
+          <div id="ck-temas-filter"><div id="ck-chips-temas"></div></div>
         </div>
 
         <!-- Resultados normativa (oculto hasta consulta) -->
@@ -4767,6 +4796,19 @@ Complemento de Base MAD: 1500"></textarea>
         <div class="ck-nav"><button class="ck-back" onclick="ckBack()">← Volver</button></div>
         <div id="ck-answer-content"></div>
       </div><!-- /ck-v-answer -->
+
+      <!-- VIEW: ACUERDOS Y APLICACIÓN — visor documental -->
+      <div id="ck-v-acuerdos" class="ck-view">
+        <div class="ck-nav cc-nav-bar">
+          <button class="ck-back" onclick="ckBack()">← Volver</button>
+          <button class="cc-toc-btn" onclick="acToggleSidebar()">≡ Índice</button>
+        </div>
+        <div class="cc-reader-layout">
+          <nav id="ac-sidebar" class="cc-sidebar"></nav>
+          <div id="ac-content" class="cc-reader-main"></div>
+          <aside id="ac-ctx-panel" class="cc-ctx-panel"></aside>
+        </div>
+      </div><!-- /ck-v-acuerdos -->
 
       <!-- VIEW: CONVENIO COLECTIVO -->
       <div id="ck-v-cc" class="ck-view">
@@ -14200,9 +14242,10 @@ window.PILOTPAY_BACKEND_READY = true;
   // ── UI helpers ──
 
   function showView(name) {
-    ['home', 'topic', 'answer', 'cc'].forEach(function(v) {
+    var FLEX_VIEWS = { cc: true, acuerdos: true };
+    ['home', 'topic', 'answer', 'cc', 'acuerdos'].forEach(function(v) {
       var el = document.getElementById('ck-v-' + v);
-      if (el) el.style.display = (v === name) ? (v === 'cc' ? 'flex' : 'block') : 'none';
+      if (el) el.style.display = (v === name) ? (FLEX_VIEWS[v] ? 'flex' : 'block') : 'none';
     });
     _ckView = name;
   }
@@ -16720,6 +16763,299 @@ window.PILOTPAY_BACKEND_READY = true;
       return '<p>' + esc(c.text) + '</p>';
     }).filter(Boolean).join('');
   }
+
+  // ══════════════════════════════════════════════════════════════
+  // ACUERDOS Y APLICACIÓN — visor documental
+  // ══════════════════════════════════════════════════════════════
+
+  var _acOpenItemId = null;
+  var _acOpenDocId  = null;
+
+  // Árbol temático del índice lateral (navegación principal por tema, no por documento)
+  var _AC_TREE = [
+    { id: 'jornada', label: 'Jornada / Roster', items: [
+      { id: 'roster_mad_tfn', label: 'MAD + TFN  \xb7  6+3', badge: 'L3', docId: 'roster_mad_tfn_2026' },
+      { id: 'roster_lpa',     label: 'LPA  \xb7  5+3',        badge: 'L3', docId: 'roster_lpa_2026' },
+      { id: 'roster_tfn53',   label: 'TFN  \xb7  5+3',        badge: 'L3', docId: 'roster_tfn_5_3_2026' },
+    ]},
+    { id: 'retribucion', label: 'Retribuci\xf3n', items: [
+      { id: 'prod_2026', label: 'DPO / Productividad', badge: 'L3', docId: 'productividad_2026' },
+      { id: 'media_var', label: 'Media de Variables',   badge: 'L2', docId: 'acta_cierre_2025' },
+    ]},
+    { id: 'ausencias', label: 'Ausencias / Licencias', items: [
+      { id: 'lic_ant', label: 'Licencias por antig\xfcedad', badge: 'L2', docId: 'acta_cierre_2025' },
+    ]},
+    { id: 'documentos', label: 'Documentos fuente', items: [
+      { id: 'doc_acta',   label: 'Acta de Cierre',   badge: 'L2', docId: 'acta_cierre_2025' },
+      { id: 'doc_mad',    label: 'Roster MAD + TFN',  badge: 'L3', docId: 'roster_mad_tfn_2026' },
+      { id: 'doc_tfn53',  label: 'Roster TFN 5+3',    badge: 'L3', docId: 'roster_tfn_5_3_2026' },
+      { id: 'doc_lpa',    label: 'Roster LPA 5+3',    badge: 'L3', docId: 'roster_lpa_2026' },
+      { id: 'doc_prod',   label: 'Productividad 2026', badge: 'L3', docId: 'productividad_2026' },
+    ]},
+  ];
+
+  // ── Helpers ─────────────────────────────────────────────────
+  function _acFindItemForDoc(docId) {
+    // Prefer 'documentos' section for direct document navigation
+    for (var s = 0; s < _AC_TREE.length; s++) {
+      if (_AC_TREE[s].id !== 'documentos') continue;
+      for (var i = 0; i < _AC_TREE[s].items.length; i++) {
+        if (_AC_TREE[s].items[i].docId === docId) return _AC_TREE[s].items[i].id;
+      }
+    }
+    for (var s = 0; s < _AC_TREE.length; s++) {
+      for (var i = 0; i < _AC_TREE[s].items.length; i++) {
+        if (_AC_TREE[s].items[i].docId === docId) return _AC_TREE[s].items[i].id;
+      }
+    }
+    return null;
+  }
+
+  // ── Abrir el visor ──────────────────────────────────────────
+  window.ckOpenAcuerdos = function() {
+    _ckPrevView = _ckView;
+    _buildAcuerdosSidebar();
+    var el = document.getElementById('ac-content');
+    if (el) el.innerHTML = '<div class="cc-art-display" id="ac-art-display">' + _renderAcuerdosWelcome() + '</div>';
+    var panel = document.getElementById('ac-ctx-panel');
+    if (panel) panel.innerHTML = '';
+    showView('acuerdos');
+    var mainCol = document.getElementById('ac-content');
+    if (mainCol) mainCol.scrollTop = 0;
+  };
+
+  // ── API de navegación cruzada ────────────────────────────────
+  // Abre el visor CC directamente en un artículo concreto (desde cualquier vista)
+  window.openConvenioArticle = function(artNum) {
+    if (_ckView === 'cc') { ccGotoArt(artNum); return; }
+    _ckPrevView = _ckView;
+    _ccBuildNav();
+    _buildCCSidebar();
+    var el = document.getElementById('ck-cc-content');
+    if (el) el.innerHTML = '<div class="cc-art-display" id="cc-art-display">' + _renderCCWelcome() + '</div>';
+    var panel = document.getElementById('cc-ctx-panel');
+    if (panel) panel.innerHTML = '';
+    showView('cc');
+    var mainCol = document.getElementById('ck-cc-content');
+    if (mainCol) mainCol.scrollTop = 0;
+    setTimeout(function() { ccGotoArt(artNum); }, 60);
+  };
+
+  // Abre el visor Acuerdos directamente en un documento/regla (desde cualquier vista)
+  window.openAgreementRule = function(docId, ruleId) {
+    _ckPrevView = _ckView;
+    var itemId = _acFindItemForDoc(docId);
+    if (itemId) _acOpenItemId = itemId;
+    _acOpenDocId = docId;
+    _buildAcuerdosSidebar();
+    showView('acuerdos');
+    var mainCol = document.getElementById('ac-content');
+    if (mainCol) mainCol.scrollTop = 0;
+    setTimeout(function() { _acOpenDoc(docId, ruleId); }, 60);
+  };
+
+  // ── Sidebar ─────────────────────────────────────────────────
+  function _buildAcuerdosSidebar() {
+    var nav = document.getElementById('ac-sidebar');
+    if (!nav) return;
+    var h = '<div class="cc-toc-hd">'
+      + '<span class="cc-toc-hd-lbl">Acuerdos</span>'
+      + '<button class="cc-toc-close" onclick="acToggleSidebar()">✕</button>'
+      + '</div><div class="cc-toc-scroll">';
+    _AC_TREE.forEach(function(section) {
+      var isOpen = section.items.some(function(it) { return it.id === _acOpenItemId; });
+      h += '<div class="cc-toc-section' + (isOpen ? ' cc-toc-open' : '') + '" id="ac-sec-' + esc(section.id) + '">';
+      h += '<div class="cc-toc-cap-hd" onclick="acToggleSection(\'' + esc(section.id) + '\')">'
+        + '<span class="cc-toc-cap-name">' + esc(section.label) + '</span>'
+        + '<span class="cc-toc-cap-count">' + section.items.length + '</span>'
+        + '<span class="cc-toc-cap-chevron">›</span></div>';
+      h += '<div class="cc-toc-arts" id="ac-arts-' + esc(section.id) + '" style="display:' + (isOpen ? 'block' : 'none') + '">';
+      h += '<div style="height:2px"></div>';
+      section.items.forEach(function(item) {
+        var isActive  = item.id === _acOpenItemId;
+        var badgeClr  = item.badge === 'L2' ? 'var(--blue)' : 'var(--amber)';
+        h += '<div class="cc-toc-art-item' + (isActive ? ' cc-toc-art-active' : '') + '" id="ac-item-' + esc(item.id) + '"'
+          + ' onclick="acSelectItem(\'' + esc(item.id) + '\',\'' + esc(item.docId) + '\')">'
+          + '<span class="cc-toc-art-num" style="color:' + badgeClr + ';font-size:9px;min-width:22px;letter-spacing:.02em">' + esc(item.badge) + '</span>'
+          + '<span class="cc-toc-art-name">' + esc(item.label) + '</span>'
+          + '</div>';
+      });
+      h += '</div></div>';
+    });
+    h += '</div>';
+    nav.innerHTML = h;
+  }
+
+  window.acToggleSection = function(secId) {
+    var secEl  = document.getElementById('ac-sec-'  + secId);
+    var artsEl = document.getElementById('ac-arts-' + secId);
+    if (!secEl || !artsEl) return;
+    var opening = !secEl.classList.contains('cc-toc-open');
+    secEl.classList.toggle('cc-toc-open', opening);
+    artsEl.style.display = opening ? 'block' : 'none';
+  };
+
+  window.acSelectItem = function(itemId, docId) {
+    _acOpenItemId = itemId;
+    _acOpenDocId  = docId;
+    document.querySelectorAll('#ac-sidebar .cc-toc-art-item').forEach(function(el) { el.classList.remove('cc-toc-art-active'); });
+    var el = document.getElementById('ac-item-' + itemId);
+    if (el) { el.classList.add('cc-toc-art-active'); el.scrollIntoView({ block: 'nearest' }); }
+    _acOpenDoc(docId, null);
+  };
+
+  function _acOpenDoc(docId, ruleId) {
+    var doc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[docId] : null;
+    var content = document.getElementById('ac-content');
+    if (!content) return;
+    var display = document.getElementById('ac-art-display');
+    if (!display) {
+      content.innerHTML = '<div class="cc-art-display" id="ac-art-display"></div>';
+      display = document.getElementById('ac-art-display');
+    }
+    if (display) {
+      display.innerHTML = _renderAcuerdoDoc(doc, docId, ruleId);
+      var inner = display.querySelector('.cc-art-display-inner');
+      if (inner) {
+        inner.classList.add('cc-art-reader-hl');
+        setTimeout(function() { if (inner) inner.classList.remove('cc-art-reader-hl'); }, 1600);
+      }
+    }
+    content.scrollTop = 0;
+    var panel = document.getElementById('ac-ctx-panel');
+    if (panel) panel.innerHTML = _renderAcuerdoCtxPanel(doc);
+    var sb = document.getElementById('ac-sidebar');
+    if (sb && window.innerWidth < 800) sb.classList.remove('cc-sidebar-open');
+  }
+
+  // ── Pantalla de bienvenida ───────────────────────────────────
+  function _renderAcuerdosWelcome() {
+    var h = '<div class="cc-art-display-inner">';
+    h += '<nav class="cc-breadcrumb"><span class="cc-bc-item cc-bc-current">Acuerdos y aplicaci\xf3n</span></nav>';
+    h += '<div class="cc-art-reader-num">BCSA · Binter Canarias 2026</div>';
+    h += '<h1 class="cc-art-reader-title">Acuerdos y aplicaci\xf3n</h1>';
+    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
+    h += '<section class="cc-art-reader-section cc-art-texto-sec">';
+    h += '<div class="cc-art-reader-section-lbl">Jerarqu\xeda normativa activa</div>';
+    if (typeof NORM_DOCS !== 'undefined') {
+      [{ capa: 'L2_ACTA', label: 'Capa 2 — Acta de Cierre' },
+       { capa: 'L3_ACUERDO', label: 'Capa 3 — Acuerdos espec\xedficos de base' }]
+      .forEach(function(layer) {
+        var docs = Object.keys(NORM_DOCS).map(function(k){ return NORM_DOCS[k]; })
+          .filter(function(d){ return d.capa === layer.capa; });
+        if (!docs.length) return;
+        h += '<div class="ac-layer-group">';
+        h += '<div class="ac-layer-lbl">' + esc(layer.label) + '</div>';
+        docs.forEach(function(doc) {
+          var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
+          h += '<div class="ac-doc-row">'
+            + '<span class="ac-doc-badge ac-doc-badge-' + esc(doc.capa) + '">'
+            + (doc.capa === 'L2_ACTA' ? 'L2' : 'L3') + '</span>'
+            + '<span class="ac-doc-nombre">' + esc(doc.nombre_corto) + '</span>'
+            + '<span class="ac-doc-vigencia' + (vigente ? '' : ' ac-doc-expirado') + '">'
+            + (vigente ? 'vigente' : 'vencido') + '</span></div>';
+        });
+        h += '</div>';
+      });
+    }
+    h += '<p style="margin-top:20px;font-size:13px;color:var(--text3);line-height:1.75">'
+      + 'Esta secci\xf3n recoge las modificaciones, complementos y acuerdos de base '
+      + 'que se aplican sobre el Convenio Colectivo. '
+      + 'Selecciona un tema en el \xeddice para consultar los acuerdos aplicables.'
+      + '</p>';
+    h += '</section></div>';
+    return h;
+  }
+
+  // ── Render de documento ─────────────────────────────────────
+  function _renderAcuerdoDoc(doc, docId, ruleId) {
+    if (!doc) return '<div class="cc-art-display-inner"><div class="cc-art-pend-txt">Documento no encontrado.</div></div>';
+    var vigente    = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
+    var capaLabel  = (typeof NORM_LAYERS !== 'undefined' && NORM_LAYERS[doc.capa]) ? NORM_LAYERS[doc.capa].label : doc.capa;
+    var capaCodigo = doc.capa === 'L2_ACTA' ? 'L2' : 'L3';
+    var h = '<div class="cc-art-display-inner">';
+    // Breadcrumb
+    h += '<nav class="cc-breadcrumb">'
+      + '<span class="cc-bc-item" onclick="ckOpenAcuerdos()">Acuerdos</span>'
+      + '<span class="cc-bc-sep">›</span>'
+      + '<span class="cc-bc-item cc-bc-current">' + esc(doc.nombre_corto) + '</span>'
+      + '</nav>';
+    // Header
+    h += '<div class="cc-art-reader-num">' + esc(capaCodigo) + ' \xb7 ' + esc(capaLabel) + '</div>';
+    h += '<h1 class="cc-art-reader-title">' + esc(doc.nombre) + '</h1>';
+    h += '<div class="cc-art-reader-meta">';
+    h += '<span class="cc-art-estado cc-art-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
+    if (doc.temporal) h += '<span class="cc-art-col-tag" style="color:var(--amber)">temporal</span>';
+    h += '</div>';
+    // Metadata
+    h += '<section class="cc-art-reader-section">';
+    h += '<div class="cc-art-reader-section-lbl">Datos del documento</div>';
+    h += '<div class="ac-meta-table">';
+    if (doc.referencia) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Referencia</span><span class="ac-meta-val">' + esc(doc.referencia) + '</span></div>';
+    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Firma</span><span class="ac-meta-val">' + esc(doc.fecha_firma || '—') + '</span></div>';
+    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Desde</span><span class="ac-meta-val">' + esc(doc.vigencia_desde || '—') + '</span></div>';
+    if (doc.vigencia_hasta) h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Hasta</span><span class="ac-meta-val">' + esc(doc.vigencia_hasta) + (doc.nota_vigencia ? ' *' : '') + '</span></div>';
+    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Bases</span><span class="ac-meta-val">' + esc((doc.bases || []).join(', ')) + '</span></div>';
+    h += '<div class="ac-meta-row"><span class="ac-meta-lbl">Colectivos</span><span class="ac-meta-val">' + esc((doc.grupos || []).join(', ')) + '</span></div>';
+    h += '</div>';
+    if (doc.nota_vigencia) h += '<p style="font-size:11.5px;color:var(--text3);margin-top:9px;line-height:1.6">* ' + esc(doc.nota_vigencia) + '</p>';
+    if (doc.nota) h += '<div style="font-size:13px;color:var(--text2);margin-top:13px;line-height:1.7;padding:12px 14px;background:color-mix(in srgb,var(--bg2) 45%,transparent);border-left:2px solid color-mix(in srgb,var(--blue) 40%,var(--border));border-radius:0 4px 4px 0">' + esc(doc.nota) + '</div>';
+    h += '</section>';
+    // Reglas — placeholder Fase 2
+    h += '<section class="cc-art-reader-section">';
+    h += '<div class="cc-art-reader-section-lbl">Reglas espec\xedficas</div>';
+    h += '<div class="cc-art-pend-txt" style="text-align:center;padding:28px 0">'
+      + 'El detalle de reglas se incorporar\xe1 en la siguiente fase del visor.'
+      + '<br><span style="font-size:12px;color:var(--text3)">Las reglas est\xe1n cargadas en el motor normativo.</span>'
+      + '</div>';
+    h += '</section></div>';
+    return h;
+  }
+
+  // ── Panel contextual derecho ─────────────────────────────────
+  function _renderAcuerdoCtxPanel(doc) {
+    if (!doc) return '';
+    var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
+    var h = '';
+    // Vigencia
+    h += '<div class="cc-ctx-card">';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Vigencia</div>';
+    h += '<span class="cc-ctx-estado cc-ctx-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
+    h += '<div style="margin-top:9px;font-size:12.5px;color:var(--text3);line-height:1.6">';
+    if (doc.vigencia_hasta) {
+      h += 'Hasta ' + esc(doc.vigencia_hasta);
+      if (doc.prorroga) h += '<br><span style="color:var(--amber);font-size:11.5px">Pr\xf3rroga requiere acuerdo expreso</span>';
+    } else {
+      h += 'Sin fecha de vencimiento';
+    }
+    h += '</div></div>';
+    // Ámbito
+    h += '<div class="cc-ctx-card">';
+    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◈</span> \xc1mbito</div>';
+    h += '<span class="cc-ctx-tags-lbl">Bases</span><div class="cc-ctx-tags">';
+    (doc.bases || []).forEach(function(b) { h += '<span class="cc-ctx-tag">' + esc(b) + '</span>'; });
+    h += '</div>';
+    h += '<span class="cc-ctx-tags-lbl" style="margin-top:9px">Colectivos</span><div class="cc-ctx-tags">';
+    (doc.grupos || []).forEach(function(g) { h += '<span class="cc-ctx-tag">' + esc(g) + '</span>'; });
+    h += '</div></div>';
+    // Modifica (cross-ref → CC)
+    if (doc.overrides_sobre && doc.overrides_sobre.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↗</span> Modifica</div>';
+      doc.overrides_sobre.forEach(function(target) {
+        var targetDoc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[target] : null;
+        h += '<span class="cc-ctx-ref" onclick="ckOpenCC()">'
+          + esc(targetDoc ? targetDoc.nombre_corto : target) + '</span>';
+      });
+      h += '</div>';
+    }
+    return h;
+  }
+
+  window.acToggleSidebar = function() {
+    var sb = document.getElementById('ac-sidebar');
+    if (sb) sb.classList.toggle('cc-sidebar-open');
+  };
 
   // ── Relacionado con: navegar al tema ────────────────────────
   window.ckVerTambienCC = function(categoria) {
