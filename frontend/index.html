@@ -3928,10 +3928,26 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-toc-cap-name {
           font-size: 13px; font-weight: 600; color: var(--text3);
           line-height: 1.35; transition: color .12s;
+          flex: 1; min-width: 0;
         }
         .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-num { opacity: .8; color: var(--blue); }
         .cc-toc-cap-hd.cc-toc-cap-active .cc-toc-cap-name { color: var(--text1); font-weight: 700; }
-        .cc-toc-arts { padding-bottom: 4px; }
+        .cc-toc-arts { display: none; padding-bottom: 4px; }
+        .cc-toc-section.cc-toc-open .cc-toc-arts { display: block; }
+        /* Contador artículos (visible cuando capítulo plegado) */
+        .cc-toc-cap-count {
+          font-size: 9px; font-family: var(--mono); color: var(--text3);
+          opacity: .35; flex-shrink: 0; white-space: nowrap;
+        }
+        .cc-toc-section.cc-toc-open .cc-toc-cap-count { display: none; }
+        /* Chevron accordion */
+        .cc-toc-cap-chevron {
+          font-size: 11px; color: var(--text3); opacity: .35;
+          flex-shrink: 0; margin-left: auto; padding-left: 4px;
+          transition: opacity .15s, color .15s;
+        }
+        .cc-toc-cap-hd:hover .cc-toc-cap-chevron { opacity: .7; }
+        .cc-toc-section.cc-toc-open .cc-toc-cap-hd .cc-toc-cap-chevron { opacity: .85; color: var(--blue); }
         .cc-toc-art-item {
           display: flex; align-items: baseline; gap: 9px;
           padding: 5px 18px 5px 36px;
@@ -15931,6 +15947,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
   var _ccNav = { flat: [], current: -1 };
   var _ccActiveArtNum = null;
+  var _ccOpenCapId    = null;  // capítulo abierto en accordion
 
   // ── Abrir el visor ─────────────────────────────────────────
   window.ckOpenCC = function() {
@@ -15968,23 +15985,30 @@ window.PILOTPAY_BACKEND_READY = true;
   function _buildCCSidebar() {
     var nav = document.getElementById('cc-sidebar');
     if (!nav || typeof CONVENIO_CC === 'undefined') return;
+    _ccOpenCapId = null;
     var h = '<div class="cc-toc-hd">'
       + '<span class="cc-toc-hd-lbl">Índice</span>'
       + '<button class="cc-toc-close" onclick="ccToggleSidebar()">✕</button>'
       + '</div><div class="cc-toc-scroll">';
     CONVENIO_CC.capitulos.forEach(function(cap) {
-      h += '<div class="cc-toc-section">'
+      var artCount = (!cap._pendiente && cap.articulos) ? cap.articulos.length : 0;
+      h += '<div class="cc-toc-section" id="cc-toc-section-' + esc(cap.id) + '">'
         + '<div class="cc-toc-cap-hd" id="cc-toc-cap-' + esc(cap.id) + '"'
-        + ' onclick="ccGotoCap(\'' + esc(cap.id) + '\')">'
+        + ' onclick="ccSidebarCapClick(\'' + esc(cap.id) + '\')">'
         + '<span class="cc-toc-cap-num">Cap.' + esc(cap.numero) + '</span>'
-        + '<span class="cc-toc-cap-name">' + esc(cap.titulo) + '</span>'
+        + '<span class="cc-toc-cap-name">' + esc(cap.titulo) + '</span>';
+      if (artCount > 0) {
+        h += '<span class="cc-toc-cap-count">' + artCount + '</span>';
+      }
+      h += '<span class="cc-toc-cap-chevron">›</span>'
         + '</div>';
       if (!cap._pendiente && cap.articulos && cap.articulos.length) {
-        h += '<div class="cc-toc-arts">';
+        h += '<div class="cc-toc-arts" id="cc-toc-arts-' + esc(cap.id) + '">'
+          + '<div style="height:2px"></div>';
         cap.articulos.forEach(function(art) {
           var t = art.titulo ? art.titulo.replace(/[,;(].*/,'').trim() : '';
           h += '<div class="cc-toc-art-item" id="cc-toc-art-' + art.numero + '"'
-            + ' onclick="ccGotoArt(' + art.numero + ')"'
+            + ' onclick="ccGotoArt(' + art.numero + ')"'  
             + ' title="' + esc(art.titulo || '') + '">'
             + '<span class="cc-toc-art-num">' + art.numero + '</span>'
             + '<span class="cc-toc-art-name">' + esc(t) + '</span>'
@@ -16289,6 +16313,24 @@ window.PILOTPAY_BACKEND_READY = true;
     return h;
   }
 
+  // ── Accordion: abrir/cerrar capítulo ───────────────────────────
+  window.ccSidebarCapClick = function(capId) {
+    _ccOpenCapId = (_ccOpenCapId === capId) ? null : capId;
+    _ccApplyAccordion();
+  };
+
+  function _ccApplyAccordion() {
+    if (typeof CONVENIO_CC === 'undefined') return;
+    CONVENIO_CC.capitulos.forEach(function(cap) {
+      var section = document.getElementById('cc-toc-section-' + cap.id);
+      if (!section) return;
+      var isOpen = (cap.id === _ccOpenCapId);
+      section.classList.toggle('cc-toc-open', isOpen);
+      var chev = section.querySelector('.cc-toc-cap-chevron');
+      if (chev) chev.textContent = isOpen ? '⤵' : '›';
+    });
+  }
+
     // ── Marcar artículo activo en sidebar ───────────────────────
   function _ccMarkSidebarActive(artNum, capId) {
     document.querySelectorAll('.cc-toc-art-item.cc-toc-art-active').forEach(function(el) {
@@ -16297,6 +16339,9 @@ window.PILOTPAY_BACKEND_READY = true;
     document.querySelectorAll('.cc-toc-cap-hd.cc-toc-cap-active').forEach(function(el) {
       el.classList.remove('cc-toc-cap-active');
     });
+    // Abrir el capítulo correcto en el accordion
+    _ccOpenCapId = capId;
+    _ccApplyAccordion();
     var artEl = document.getElementById('cc-toc-art-' + artNum);
     if (artEl) { artEl.classList.add('cc-toc-art-active'); artEl.scrollIntoView({ block: 'nearest' }); }
     var capEl = document.getElementById('cc-toc-cap-' + capId);
@@ -16311,6 +16356,8 @@ window.PILOTPAY_BACKEND_READY = true;
     if (panel) panel.innerHTML = '';
     _ccActiveArtNum = null;
     _ccNav.current = -1;
+    _ccOpenCapId = null;
+    _ccApplyAccordion();
     document.querySelectorAll('.cc-toc-art-item.cc-toc-art-active').forEach(function(el) { el.classList.remove('cc-toc-art-active'); });
     document.querySelectorAll('.cc-toc-cap-hd.cc-toc-cap-active').forEach(function(el)  { el.classList.remove('cc-toc-cap-active'); });
     try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch(e) {}
