@@ -4974,6 +4974,21 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
         .cc-ctx-glos-entry + .cc-ctx-glos-entry { margin-top: 11px; padding-top: 11px; border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent); }
         .cc-ctx-glos-term { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
         .cc-ctx-glos-def  { font-size: 12px; color: var(--text2); line-height: 1.5; }
+        /* ── Leyenda documental — welcome screens ── */
+        .cc-leyenda { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .cc-leyenda-title { font-size: 9px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--text3); margin-bottom: 16px; }
+        .cc-leyenda-group { margin-bottom: 16px; }
+        .cc-leyenda-group-lbl { font-size: 9px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--text3); opacity: .55; margin-bottom: 9px; }
+        .cc-leyenda-item { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 9px; }
+        .cc-leyenda-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .cc-leyenda-term { font-size: 11px; font-weight: 600; color: var(--text2); line-height: 1.4; }
+        .cc-leyenda-def { font-size: 10.5px; color: var(--text3); line-height: 1.5; margin-top: 1px; }
+        /* ── Leyenda documental — context panel ── */
+        .cc-ctx-leyenda { margin-top: 2px; padding: 11px 14px 10px; border-top: 1px solid color-mix(in srgb,var(--border) 55%,transparent); }
+        .cc-ctx-leyenda-title { font-size: 9px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--text3); opacity: .65; margin-bottom: 9px; }
+        .cc-ctx-leyenda-row { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+        .cc-ctx-leyenda-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+        .cc-ctx-leyenda-lbl { font-size: 10px; color: var(--text3); line-height: 1.4; }
       </style>
 
       <!-- VIEW: HOME -->
@@ -16606,7 +16621,9 @@ window.PILOTPAY_BACKEND_READY = true;
         + '<span class="cc-welcome-cap-count">' + cntStr + '</span>'
         + '</div>';
     });
-    h += '</div></div>';
+    h += '</div>';
+    h += _docLeyendaHtml();
+    h += '</div>';
     return h;
   }
 
@@ -16806,6 +16823,62 @@ window.PILOTPAY_BACKEND_READY = true;
     return _res.slice(0, 6).map(function(r) { return r.entry; });
   }
 
+  function _docLeyendaHtml() {
+    var h = '<div class="cc-leyenda">';
+    h += '<div class="cc-leyenda-title">Cómo leer este documento</div>';
+    h += '<div class="cc-leyenda-group">';
+    h += '<div class="cc-leyenda-group-lbl">Estados normativos</div>';
+    var _est = [
+      ['var(--green)',  'Vigente',                  'Texto actualmente aplicable.'],
+      ['var(--blue)',   'Ampliado por acuerdo',     'Un acuerdo posterior añade condiciones o mejoras.'],
+      ['var(--amber)',  'Interpretado',              'Se aplica con matices o aclaraciones adicionales.'],
+      ['var(--red)',    'Modificado por acuerdo',   'Un acuerdo posterior altera parte del texto.'],
+      ['var(--amber)',  'Aplicación condicionada',  'Solo aplica si se cumple una condición concreta.'],
+      ['var(--amber)',  'Suspendido',                'Aplicación interrumpida temporalmente por acuerdo.'],
+    ];
+    _est.forEach(function(e) {
+      h += '<div class="cc-leyenda-item">'
+        + '<div class="cc-leyenda-dot" style="background:' + e[0] + '"></div>'
+        + '<div><div class="cc-leyenda-term">' + e[1] + '</div>'
+        + '<div class="cc-leyenda-def">' + e[2] + '</div></div></div>';
+    });
+    h += '</div><div class="cc-leyenda-group">';
+    h += '<div class="cc-leyenda-group-lbl">Jerarquía documental</div>';
+    var _docs = [
+      ['var(--accent)', 'Convenio Colectivo',       'Fuente base publicada en BOE. Marco normativo principal.'],
+      ['var(--blue)',   'Acta de Cierre',           'Acuerdo complementario posterior. Mejora o precisa el convenio.'],
+      ['#0d9488',      'Acuerdo de Aplicación',    'Norma específica de base, colectivo o productividad.'],
+    ];
+    _docs.forEach(function(e) {
+      h += '<div class="cc-leyenda-item">'
+        + '<div class="cc-leyenda-dot" style="background:' + e[0] + '"></div>'
+        + '<div><div class="cc-leyenda-term">' + e[1] + '</div>'
+        + '<div class="cc-leyenda-def">' + e[2] + '</div></div></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  function _ctxLeyendaHtml() {
+    var h = '<div class="cc-ctx-leyenda">';
+    h += '<div class="cc-ctx-leyenda-title">Leyenda</div>';
+    var _rows = [
+      ['var(--green)',  'Vigente'],
+      ['var(--blue)',   'Ampliado por acuerdo'],
+      ['var(--amber)',  'Interpretado · Condicionado'],
+      ['var(--red)',    'Modificado por acuerdo'],
+      ['var(--amber)',  'Suspendido'],
+      ['var(--text3)', 'Pendiente de extracción'],
+    ];
+    _rows.forEach(function(r) {
+      h += '<div class="cc-ctx-leyenda-row">'
+        + '<div class="cc-ctx-leyenda-dot" style="background:' + r[0] + '"></div>'
+        + '<div class="cc-ctx-leyenda-lbl">' + r[1] + '</div></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
   function _renderCtxPanel(entry) {
     var art    = entry.art;
     var estado = art.estado || 'pendiente';
@@ -16917,6 +16990,7 @@ window.PILOTPAY_BACKEND_READY = true;
       h += '</div>';
     }
 
+    h += _ctxLeyendaHtml();
     return h;
   }
 
@@ -17602,7 +17676,7 @@ window.PILOTPAY_BACKEND_READY = true;
     var vigente = !doc || !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
     h += '<div class="cc-ctx-card">';
     h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Vigencia</div>';
-    h += '<span class="cc-ctx-estado cc-ctx-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'vigente' : 'vencido') + '</span>';
+    h += '<span class="cc-ctx-estado cc-ctx-estado-' + (vigente ? 'vigente' : 'pendiente') + '">' + (vigente ? 'Vigente' : 'Vencido') + '</span>';
     if (doc && doc.vigencia_hasta) {
       h += '<div style="margin-top:9px;font-size:12.5px;color:var(--text3);line-height:1.6">Hasta ' + esc(doc.vigencia_hasta);
       if (doc.prorroga) h += '<br><span style="color:var(--amber);font-size:11.5px">Pr\xf3rroga requiere acuerdo expreso</span>';
@@ -17675,6 +17749,7 @@ window.PILOTPAY_BACKEND_READY = true;
       _ac_glos.forEach(function(e) { h += '<div class="cc-ctx-glos-entry"><div class="cc-ctx-glos-term">' + esc(e[0]) + '</div><div class="cc-ctx-glos-def">' + esc(e[1]) + '</div></div>'; });
       h += '</div>';
     }
+    h += _ctxLeyendaHtml();
     return h;
   }
 
@@ -17737,6 +17812,7 @@ window.PILOTPAY_BACKEND_READY = true;
       + 'que se aplican sobre el Convenio Colectivo. '
       + 'Selecciona un tema en el \xeddice para consultar las reglas aplicables.'
       + '</p>';
+    h += _docLeyendaHtml();
     h += '</section></div>';
     return h;
   }
