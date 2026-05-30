@@ -1613,7 +1613,6 @@ input[type=number] { -moz-appearance: textfield; }
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
-    <button class="tab" id="tab-admin"  style="display:none" onclick="showTab('admin')"></button>
   </div>
 
   <!-- ── SELECTOR DE MODO OPERATIVO ── -->
@@ -6599,6 +6598,7 @@ async function loadPermsFromFirebase() {
 }
 
 async function savePermsToFirebase() {
+  if (!isAdmin()) return;
   try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
   if (_online) {
     // fbUpdate (PATCH) — merge en lugar de PUT para no borrar permisos de otros usuarios.
@@ -7014,14 +7014,12 @@ function initApp() {
   // Load admin-created users
   loadAdminCreatedUsers();
 
-  // Show admin tab only for ESH
-  const adminTab = document.getElementById('tab-admin');
+  // Admin tab removed from tab bar — access via user dropdown menu only
   const dropAdmin = document.getElementById('drop-admin');
   if (currentUser === 'ESH') {
-    adminTab.style.display = 'inline-flex';
     if (dropAdmin) dropAdmin.style.display = 'flex';
   } else {
-    adminTab.style.display = 'none';
+    if (dropAdmin) dropAdmin.style.display = 'none';
   }
 
   loadTheme();
@@ -7135,6 +7133,7 @@ function checkApiKeyCard() {
 // ══════════════════════════════════════
 
 const ADMIN_CODE = 'ESH';
+function isAdmin() { return currentUser === ADMIN_CODE; }
 const BASES_OPTIONS = [
   { val: 'GC',  label: 'Gran Canaria', factor: '1'   },
   { val: 'TFN', label: 'Tenerife',     factor: '1'   },
@@ -7155,6 +7154,7 @@ function getUserPerms(userCode) {
 
 // ── ADMIN SUB-TABS ──
 function adminTab(tab) {
+  if (!isAdmin()) return;
   ['alta','usuarios','avatares','monitor'].forEach(t => {
     const panel = document.getElementById(`adm-panel-${t}`);
     const btn   = document.getElementById(`adm-tab-${t}`);
@@ -7171,6 +7171,7 @@ function adminTab(tab) {
 // ── MONITOR DE SINCRONIZACIÓN ────────────────────────────────────────────
 
 function _initSyncMonitor() {
+  if (!isAdmin()) return;
   const sel = document.getElementById('adm-monitor-user-sel');
   if (!sel) return;
   // Poblar selector con todos los usuarios conocidos
@@ -7332,6 +7333,7 @@ async function renderSyncMonitor(userId) {
 let _adminAvatarFilter = 'all';
 
 function renderAdminAvatarGrid(filter) {
+  if (!isAdmin()) return;
   if (filter !== undefined) _adminAvatarFilter = filter;
   const grid = document.getElementById('adm-avatar-grid');
   if (!grid) return;
@@ -7381,6 +7383,7 @@ function renderAdminAvatarGrid(filter) {
 }
 
 function adminAvatarFilter(filter, btn) {
+  if (!isAdmin()) return;
   _adminAvatarFilter = filter;
   document.querySelectorAll('#adm-panel-avatares .av-filter-btn').forEach(b => {
     b.classList.toggle('av-filter-active', b === btn);
@@ -7389,6 +7392,7 @@ function adminAvatarFilter(filter, btn) {
 }
 
 function adminToggleAvatar(id) {
+  if (!isAdmin()) return;
   AvatarManager.toggleActive(id);
   renderAdminAvatarGrid();
   // Re-render Perfil grid if visible so inactive avatars disappear immediately
@@ -7396,6 +7400,7 @@ function adminToggleAvatar(id) {
 }
 
 function adminAddAvatar() {
+  if (!isAdmin()) return;
   const name   = document.getElementById('av-new-name').value.trim();
   const role   = document.getElementById('av-new-role').value;
   const gender = document.getElementById('av-new-gender').value;
@@ -7420,6 +7425,7 @@ function adminAddAvatar() {
 }
 
 function renderAdmin() {
+  if (!isAdmin()) return;
   const el = document.getElementById('admin-users-list');
   if (!el) return;
 
@@ -7534,6 +7540,7 @@ function renderAdmin() {
 }
 
 async function togglePerm(userCode, type, val, checked) {
+  if (!isAdmin()) return;
   // perms is now the global Firebase-backed object
   const u = USERS[userCode];
   if (!perms[userCode]) {
@@ -7564,6 +7571,7 @@ async function togglePerm(userCode, type, val, checked) {
 }
 
 async function crearUsuarioLocal() {
+  if (!isAdmin()) return;
   const nombre   = document.getElementById('adm-nombre').value.trim();
   const codigo   = document.getElementById('adm-codigo').value.trim().toUpperCase();
   const pass     = document.getElementById('adm-pass').value.trim();
@@ -7773,6 +7781,7 @@ function closeDayModal(e) {
 }
 
 function editarUsuario(code) {
+  if (!isAdmin()) return;
   const u = USERS[code] || {};
   const isAdmin = code === ADMIN_CODE;
 
@@ -7848,6 +7857,7 @@ function editarUsuario(code) {
 }
 
 async function confirmarEliminarUsuario(code) {
+  if (!isAdmin()) return;
   const u = USERS[code] || {};
   const nombre = `${u.name||''} ${u.apellidos||''}`.trim() || code;
   document.getElementById('day-modal-content').innerHTML = `
@@ -7875,6 +7885,7 @@ async function confirmarEliminarUsuario(code) {
 }
 
 async function toggleBloqueoUsuario(code, bloquear) {
+  if (!isAdmin()) return;
   if (code === ADMIN_CODE) { alert('No se puede bloquear al administrador.'); return; }
   if (!USERS[code]) { alert('Usuario no encontrado en sesión. Recarga y vuelve a intentarlo.'); return; }
   try {
@@ -7887,6 +7898,7 @@ async function toggleBloqueoUsuario(code, bloquear) {
 }
 
 async function eliminarUsuario(code) {
+  if (!isAdmin()) return;
   try {
     // Borrar absolutamente todo rastro en Firebase
     const _tkDel = await getAuthToken();
@@ -7908,6 +7920,7 @@ async function eliminarUsuario(code) {
 }
 
 async function guardarEdicionUsuario(code) {
+  if (!isAdmin()) return;
   const nameVal   = document.getElementById('edit-nombre').value.trim();
   const apellidos = document.getElementById('edit-apellidos').value.trim();
   const alias     = document.getElementById('edit-alias').value.trim();
@@ -7949,6 +7962,7 @@ async function guardarEdicionUsuario(code) {
 // Los permisos solo afectan a /permisos/{code} (qué cálculos puede hacer),
 // nunca a /usuarios ni /perfiles (identidad). No llama a atomicRoleChange.
 function gestionarPermisos(code) {
+  if (!isAdmin()) return;
   const u = USERS[code] || {};
   const userPerms = perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] };
 
@@ -8016,6 +8030,7 @@ function gestionarPermisos(code) {
 
 // Muestra/oculta el campo de fecha límite en el formulario de alta temporal.
 function onAdmTemporalChange() {
+  if (!isAdmin()) return;
   const checked = document.getElementById('adm-temporal')?.checked;
   const wrap    = document.getElementById('adm-expires-wrap');
   if (wrap) wrap.style.display = checked ? '' : 'none';
@@ -8028,6 +8043,7 @@ function onAdmTemporalChange() {
 // Actualiza las opciones de nivel al cambiar función en el modal de edición.
 // Referenciada en el onchange de edit-funcion — no existía hasta P1-c.
 function updateEditNivelOptions() {
+  if (!isAdmin()) return;
   const fn     = document.getElementById('edit-funcion')?.value || 'CMD';
   const max    = (fn === 'SCC' || fn === 'CC') ? 5 : 6;
   const selEl  = document.getElementById('edit-nivel');
@@ -8062,6 +8078,11 @@ function showTab(name) {
   if (window.PilotPayMode === 'simulation' &&
       ['dashboard', 'historial'].indexOf(name) !== -1) {
     console.warn('[PilotPay] showTab("' + name + '"): bloqueado en modo simulación');
+    return;
+  }
+  // Guard: panel admin solo para administrador
+  if (name === 'admin' && !isAdmin()) {
+    console.warn('[PilotPay] showTab("admin"): acceso denegado');
     return;
   }
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -8751,6 +8772,7 @@ function tcpDistribuir(tipo) {
 
 
 function onAdmFuncionChange() {
+  if (!isAdmin()) return;
   const fn = document.getElementById('adm-funcion')?.value || 'CMD';
   const isTCP = fn === 'SCC' || fn === 'CC';
   const isSCC = fn === 'SCC';
