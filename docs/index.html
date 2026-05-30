@@ -4893,6 +4893,31 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ── Section header with badge inline ── */
         .nr-sec-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        /* ── Áreas de consulta — índice documental ── */
+        .ck-areas-section { padding: 12px 16px 14px; border-bottom: 1px solid var(--border); }
+        .ck-areas-section:last-child { border-bottom: none; padding-bottom: 18px; }
+        .ck-areas-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .15em; color: var(--text3); font-weight: 700; margin-bottom: 9px; }
+        .ck-areas-list { display: flex; flex-direction: column; }
+        .ck-areas-item { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent); cursor: pointer; }
+        .ck-areas-item:last-child { border-bottom: none; }
+        .ck-areas-item:hover .ck-areas-name { color: var(--blue); }
+        .ck-areas-name { font-size: 13px; color: var(--text); line-height: 1.4; }
+        .ck-areas-ref  { font-size: 10.5px; color: var(--text3); font-family: var(--mono); flex-shrink: 0; margin-left: 8px; }
+
+        /* ── Hero: métricas secundarias ── */
+        .ck-lib-hero-stats--secondary { display: flex; align-items: center; flex-wrap: wrap; gap: 0; margin-top: 12px; }
+        .ck-lib-stat-inline { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+        .ck-lib-stat-sep    { font-size: 10px; color: var(--text3); margin: 0 8px; opacity: .4; }
+
+        /* ── Claves de lectura ── */
+        .cc-ctx-claves { display: flex; flex-direction: column; gap: 7px; }
+        .cc-ctx-clave  { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+        .cc-ctx-clave-dot { flex-shrink: 0; width: 4px; height: 4px; border-radius: 50%; background: var(--blue); margin-top: 6px; }
+
+        /* ── Conceptos de esta lectura ── */
+        .cc-ctx-glos-entry + .cc-ctx-glos-entry { margin-top: 11px; padding-top: 11px; border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent); }
+        .cc-ctx-glos-term { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .cc-ctx-glos-def  { font-size: 12px; color: var(--text2); line-height: 1.5; }
       </style>
 
       <!-- VIEW: HOME -->
@@ -4901,25 +4926,17 @@ Complemento de Base MAD: 1500"></textarea>
         <!-- HERO BIBLIOTECA -->
         <div class="ck-lib-hero">
           <div class="ck-home-eyebrow">BCSA · Binter Canarias · 2026</div>
-          <div class="ck-lib-hero-title">Centro Laboral</div>
-          <div class="ck-lib-hero-desc">Biblioteca normativa con el convenio colectivo y los acuerdos de aplicación vigentes adaptados a tu perfil.</div>
-          <div class="ck-lib-hero-stats">
-            <div class="ck-lib-stat">
-              <span class="ck-lib-stat-n">93</span>
-              <span class="ck-lib-stat-l">artículos</span>
-            </div>
-            <div class="ck-lib-stat">
-              <span class="ck-lib-stat-n">10</span>
-              <span class="ck-lib-stat-l">capítulos</span>
-            </div>
-            <div class="ck-lib-stat">
-              <span class="ck-lib-stat-n">69</span>
-              <span class="ck-lib-stat-l">reglas acuerdos</span>
-            </div>
-            <div class="ck-lib-stat">
-              <span class="ck-lib-stat-n">4</span>
-              <span class="ck-lib-stat-l">documentos</span>
-            </div>
+          <div class="ck-lib-hero-title">Biblioteca Normativa</div>
+          <div class="ck-lib-hero-desc">Convenio Colectivo y Acuerdos de Aplicación vigentes.
+BCSA · Binter Canarias · 2026–2031.</div>
+          <div class="ck-lib-hero-stats ck-lib-hero-stats--secondary">
+            <span class="ck-lib-stat-inline">93 artículos</span>
+            <span class="ck-lib-stat-sep">·</span>
+            <span class="ck-lib-stat-inline">10 capítulos</span>
+            <span class="ck-lib-stat-sep">·</span>
+            <span class="ck-lib-stat-inline">69 reglas</span>
+            <span class="ck-lib-stat-sep">·</span>
+            <span class="ck-lib-stat-inline">4 documentos</span>
           </div>
         </div>
 
@@ -4991,76 +5008,81 @@ Complemento de Base MAD: 1500"></textarea>
           <div id="ck-results-inner"></div>
         </div>
 
-        <!-- ACCESO RÁPIDO -->
+        <!-- ÁREAS DE CONSULTA — índice documental -->
         <div class="ck-block">
-          <div class="ck-block-label">Acceso rápido</div>
+          <div class="ck-block-label">Áreas de consulta</div>
           <div class="card" style="padding:0">
-            <div class="ck-quick-grid">
-              <div class="ck-quick-item" onclick="openConvenioArticle(47)">
-                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
-                <div>
-                  <div class="ck-quick-title">Vacaciones</div>
-                  <div class="ck-quick-meta">Art. 47 · Duración y períodos</div>
+            <div class="ck-areas-section">
+              <div class="ck-areas-lbl">Retribución</div>
+              <div class="ck-areas-list">
+                <div class="ck-areas-item" onclick="openConvenioArticle(47)">
+                  <span class="ck-areas-name">Retribución Grupo IV</span>
+                  <span class="ck-areas-ref">Art. 47</span>
+                </div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(48)">
+                  <span class="ck-areas-name">Dirección por objetivos</span>
+                  <span class="ck-areas-ref">Art. 48</span>
+                </div>
+                <div class="ck-areas-item" onclick="openAgreementRule('productividad_2026','prod_vigencia')">
+                  <span class="ck-areas-name">Productividad 2026</span>
+                  <span class="ck-areas-ref">Acuerdo</span>
+                </div>
+                <div class="ck-areas-item" onclick="openAgreementRule('acta_cierre_2025','acta_media_variables_ampliada')">
+                  <span class="ck-areas-name">Media de variables</span>
+                  <span class="ck-areas-ref">Acta 2025</span>
                 </div>
               </div>
-              <div class="ck-quick-item" onclick="openConvenioArticle(46)">
-                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
-                <div>
-                  <div class="ck-quick-title">Días adicionales</div>
-                  <div class="ck-quick-meta">Art. 46 · Días adicionales sobre vacaciones</div>
+            </div>
+            <div class="ck-areas-section">
+              <div class="ck-areas-lbl">Actividad y descanso</div>
+              <div class="ck-areas-list">
+                <div class="ck-areas-item" onclick="openConvenioArticle(41)">
+                  <span class="ck-areas-name">Vacaciones</span>
+                  <span class="ck-areas-ref">Art. 41</span>
+                </div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(75)">
+                  <span class="ck-areas-name">Régimen trabajo–descanso</span>
+                  <span class="ck-areas-ref">Art. 75</span>
+                </div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(77)">
+                  <span class="ck-areas-name">FDP y límites máximos</span>
+                  <span class="ck-areas-ref">Art. 77</span>
+                </div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(80)">
+                  <span class="ck-areas-name">Día libre / Franco</span>
+                  <span class="ck-areas-ref">Art. 80</span>
+                </div>
+                <div class="ck-areas-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_roster_patron')">
+                  <span class="ck-areas-name">Roster MAD 6+3</span>
+                  <span class="ck-areas-ref">Acuerdo</span>
+                </div>
+                <div class="ck-areas-item" onclick="openAgreementRule('roster_tfn_5_3_2026','tfn_roster_5_3')">
+                  <span class="ck-areas-name">Roster TFN 5+3</span>
+                  <span class="ck-areas-ref">Acuerdo</span>
                 </div>
               </div>
-              <div class="ck-quick-item" onclick="openConvenioArticle(80)">
-                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
-                <div>
-                  <div class="ck-quick-title">Jornada y descanso</div>
-                  <div class="ck-quick-meta">Art. 80 · Límites y excepciones</div>
+            </div>
+            <div class="ck-areas-section">
+              <div class="ck-areas-lbl">Licencias y ausencias</div>
+              <div class="ck-areas-list">
+                <div class="ck-areas-item" onclick="openConvenioArticle(38)">
+                  <span class="ck-areas-name">Licencias retribuidas</span>
+                  <span class="ck-areas-ref">Art. 38</span>
                 </div>
-              </div>
-              <div class="ck-quick-item" onclick="openAgreementRule('acta_cierre_2025','acta_media_variables_ampliada')">
-                <div class="ck-quick-ico ck-quick-ico--blue">L2</div>
-                <div>
-                  <div class="ck-quick-title">Media de variables</div>
-                  <div class="ck-quick-meta">Acta 2025 · Ampliación período de cálculo</div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(31)">
+                  <span class="ck-areas-name">Excedencia voluntaria</span>
+                  <span class="ck-areas-ref">Art. 31</span>
                 </div>
-              </div>
-              <div class="ck-quick-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_roster_patron')">
-                <div class="ck-quick-ico ck-quick-ico--amber">L3</div>
-                <div>
-                  <div class="ck-quick-title">Roster MAD · 6+3</div>
-                  <div class="ck-quick-meta">Acuerdo Roster · Temporal 2026</div>
-                </div>
-              </div>
-              <div class="ck-quick-item" onclick="openAgreementRule('roster_tfn_5_3_2026','tfn_roster_5_3')">
-                <div class="ck-quick-ico ck-quick-ico--amber">L3</div>
-                <div>
-                  <div class="ck-quick-title">Roster TFN · 5+3</div>
-                  <div class="ck-quick-meta">Acuerdo Roster · Desde 01/2026</div>
+                <div class="ck-areas-item" onclick="openConvenioArticle(40)">
+                  <span class="ck-areas-name">Reducción de jornada</span>
+                  <span class="ck-areas-ref">Art. 40</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- HISTORIAL DE CONSULTAS -->
-        <div class="ck-block" id="ck-block-popular">
-          <div class="ck-block-label">Historial de consultas</div>
-          <div class="card" style="padding:0">
-            <div class="ck-list-rows" id="ck-popular"></div>
-          </div>
-        </div>
-
-        <!-- LEYENDA Y ABREVIATURAS -->
-        <div class="ck-block" style="padding-bottom:24px">
-          <div class="ck-block-label">Leyenda y abreviaturas</div>
-          <div class="card" style="padding:0">
-            <div class="ck-glosario-toggle" onclick="ckToggleGlosario()">
-              <span class="ck-glosario-toggle-text">Ver glosario completo</span>
-              <span class="ck-glosario-toggle-ico" id="ck-glosario-ico">▼</span>
-            </div>
-            <div class="ck-glosario-content" id="ck-glosario-content"></div>
-          </div>
-        </div>
+        <div style="display:none"><div class="ck-list-rows" id="ck-popular"></div></div>
 
       </div><!-- /ck-v-home -->
 
@@ -14663,24 +14685,27 @@ window.PILOTPAY_BACKEND_READY = true;
   ];
 
   var GLOSARIO = [
-    ['CC',   'Convenio Colectivo'],
-    ['CMD',  'Comandante'],
-    ['COP',  'Copiloto'],
-    ['SCC',  'Sobrecargo Jefe de Cabina'],
-    ['TCP',  'Tripulante de Cabina de Pasajeros'],
-    ['HV',   'Horas de Vuelo'],
-    ['FDP',  'Flight Duty Period — período de actividad de vuelo'],
-    ['DPO',  'Dirección por Objetivos (productividad variable)'],
-    ['IT',   'Incapacidad Temporal (baja médica)'],
-    ['ROFF', 'Día libre (Rest Off)'],
-    ['LRC',  'Licencia Retribuida por Circunstancias'],
-    ['LPA',  'Base Las Palmas de Gran Canaria'],
-    ['TFN',  'Base Tenerife Norte'],
-    ['MAD',  'Base Madrid'],
-    ['L1',   'Capa normativa: Convenio Colectivo (base)'],
-    ['L2',   'Capa normativa: Acta de Cierre (mejoras sobre CC)'],
-    ['L3',   'Capa normativa: Acuerdos específicos de base'],
-    ['AT',   'Accidente de Trabajo'],
+    ['CC',        'Convenio Colectivo — documento que regula las condiciones laborales de base.'],
+    ['CMD',       'Comandante — piloto al mando de la aeronave.'],
+    ['COP',       'Copiloto — segundo piloto en cabina.'],
+    ['SCC',       'Sobrecargo — jefe de la tripulación de cabina.'],
+    ['TCP',       'Tripulante de Cabina — personal de pasajeros.'],
+    ['HV',        'Horas de vuelo computables en nómina.'],
+    ['FDP',       'Período máximo de actividad de vuelo antes del descanso obligatorio.'],
+    ['DPO',       'Variable de productividad incluida en la nómina mensual.'],
+    ['IT',        'Incapacidad Temporal — baja médica que suspende la actividad.'],
+    ['ROFF',      'Día de descanso programado en el roster.'],
+    ['LRC',       'Licencia retribuida por circunstancias personales o médicas.'],
+    ['LPA',       'Base Las Palmas de Gran Canaria.'],
+    ['TFN',       'Base Tenerife Norte.'],
+    ['MAD',       'Base Madrid.'],
+    ['L1',        'Capa normativa base: el Convenio Colectivo.'],
+    ['L2',        'Segunda capa: Acta de Cierre, mejoras sobre el convenio.'],
+    ['L3',        'Tercera capa: acuerdos específicos por base o colectivo.'],
+    ['AT',        'Accidente de Trabajo — sin carencia para el complemento de empresa.'],
+    ['Franco',    'Día libre programado dentro del patrón de actividad.'],
+    ['Actividad', 'Día computable para los límites de jornada.'],
+    ['Roster',    'Patrón de días de actividad y descanso programado.'],
   ];
 
   // ── Síntesis: situaciones operativas efectivas por categoría ──
@@ -16748,6 +16773,21 @@ window.PILOTPAY_BACKEND_READY = true;
     general:       { nombre: 'Acuerdo general',       badge: 'complementa', docId: 'acta_cierre_2025',      itemId: 'doc_acta'       },
   };
 
+  function _ckGlosarioContextual(text) {
+    if (!text) return [];
+    var _res = [];
+    for (var _gi = 0; _gi < GLOSARIO.length; _gi++) {
+      var _term = GLOSARIO[_gi][0];
+      try {
+        var _re = new RegExp('\\b' + _term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+        var _m = _re.exec(text);
+        if (_m) _res.push({ pos: _m.index, entry: GLOSARIO[_gi] });
+      } catch(e) {}
+    }
+    _res.sort(function(a, b) { return a.pos - b.pos; });
+    return _res.slice(0, 6).map(function(r) { return r.entry; });
+  }
+
   function _renderCtxPanel(entry) {
     var art    = entry.art;
     var estado = art.estado || 'pendiente';
@@ -16819,32 +16859,50 @@ window.PILOTPAY_BACKEND_READY = true;
     }
     h += '</div>';
 
-    // ── CARD 4: FAQs operativas ────────────────────────────────────
-    h += '<div class="cc-ctx-card">';
-    h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">？</span> FAQs</div>';
-    if (art.faqs && art.faqs.length) {
-      art.faqs.forEach(function(faq) {
-        h += '<div class="cc-ctx-faq-item">'
-          + '<div class="cc-ctx-faq-q">' + esc(faq.q) + '</div>'
-          + '<div class="cc-ctx-faq-a">' + esc(faq.a) + '</div>'
-          + '</div>';
-      });
-    } else {
-      h += '<div class="cc-ctx-empty">Sin preguntas frecuentes registradas.</div>';
-    }
-    h += '</div>';
-
-    // ── CARD 5: Fuente normativa ───────────────────────────────────
+        // ── CARD 5: Fuente normativa ───────────────────────────────────
     h += '<div class="cc-ctx-card">';
     h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">⊙</span> Fuente</div>';
     var fuente = art.fuente || (typeof CONVENIO_CC !== 'undefined' ? CONVENIO_CC.meta.boe : '');
     h += '<div class="cc-ctx-fuente">' + esc(fuente) + '</div>';
     h += '</div>';
 
+    // ── Claves de lectura (condicional) ────────────────────────────
+    var _ck_claves = [];
+    if (art.afectaciones && art.afectaciones.length) {
+      var _ck_seen = {};
+      art.afectaciones.forEach(function(a) {
+        var _tipo = a.tipo || a.fuente || '';
+        var _cfg  = _ACUERDO_MAP[_tipo];
+        var _nom  = _cfg ? _cfg.nombre : _tipo.replace(/_/g, ' ');
+        if (!_ck_seen[_nom]) { _ck_seen[_nom] = true; _ck_claves.push('Modificado por ' + _nom); }
+      });
+    }
+    if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general' && art.colectivos.length < 4) {
+      _ck_claves.push('Afecta a ' + art.colectivos.join(', '));
+    }
+    if (art.estado && art.estado !== 'vigente') _ck_claves.push('Estado: ' + art.estado);
+    if (_ck_claves.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">▸</span> Claves de lectura</div>';
+      h += '<div class="cc-ctx-claves">';
+      _ck_claves.forEach(function(c) { h += '<div class="cc-ctx-clave"><span class="cc-ctx-clave-dot"></span>' + esc(c) + '</div>'; });
+      h += '</div></div>';
+    }
+    // ── Conceptos de esta lectura (condicional) ──────────────────────
+    var _ck_artTxt = (art.titulo || '') + ' ' + (art.texto_oficial || '');
+    try { if (art.parrafos) art.parrafos.forEach(function(p) { _ck_artTxt += ' ' + (typeof p === 'string' ? p : (p.texto || '')); }); } catch(e) {}
+    var _ck_glos = _ckGlosarioContextual(_ck_artTxt);
+    if (_ck_glos.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Conceptos</div>';
+      _ck_glos.forEach(function(e) { h += '<div class="cc-ctx-glos-entry"><div class="cc-ctx-glos-term">' + esc(e[0]) + '</div><div class="cc-ctx-glos-def">' + esc(e[1]) + '</div></div>'; });
+      h += '</div>';
+    }
+
     return h;
   }
 
-  // ── Accordion: abrir/cerrar capítulo ───────────────────────────
+  // ── Accordion: abrir/cerrar capítulo ───────────────────────
   window.ccSidebarCapClick = function(capId) {
     _ccOpenCapId = (_ccOpenCapId === capId) ? null : capId;
     _ccApplyAccordion();
@@ -17557,6 +17615,46 @@ window.PILOTPAY_BACKEND_READY = true;
       artList.forEach(function(num) {
         h += '<div class="cc-ctx-ref" onclick="openConvenioArticle(' + num + ')">Art.\xa0' + num + '</div>';
       });
+      h += '</div>';
+    }
+    // ── Claves de lectura (condicional) ────────────────────────────
+    var _ac_claves = [];
+    if (doc && doc.vigencia_hasta) {
+      var _dv = new Date(doc.vigencia_hasta);
+      var _mes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      _ac_claves.push('Temporal \xb7 hasta ' + _dv.getDate() + '\xa0de\xa0' + _mes[_dv.getMonth()] + '\xa0de\xa0' + _dv.getFullYear());
+    }
+    if (doc && doc.bases && doc.bases.length && doc.bases.length < 3) {
+      _ac_claves.push(doc.bases.length === 1 ? 'Solo aplica en\xa0' + doc.bases[0] : 'Aplica en\xa0' + doc.bases.join('\xa0y\xa0'));
+    }
+    if (doc && doc.prorroga) _ac_claves.push('Pr\xf3rroga requiere acuerdo expreso');
+    if (doc && doc.grupos && doc.grupos.length && doc.grupos.length < 4) {
+      _ac_claves.push('Afecta a\xa0' + doc.grupos.join(', '));
+    }
+    var _suspArt80 = false;
+    for (var _ri = 0; _ri < rules.length && !_suspArt80; _ri++) {
+      if (rules[_ri].tipo === 'suspende') {
+        var _ovs = (rules[_ri]._meta && rules[_ri]._meta.overrides) || [];
+        for (var _oi = 0; _oi < _ovs.length && !_suspArt80; _oi++) {
+          if (_ovs[_oi].indexOf('art80') >= 0) _suspArt80 = true;
+        }
+      }
+    }
+    if (_suspArt80) _ac_claves.push('Suspende protecciones Art.\xa080 CC');
+    if (_ac_claves.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">▸</span> Claves de lectura</div>';
+      h += '<div class="cc-ctx-claves">';
+      _ac_claves.forEach(function(c) { h += '<div class="cc-ctx-clave"><span class="cc-ctx-clave-dot"></span>' + esc(c) + '</div>'; });
+      h += '</div></div>';
+    }
+    // ── Conceptos de esta lectura (condicional) ──────────────────────
+    var _ac_itemTxt = (item.titulo || '') + ' ' + (item.condicion || '') + ' ' + (item.valor_texto || '');
+    var _ac_glos = _ckGlosarioContextual(_ac_itemTxt);
+    if (_ac_glos.length) {
+      h += '<div class="cc-ctx-card">';
+      h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Conceptos</div>';
+      _ac_glos.forEach(function(e) { h += '<div class="cc-ctx-glos-entry"><div class="cc-ctx-glos-term">' + esc(e[0]) + '</div><div class="cc-ctx-glos-def">' + esc(e[1]) + '</div></div>'; });
       h += '</div>';
     }
     return h;
