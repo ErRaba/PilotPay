@@ -4994,7 +4994,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
             <!-- Convenio Colectivo — L1, institucional -->
             <div class="ck-doc" onclick="ckOpenCC()">
               <div class="ck-doc-cover">
-                <div class="ck-doc-tier">L1</div>
+                <div class="ck-doc-tier">Oficial</div>
                 <div class="ck-doc-cat">Convenio Colectivo</div>
                 <div class="ck-doc-entity">Binter Canarias</div>
               </div>
@@ -5016,7 +5016,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
             <!-- Acuerdos y Aplicación — L2-L3, operativo -->
             <div class="ck-doc ck-doc--l2" onclick="ckOpenAcuerdos()">
               <div class="ck-doc-cover">
-                <div class="ck-doc-tier">L2–L3</div>
+                <div class="ck-doc-tier">Complementario</div>
                 <div class="ck-doc-cat">Acuerdos y Aplicación</div>
                 <div class="ck-doc-entity">BCSA</div>
               </div>
@@ -14587,6 +14587,14 @@ window.PILOTPAY_BACKEND_READY = true;
     return p.join(' ');
   }
 
+  var _ESTADO_LABEL = {
+    'vigente': 'Vigente', 'complementado': 'Ampliado por acuerdo',
+    'matizado': 'Interpretado', 'modificado': 'Modificado por acuerdo',
+    'suspendido': 'Suspendido', 'condicionado': 'Aplicación condicionada',
+    'pendiente': 'Pendiente de extracción'
+  };
+  function estadoLabel(e) { return _ESTADO_LABEL[e] || e; }
+
   function layerBadge(capa) {
     var MAP = { 'L1_CC': ['CC', 'ck-src-convenio'], 'L2_ACTA': ['ACTA', 'ck-src-interno'], 'L3_ACUERDO': ['ACUERDO', 'ck-src-interp'] };
     var e = MAP[capa] || [capa || '?', 'ck-src-pendiente'];
@@ -14708,9 +14716,9 @@ window.PILOTPAY_BACKEND_READY = true;
     ['LPA',       'Base Las Palmas de Gran Canaria.'],
     ['TFN',       'Base Tenerife Norte.'],
     ['MAD',       'Base Madrid.'],
-    ['L1',        'Capa normativa base: el Convenio Colectivo.'],
-    ['L2',        'Segunda capa: Acta de Cierre, mejoras sobre el convenio.'],
-    ['L3',        'Tercera capa: acuerdos específicos por base o colectivo.'],
+    ['Convenio Colectivo', 'Norma marco del colectivo. Capa base de toda la estructura retributiva.'],
+    ['Acta de Cierre',     'Mejoras pactadas sobre el Convenio Colectivo.'],
+    ['Acuerdos de aplicación', 'Normativa específica por base operativa o colectivo.'],
     ['AT',        'Accidente de Trabajo — sin carencia para el complemento de empresa.'],
     ['Franco',    'Día libre programado dentro del patrón de actividad.'],
     ['Actividad', 'Día computable para los límites de jornada.'],
@@ -15639,7 +15647,7 @@ window.PILOTPAY_BACKEND_READY = true;
       h += '<div class="nr-sec"><div class="nr-sec-label">' + esc(grpLbl) + ' — Grupo III</div>';
       h += _renderRetributiva(tabKey, selNivel, n1pTCP);
       if (n1pTCP) {
-        h += '<div class="nr-sal-n1plus-note">N1+ — nivel adicional Grupo III (Acta §QUINTO, L2). No automático. Condiciones de acceso no detalladas explícitamente en el documento. Desde 01/01/2026.</div>';
+        h += '<div class="nr-sal-n1plus-note">N1+ — nivel adicional Grupo III (Acta de Cierre §QUINTO). No automático. Condiciones de acceso no detalladas explícitamente en el documento. Desde 01/01/2026.</div>';
       }
       h += '</div>';
     }
@@ -16017,17 +16025,19 @@ window.PILOTPAY_BACKEND_READY = true;
                : tipo === 'condicionado' ? 'nr-sal-tag nr-sal-tag-cond'
                : tipo === 'variable'     ? 'nr-sal-tag nr-sal-tag-var'
                :                          'nr-sal-tag nr-sal-tag-pend';
+    var _TIPO_LBL = { 'fijo': 'Fijo', 'variable': 'Variable', 'condicionado': 'Condicional' };
+    var _EV_LBL   = { 'documentado': 'Documentado', 'observado': 'Observado', 'mixto': 'Verificado parcialmente', 'pendiente': 'Pendiente' };
     var evHtml = '';
     if (evidencia) {
       var evCls = evidencia === 'documentado' ? 'nr-sal-ev nr-sal-ev-doc'
                 : evidencia === 'observado'   ? 'nr-sal-ev nr-sal-ev-obs'
                 : evidencia === 'mixto'       ? 'nr-sal-ev nr-sal-ev-mix'
                 :                              'nr-sal-ev nr-sal-ev-pend';
-      evHtml = '<span class="' + evCls + '">' + esc(evidencia) + '</span>';
+      evHtml = '<span class="' + evCls + '">' + esc(_EV_LBL[evidencia] || evidencia) + '</span>';
     }
     return '<div class="nr-sal-otros-row">'
       + '<span class="nr-sal-otros-name">' + name + '</span>'
-      + '<span class="nr-sal-otros-tags"><span class="' + tagCls + '">' + esc(tipo) + '</span>' + evHtml + '</span>'
+      + '<span class="nr-sal-otros-tags"><span class="' + tagCls + '">' + esc(_TIPO_LBL[tipo] || tipo) + '</span>' + evHtml + '</span>'
       + '<span class="nr-sal-otros-desc">' + desc + '</span>'
       + '</div>';
   }
@@ -16151,7 +16161,7 @@ window.PILOTPAY_BACKEND_READY = true;
       body += _otroRow('Complemento base MAD', 'fijo',
         _fmtEur(_MAD_COMP[grupo] || 0) + '/mes. Incluido en fijo mostrado. '
         + 'Condición: ≥75% función asignada mensual. '
-        + 'Definición de "función asignada" no publicada por la empresa. L2 Acta §SÉPTIMO. Vigente desde 01/01/2026.',
+        + 'Definición de "función asignada" no publicada por la empresa. Acta de Cierre §SÉPTIMO. Vigente desde 01/01/2026.',
         'mixto');
     }
 
@@ -16177,7 +16187,7 @@ window.PILOTPAY_BACKEND_READY = true;
       if (hayMAD) {
         body += _otroRow('HV +20% MAD', 'condicionado',
           'Aplicado en tarifas HV mostradas. Condición colectiva: productividad media ≥11 días/mes en base MAD. '
-          + 'No cae automáticamente — requiere revisión formal con RLT. L2 Acta §SÉPTIMO.',
+          + 'No cae automáticamente — requiere revisión formal con RLT. Acta de Cierre §SÉPTIMO.',
           'documentado');
       }
     } else {
@@ -16683,7 +16693,7 @@ window.PILOTPAY_BACKEND_READY = true;
     h += '<div class="cc-art-reader-num">Art\xedculo ' + art.numero + '</div>';
     h += '<h1 class="cc-art-reader-title">' + esc(art.titulo || 'Art\xedculo ' + art.numero) + '</h1>';
     h += '<div class="cc-art-reader-meta">';
-    h += '<span class="cc-art-estado cc-art-estado-' + esc(estado) + '">' + esc(estado) + '</span>';
+    h += '<span class="cc-art-estado cc-art-estado-' + esc(estado) + '">' + esc(estadoLabel(estado)) + '</span>';
     if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
       art.colectivos.forEach(function(c) {
         h += '<span class="cc-art-col-tag">' + esc(c.toUpperCase()) + '</span>';
@@ -16804,7 +16814,7 @@ window.PILOTPAY_BACKEND_READY = true;
     // ── CARD 1: Contexto del artículo ─────────────────────────────
     h += '<div class="cc-ctx-card">';
     h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">◎</span> Contexto</div>';
-    h += '<span class="cc-ctx-estado cc-ctx-estado-' + esc(estado) + '">' + esc(estado) + '</span>';
+    h += '<span class="cc-ctx-estado cc-ctx-estado-' + esc(estado) + '">' + esc(estadoLabel(estado)) + '</span>';
     if (art.colectivos && art.colectivos.length && art.colectivos[0] !== 'general') {
       h += '<span class="cc-ctx-tags-lbl">Afecta a</span>';
       h += '<div class="cc-ctx-tags">';
@@ -16838,7 +16848,7 @@ window.PILOTPAY_BACKEND_READY = true;
           + '<div class="cc-ctx-acuerdo-body">'
           + '<span class="cc-ctx-acuerdo-nombre">' + esc(cfg.nombre) + '</span>'
           + (short ? '<span class="cc-ctx-acuerdo-desc">' + esc(short) + '</span>' : '')
-          + '<span class="cc-ctx-badge cc-ctx-badge-' + esc(cfg.badge) + '">' + esc(cfg.badge) + '</span>'
+          + '<span class="cc-ctx-badge cc-ctx-badge-' + esc(cfg.badge) + '">' + esc({ 'complementa': 'Desarrolla y amplía', 'adiciona': 'Añade condiciones', 'sustituye': 'Reemplaza', 'suspende': 'Suspende temporalmente' }[cfg.badge] || cfg.badge) + '</span>'
           + '</div></div>';
       });
     } else {
@@ -17499,10 +17509,10 @@ window.PILOTPAY_BACKEND_READY = true;
 
     function _renderAcuerdoRuleCard(rule) {
     var TIPO_LABELS = {
-      adiciona:    'A\xf1ade',
-      sustituye:   'Sustituye',
-      complementa: 'Complementa',
-      suspende:    'Suspende',
+      adiciona:    'Añade condiciones',
+      sustituye:   'Reemplaza',
+      complementa: 'Desarrolla y amplía',
+      suspende:    'Suspende temporalmente',
     };
     var meta  = rule._meta || {};
     var tipo  = meta.tipo_override || '';
@@ -17519,8 +17529,8 @@ window.PILOTPAY_BACKEND_READY = true;
       h += '<span class="ac-rule-badge ac-rule-badge-' + esc(tipo) + '">'
         + esc(TIPO_LABELS[tipo] || tipo) + '</span>';
     }
-    if (meta.temporal) h += '<span class="ac-rule-badge ac-rule-badge-temporal">Temporal</span>';
-    if (meta.pendiente_validacion) h += '<span class="ac-rule-badge ac-rule-badge-pendiente">Pendiente</span>';
+    if (meta.temporal) h += '<span class="ac-rule-badge ac-rule-badge-temporal">Vigencia limitada</span>';
+    if (meta.pendiente_validacion) h += '<span class="ac-rule-badge ac-rule-badge-pendiente">Pendiente de validación</span>';
     h += '</div>';
     if (condLabel) {
       h += '<div class="ac-rule-cond">'
@@ -17551,12 +17561,12 @@ window.PILOTPAY_BACKEND_READY = true;
       + '<span class="cc-bc-item cc-bc-current">' + esc(item.label) + '</span>'
       + '</nav>';
     var capaLabel = item.badge === 'L2' ? 'Acta de Cierre 2025' : 'Acuerdo espec\xedfico 2026';
-    h += '<div class="cc-art-reader-num">' + esc(item.badge) + ' \xb7 ' + esc(capaLabel) + '</div>';
+    h += '<div class="cc-art-reader-num">' + esc(capaLabel) + '</div>';
     h += '<h1 class="cc-art-reader-title">' + esc(item.label) + '</h1>';
     if (doc && doc.nombre_corto && doc.nombre_corto !== item.label) {
       h += '<div style="font-size:12px;color:var(--text3);margin-bottom:4px">' + esc(doc.nombre_corto) + '</div>';
     }
-    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
+    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">Vigente</span></div>';
     if (rules.length) {
       h += '<section class="cc-art-reader-section">';
       h += '<div class="cc-art-reader-section-lbl">Reglas aplicables</div>';
@@ -17698,7 +17708,7 @@ window.PILOTPAY_BACKEND_READY = true;
     h += '<nav class="cc-breadcrumb"><span class="cc-bc-item cc-bc-current">Acuerdos y aplicaci\xf3n</span></nav>';
     h += '<div class="cc-art-reader-num">BCSA \xb7 Binter Canarias 2026</div>';
     h += '<h1 class="cc-art-reader-title">Acuerdos y aplicaci\xf3n</h1>';
-    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">vigente</span></div>';
+    h += '<div class="cc-art-reader-meta"><span class="cc-art-estado cc-art-estado-vigente">Vigente</span></div>';
     h += '<section class="cc-art-reader-section cc-art-texto-sec">';
     h += '<div class="cc-art-reader-section-lbl">Jerarqu\xeda normativa activa</div>';
     if (typeof NORM_DOCS !== 'undefined') {
@@ -17714,10 +17724,10 @@ window.PILOTPAY_BACKEND_READY = true;
           var vigente = !doc.vigencia_hasta || new Date(doc.vigencia_hasta) > new Date();
           h += '<div class="ac-doc-row">'
             + '<span class="ac-doc-badge ac-doc-badge-' + esc(doc.capa) + '">'
-            + (doc.capa === 'L2_ACTA' ? 'L2' : 'L3') + '</span>'
+            + (doc.capa === 'L2_ACTA' ? 'Acta' : 'Acuerdo') + '</span>'
             + '<span class="ac-doc-nombre">' + esc(doc.nombre_corto) + '</span>'
             + '<span class="ac-doc-vigencia' + (vigente ? '' : ' ac-doc-expirado') + '">'
-            + (vigente ? 'vigente' : 'vencido') + '</span></div>';
+            + (vigente ? 'Vigente' : 'Vencido') + '</span></div>';
         });
         h += '</div>';
       });
@@ -17803,9 +17813,10 @@ window.PILOTPAY_BACKEND_READY = true;
       section.items.forEach(function(item) {
         var isActive = item.id === _acOpenItemId;
         var badgeClr = item.badge === 'L2' ? 'var(--blue)' : 'var(--amber)';
+        var badgeLbl = item.badge === 'L2' ? 'Acta' : 'Acdo.';
         h += '<div class="cc-toc-art-item' + (isActive ? ' cc-toc-art-active' : '') + '" id="ac-item-' + esc(item.id) + '"'
           + ' onclick="acSelectItem(\'' + esc(item.id) + '\',\'' + esc(item.docId) + '\')">'
-          + '<span class="cc-toc-art-num" style="color:' + badgeClr + ';font-size:9px;min-width:22px;letter-spacing:.02em">' + esc(item.badge) + '</span>'
+          + '<span class="cc-toc-art-num" style="color:' + badgeClr + ';font-size:9px;min-width:22px;letter-spacing:.02em">' + esc(badgeLbl) + '</span>'
           + '<span class="cc-toc-art-name">' + esc(item.label) + '</span>'
           + '</div>';
       });
