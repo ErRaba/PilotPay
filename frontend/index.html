@@ -4504,7 +4504,7 @@ Complemento de Base MAD: 1500"></textarea>
           transition: border-color .12s;
         }
         .ac-rule-card:last-child { margin-bottom: 0; }
-        .ac-rule-card p { margin: 0; line-height: 1.78; color: color-mix(in srgb, var(--text) 85%, var(--bg)); }
+        .ac-rule-card p { margin: 0; line-height: 1.78; color: color-mix(in srgb, var(--text) 85%, var(--bg)); max-width: 600px; }
         .ac-rule-card p + p { margin-top: 0.82em; }
         .ac-rule-card-hd {
           display: flex; align-items: center; gap: 7px; margin-bottom: 14px; flex-wrap: wrap;
@@ -17775,9 +17775,11 @@ window.PILOTPAY_BACKEND_READY = true;
     if (artList.length) {
       h += '<div class="cc-ctx-card">';
       h += '<div class="cc-ctx-card-hd"><span class="cc-ctx-card-ico">↗</span> Arts. CC afectados</div>';
+      h += '<div class="cc-ctx-refs">';
       artList.forEach(function(num) {
         h += '<div class="cc-ctx-ref" onclick="openConvenioArticle(' + num + ')">Art.\xa0' + num + '</div>';
       });
+      h += '</div>';
       h += '</div>';
     }
     // ── Claves de lectura (condicional) ────────────────────────────
