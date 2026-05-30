@@ -4510,7 +4510,7 @@ Complemento de Base MAD: 1500"></textarea>
         }
         .ac-rule-title {
           font-size: 13.5px; font-weight: 600; color: var(--text);
-          flex: 1; min-width: 140px; line-height: 1.35;
+          flex: 0 0 100%; min-width: 0; line-height: 1.35;
         }
         .ac-rule-badge {
           font-family: var(--mono); font-size: 9px; font-weight: 700;
@@ -16776,14 +16776,14 @@ window.PILOTPAY_BACKEND_READY = true;
         + ' title="' + esc(prev.art.titulo || '') + '">'
         + '<span class="cc-nav-dir">← Anterior</span>'
         + '<span class="cc-nav-lbl">Art. ' + prev.art.numero
-        + (prev.art.titulo ? ' · ' + prev.art.titulo.split(/[,;(]/)[0].trim().substring(0,22) : '')
+        + (prev.art.titulo ? ' · ' + prev.art.titulo.split(/[,;(]/)[0].trim() : '')
         + '</span></button>';
     } else { h += '<span></span>'; }
     if (next) {
       h += '<button class="cc-art-reader-nav-btn cc-nav-next" onclick="ccGotoArt(' + next.art.numero + ')"'
         + ' title="' + esc(next.art.titulo || '') + '">'
         + '<span class="cc-nav-lbl">Art. ' + next.art.numero
-        + (next.art.titulo ? ' · ' + next.art.titulo.split(/[,;(]/)[0].trim().substring(0,22) : '')
+        + (next.art.titulo ? ' · ' + next.art.titulo.split(/[,;(]/)[0].trim() : '')
         + '</span>'
         + '<span class="cc-nav-dir">Siguiente →</span>'
         + '</button>';
