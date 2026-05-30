@@ -4912,20 +4912,27 @@ Complemento de Base MAD: 1500"></textarea>
 .ck-lib-hero-metrics{font-size:12px;color:var(--text2);margin-top:10px;letter-spacing:.03em}
 .ck-doc-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 16px}
 @media(max-width:560px){.ck-doc-pair{grid-template-columns:1fr}}
-.ck-doc{display:flex;flex-direction:column;padding:28px 22px 24px;background:var(--card-bg);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0;cursor:pointer;min-height:420px;transition:box-shadow .2s;-webkit-tap-highlight-color:transparent}
-.ck-doc:hover{box-shadow:0 6px 28px rgba(0,0,0,.12)}
+.ck-doc{display:flex;flex-direction:column;border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0;cursor:pointer;min-height:420px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 10px rgba(0,0,0,.07),0 10px 28px rgba(0,0,0,.05);transition:box-shadow .25s,transform .25s;-webkit-tap-highlight-color:transparent}
+.ck-doc:hover{box-shadow:0 2px 6px rgba(0,0,0,.09),0 8px 20px rgba(0,0,0,.11),0 20px 48px rgba(0,0,0,.08);transform:translateY(-1px)}
 @media(max-width:560px){.ck-doc{min-height:340px}}
-.ck-doc--l2{border-left-color:var(--text2)}
-.ck-doc-tier{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
-.ck-doc--l2 .ck-doc-tier{color:var(--text2)}
-.ck-doc-title-block{margin-bottom:24px}
-.ck-doc-cat{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:8px}
-.ck-doc-name{font-size:21px;font-weight:800;color:var(--text);line-height:1.15}
-.ck-doc-rule{border:none;border-top:1px solid var(--border);margin:0 0 18px}
-.ck-doc-refs{font-size:11.5px;color:var(--text2);line-height:2;letter-spacing:.025em;margin-bottom:18px}
-.ck-doc-desc{font-size:12.5px;line-height:1.65;color:color-mix(in srgb,var(--text) 75%,var(--bg));flex:1;margin-bottom:20px}
-.ck-doc-open{font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;padding-top:16px;border-top:1px solid var(--border);margin-top:auto}
-.ck-doc--l2 .ck-doc-open{color:var(--text2)}
+.ck-doc--l2{border-left-color:color-mix(in srgb,var(--accent) 45%,var(--text2))}
+.ck-doc-cover{padding:22px 22px 18px;background:color-mix(in srgb,var(--accent) 6%,var(--card-bg));border-bottom:1px solid var(--border);flex-shrink:0}
+.ck-doc--l2 .ck-doc-cover{background:color-mix(in srgb,var(--text) 4%,var(--card-bg))}
+.ck-doc-tier{font-size:9px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.ck-doc--l2 .ck-doc-tier{color:color-mix(in srgb,var(--accent) 45%,var(--text2))}
+.ck-doc-cat{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:8px}
+.ck-doc-entity{font-size:26px;font-weight:900;color:var(--text);line-height:1.1;letter-spacing:-.015em}
+.ck-doc--l2 .ck-doc-entity{font-size:28px;letter-spacing:.01em}
+.ck-doc-body{padding:18px 22px 20px;display:flex;flex-direction:column;flex:1;background:var(--card-bg)}
+.ck-doc-refs{font-size:11.5px;color:var(--text2);line-height:2.1;letter-spacing:.025em;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.ck-doc-desc{font-size:12.5px;line-height:1.7;color:color-mix(in srgb,var(--text) 70%,var(--bg));flex:1;margin-bottom:18px}
+.ck-doc-cta{display:flex;align-items:center;gap:10px;padding-top:14px;border-top:1px solid var(--border);margin-top:auto}
+.ck-doc-cta-text{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.ck-doc--l2 .ck-doc-cta-text{color:color-mix(in srgb,var(--accent) 45%,var(--text2))}
+.ck-doc-cta-line{flex:1;height:1px;background:color-mix(in srgb,var(--accent) 28%,transparent)}
+.ck-doc--l2 .ck-doc-cta-line{background:color-mix(in srgb,var(--text2) 28%,transparent)}
+.ck-doc-cta-arr{font-size:13px;color:var(--accent);opacity:.75;flex-shrink:0}
+.ck-doc--l2 .ck-doc-cta-arr{color:color-mix(in srgb,var(--accent) 45%,var(--text2))}
         .ck-areas-section { padding: 12px 16px 14px; border-bottom: 1px solid var(--border); }
         .ck-areas-section:last-child { border-bottom: none; padding-bottom: 18px; }
         .ck-areas-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .15em; color: var(--text3); font-weight: 700; margin-bottom: 9px; }
@@ -4966,38 +4973,48 @@ Complemento de Base MAD: 1500"></textarea>
         <!-- DOS DOCUMENTOS PRINCIPALES -->
         <div class="ck-doc-pair">
 
-          <!-- Convenio Colectivo -->
+          <!-- Convenio Colectivo — L1, institucional -->
           <div class="ck-doc" onclick="ckOpenCC()">
-            <div class="ck-doc-tier">L1</div>
-            <div class="ck-doc-title-block">
+            <div class="ck-doc-cover">
+              <div class="ck-doc-tier">L1</div>
               <div class="ck-doc-cat">Convenio Colectivo</div>
-              <div class="ck-doc-name">Binter Canarias</div>
+              <div class="ck-doc-entity">Binter Canarias</div>
             </div>
-            <hr class="ck-doc-rule">
-            <div class="ck-doc-refs">
-              <div>BOE-A-2026-6389</div>
-              <div>Vigencia 2026–2031</div>
-              <div>93 artículos · 10 capítulos</div>
+            <div class="ck-doc-body">
+              <div class="ck-doc-refs">
+                <div>BOE-A-2026-6389</div>
+                <div>Vigencia 2026–2031</div>
+                <div>93 artículos · 10 capítulos</div>
+              </div>
+              <div class="ck-doc-desc">Texto oficial consolidado del Convenio Colectivo de Binter Canarias con estructura por capítulos, artículos anotados y referencias de aplicación.</div>
+              <div class="ck-doc-cta">
+                <span class="ck-doc-cta-text">Abrir documento</span>
+                <span class="ck-doc-cta-line"></span>
+                <span class="ck-doc-cta-arr">→</span>
+              </div>
             </div>
-            <div class="ck-doc-desc">Texto oficial consolidado del Convenio Colectivo de Binter Canarias con estructura por capítulos, artículos anotados y referencias de aplicación.</div>
-            <div class="ck-doc-open">Abrir documento →</div>
           </div>
 
-          <!-- Acuerdos y Aplicación -->
+          <!-- Acuerdos y Aplicación — L2-L3, operativo -->
           <div class="ck-doc ck-doc--l2" onclick="ckOpenAcuerdos()">
-            <div class="ck-doc-tier">L2–L3</div>
-            <div class="ck-doc-title-block">
+            <div class="ck-doc-cover">
+              <div class="ck-doc-tier">L2–L3</div>
               <div class="ck-doc-cat">Acuerdos y Aplicación</div>
-              <div class="ck-doc-name">BCSA</div>
+              <div class="ck-doc-entity">BCSA</div>
             </div>
-            <hr class="ck-doc-rule">
-            <div class="ck-doc-refs">
-              <div>Acta de Cierre · Acuerdos de Base</div>
-              <div>Productividad · Media de Variables</div>
-              <div>Vigencia 2025–2026 · 69 reglas</div>
+            <div class="ck-doc-body">
+              <div class="ck-doc-refs">
+                <div>Acta de Cierre · Acuerdos de Base</div>
+                <div>Productividad · Media de Variables</div>
+                <div>Vigencia 2025–2026 · 69 reglas</div>
+              </div>
+              <div class="ck-doc-desc">Normativa complementaria y acuerdos de aplicación que modifican, complementan o desarrollan el Convenio Colectivo.</div>
+              <div class="ck-doc-cta">
+                <span class="ck-doc-cta-text">Abrir documento</span>
+                <span class="ck-doc-cta-line"></span>
+                <span class="ck-doc-cta-arr">→</span>
+              </div>
             </div>
-            <div class="ck-doc-desc">Normativa complementaria y acuerdos de aplicación que modifican, complementan o desarrollan el Convenio Colectivo.</div>
-            <div class="ck-doc-open">Abrir documento →</div>
           </div>
 
         </div>
