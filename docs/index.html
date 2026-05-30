@@ -16263,8 +16263,7 @@ window.PILOTPAY_BACKEND_READY = true;
     var wrapEl = document.getElementById('ck-results-wrap');
     if (!inner) return;
     if (_ckTemas !== null && _ckTemas.size === 0 && _allPanels.length > 0) {
-      inner.innerHTML = '<div class="ck-temas-empty-msg">Selecciona uno o varios temas para consultar acuerdos y aplicación.</div>';
-      if (wrapEl) wrapEl.style.display = 'block';
+      if (wrapEl) wrapEl.style.display = 'none';
       return;
     }
     inner.innerHTML = renderAllPanels();
