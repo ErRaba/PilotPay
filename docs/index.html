@@ -4540,6 +4540,57 @@ Complemento de Base MAD: 1500"></textarea>
         /* Cross-link desde CC panel → Acuerdos */
         .cc-ctx-acuerdo { cursor: pointer; border-radius: 5px; transition: background .12s; }
         .cc-ctx-acuerdo:hover { background: color-mix(in srgb, var(--blue) 6%, transparent); }
+        /* Acuerdos: bloques semánticos dentro de valor_tabla */
+        .ac-vt-block { margin-top: 14px; }
+        .ac-vt-section { margin-top: 16px; }
+        .ac-vt-section:first-child { margin-top: 8px; }
+        .ac-vt-section-lbl {
+          font-size: 10px; font-family: var(--mono); text-transform: uppercase;
+          letter-spacing: .12em; color: var(--text3); margin-bottom: 9px;
+          padding-bottom: 5px;
+          border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+        }
+        .ac-ficha-row {
+          padding: 10px 13px; border-radius: 6px; margin-bottom: 7px;
+          background: color-mix(in srgb, var(--bg2) 45%, transparent);
+          border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+        }
+        .ac-ficha-lbl {
+          font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 3px;
+        }
+        .ac-ficha-val { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.3; }
+        .ac-ficha-desc { font-size: 12px; color: var(--text3); margin-top: 3px; line-height: 1.5; }
+        .ac-activity-list { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+        .ac-activity-item {
+          display: flex; align-items: flex-start; gap: 9px;
+          font-size: 13px; line-height: 1.5; color: var(--text2);
+        }
+        .ac-activity-item-ico {
+          flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 10px; font-weight: 700; margin-top: 1px;
+        }
+        .ac-activity-item--yes .ac-activity-item-ico {
+          background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green);
+        }
+        .ac-activity-item--no .ac-activity-item-ico {
+          background: color-mix(in srgb, var(--text3) 12%, transparent); color: var(--text3);
+        }
+        .ac-activity-item--no { color: var(--text3); }
+        .ac-bool-yes {
+          display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+          color: var(--green); background: color-mix(in srgb, var(--green) 12%, transparent);
+          padding: 4px 10px; border-radius: 20px;
+        }
+        .ac-bool-no {
+          display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+          color: var(--text3); background: color-mix(in srgb, var(--text3) 10%, transparent);
+          padding: 4px 10px; border-radius: 20px;
+        }
+        .ac-importe-grid {
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 7px; margin-top: 4px;
+        }
 
         /* ── Normative state badges ── */
         .nr-badge {
@@ -16770,7 +16821,14 @@ window.PILOTPAY_BACKEND_READY = true;
     var UPPER = /^[A-Z\xc1\xc9\xcd\xd3\xda\xdc\xd1]/; // A-Z + Á É Í Ó Ú Ü Ñ
 
     // Walk lines: join OCR soft-wraps, split on .\n[Capital] heuristic
-    var lines  = txt.split('\n');
+    var raw = txt.split('\n');
+    var lines = [];
+    raw.forEach(function(ln) {
+      if (ln.trim().length > 160) {
+        var parts = ln.replace(/([.!?])\s+(?=[A-Z\xc1\xc9\xcd\xd3\xda\xdc\xd1])/g, '$1\n').split('\n');
+        parts.forEach(function(p) { lines.push(p); });
+      } else { lines.push(ln); }
+    });
     var chunks = []; // {type:'para'|'item', text:string}
     var buf    = [];
 
@@ -16909,83 +16967,328 @@ window.PILOTPAY_BACKEND_READY = true;
 
   function _acLabelKey(k) {
     var map = {
-      dias_actividad:                   'D\xedas activos',
-      dias_descanso:                    'D\xedas descanso',
-      patron:                           'Patr\xf3n',
-      dias_vacaciones:                  'D\xedas de vacaciones',
-      tipo_dias:                        'Tipo de d\xedas',
-      max_periodos:                     'M\xe1x. per\xedodos',
-      condicion:                        'Condici\xf3n',
-      dia_en_descanso:                  'D\xeda en descanso',
-      patron_resultante:                'Patr\xf3n resultante',
-      actividades_cuentan_fdp:          'Cuentan FDP',
-      actividades_no_cuentan_fdp:       'No cuentan FDP',
-      base_piloto_para_tfn:             'Base piloto TFN',
-      prorroga_posible:                 'Pr\xf3rroga posible',
-      suspension_sin_compensacion:      'Sin compensaci\xf3n si cancela',
-      si_se_cancela_roster:             'Si cancela roster',
-      cupos_max_actividades_no_vuelo:   'Cupos m\xe1x. no vuelo',
-      compensacion_euros:               'Compensaci\xf3n (€)',
-      compensacion_dia_festivo_euros:   'Compensaci\xf3n festivo (€)',
-      horas_sindicales_nota:            'Nota horas sindicales',
-      oficina_nota:                     'Nota d\xeda de oficina',
+      dias_actividad:                    'D\xedas de actividad',
+      dias_descanso:                     'D\xedas de descanso',
+      patron:                            'Patr\xf3n',
+      patron_resultante:                 'Patr\xf3n resultante',
+      dia_en_descanso:                   'D\xeda de descanso afectado',
+      cupos_max_actividades_no_vuelo:    'Cupos m\xe1x. actividad no vuelo',
+      empresa_puede_adaptar_causas_operativas: 'Empresa puede adaptar (causas op.)',
+      si_se_cancela_roster:              'Si se cancela el roster',
+      dias_vacaciones:                   'D\xedas de vacaciones',
+      tipo_dias:                         'Tipo de d\xedas',
+      max_periodos:                      'M\xe1x. per\xedodos',
+      dias_adicionales:                  'D\xedas adicionales',
+      dias_lrc:                          'D\xedas LRC',
+      actividades_cuentan_fdp:           'Computan como actividad',
+      actividades_no_cuentan_fdp:        'No computan como actividad',
+      horas_sindicales_nota:             'Nota \u2014 horas sindicales',
+      oficina_nota:                      'Nota \u2014 d\xeda de oficina',
+      condicion:                         'Condici\xf3n',
+      condicion_tipo:                    'Tipo de condici\xf3n',
+      condicion_dias_vuelo_media:        'Media d\xedas vuelo',
+      condicion_minima_pct:              'Porcentaje m\xednimo',
+      base_piloto_para_tfn:              'Base piloto TFN',
+      prorroga_posible:                  'Pr\xf3rroga posible',
+      suspension_sin_compensacion:       'Cancelaci\xf3n sin compensaci\xf3n',
+      sujeta_disponibilidad_operativa:   'Sujeta a disponibilidad operativa',
+      informe_tecnico_favorable:         'Informe t\xe9cnico favorable',
+      suspension_automatica:             'Suspensi\xf3n autom\xe1tica',
+      mecanismo_exacto_no_especificado:  'Mecanismo sin especificar',
+      mecanismo_si_varia:                'Mecanismo si var\xeda',
+      importe_mensual_bruto:             'Importe mensual bruto',
+      importe_anual_bruto:               'Importe anual bruto',
+      salario_base_mes:                  'Salario base mensual',
+      compensacion_euros:                'Compensaci\xf3n (\u20ac)',
+      compensacion_dia_festivo_euros:    'Compensaci\xf3n festivo (\u20ac)',
+      cop_importe:                       'Importe COP',
+      tcp_importe:                       'Importe TCP',
+      cmd_con_cambio_nivel_importe:      'CMD con cambio de nivel',
+      cmd_sin_cambio_nivel_importe:      'CMD sin cambio de nivel',
+      extra1_mes:                        'Extra 1\xa0/\xa0mes',
+      extra2_mes:                        'Extra 2\xa0/\xa0mes',
+      incremento_pct:                    'Incremento',
+      penalizacion_pct:                  'Penalizaci\xf3n',
+      umbral_minimo_activacion_pct:      'Umbral m\xednimo activaci\xf3n',
+      objetivo_maximo_pct:               'Objetivo m\xe1ximo',
+      bajo_minimo:                       'Bajo m\xednimo',
+      sobre_maximo:                      'Sobre m\xe1ximo',
+      destacamento_int_dia:              'Destacamento internacional\xa0/\xa0d\xeda',
+      destacamento_nac_dia:              'Destacamento nacional\xa0/\xa0d\xeda',
+      dieta_nac_dia:                     'Dieta nacional\xa0/\xa0d\xeda',
+      supl_int_dia:                      'Suplemento internacional\xa0/\xa0d\xeda',
+      supl_pernocta_int_dia:             'Suplemento pernocta int.\xa0/\xa0d\xeda',
+      supl_pernocta_nac_dia:             'Suplemento pernocta nac.\xa0/\xa0d\xeda',
+      plus_sobrecargo_reactor_dia:       'Plus sobrecargo\xa0/\xa0d\xeda (reactor)',
+      indicador:                         'Indicador',
+      objetivo:                          'Objetivo',
+      metrica:                           'M\xe9trica',
+      medicion:                          'Medici\xf3n',
+      unidad:                            'Unidad',
+      sistema_evaluacion:                'Sistema de evaluaci\xf3n',
+      ponderacion_combustible_pct:       'Ponderaci\xf3n combustible',
+      ponderacion_puntualidad_pct:       'Ponderaci\xf3n puntualidad',
+      afecta_tramos:                     'Afecta a tramos',
+      descripcion_cota:                  'Descripci\xf3n de cota',
+      matriz_publicada:                  'Matriz publicada',
+      asignacion:                        'Asignaci\xf3n',
+      libre_volado_menos_24h:            'Libre volado < 24\xa0h',
+      libre_volado_24_72h:               'Libre volado 24\u201372\xa0h',
+      libre_volado_mas_72h:              'Libre volado > 72\xa0h',
+      requisitos:                        'Requisitos',
+      requisito_alta_desde:              'Alta desde',
+      requisito_continuidad:             'Continuidad requerida',
+      cargo_cmd_activo:                  'CMD activo en cargo',
+      alcance:                           'Alcance',
+      preaviso_dias:                     'Preaviso',
+      silencio_positivo_dias_antes:      'Silencio positivo (d\xedas antes)',
+      fecha_limite_pago:                 'Fecha l\xedmite de pago',
+      si_no_alcanza:                     'Si no alcanza',
+      importe_determinado_por:           'Importe determinado por',
+      hv_t1_ord: 'HV tramo\xa01 ordinario', hv_t1_rot: 'HV tramo\xa01 rotativo',
+      hv_t2_ord: 'HV tramo\xa02 ordinario', hv_t2_rot: 'HV tramo\xa02 rotativo',
+      hv_t3_ord: 'HV tramo\xa03 ordinario', hv_t3_rot: 'HV tramo\xa03 rotativo',
+      hv_t4_ord: 'HV tramo\xa04 ordinario', hv_t4_rot: 'HV tramo\xa04 rotativo',
     };
-    return map[k] || k.replace(/_/g, ' ');
+    return map[k] || k.replace(/_/g, '\xa0');
   }
 
-  function _acRenderValorTabla(vt) {
+  function _acLabelActivity(id) {
+    var map = {
+      formacion_no_presencial_online:            'Formaci\xf3n online no presencial',
+      vuelo_posicional_simulador_verificaciones: 'Vuelo posicional, simulador o verificaciones',
+      dia_oficina_sin_funcion_responsabilidad:   'D\xeda de oficina sin funci\xf3n de responsabilidad',
+      auditorias_e_inspecciones:                 'Auditor\xedas e inspecciones',
+      competencia_linguistica:                   'Competencia ling\xfc\xedstica',
+      reconocimiento_medico:                     'Reconocimiento m\xe9dico',
+      horas_sindicales_en_libranza:              'Horas sindicales en d\xeda de libranza',
+      horas_sindicales_dias_libranza:            'Horas sindicales en d\xedas de libranza',
+    };
+    return map[id] || id.replace(/_/g, '\xa0');
+  }
+
+  function _acLabelAmbig(id) {
+    var map = {
+      ambig_franco_5_dia_alcance:            'Alcance del franco tras el 5.\xba\xa0d\xeda',
+      ambig_mad_11_dias_periodo:             'Per\xedodo de medici\xf3n de los 11\xa0d\xedas MAD',
+      ambig_mad_75pct_funcion:               'Definici\xf3n de \xabfunci\xf3n asignada\xbb al 75\xa0%',
+      ambig_matrices_dpo_ausentes:           'Matrices de DPO pendientes de publicaci\xf3n',
+      ambig_media_variables_ajuste_12m:      'Per\xedodo de c\xe1lculo de la media de variables',
+      ambig_oficina_funcion_responsabilidad: 'Definici\xf3n de \xabfunci\xf3n de responsabilidad\xbb en d\xedas de oficina',
+      ambig_tfn_gap_julio_agosto:            'Gap normativo julio\u2013agosto en TFN',
+      ambig_vac_dia_adicional_tipo:          'Naturaleza del d\xeda adicional de vacaciones',
+    };
+    return map[id] || id.replace(/_/g, '\xa0');
+  }
+
+  function _acLabelVal(key, rawVal) {
+    var valMaps = {
+      dia_en_descanso: {
+        primero_o_ultimo: 'Primer o \xfaltimo d\xeda del bloque',
+      },
+      tipo_dias: {
+        laborales: 'D\xedas laborales',
+        naturales: 'D\xedas naturales',
+        habiles:   'D\xedas h\xe1biles',
+      },
+      condicion: {
+        roster_5_3_efectivamente_implantado: 'Roster\xa05+3 efectivamente implantado',
+        roster_6_3_efectivamente_implantado: 'Roster\xa06+3 efectivamente implantado',
+      },
+      si_se_cancela_roster: {
+        vuelve_a_30_dias_naturales_CC: 'Vuelve a los 30\xa0d\xedas naturales del Convenio',
+      },
+    };
+    if (typeof rawVal !== 'string') return String(rawVal);
+    if (valMaps[key] && valMaps[key][rawVal]) return valMaps[key][rawVal];
+    var s = rawVal.replace(/_/g, '\xa0');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+    function _acRenderValorTabla(vt) {
     if (!vt || typeof vt !== 'object') return '';
     var keys = Object.keys(vt).filter(function(k) {
       return vt[k] !== null && vt[k] !== undefined;
     });
     if (!keys.length) return '';
-    var h = '<div class="ac-meta-table" style="margin-top:10px">';
-    keys.forEach(function(k) {
-      var v = vt[k];
-      var displayVal;
-      if (Array.isArray(v)) {
-        displayVal = v.map(function(vi) { return vi.replace(/_/g, ' '); }).join(', ');
-      } else if (typeof v === 'boolean') {
-        displayVal = v ? 'S\xed' : 'No';
-      } else {
-        displayVal = String(v);
-      }
-      h += '<div class="ac-meta-row"><span class="ac-meta-lbl">' + esc(_acLabelKey(k)) + '</span>'
-        + '<span class="ac-meta-val">' + esc(displayVal) + '</span></div>';
+    var h = '<div class="ac-vt-block">';
+
+    // Grupo 1: Patrón de roster
+    var patternKeys = ['patron', 'patron_resultante', 'dias_actividad', 'dias_descanso', 'dia_en_descanso'];
+    var hasPattern = patternKeys.some(function(k) { return keys.indexOf(k) !== -1; });
+    if (hasPattern) {
+      h += '<div class="ac-vt-section">';
+      h += '<div class="ac-vt-section-lbl">Patr\xf3n de servicio</div>';
+      patternKeys.forEach(function(k) {
+        if (keys.indexOf(k) === -1) return;
+        var v = vt[k]; var lbl = _acLabelKey(k); var desc = '';
+        if ((k === 'patron' || k === 'patron_resultante') && typeof v === 'string') {
+          var pts = v.split('+');
+          if (pts.length === 2) desc = '(' + pts[0].trim() + '\xa0d\xedas de actividad + ' + pts[1].trim() + '\xa0de descanso)';
+        }
+        h += '<div class="ac-ficha-row">';
+        h += '<div class="ac-ficha-lbl">' + esc(lbl) + '</div>';
+        h += '<div class="ac-ficha-val">' + esc(k === 'dia_en_descanso' ? _acLabelVal(k, String(v)) : String(v)) + '</div>';
+        if (desc) h += '<div class="ac-ficha-desc">' + esc(desc) + '</div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+
+    // Grupo 2: Actividades ✓/✕
+    var cuentan = vt.actividades_cuentan_fdp;
+    var noCuentan = vt.actividades_no_cuentan_fdp;
+    if (cuentan && cuentan.length) {
+      h += '<div class="ac-vt-section">';
+      h += '<div class="ac-vt-section-lbl">Computan como actividad\xa0\u2014 afectan a FDP</div>';
+      h += '<div class="ac-activity-list">';
+      cuentan.forEach(function(id) {
+        h += '<div class="ac-activity-item ac-activity-item--yes">'
+          + '<span class="ac-activity-item-ico">\u2713</span>'
+          + '<span>' + esc(_acLabelActivity(id)) + '</span></div>';
+      });
+      h += '</div></div>';
+    }
+    if (noCuentan && noCuentan.length) {
+      h += '<div class="ac-vt-section">';
+      h += '<div class="ac-vt-section-lbl">No computan como actividad\xa0\u2014 no afectan a FDP</div>';
+      h += '<div class="ac-activity-list">';
+      noCuentan.forEach(function(id) {
+        h += '<div class="ac-activity-item ac-activity-item--no">'
+          + '<span class="ac-activity-item-ico">\u2715</span>'
+          + '<span>' + esc(_acLabelActivity(id)) + '</span></div>';
+      });
+      h += '</div></div>';
+    }
+
+    // Grupo 3: Notas de texto
+    ['horas_sindicales_nota', 'oficina_nota'].forEach(function(k) {
+      if (keys.indexOf(k) === -1 || !vt[k]) return;
+      h += '<div class="ac-rule-nota" style="margin-top:10px">'
+        + '<strong style="font-weight:600;font-size:11.5px">' + esc(_acLabelKey(k)) + '</strong>'
+        + '<br>' + esc(String(vt[k])) + '</div>';
     });
+
+    // Grupo 4: Flags booleanos
+    var boolKeys = [
+      'prorroga_posible', 'suspension_sin_compensacion', 'cupos_max_actividades_no_vuelo',
+      'empresa_puede_adaptar_causas_operativas', 'sujeta_disponibilidad_operativa',
+      'informe_tecnico_favorable', 'mecanismo_exacto_no_especificado', 'matriz_publicada',
+      'suspension_automatica',
+    ];
+    var activeBools = boolKeys.filter(function(k) {
+      return keys.indexOf(k) !== -1 && typeof vt[k] === 'boolean';
+    });
+    if (activeBools.length) {
+      h += '<div class="ac-vt-section"><div class="ac-vt-section-lbl">Condiciones operativas</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">';
+      activeBools.forEach(function(k) {
+        h += vt[k]
+          ? '<span class="ac-bool-yes">\u2713\xa0' + esc(_acLabelKey(k)) + '</span>'
+          : '<span class="ac-bool-no">\u2715\xa0' + esc(_acLabelKey(k)) + '</span>';
+      });
+      h += '</div></div>';
+    }
+
+    // Grupo 5: Importes
+    var moneyKeys = [
+      'importe_mensual_bruto', 'importe_anual_bruto', 'salario_base_mes',
+      'compensacion_euros', 'compensacion_dia_festivo_euros',
+      'cop_importe', 'tcp_importe', 'cmd_con_cambio_nivel_importe', 'cmd_sin_cambio_nivel_importe',
+      'extra1_mes', 'extra2_mes',
+      'destacamento_int_dia', 'destacamento_nac_dia', 'dieta_nac_dia',
+      'supl_int_dia', 'supl_pernocta_int_dia', 'supl_pernocta_nac_dia', 'plus_sobrecargo_reactor_dia',
+    ];
+    var activeMoneys = moneyKeys.filter(function(k) { return keys.indexOf(k) !== -1; });
+    if (activeMoneys.length) {
+      h += '<div class="ac-vt-section"><div class="ac-vt-section-lbl">Importes</div>';
+      h += '<div class="ac-importe-grid">';
+      activeMoneys.forEach(function(k) {
+        var v = vt[k];
+        var dv = typeof v === 'number'
+          ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '\xa0\u20ac'
+          : String(v);
+        h += '<div class="ac-ficha-row" style="margin-bottom:0">';
+        h += '<div class="ac-ficha-lbl">' + esc(_acLabelKey(k)) + '</div>';
+        h += '<div class="ac-ficha-val">' + esc(dv) + '</div></div>';
+      });
+      h += '</div></div>';
+    }
+
+    // Grupo 6: Catch-all (resto de claves)
+    var handled = patternKeys.concat([
+      'actividades_cuentan_fdp', 'actividades_no_cuentan_fdp',
+      'horas_sindicales_nota', 'oficina_nota',
+    ]).concat(boolKeys).concat(moneyKeys);
+    var remaining = keys.filter(function(k) { return handled.indexOf(k) === -1; });
+    if (remaining.length) {
+      h += '<div class="ac-vt-section"><div class="ac-vt-section-lbl">Detalles</div>';
+      remaining.forEach(function(k) {
+        var v = vt[k]; var dv;
+        if (Array.isArray(v)) {
+          dv = v.map(function(vi) { return typeof vi === 'string' ? _acLabelVal(k, vi) : String(vi); }).join(',\xa0');
+        } else if (typeof v === 'boolean') {
+          dv = v ? 'S\xed' : 'No';
+        } else {
+          dv = _acLabelVal(k, String(v));
+        }
+        h += '<div class="ac-meta-row">'
+          + '<span class="ac-meta-lbl">' + esc(_acLabelKey(k)) + '</span>'
+          + '<span class="ac-meta-val">' + esc(dv) + '</span></div>';
+      });
+      h += '</div>';
+    }
+
     h += '</div>';
     return h;
   }
 
-  function _renderAcuerdoRuleCard(rule) {
+    function _renderAcuerdoRuleCard(rule) {
+    var TIPO_LABELS = {
+      adiciona:    'A\xf1ade',
+      sustituye:   'Sustituye',
+      complementa: 'Complementa',
+      suspende:    'Suspende',
+    };
     var meta  = rule._meta || {};
     var tipo  = meta.tipo_override || '';
     var cond  = meta.condicionado_a;
     var condLabel = cond
       ? ((typeof NORM_CONDICIONES !== 'undefined' && NORM_CONDICIONES[cond])
           ? NORM_CONDICIONES[cond]
-          : cond.replace(/_/g, ' '))
+          : cond.replace(/_/g, '\xa0'))
       : null;
     var h = '<div class="ac-rule-card">';
     h += '<div class="ac-rule-card-hd">';
     h += '<span class="ac-rule-title">' + esc(rule.titulo || rule.id) + '</span>';
-    if (tipo) h += '<span class="ac-rule-badge ac-rule-badge-' + esc(tipo) + '">' + esc(tipo) + '</span>';
-    if (meta.temporal) h += '<span class="ac-rule-badge ac-rule-badge-temporal">temporal</span>';
-    if (meta.pendiente_validacion) h += '<span class="ac-rule-badge ac-rule-badge-pendiente">pendiente</span>';
+    if (tipo) {
+      h += '<span class="ac-rule-badge ac-rule-badge-' + esc(tipo) + '">'
+        + esc(TIPO_LABELS[tipo] || tipo) + '</span>';
+    }
+    if (meta.temporal) h += '<span class="ac-rule-badge ac-rule-badge-temporal">Temporal</span>';
+    if (meta.pendiente_validacion) h += '<span class="ac-rule-badge ac-rule-badge-pendiente">Pendiente</span>';
     h += '</div>';
     if (condLabel) {
-      h += '<div class="ac-rule-cond"><span style="font-weight:600">Condici\xf3n:</span> ' + esc(condLabel) + '</div>';
+      h += '<div class="ac-rule-cond">'
+        + '<span style="font-size:10px;font-family:var(--mono);text-transform:uppercase;'
+        + 'letter-spacing:.1em;opacity:.7;display:block;margin-bottom:3px">Condici\xf3n</span>'
+        + esc(condLabel) + '</div>';
     }
     if (rule.texto) h += _ccParas(rule.texto);
     if (rule.valor_tabla) h += _acRenderValorTabla(rule.valor_tabla);
+    if (rule.valor_texto) {
+      h += '<div class="ac-rule-nota">' + esc(rule.valor_texto) + '</div>';
+    }
     if (meta.ambiguedad_id) {
-      h += '<div class="ac-rule-nota-critica">Ambig\xfcedad documentada: ' + esc(meta.ambiguedad_id.replace(/_/g, ' ')) + '</div>';
+      h += '<div class="ac-rule-nota-critica">'
+        + '<span style="font-weight:600">Ambig\xfcedad documentada:\xa0</span>'
+        + esc(_acLabelAmbig(meta.ambiguedad_id)) + '</div>';
     }
     h += '</div>';
     return h;
   }
 
-  function _renderAcuerdoItemContent(item, rules) {
+    function _renderAcuerdoItemContent(item, rules) {
     var doc = (typeof NORM_DOCS !== 'undefined') ? NORM_DOCS[item.docId] : null;
     var h = '<div class="cc-art-display-inner">';
     h += '<nav class="cc-breadcrumb">'
