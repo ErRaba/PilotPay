@@ -16880,6 +16880,76 @@ window.PILOTPAY_BACKEND_READY = true;
     return h;
   }
 
+  function _acDocLeyendaHtml() {
+    var h = '<div class="cc-leyenda">';
+    h += '<div class="cc-leyenda-title">Cómo leer los acuerdos</div>';
+    h += '<div class="cc-leyenda-group">';
+    h += '<div class="cc-leyenda-group-lbl">Tipos de relación</div>';
+    var _rel = [
+      ['var(--blue)',   'Desarrolla y amplía',      'El acuerdo complementa o expande una regla del Convenio.'],
+      ['var(--green)',  'Añade condiciones',         'El acuerdo introduce condiciones adicionales al Convenio.'],
+      ['var(--amber)',  'Reemplaza',                   'El acuerdo sustituye texto del Convenio por texto propio.'],
+      ['var(--amber)',  'Suspende temporalmente',      'La regla del Convenio no aplica durante la vigencia del acuerdo.'],
+    ];
+    _rel.forEach(function(e) {
+      h += '<div class="cc-leyenda-item">'
+        + '<div class="cc-leyenda-dot" style="background:' + e[0] + '"></div>'
+        + '<div><div class="cc-leyenda-term">' + e[1] + '</div>'
+        + '<div class="cc-leyenda-def">' + e[2] + '</div></div></div>';
+    });
+    h += '</div><div class="cc-leyenda-group">';
+    h += '<div class="cc-leyenda-group-lbl">Avisos en reglas</div>';
+    var _avi = [
+      ['var(--amber)',  'Vigencia limitada',           'La regla tiene fecha de caducidad.'],
+      ['var(--red)',    'Pendiente de validación',  'Contenido pendiente de confirmación.'],
+      ['var(--amber)',  'Condición',                'La regla aplica solo si se cumple una condición operativa.'],
+      ['var(--red)',    'Ambigüedad documentada',   'Existe incertidumbre interpretativa en este punto.'],
+    ];
+    _avi.forEach(function(e) {
+      h += '<div class="cc-leyenda-item">'
+        + '<div class="cc-leyenda-dot" style="background:' + e[0] + '"></div>'
+        + '<div><div class="cc-leyenda-term">' + e[1] + '</div>'
+        + '<div class="cc-leyenda-def">' + e[2] + '</div></div></div>';
+    });
+    h += '</div><div class="cc-leyenda-group">';
+    h += '<div class="cc-leyenda-group-lbl">Jerarquía documental</div>';
+    var _docs = [
+      ['var(--blue)',   'Acta de Cierre',              'Acuerdo complementario posterior al Convenio.'],
+      ['#0d9488',      'Acuerdo de Aplicación',    'Norma específica de base o colectivo.'],
+      ['var(--accent)', 'Convenio Colectivo',          'Texto base sobre el que actúan los acuerdos.'],
+    ];
+    _docs.forEach(function(e) {
+      h += '<div class="cc-leyenda-item">'
+        + '<div class="cc-leyenda-dot" style="background:' + e[0] + '"></div>'
+        + '<div><div class="cc-leyenda-term">' + e[1] + '</div>'
+        + '<div class="cc-leyenda-def">' + e[2] + '</div></div></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  function _acCtxLeyendaHtml() {
+    var h = '<div class="cc-ctx-leyenda">';
+    h += '<div class="cc-ctx-leyenda-title">Leyenda</div>';
+    var _rows = [
+      ['var(--blue)',   'Desarrolla y amplía'],
+      ['var(--green)',  'Añade condiciones'],
+      ['var(--amber)',  'Reemplaza'],
+      ['var(--amber)',  'Suspende temporalmente'],
+      ['var(--amber)',  'Vigencia limitada'],
+      ['var(--red)',    'Pendiente de validación'],
+      ['var(--amber)',  'Condición operativa'],
+      ['var(--red)',    'Ambigüedad documentada'],
+    ];
+    _rows.forEach(function(r) {
+      h += '<div class="cc-ctx-leyenda-row">'
+        + '<div class="cc-ctx-leyenda-dot" style="background:' + r[0] + '"></div>'
+        + '<div class="cc-ctx-leyenda-lbl">' + r[1] + '</div></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
   function _renderCtxPanel(entry) {
     var art    = entry.art;
     var estado = art.estado || 'pendiente';
@@ -17750,7 +17820,7 @@ window.PILOTPAY_BACKEND_READY = true;
       _ac_glos.forEach(function(e) { h += '<div class="cc-ctx-glos-entry"><div class="cc-ctx-glos-term">' + esc(e[0]) + '</div><div class="cc-ctx-glos-def">' + esc(e[1]) + '</div></div>'; });
       h += '</div>';
     }
-    h += _ctxLeyendaHtml();
+    h += _acCtxLeyendaHtml();
     return h;
   }
 
@@ -17813,7 +17883,7 @@ window.PILOTPAY_BACKEND_READY = true;
       + 'que se aplican sobre el Convenio Colectivo. '
       + 'Selecciona un tema en el \xeddice para consultar las reglas aplicables.'
       + '</p>';
-    h += _docLeyendaHtml();
+    h += _acDocLeyendaHtml();
     h += '</section></div>';
     return h;
   }
