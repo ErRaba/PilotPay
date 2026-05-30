@@ -4894,6 +4894,21 @@ Complemento de Base MAD: 1500"></textarea>
         /* ── Section header with badge inline ── */
         .nr-sec-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
         /* ── Áreas de consulta — índice documental ── */
+.ck-temas-section{margin:0 0 24px}
+.ck-temas-lbl,.ck-esp-lbl,.ck-docs-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);padding:0 4px;margin-bottom:12px}
+.ck-temas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ck-tema-tile{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.ck-tema-tile:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.ck-tema-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;display:block}
+.ck-tema-ref{font-size:11px;color:var(--text2);letter-spacing:.02em}
+.ck-esp-section{margin:0 0 28px}
+.ck-esp-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ck-esp-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;-webkit-tap-highlight-color:transparent}
+.ck-esp-item:last-child{border-bottom:none}
+.ck-esp-item:hover{background:color-mix(in srgb,var(--accent) 6%,var(--card-bg))}
+.ck-esp-name{font-size:13px;color:var(--text)}
+.ck-esp-ref{font-size:11px;color:var(--text2);letter-spacing:.02em;flex-shrink:0;margin-left:10px}
+.ck-docs-section{margin:0 0 8px}
         .ck-areas-section { padding: 12px 16px 14px; border-bottom: 1px solid var(--border); }
         .ck-areas-section:last-child { border-bottom: none; padding-bottom: 18px; }
         .ck-areas-lbl { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .15em; color: var(--text3); font-weight: 700; margin-bottom: 9px; }
@@ -4940,41 +4955,116 @@ BCSA · Binter Canarias · 2026–2031.</div>
           </div>
         </div>
 
-        <!-- MÓDULO: CONVENIO COLECTIVO -->
-        <div class="ck-block">
-          <div class="ck-lib-doc-card" onclick="ckOpenCC()">
-            <div class="ck-lib-doc-hd">
-              <span class="ck-lib-doc-badge ck-lib-doc-badge-l1">L1</span>
-              <span class="ck-lib-doc-titulo">Convenio Colectivo Binter Canarias</span>
-              <span class="ck-lib-doc-estado">vigente</span>
+        <!-- CONSULTAS PRINCIPALES -->
+        <div class="ck-temas-section">
+          <div class="ck-temas-lbl">Consultas principales</div>
+          <div class="ck-temas-grid">
+            <div class="ck-tema-tile" onclick="openConvenioArticle(41)">
+              <span class="ck-tema-name">Vacaciones</span>
+              <span class="ck-tema-ref">Art. 41 CC</span>
             </div>
-            <div class="ck-lib-doc-period">2026 – 2031 · BOE-A-2026-6389</div>
-            <div class="ck-lib-doc-desc">Texto oficial del convenio con índice por capítulos, artículos anotados y notas de afectación por acuerdos posteriores.</div>
-            <div class="ck-lib-doc-stats">
-              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">93</span> artículos</div>
-              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">10</span> capítulos</div>
-              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">5</span> años vigencia</div>
+            <div class="ck-tema-tile" onclick="openConvenioArticle(75)">
+              <span class="ck-tema-name">Jornada y descanso</span>
+              <span class="ck-tema-ref">Art. 75 CC</span>
             </div>
-            <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
+            <div class="ck-tema-tile" onclick="openConvenioArticle(80)">
+              <span class="ck-tema-name">Francos</span>
+              <span class="ck-tema-ref">Art. 80 CC</span>
+            </div>
+            <div class="ck-tema-tile" onclick="openAgreementRule('productividad_2026','prod_vigencia')">
+              <span class="ck-tema-name">Productividad</span>
+              <span class="ck-tema-ref">Acuerdo 2026</span>
+            </div>
+            <div class="ck-tema-tile" onclick="openAgreementRule('acta_cierre_2025','acta_media_variables_ampliada')">
+              <span class="ck-tema-name">Media de variables</span>
+              <span class="ck-tema-ref">Acta Cierre 2025</span>
+            </div>
+            <div class="ck-tema-tile" onclick="openConvenioArticle(38)">
+              <span class="ck-tema-name">Licencias retribuidas</span>
+              <span class="ck-tema-ref">Art. 38 CC</span>
+            </div>
+            <div class="ck-tema-tile" onclick="openConvenioArticle(93)">
+              <span class="ck-tema-name">Uniformidad</span>
+              <span class="ck-tema-ref">Art. 93 CC</span>
+            </div>
+            <div class="ck-tema-tile" onclick="openConvenioArticle(47)">
+              <span class="ck-tema-name">Retribución Grupo IV</span>
+              <span class="ck-tema-ref">Art. 47 CC</span>
+            </div>
           </div>
         </div>
 
-        <!-- MÓDULO: ACUERDOS Y APLICACIÓN -->
-        <div class="ck-block">
-          <div class="ck-lib-doc-card ck-lib-doc-card--acuerdos" onclick="ckOpenAcuerdos()">
-            <div class="ck-lib-doc-hd">
-              <span class="ck-lib-doc-badge ck-lib-doc-badge-l2l3">L2–L3</span>
-              <span class="ck-lib-doc-titulo">Acuerdos y aplicación</span>
-              <span class="ck-lib-doc-estado">vigente</span>
+        <!-- CONSULTAS ESPECÍFICAS -->
+        <div class="ck-esp-section">
+          <div class="ck-esp-lbl">Consultas específicas</div>
+          <div class="ck-esp-card">
+            <div class="ck-esp-item" onclick="openConvenioArticle(77)">
+              <span class="ck-esp-name">FDP y límites máximos</span>
+              <span class="ck-esp-ref">Art. 77</span>
             </div>
-            <div class="ck-lib-doc-period">2025 – 2026 · BCSA</div>
-            <div class="ck-lib-doc-desc">Modificaciones, complementos y acuerdos de base que se aplican sobre el Convenio Colectivo. Incluye Acta de Cierre 2025, rosters MAD / TFN / LPA y productividad 2026.</div>
-            <div class="ck-lib-doc-stats">
-              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">69</span> reglas</div>
-              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">4</span> documentos</div>
-              <div class="ck-lib-doc-stat" style="color:var(--text2)">MAD · TFN · LPA</div>
+            <div class="ck-esp-item" onclick="openConvenioArticle(48)">
+              <span class="ck-esp-name">Dirección por objetivos (DPO)</span>
+              <span class="ck-esp-ref">Art. 48</span>
             </div>
-            <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
+            <div class="ck-esp-item" onclick="openConvenioArticle(31)">
+              <span class="ck-esp-name">Excedencia voluntaria</span>
+              <span class="ck-esp-ref">Art. 31</span>
+            </div>
+            <div class="ck-esp-item" onclick="openConvenioArticle(40)">
+              <span class="ck-esp-name">Reducción de jornada</span>
+              <span class="ck-esp-ref">Art. 40</span>
+            </div>
+            <div class="ck-esp-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_comp_cmd')">
+              <span class="ck-esp-name">Complemento base MAD</span>
+              <span class="ck-esp-ref">Acuerdo MAD</span>
+            </div>
+            <div class="ck-esp-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_roster_patron')">
+              <span class="ck-esp-name">Roster MAD 6+3</span>
+              <span class="ck-esp-ref">Acuerdo MAD</span>
+            </div>
+            <div class="ck-esp-item" onclick="openAgreementRule('roster_tfn_5_3_2026','tfn_roster_5_3')">
+              <span class="ck-esp-name">Roster TFN 5+3</span>
+              <span class="ck-esp-ref">Acuerdo TFN</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DOCUMENTACIÓN COMPLETA -->
+        <div class="ck-docs-section">
+          <div class="ck-docs-lbl">Documentación completa</div>
+          <div class="ck-block">
+            <div class="ck-lib-doc-card" onclick="ckOpenCC()">
+              <div class="ck-lib-doc-hd">
+                <span class="ck-lib-doc-badge ck-lib-doc-badge-l1">L1</span>
+                <span class="ck-lib-doc-titulo">Convenio Colectivo Binter Canarias</span>
+                <span class="ck-lib-doc-estado">vigente</span>
+              </div>
+              <div class="ck-lib-doc-period">2026 – 2031 · BOE-A-2026-6389</div>
+              <div class="ck-lib-doc-desc">Texto oficial del convenio con índice por capítulos, artículos anotados y notas de afectación por acuerdos posteriores.</div>
+              <div class="ck-lib-doc-stats">
+                <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">93</span> artículos</div>
+                <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">10</span> capítulos</div>
+                <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">5</span> años vigencia</div>
+              </div>
+              <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
+            </div>
+          </div>
+          <div class="ck-block">
+            <div class="ck-lib-doc-card ck-lib-doc-card--acuerdos" onclick="ckOpenAcuerdos()">
+              <div class="ck-lib-doc-hd">
+                <span class="ck-lib-doc-badge ck-lib-doc-badge-l2l3">L2–L3</span>
+                <span class="ck-lib-doc-titulo">Acuerdos y aplicación</span>
+                <span class="ck-lib-doc-estado">vigente</span>
+              </div>
+              <div class="ck-lib-doc-period">2025 – 2026 · BCSA</div>
+              <div class="ck-lib-doc-desc">Modificaciones, complementos y acuerdos de base que se aplican sobre el Convenio Colectivo. Incluye Acta de Cierre 2025, rosters MAD / TFN / LPA y productividad 2026.</div>
+              <div class="ck-lib-doc-stats">
+                <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">69</span> reglas</div>
+                <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">4</span> documentos</div>
+                <div class="ck-lib-doc-stat" style="color:var(--text2)">MAD · TFN · LPA</div>
+              </div>
+              <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
+            </div>
           </div>
         </div>
 
@@ -5006,80 +5096,6 @@ BCSA · Binter Canarias · 2026–2031.</div>
         <!-- Resultados normativa (oculto hasta consulta) -->
         <div id="ck-results-wrap" style="display:none">
           <div id="ck-results-inner"></div>
-        </div>
-
-        <!-- ÁREAS DE CONSULTA — índice documental -->
-        <div class="ck-block">
-          <div class="ck-block-label">Áreas de consulta</div>
-          <div class="card" style="padding:0">
-            <div class="ck-areas-section">
-              <div class="ck-areas-lbl">Retribución</div>
-              <div class="ck-areas-list">
-                <div class="ck-areas-item" onclick="openConvenioArticle(47)">
-                  <span class="ck-areas-name">Retribución Grupo IV</span>
-                  <span class="ck-areas-ref">Art. 47</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(48)">
-                  <span class="ck-areas-name">Dirección por objetivos</span>
-                  <span class="ck-areas-ref">Art. 48</span>
-                </div>
-                <div class="ck-areas-item" onclick="openAgreementRule('productividad_2026','prod_vigencia')">
-                  <span class="ck-areas-name">Productividad 2026</span>
-                  <span class="ck-areas-ref">Acuerdo</span>
-                </div>
-                <div class="ck-areas-item" onclick="openAgreementRule('acta_cierre_2025','acta_media_variables_ampliada')">
-                  <span class="ck-areas-name">Media de variables</span>
-                  <span class="ck-areas-ref">Acta 2025</span>
-                </div>
-              </div>
-            </div>
-            <div class="ck-areas-section">
-              <div class="ck-areas-lbl">Actividad y descanso</div>
-              <div class="ck-areas-list">
-                <div class="ck-areas-item" onclick="openConvenioArticle(41)">
-                  <span class="ck-areas-name">Vacaciones</span>
-                  <span class="ck-areas-ref">Art. 41</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(75)">
-                  <span class="ck-areas-name">Régimen trabajo–descanso</span>
-                  <span class="ck-areas-ref">Art. 75</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(77)">
-                  <span class="ck-areas-name">FDP y límites máximos</span>
-                  <span class="ck-areas-ref">Art. 77</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(80)">
-                  <span class="ck-areas-name">Día libre / Franco</span>
-                  <span class="ck-areas-ref">Art. 80</span>
-                </div>
-                <div class="ck-areas-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_roster_patron')">
-                  <span class="ck-areas-name">Roster MAD 6+3</span>
-                  <span class="ck-areas-ref">Acuerdo</span>
-                </div>
-                <div class="ck-areas-item" onclick="openAgreementRule('roster_tfn_5_3_2026','tfn_roster_5_3')">
-                  <span class="ck-areas-name">Roster TFN 5+3</span>
-                  <span class="ck-areas-ref">Acuerdo</span>
-                </div>
-              </div>
-            </div>
-            <div class="ck-areas-section">
-              <div class="ck-areas-lbl">Licencias y ausencias</div>
-              <div class="ck-areas-list">
-                <div class="ck-areas-item" onclick="openConvenioArticle(38)">
-                  <span class="ck-areas-name">Licencias retribuidas</span>
-                  <span class="ck-areas-ref">Art. 38</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(31)">
-                  <span class="ck-areas-name">Excedencia voluntaria</span>
-                  <span class="ck-areas-ref">Art. 31</span>
-                </div>
-                <div class="ck-areas-item" onclick="openConvenioArticle(40)">
-                  <span class="ck-areas-name">Reducción de jornada</span>
-                  <span class="ck-areas-ref">Art. 40</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div style="display:none"><div class="ck-list-rows" id="ck-popular"></div></div>
