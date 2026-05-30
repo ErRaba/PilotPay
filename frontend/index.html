@@ -4649,6 +4649,122 @@ Complemento de Base MAD: 1500"></textarea>
         .ck-faq-item:last-child { border-bottom: none; }
         .ck-faq-q { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; line-height: 1.35; }
         .ck-faq-a { font-size: 12px; color: var(--text2); line-height: 1.6; }
+        /* ── Biblioteca normativa — portada ── */
+        .ck-lib-hero {
+          padding: 28px 20px 22px;
+          background: linear-gradient(155deg, var(--blue-dim) 0%, var(--bg2) 65%);
+          border-bottom: 1px solid color-mix(in srgb, var(--blue) 22%, var(--border));
+        }
+        .ck-lib-hero-title {
+          font-size: 26px; font-weight: 700; color: var(--text);
+          letter-spacing: -.03em; line-height: 1.15; margin: 5px 0 8px;
+        }
+        .ck-lib-hero-desc {
+          font-size: 13px; color: var(--text2); line-height: 1.65;
+          margin-bottom: 20px; max-width: 400px;
+        }
+        .ck-lib-hero-stats {
+          display: flex; align-items: center; flex-wrap: wrap; row-gap: 8px;
+        }
+        .ck-lib-stat {
+          display: flex; flex-direction: column;
+          padding: 0 14px;
+          border-right: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+        }
+        .ck-lib-stat:first-child { padding-left: 0; }
+        .ck-lib-stat:last-child { border-right: none; }
+        .ck-lib-stat-n {
+          font-size: 19px; font-weight: 700; font-family: var(--mono);
+          color: var(--text); letter-spacing: -.02em; line-height: 1.1;
+        }
+        .ck-lib-stat-l {
+          font-size: 9px; color: var(--text3); font-family: var(--mono);
+          text-transform: uppercase; letter-spacing: .1em; margin-top: 3px;
+        }
+        /* Tarjetas de documento principal */
+        .ck-lib-doc-card {
+          padding: 18px 20px;
+          border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+          border-radius: var(--r);
+          cursor: pointer; transition: border-color .15s, background .15s;
+          display: flex; flex-direction: column; gap: 9px;
+        }
+        .ck-lib-doc-card:hover {
+          border-color: var(--blue);
+          background: color-mix(in srgb, var(--blue) 4%, transparent);
+        }
+        .ck-lib-doc-card--acuerdos:hover {
+          border-color: var(--amber);
+          background: color-mix(in srgb, var(--amber) 4%, transparent);
+        }
+        .ck-lib-doc-hd {
+          display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+        }
+        .ck-lib-doc-badge {
+          font-size: 9px; font-family: var(--mono); font-weight: 700;
+          padding: 2px 7px; border-radius: 3px; letter-spacing: .08em;
+          text-transform: uppercase; flex-shrink: 0;
+        }
+        .ck-lib-doc-badge-l1 {
+          background: color-mix(in srgb, var(--blue) 15%, transparent); color: var(--blue);
+        }
+        .ck-lib-doc-badge-l2l3 {
+          background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber);
+        }
+        .ck-lib-doc-titulo {
+          font-size: 15px; font-weight: 700; color: var(--text);
+          flex: 1; letter-spacing: -.01em; line-height: 1.25;
+        }
+        .ck-lib-doc-estado {
+          font-size: 9px; font-family: var(--mono); font-weight: 700;
+          text-transform: uppercase; letter-spacing: .1em;
+          color: var(--green); flex-shrink: 0;
+        }
+        .ck-lib-doc-period {
+          font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: .03em;
+        }
+        .ck-lib-doc-desc {
+          font-size: 13px; color: var(--text2); line-height: 1.6;
+        }
+        .ck-lib-doc-stats {
+          display: flex; gap: 18px; flex-wrap: wrap;
+          padding-top: 11px;
+          border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+          align-items: baseline;
+        }
+        .ck-lib-doc-stat {
+          font-size: 12px; color: var(--text3);
+          display: flex; align-items: baseline; gap: 4px;
+        }
+        .ck-lib-doc-stat-n {
+          font-size: 16px; font-weight: 700; font-family: var(--mono);
+          color: var(--text); letter-spacing: -.01em;
+        }
+        .ck-lib-doc-cta {
+          font-size: 12px; font-weight: 600; letter-spacing: .02em;
+          color: var(--blue);
+        }
+        .ck-lib-doc-card--acuerdos .ck-lib-doc-cta { color: var(--amber); }
+        /* Acceso rápido */
+        .ck-quick-grid { display: flex; flex-direction: column; }
+        .ck-quick-item {
+          display: flex; align-items: center; gap: 13px;
+          padding: 13px 16px; border-bottom: 1px solid var(--border);
+          cursor: pointer; transition: background .1s;
+        }
+        .ck-quick-item:last-child { border-bottom: none; }
+        .ck-quick-item:hover { background: var(--bg3); }
+        .ck-quick-ico {
+          flex-shrink: 0; width: 34px; height: 34px; border-radius: 6px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 9px; font-family: var(--mono); font-weight: 700;
+          text-transform: uppercase; letter-spacing: .04em;
+        }
+        .ck-quick-ico--blue  { background: color-mix(in srgb, var(--blue)  15%, transparent); color: var(--blue); }
+        .ck-quick-ico--amber { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
+        .ck-quick-ico--green { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+        .ck-quick-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; }
+        .ck-quick-meta  { font-size: 11px; color: var(--text3); margin-top: 1px; font-family: var(--mono); }
 
         /* ── Empty ── */
         .ck-empty { padding: 36px 16px; text-align: center; font-size: 13px; color: var(--text3); font-family: var(--mono); }
@@ -4781,43 +4897,70 @@ Complemento de Base MAD: 1500"></textarea>
 
       <!-- VIEW: HOME -->
       <div id="ck-v-home" class="ck-view">
-        <div class="card" style="padding:0">
-          <div class="ck-home-header">
-            <div class="ck-home-eyebrow">Binter Canarias · BCSA 2026</div>
-            <div class="ck-home-title">Centro laboral</div>
-            <div class="ck-home-sub">Normativa vigente adaptada a tu perfil</div>
-          </div>
-        </div>
 
-        <!-- Convenio Colectivo — PRIMERO (fuente normativa madre) -->
-        <div class="ck-block">
-          <div class="ck-block-label">Convenio Colectivo · Fuente base</div>
-          <div class="card" style="padding:0">
-            <div class="ck-cc-entry" onclick="ckOpenCC()">
-              <div class="ck-cc-entry-ico">📋</div>
-              <div class="ck-cc-entry-meta">
-                <div class="ck-cc-entry-title">Convenio Colectivo Binter Canarias 2026–2031</div>
-                <div class="ck-cc-entry-sub">Texto oficial BOE-A-2026-6389 · Índice por capítulos · Artículos · Notas de afectación</div>
-              </div>
-              <div class="ck-cc-entry-arrow">→</div>
+        <!-- HERO BIBLIOTECA -->
+        <div class="ck-lib-hero">
+          <div class="ck-home-eyebrow">BCSA · Binter Canarias · 2026</div>
+          <div class="ck-lib-hero-title">Centro Laboral</div>
+          <div class="ck-lib-hero-desc">Biblioteca normativa con el convenio colectivo y los acuerdos de aplicación vigentes adaptados a tu perfil.</div>
+          <div class="ck-lib-hero-stats">
+            <div class="ck-lib-stat">
+              <span class="ck-lib-stat-n">93</span>
+              <span class="ck-lib-stat-l">artículos</span>
+            </div>
+            <div class="ck-lib-stat">
+              <span class="ck-lib-stat-n">10</span>
+              <span class="ck-lib-stat-l">capítulos</span>
+            </div>
+            <div class="ck-lib-stat">
+              <span class="ck-lib-stat-n">69</span>
+              <span class="ck-lib-stat-l">reglas acuerdos</span>
+            </div>
+            <div class="ck-lib-stat">
+              <span class="ck-lib-stat-n">4</span>
+              <span class="ck-lib-stat-l">documentos</span>
             </div>
           </div>
         </div>
 
-        <!-- Acuerdos y aplicación -->
+        <!-- MÓDULO: CONVENIO COLECTIVO -->
         <div class="ck-block">
-          <div class="ck-block-label">Acuerdos y aplicación</div>
-          <div class="card" style="padding:0">
-            <div class="ck-cc-entry" onclick="ckOpenAcuerdos()">
-              <div class="ck-cc-entry-ico">📑</div>
-              <div class="ck-cc-entry-meta">
-                <div class="ck-cc-entry-title">Acuerdos y aplicación · BCSA 2026</div>
-                <div class="ck-cc-entry-sub">Acta de Cierre · Roster MAD / TFN / LPA · Productividad · Modificaciones sobre Convenio</div>
-              </div>
-              <div class="ck-cc-entry-arrow">→</div>
+          <div class="ck-lib-doc-card" onclick="ckOpenCC()">
+            <div class="ck-lib-doc-hd">
+              <span class="ck-lib-doc-badge ck-lib-doc-badge-l1">L1</span>
+              <span class="ck-lib-doc-titulo">Convenio Colectivo Binter Canarias</span>
+              <span class="ck-lib-doc-estado">vigente</span>
             </div>
+            <div class="ck-lib-doc-period">2026 – 2031 · BOE-A-2026-6389</div>
+            <div class="ck-lib-doc-desc">Texto oficial del convenio con índice por capítulos, artículos anotados y notas de afectación por acuerdos posteriores.</div>
+            <div class="ck-lib-doc-stats">
+              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">93</span> artículos</div>
+              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">10</span> capítulos</div>
+              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">5</span> años vigencia</div>
+            </div>
+            <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
           </div>
         </div>
+
+        <!-- MÓDULO: ACUERDOS Y APLICACIÓN -->
+        <div class="ck-block">
+          <div class="ck-lib-doc-card ck-lib-doc-card--acuerdos" onclick="ckOpenAcuerdos()">
+            <div class="ck-lib-doc-hd">
+              <span class="ck-lib-doc-badge ck-lib-doc-badge-l2l3">L2–L3</span>
+              <span class="ck-lib-doc-titulo">Acuerdos y aplicación</span>
+              <span class="ck-lib-doc-estado">vigente</span>
+            </div>
+            <div class="ck-lib-doc-period">2025 – 2026 · BCSA</div>
+            <div class="ck-lib-doc-desc">Modificaciones, complementos y acuerdos de base que se aplican sobre el Convenio Colectivo. Incluye Acta de Cierre 2025, rosters MAD / TFN / LPA y productividad 2026.</div>
+            <div class="ck-lib-doc-stats">
+              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">69</span> reglas</div>
+              <div class="ck-lib-doc-stat"><span class="ck-lib-doc-stat-n">4</span> documentos</div>
+              <div class="ck-lib-doc-stat" style="color:var(--text2)">MAD · TFN · LPA</div>
+            </div>
+            <div class="ck-lib-doc-cta">Abrir visor <span style="opacity:.55">→</span></div>
+          </div>
+        </div>
+
         <!-- Filtros ocultos — preservados para compatibilidad interna con motor normativo -->
         <div style="display:none">
           <div id="ck-chips-base">
@@ -4848,23 +4991,66 @@ Complemento de Base MAD: 1500"></textarea>
           <div id="ck-results-inner"></div>
         </div>
 
-        <!-- Preguntas frecuentes -->
-        <div class="ck-block" id="ck-block-faqs">
-          <div class="ck-block-label">Preguntas frecuentes</div>
+        <!-- ACCESO RÁPIDO -->
+        <div class="ck-block">
+          <div class="ck-block-label">Acceso rápido</div>
           <div class="card" style="padding:0">
-            <div id="ck-faqs-list"></div>
+            <div class="ck-quick-grid">
+              <div class="ck-quick-item" onclick="openConvenioArticle(47)">
+                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
+                <div>
+                  <div class="ck-quick-title">Vacaciones</div>
+                  <div class="ck-quick-meta">Art. 47 · Duración y períodos</div>
+                </div>
+              </div>
+              <div class="ck-quick-item" onclick="openConvenioArticle(46)">
+                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
+                <div>
+                  <div class="ck-quick-title">Días adicionales</div>
+                  <div class="ck-quick-meta">Art. 46 · Días adicionales sobre vacaciones</div>
+                </div>
+              </div>
+              <div class="ck-quick-item" onclick="openConvenioArticle(80)">
+                <div class="ck-quick-ico ck-quick-ico--blue">Art.</div>
+                <div>
+                  <div class="ck-quick-title">Jornada y descanso</div>
+                  <div class="ck-quick-meta">Art. 80 · Límites y excepciones</div>
+                </div>
+              </div>
+              <div class="ck-quick-item" onclick="openAgreementRule('acta_cierre_2025','acta_media_variables_ampliada')">
+                <div class="ck-quick-ico ck-quick-ico--blue">L2</div>
+                <div>
+                  <div class="ck-quick-title">Media de variables</div>
+                  <div class="ck-quick-meta">Acta 2025 · Ampliación período de cálculo</div>
+                </div>
+              </div>
+              <div class="ck-quick-item" onclick="openAgreementRule('roster_mad_tfn_2026','mad_roster_patron')">
+                <div class="ck-quick-ico ck-quick-ico--amber">L3</div>
+                <div>
+                  <div class="ck-quick-title">Roster MAD · 6+3</div>
+                  <div class="ck-quick-meta">Acuerdo Roster · Temporal 2026</div>
+                </div>
+              </div>
+              <div class="ck-quick-item" onclick="openAgreementRule('roster_tfn_5_3_2026','tfn_roster_5_3')">
+                <div class="ck-quick-ico ck-quick-ico--amber">L3</div>
+                <div>
+                  <div class="ck-quick-title">Roster TFN · 5+3</div>
+                  <div class="ck-quick-meta">Acuerdo Roster · Desde 01/2026</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Lo más consultado -->
+        <!-- HISTORIAL DE CONSULTAS -->
         <div class="ck-block" id="ck-block-popular">
-          <div class="ck-block-label">Lo más consultado</div>
+          <div class="ck-block-label">Historial de consultas</div>
           <div class="card" style="padding:0">
             <div class="ck-list-rows" id="ck-popular"></div>
           </div>
         </div>
 
-        <!-- Leyenda y abreviaturas -->
+        <!-- LEYENDA Y ABREVIATURAS -->
         <div class="ck-block" style="padding-bottom:24px">
           <div class="ck-block-label">Leyenda y abreviaturas</div>
           <div class="card" style="padding:0">
