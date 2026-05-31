@@ -17837,6 +17837,9 @@ window.PILOTPAY_BACKEND_READY = true;
     }
     // ── Conceptos de esta lectura (condicional) ──────────────────────
     var _ac_itemTxt = (item.titulo || '') + ' ' + (item.condicion || '') + ' ' + (item.valor_texto || '');
+    rules.forEach(function(r) {
+      _ac_itemTxt += ' ' + (r.titulo || '') + ' ' + (r.texto || '') + ' ' + (r.valor_texto || '');
+    });
     var _ac_glos = _ckGlosarioContextual(_ac_itemTxt);
     if (_ac_glos.length) {
       h += '<div class="cc-ctx-card">';
