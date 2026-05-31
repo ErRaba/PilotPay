@@ -16766,7 +16766,7 @@ window.PILOTPAY_BACKEND_READY = true;
         h += '<div class="cc-art-reader-related-lbl">Ver tambi\xe9n</div>';
         h += '<div class="cc-art-related-tags">';
         art.related.forEach(function(v) {
-          h += '<span class="cc-art-related-tag" onclick="ckVerTambienCC(\'' + esc(v) + '\')">'
+          h += '<span class="cc-art-related-tag" onclick="ckVerTambienCC(\'' + esc(v) + '\',' + (art.numero||0) + ')">'
             + esc(v.replace(/_/g, ' ')) + '</span>';
         });
         h += '</div>';
@@ -17028,7 +17028,7 @@ window.PILOTPAY_BACKEND_READY = true;
           var num = parseInt(mArt[1]);
           h += '<span class="cc-ctx-ref" onclick="ccGotoArt(' + num + ')">Art. ' + num + '</span>';
         } else {
-          h += '<span class="cc-ctx-ref" onclick="ckVerTambienCC(\'' + esc(v) + '\')">'
+          h += '<span class="cc-ctx-ref" onclick="ckVerTambienCC(\'' + esc(v) + '\',' + (art.numero||0) + ')">'
             + esc(v.replace(/_/g, ' ')) + '</span>';
         }
       });
@@ -18021,6 +18021,61 @@ window.PILOTPAY_BACKEND_READY = true;
     if (sb) sb.classList.toggle('cc-sidebar-open');
   };
 
+  // ── Modal de tablas salariales contextual ───────────────────
+  window.ckOpenTablasModal = function(artNum) {
+    var selNivel = _ckNivel || null;
+    var pool = (typeof ACTA_REGLAS !== 'undefined') ? ACTA_REGLAS : [];
+    var r1pCMD = null, r1pTCP = null;
+    for (var ri = 0; ri < pool.length; ri++) {
+      if (pool[ri].id === 'acta_nivel_1_plus_cmd') r1pCMD = pool[ri];
+      if (pool[ri].id === 'acta_nivel_1_plus_tcp') r1pTCP = pool[ri];
+    }
+    var n1pCMD = r1pCMD ? (r1pCMD.valor_tabla || null) : null;
+    var n1pTCP = r1pTCP ? (r1pTCP.valor_tabla || null) : null;
+
+    var titulo, bodyHtml;
+    if (artNum === 46) {
+      titulo = 'Art. 46 — Tablas retributivas Grupo III';
+      bodyHtml = '<div class="nr-sec"><div class="nr-sec-label">Sobrecargo (SCC) — Grupo III</div>'
+        + _renderRetributiva('SCC', selNivel, n1pTCP) + '</div>'
+        + '<div class="nr-sec" style="margin-top:16px"><div class="nr-sec-label">TCP — Grupo III</div>'
+        + _renderRetributiva('CC',  selNivel, n1pTCP) + '</div>';
+    } else if (artNum === 47) {
+      titulo = 'Art. 47 — Tablas retributivas Grupo IV';
+      bodyHtml = '<div class="nr-sec"><div class="nr-sec-label">Comandante — Grupo IV</div>'
+        + _renderRetributiva('CMD', selNivel, n1pCMD) + '</div>'
+        + '<div class="nr-sec" style="margin-top:16px"><div class="nr-sec-label">Copiloto — Grupo IV</div>'
+        + _renderRetributiva('COP', selNivel, null)   + '</div>';
+    } else {
+      return;
+    }
+
+    var modal = document.getElementById('pp-tablas-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'pp-tablas-modal';
+      modal.setAttribute('style', 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center');
+      modal.innerHTML = '<div style="background:var(--bg2);border-radius:12px;max-width:700px;width:92%;max-height:82vh;overflow-y:auto;padding:24px 20px 20px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+        + '<span id="pp-tablas-modal-title" style="font-size:14px;font-weight:600;color:var(--text1)"></span>'
+        + '<button onclick="ckCloseTablasModal()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:2px 8px">&#x2715;</button>'
+        + '</div>'
+        + '<div id="pp-tablas-modal-body"></div>'
+        + '</div>';
+      document.body.appendChild(modal);
+      modal.addEventListener('click', function(e) { if (e.target === modal) ckCloseTablasModal(); });
+    }
+
+    document.getElementById('pp-tablas-modal-title').textContent = titulo;
+    document.getElementById('pp-tablas-modal-body').innerHTML = bodyHtml;
+    modal.style.display = 'flex';
+  };
+
+  window.ckCloseTablasModal = function() {
+    var modal = document.getElementById('pp-tablas-modal');
+    if (modal) modal.style.display = 'none';
+  };
+
   // ── Relacionado con: navegar al tema ────────────────────────
   var _RELATED_TO_TEMA = {
     tablas_salariales: 'tablas_salariales',
@@ -18032,9 +18087,10 @@ window.PILOTPAY_BACKEND_READY = true;
     productividad: 'productividad_2026',
   };
 
-  window.ckVerTambienCC = function(categoria) {
+  window.ckVerTambienCC = function(categoria, artNum) {
     var docId = _RELATED_TO_ACUERDO[categoria];
     if (docId) { openAgreementRule(docId, null); return; }
+    if (categoria === 'tablas_salariales' && artNum) { ckOpenTablasModal(artNum); return; }
     var tema = _RELATED_TO_TEMA[categoria] || categoria;
     showView('home');
     ckConsultar();
