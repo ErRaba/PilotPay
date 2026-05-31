@@ -14472,7 +14472,7 @@ window.PILOTPAY_BACKEND_READY = true;
     'activa':       { etiqueta: 'Vigente',        clase: 'nr-activa',       icono: '✓' },
     'ampliada':     { etiqueta: 'Ampliado',        clase: 'nr-ampliada',     icono: '+' },
     'condicionada': { etiqueta: 'Condicionado',    clase: 'nr-condicionada', icono: '?' },
-    'suspendida':   { etiqueta: 'Susp. temporal',  clase: 'nr-suspendida',   icono: '⏸' },
+    'suspendida':   { etiqueta: 'Suspendido',       clase: 'nr-suspendida',   icono: '⏸' },
     'sustituida':   { etiqueta: 'Sustituido',      clase: 'nr-sustituida',   icono: '↻' },
   };
 
@@ -16883,7 +16883,8 @@ window.PILOTPAY_BACKEND_READY = true;
     var _rows = [
       ['var(--green)',  'Vigente'],
       ['var(--blue)',   'Ampliado por acuerdo'],
-      ['var(--amber)',  'Interpretado · Condicionado'],
+      ['var(--amber)',  'Interpretado'],
+      ['var(--amber)',  'Aplicación condicionada'],
       ['var(--red)',    'Modificado por acuerdo'],
       ['var(--amber)',  'Suspendido'],
       ['var(--text3)', 'Pendiente de extracción'],
@@ -17818,7 +17819,7 @@ window.PILOTPAY_BACKEND_READY = true;
     }
     var _suspArt80 = false;
     for (var _ri = 0; _ri < rules.length && !_suspArt80; _ri++) {
-      if (rules[_ri].tipo === 'suspende') {
+      if (rules[_ri]._meta && rules[_ri]._meta.tipo_override === 'suspende') {
         var _ovs = (rules[_ri]._meta && rules[_ri]._meta.overrides) || [];
         for (var _oi = 0; _oi < _ovs.length && !_suspArt80; _oi++) {
           if (_ovs[_oi].indexOf('art80') >= 0) _suspArt80 = true;
