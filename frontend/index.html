@@ -14726,6 +14726,7 @@ window.PILOTPAY_BACKEND_READY = true;
     ['HV',        'Horas de vuelo computables en nómina.'],
     ['FDP',       'Período máximo de actividad de vuelo antes del descanso obligatorio.'],
     ['DPO',       'Variable de productividad incluida en la nómina mensual.'],
+    ['TDV',       'Tripulantes De Vuelo — colectivo de pilotos (CMD/COP) en el contexto del DPO.'],
     ['IT',        'Incapacidad Temporal — baja médica que suspende la actividad.'],
     ['ROFF',      'Día de descanso programado en el roster.'],
     ['LRC',       'Licencia retribuida por circunstancias personales o médicas.'],
@@ -15142,7 +15143,6 @@ window.PILOTPAY_BACKEND_READY = true;
       h += '<div class="nr-sec"><div class="nr-condicion-block">'
         + '<span class="nr-condicion-ico">⚑</span>'
         + '<strong>Condición para percibir el complemento</strong> — El trabajador debe haber desempeñado al menos el <strong>75% de la función asignada</strong> mensualmente.'
-        + '<br><span style="font-size:11px;color:var(--amber2,#b45309)">⚠ La empresa no ha definido qué constituye "función asignada". Esta ambigüedad determina si el complemento se percibe o no.</span>'
         + '</div></div>';
 
       // Tabla todos los grupos
@@ -15512,6 +15512,22 @@ window.PILOTPAY_BACKEND_READY = true;
 
     h += ambigHtml(sit.ambiguedades);
     h += fuenteHtml(sit.reglas);
+
+    // Términos usados en esta sección
+    var _dpoTerms = [
+      ['DPO',  'Dirección por Objetivos — bono de productividad mensual colectivo.'],
+      ['TDV',  'Tripulantes De Vuelo — pilotos (CMD/COP) en el contexto del DPO.'],
+      ['CMD',  'Comandante — piloto al mando.'],
+      ['COP',  'Copiloto — segundo piloto en cabina.'],
+      ['SCC',  'Sobrecargo — jefe de tripulación de cabina.'],
+      ['TCP',  'Tripulante de Cabina de Pasajeros.'],
+    ];
+    h += '<div style="margin-top:14px;padding:10px 12px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border)">'
+      + '<div style="font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:8px">Abreviaturas</div>';
+    _dpoTerms.forEach(function(t) {
+      h += '<div class="ck-glosario-row"><span class="ck-glosario-term">' + esc(t[0]) + '</span><span class="ck-glosario-def">' + esc(t[1]) + '</span></div>';
+    });
+    h += '</div>';
 
     // Nota técnica al pie — discreta, sin caja
     h += '<div class="nr-dpo-limit">Nota técnica — Acuerdo de Productividad 2026: matrices eficiencia × puntualidad (TDV) y calidad × puntualidad (TCP) no publicadas en el documento. Sin ellas el importe exacto es incalculable.</div>';
@@ -17638,6 +17654,9 @@ window.PILOTPAY_BACKEND_READY = true;
           dv = v.map(function(vi) { return typeof vi === 'string' ? _acLabelVal(k, vi) : String(vi); }).join(',\xa0');
         } else if (typeof v === 'boolean') {
           dv = v ? 'S\xed' : 'No';
+        } else if (typeof v === 'number' && k.endsWith('_pct')) {
+          var sign = k === 'incremento_pct' ? '+' : (k === 'penalizacion_pct' ? '−' : '');
+          dv = sign + v + ' %';
         } else {
           dv = _acLabelVal(k, String(v));
         }
@@ -18002,13 +18021,22 @@ window.PILOTPAY_BACKEND_READY = true;
   };
 
   // ── Relacionado con: navegar al tema ────────────────────────
+  var _RELATED_TO_TEMA = {
+    tablas_salariales: 'tablas_salariales',
+    imaginaria:        'hv',
+    libre_volado:      'hv',
+    horas_vuelo:       'hv',
+    productividad:     'productividad',
+  };
+
   window.ckVerTambienCC = function(categoria) {
+    var tema = _RELATED_TO_TEMA[categoria] || categoria;
     showView('home');
     ckConsultar();
     // ckConsultar resetea _ckTemas=null — aplicar filtro después del reset
-    _ckTemas = new Set([categoria]);
+    _ckTemas = new Set([tema]);
     Array.prototype.forEach.call(document.querySelectorAll('#ck-chips-temas .ck-chip'), function(c) {
-      c.classList.toggle('active', c.getAttribute('data-tema') === categoria);
+      c.classList.toggle('active', c.getAttribute('data-tema') === tema);
     });
     _reRenderInner();
     var homeView = document.getElementById('ck-v-home');
