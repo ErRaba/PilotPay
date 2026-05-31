@@ -576,7 +576,7 @@ var CONVENIO_CC = {
               texto: 'Con el roster 5+3 activo en LPA, las vacaciones pasan a ser 23 d\xedas laborales. Si el roster se suspende o no se prorroga, se recuperan los 30 d\xedas naturales del CC.',
             },
           ],
-          related: ['roster_lpa', 'roster_mad'],
+          related: ['roster_lpa'],
           faqs: [],
         },
         {
