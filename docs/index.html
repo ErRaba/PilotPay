@@ -18039,7 +18039,17 @@ window.PILOTPAY_BACKEND_READY = true;
     var n1pTCP = r1pTCP ? (r1pTCP.valor_tabla || null) : null;
 
     var titulo, bodyHtml;
-    if (artNum === 46) {
+    if (artNum === 25) {
+      titulo = 'Anexo I · Tablas salariales — Grupos III y IV';
+      bodyHtml = '<div class="nr-sec"><div class="nr-sec-label">Sobrecargo (SCC) — Grupo III</div>'
+        + _renderRetributiva('SCC', selNivel, n1pTCP) + '</div>'
+        + '<div class="nr-sec" style="margin-top:16px"><div class="nr-sec-label">TCP — Grupo III</div>'
+        + _renderRetributiva('CC',  selNivel, n1pTCP) + '</div>'
+        + '<div class="nr-sec" style="margin-top:16px"><div class="nr-sec-label">Comandante — Grupo IV</div>'
+        + _renderRetributiva('CMD', selNivel, n1pCMD) + '</div>'
+        + '<div class="nr-sec" style="margin-top:16px"><div class="nr-sec-label">Copiloto — Grupo IV</div>'
+        + _renderRetributiva('COP', selNivel, null)   + '</div>';
+    } else if (artNum === 46) {
       titulo = 'Art. 46 — Tablas retributivas Grupo III';
       bodyHtml = '<div class="nr-sec"><div class="nr-sec-label">Sobrecargo (SCC) — Grupo III</div>'
         + _renderRetributiva('SCC', selNivel, n1pTCP) + '</div>'
