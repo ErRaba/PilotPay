@@ -18024,11 +18024,16 @@ window.PILOTPAY_BACKEND_READY = true;
   var _RELATED_TO_TEMA = {
     tablas_salariales: 'tablas_salariales',
     productividad:     'productividad',
-    roster_lpa:        'roster',
-    roster_mad:        'roster',
+  };
+
+  var _RELATED_TO_ACUERDO = {
+    roster_mad: 'roster_mad_tfn_2026',
+    roster_lpa: 'roster_lpa_2026',
   };
 
   window.ckVerTambienCC = function(categoria) {
+    var docId = _RELATED_TO_ACUERDO[categoria];
+    if (docId) { openAgreementRule(docId, null); return; }
     var tema = _RELATED_TO_TEMA[categoria] || categoria;
     showView('home');
     ckConsultar();
