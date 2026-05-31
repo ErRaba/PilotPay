@@ -669,7 +669,7 @@ var CONVENIO_CC = {
               texto: 'En la base MAD, el valor de todas las HV (T1-T4) se incrementa un 20% mientras la productividad media colectiva se mantenga en 11 d\xedas de vuelo/tripulante. No cae autom\xe1ticamente: requiere revisi\xf3n formal si var\xeda.',
             },
           ],
-          related: ['tablas_salariales', 'imaginaria', 'libre_volado', 'horas_vuelo'],
+          related: ['tablas_salariales', 'productividad'],
           faqs: [],
         },
         {
@@ -701,7 +701,7 @@ var CONVENIO_CC = {
               texto: 'En la base MAD, el valor de todas las HV (T1-T4) se incrementa un 20% mientras la productividad media colectiva se mantenga en 11 d\xedas de vuelo/tripulante. No cae autom\xe1ticamente: requiere revisi\xf3n formal si var\xeda.',
             },
           ],
-          related: ['tablas_salariales', 'imaginaria', 'libre_volado', 'horas_vuelo', 'productividad'],
+          related: ['tablas_salariales', 'productividad'],
           faqs: [],
         },
         {
