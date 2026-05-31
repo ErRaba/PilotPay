@@ -14547,7 +14547,7 @@ window.PILOTPAY_BACKEND_READY = true;
     {
       id: 'nr_faq_act_descanso',
       pregunta: '¿Puede la empresa programar actividad en mis días de descanso?',
-      ruleIds: ['mad_actividad_descanso', 'lpa_actividad_descanso', 'tfn_roster_6_3_actividad_descanso', 'tfn_roster_5_3_actividad_descanso'],
+      ruleIds: ['lpa_actividad_descanso', 'tfn_roster_5_3_actividad_descanso'],
       buildRespuesta: function(rs) {
         if (!rs || !rs.length) return 'Depende del acuerdo de roster activo. Con roster 5+3 o 6+3, ciertas actividades pueden caer en el 1.er o último día de tus 3 días de descanso.';
         var act = rs.filter(function(r) { return r._resolution && r._resolution.operativa === true; });
@@ -17291,9 +17291,9 @@ window.PILOTPAY_BACKEND_READY = true;
     { id: 'jornada', label: 'Jornada / Roster', items: [
       { id: 'roster_mad_tfn', label: 'MAD\xa0+\xa0TFN \xb7 6+3', badge: 'L3', docId: 'roster_mad_tfn_2026',
         ruleIds: ['mad_roster_patron','mad_roster_franco_5_dia','mad_roster_sexto_dia_compensacion',
-                  'mad_actividad_descanso','mad_art80_suspendido',
+                  'mad_art80_suspendido',
                   'tfn_roster_6_3','tfn_roster_6_3_franco_5_dia','tfn_roster_6_3_sexto_dia',
-                  'tfn_roster_6_3_actividad_descanso','tfn_roster_6_3_art80_suspendido',
+                  'tfn_roster_6_3_art80_suspendido',
                   'tfn_gap_julio_agosto'] },
       { id: 'roster_lpa', label: 'LPA \xb7 5+3', badge: 'L3', docId: 'roster_lpa_2026',
         ruleIds: ['lpa_roster_patron','lpa_actividad_descanso','lpa_art80_suspendido','lpa_roster_vac_23_lab'] },

@@ -92,38 +92,6 @@ var TFN_REGLAS = [
   },
 
   {
-    id:        'tfn_roster_6_3_actividad_descanso',
-    categoria: 'actividad_descanso',
-    titulo:    'Actividades en descanso — TFN Fase 1 (6+3)',
-    texto:     'Con el roster 6+3 activo en TFN, las siguientes actividades pueden programarse en el PRIMER o ÚLTIMO día del bloque de 3 días de descanso, convirtiendo el patrón efectivo en 6+2. Las que SÍ cuentan como actividad operativa (afectan a FDP): formación online, vuelo posicional para simulador/verificaciones, día de oficina (solo personal sin función de responsabilidad), auditorías e inspecciones, competencia lingüística. Las que NO cuentan como actividad operativa (NO afectan a FDP ni descanso mínimo): reconocimiento médico, horas sindicales en días de libranza.',
-    _meta: {
-      doc: 'roster_mad_tfn_2026', capa: 'L3_ACUERDO', articulo: 'CUARTO',
-      vigencia_desde: '2026-01-01', vigencia_hasta: '2026-07-01',
-      bases: ['TFN'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
-      condicionado_a: 'roster_6_3_implantado',
-      overrides: [], tipo_override: 'adiciona',
-      temporal: true, ambiguedad_id: 'ambig_oficina_funcion_responsabilidad',
-      pendiente_validacion: false, confianza: 'documentado',
-    },
-    valor_tabla: {
-      dia_en_descanso: 'primero_o_ultimo',
-      patron_resultante: '6+2',
-      actividades_cuentan_fdp: [
-        'formacion_no_presencial_online',
-        'vuelo_posicional_simulador_verificaciones',
-        'dia_oficina_sin_funcion_responsabilidad',
-        'auditorias_e_inspecciones',
-        'competencia_linguistica',
-      ],
-      actividades_no_cuentan_fdp: [
-        'reconocimiento_medico',
-        'horas_sindicales_en_libranza',
-      ],
-      horas_sindicales_nota: 'Si no hay hueco en el bloque de 3, puede ir al bloque de actividad.',
-    },
-  },
-
-  {
     id:        'tfn_roster_6_3_art80_suspendido',
     categoria: 'programacion',
     titulo:    'Protecciones Art. 80 suspendidas en TFN — Fase 1 (6+3)',

@@ -139,7 +139,6 @@ var NORM_VALIDATION_CASES = [
       reglas: {
         'mad_roster_patron': null,        // NO: expirado (hasta 2026-07-01)
         'mad_art80_suspendido': null,     // NO: expirado
-        'mad_actividad_descanso': null,   // NO: expirado
         'cc_art80_seis_dias': {
           _resolution: {
             estado:    'activa',
@@ -653,32 +652,6 @@ var NORM_VALIDATION_CASES = [
       'afirmar_23_laborales_mas_1_natural',
     ],
     notas: 'DISEÑO-04 resuelto: acta_vac_ant_20_plus excluida por filtro antiguedad_años.',
-  },
-
-  {
-    id:          'VC-DSC-01',
-    descripcion: 'CMD MAD, oficina en día de descanso — ambigüedad función responsabilidad',
-    ctx: {
-      base:       'MAD',
-      grupo:      'CMD',
-      fecha:      '2026-03-15',
-      categorias: ['actividad_descanso'],
-      condicionesActivas: [],
-    },
-    esperado: {
-      reglas: {
-        'mad_actividad_descanso': {
-          _resolution: { estado: 'activa', operativa: true },
-          nota_consumidor: 'actividades_cuentan_fdp incluye dia_oficina_sin_funcion_responsabilidad. Para CMD: ambiguo.',
-        },
-      },
-    },
-    ambiguedades_esperadas: ['ambig_oficina_funcion_responsabilidad'],
-    acciones_prohibidas: [
-      'afirmar_que_cmd_puede_tener_oficina_en_descanso',
-      'afirmar_que_cmd_no_puede_tener_oficina_en_descanso',
-    ],
-    notas: 'hasAmbiguedad(mad_actividad_descanso) → ambig_oficina_funcion_responsabilidad.',
   },
 
 ];

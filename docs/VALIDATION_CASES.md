@@ -200,7 +200,6 @@ condicionesActivas: []
 | mad_roster_patron | roster | vigente |
 | mad_roster_franco_5_dia | roster | vigente |
 | mad_roster_sexto_dia_compensacion | roster | vigente |
-| mad_actividad_descanso | actividad_descanso | vigente |
 | mad_art80_suspendido | programacion | vigente — overrides: cc_art80_seis_dias, cc_art80_fin_semana |
 
 **Productividad — PROD_REGLAS:**
@@ -252,7 +251,6 @@ Con `hasta = 2026-07-01` y `fecha = 2026-07-15`: `2026-07-15 >= 2026-07-01` → 
 - `mad_roster_patron` ✓ (expirado)
 - `mad_roster_franco_5_dia` ✓ (expirado — misma vigencia)
 - `mad_roster_sexto_dia_compensacion` ✓ (expirado)
-- `mad_actividad_descanso` ✓ (expirado)
 - `mad_art80_suspendido` ✓ (expirado)
 
 **Por lo tanto**, el Art. 80 RECUPERA plena vigencia en MAD a partir del 01/07/2026:
@@ -372,7 +370,6 @@ ctx: { base: 'TFN', grupo: 'CMD', fecha: '2026-02-15' }
 #### Reglas de roster activas
 - `tfn_roster_6_3` — vigente (01/01 → 01/07/2026) ✓
 - `tfn_roster_6_3_franco_5_dia` — vigente, **pendiente_validacion: true** ⚠
-- `tfn_roster_6_3_actividad_descanso` — vigente ✓
 - `tfn_roster_6_3_art80_suspendido` — vigente, overrides cc_art80_seis_dias + cc_art80_fin_semana ✓
 
 #### Art. 80
@@ -407,7 +404,6 @@ condicionesActivas: ['roster_5_3_implantado']
 #### Reglas de roster Fase 1 — EXPIRADAS
 - `tfn_roster_6_3` — **NO vigente** (hasta: 2026-07-01) ✓
 - `tfn_roster_6_3_art80_suspendido` — **NO vigente** ✓
-- `tfn_roster_6_3_actividad_descanso` — **NO vigente** ✓
 - `tfn_gap_julio_agosto` — **NO vigente** (hasta: 2026-08-01) ✓
 
 #### Reglas de roster Fase 2 — VIGENTES
@@ -728,38 +724,12 @@ condicionesActivas: ['roster_5_3_implantado']
 
 ---
 
-### VC-DSC-01 — CMD MAD, oficina en día de descanso
+### VC-DSC-01 — ELIMINADO
 
-```
-ctx: { base: 'MAD', grupo: 'CMD', fecha: '2026-03-15', categorias: ['actividad_descanso'] }
-```
-
-#### Regla relevante
-`mad_actividad_descanso` — vigente ✓
-
-`valor_tabla.actividades_cuentan_fdp` incluye:
-- `'dia_oficina_sin_funcion_responsabilidad'`
-
-La nota en la regla:
-> "Solo para personal SIN función de responsabilidad. La empresa no ha definido qué cargos quedan excluidos."
-
-#### Ambigüedad activa
-`ambig_oficina_funcion_responsabilidad` — urgencia: media
-
-Para CMD (Comandante): existe una fuerte presunción de que CMD tiene función de responsabilidad,
-pero el documento no lo dice. El motor no puede resolver si CMD puede o no tener oficina en descanso.
-
-**Riesgo específico para CMD**:
-Si el documento intentara excluir instructores, jefes de base, TRI/TRE — todos son CMD.
-Un CMD "normal" (sin habilitación adicional) podría quedar incluido en la regla.
-El sistema no tiene forma de distinguirlo.
-
-**Consecuencia operacional**:
-- El consumidor NO debe afirmar que un CMD puede tener oficina en descanso.
-- Tampoco debe afirmar que no puede.
-- Debe mostrar la ambigüedad y recomendar consulta con empresa.
-
-#### Resultado: CORRECTO — la ambigüedad está bien modelada.
+> Este caso fue eliminado. La regla `mad_actividad_descanso` ha sido suprimida del motor
+> tras auditoría jurídica (2026-05-31): el CUARTO del Acuerdo Roster MAD+TFN aplica
+> exclusivamente al roster 5+3 de TFN (TERCERO). MAD no tiene cobertura normativa para
+> actividades en días de descanso.
 
 ---
 

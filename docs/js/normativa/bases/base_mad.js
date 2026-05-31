@@ -3,7 +3,7 @@
  *
  * Fuentes:
  *   - Acta de Cierre 28/11/2025, §SÉPTIMO (complemento base + HV +20%)
- *   - Acuerdo Roster MAD+TFN 28/11/2025, cláusulas PRIMERO/SEGUNDO/CUARTO
+ *   - Acuerdo Roster MAD+TFN 28/11/2025, cláusulas PRIMERO/SEGUNDO
  *
  * Capa: L2_ACTA (complemento y HV) + L3_ACUERDO (roster)
  *
@@ -204,44 +204,6 @@ var MAD_REGLAS = [
       confianza: 'documentado',
     },
     valor_texto: '"Intentará" — compromiso de buena fe. No garantía. La empresa puede no compensar.',
-  },
-
-  // ══════════════════════════════════════════════════════════════
-  // ACTIVIDADES EN DESCANSO — MAD (Acuerdo Roster — CUARTO)
-  // Aplica mientras el roster esté vigente
-  // ══════════════════════════════════════════════════════════════
-
-  {
-    id:        'mad_actividad_descanso',
-    categoria: 'actividad_descanso',
-    titulo:    'Actividades que pueden meterse en tus 3 días de descanso — MAD',
-    texto:     'Con el roster 6+3 activo en MAD, las siguientes actividades pueden programarse en el PRIMER o ÚLTIMO día del bloque de 3 días de descanso. Cuando ocurre, el patrón efectivo pasa a ser 6 días actividad + 2 días libres. Las actividades que SÍ cuentan como actividad operativa (afectan a FDP): formación online, vuelo posicional para simulador/verificaciones, día de oficina (solo personal sin función de responsabilidad), auditorías e inspecciones, competencia lingüística. Las actividades que NO cuentan como actividad operativa (NO afectan a FDP ni descanso mínimo): reconocimiento médico, horas sindicales solicitadas en días de libranza (si no hay hueco en el bloque de 3, pueden ir al bloque de actividad).',
-    _meta: {
-      doc: 'roster_mad_tfn_2026', capa: 'L3_ACUERDO', articulo: 'CUARTO',
-      vigencia_desde: '2026-01-01', vigencia_hasta: '2026-07-01',
-      bases: ['MAD'], grupos: ['CMD', 'COP', 'SCC', 'TCP', 'CC'],
-      condicionado_a: 'roster_6_3_implantado',
-      overrides: [], tipo_override: 'adiciona',
-      temporal: true, ambiguedad_id: 'ambig_oficina_funcion_responsabilidad',
-      pendiente_validacion: false, confianza: 'documentado',
-    },
-    valor_tabla: {
-      dia_en_descanso: 'primero_o_ultimo',
-      patron_resultante: '6+2',
-      actividades_cuentan_fdp: [
-        'formacion_no_presencial_online',
-        'vuelo_posicional_simulador_verificaciones',
-        'dia_oficina_sin_funcion_responsabilidad',
-        'auditorias_e_inspecciones',
-        'competencia_linguistica',
-      ],
-      actividades_no_cuentan_fdp: [
-        'reconocimiento_medico',
-        'horas_sindicales_en_libranza',
-      ],
-      horas_sindicales_nota: 'Si no hay día disponible en el bloque de 3, puede programarse en el bloque de actividad.',
-      oficina_nota: 'Solo para personal SIN función de responsabilidad. La empresa no ha definido qué cargos tienen función de responsabilidad.',
-    },
   },
 
   // ══════════════════════════════════════════════════════════════
