@@ -16283,7 +16283,8 @@ window.PILOTPAY_BACKEND_READY = true;
         var lbl = p.ctx.grupoLabel || ([p.ctx.base, p.ctx.grupo].filter(Boolean).join(' · ') || 'General');
         header = '<div class="ck-panel-head"><span class="ck-panel-lbl">' + esc(lbl) + '</span></div>';
       }
-      var salaryHtml = renderSalaryBlock(p);
+      var _soloTablas = _ckTemas && _ckTemas.size === 1 && _ckTemas.has('tablas_salariales');
+      var salaryHtml = _soloTablas ? '' : renderSalaryBlock(p);
       if (!p.reglas || !p.reglas.length) {
         return header + salaryHtml + '<div style="padding:12px 16px;font-size:13px;color:var(--text3)">Sin normativa para este perfil.</div>';
       }
