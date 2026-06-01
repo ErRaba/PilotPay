@@ -5943,7 +5943,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
         calcResult  : (window.PP_getters && window.PP_getters.calcResult)   ? window.PP_getters.calcResult()   : null,
         profileData : (window.PP_getters && window.PP_getters.profileData) ? window.PP_getters.profileData() : null,
         currentUser : (window.PP_getters && window.PP_getters.currentUser) ? window.PP_getters.currentUser() : null,
-        currentNivel: window.currentNivel,
+        currentNivel: currentNivel,
         USERS       : window.USERS
       };
       const record = auditEngine.buildAuditRecord(nomData, diffs, totalDelta, errores, avisos, ctx);
@@ -9776,7 +9776,7 @@ function _syncLeftPanel() {
   var fnMap = { CMD: 'Comandante', COP: 'Copiloto', SCC: 'Sobrecargo (SCC)', CC: 'TCP · Cabina' };
   clFn.textContent = fnMap[fn] || fn || '—';
   document.getElementById('cl-base').textContent  = bv > 1 ? 'Madrid (MAD)' : 'Canarias';
-  document.getElementById('cl-nivel').textContent = 'N' + (window.currentNivel || '—');
+  document.getElementById('cl-nivel').textContent = 'N' + (currentNivel != null ? currentNivel : '—');
 
   // Página activa dentro del workspace
   var ws = document.getElementById('workspace');
@@ -14160,7 +14160,7 @@ function _ppSimExitDialog(onConfirm) {
   const fmt = x => Number(x || 0).toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2});
   const fnActual = () => String(v('funcion','')).toUpperCase();
   const esTCP = fn => fn === 'SCC' || fn === 'CC';
-  const nivelActual = () => Number(window.currentNivel || 1);
+  const nivelActual = () => Number(currentNivel || 1);
 
   function buildBackendPayload(){
     const fn = fnActual();
