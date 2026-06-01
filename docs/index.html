@@ -1485,9 +1485,13 @@ input, select, textarea {
   /* Centro: único scroll container del workspace */
   #workspace-center {
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(155,155,165,0.50) transparent;
+    scrollbar-width: thin; /* Firefox */
+    /* scrollbar-color omitida: en Chrome 121+ anula las reglas ::-webkit-scrollbar */
   }
+  #workspace-center::-webkit-scrollbar        { width: 4px; }
+  #workspace-center::-webkit-scrollbar-track  { background: transparent; }
+  #workspace-center::-webkit-scrollbar-thumb  { background: rgba(155,155,165,0.55); border-radius: 4px; }
+  #workspace-center::-webkit-scrollbar-thumb:hover { background: rgba(155,155,165,0.85); }
   /* Sidebar: columna fija — sticky ya no necesario */
   #cl-sidebar-card {
     position: relative;
@@ -9697,28 +9701,56 @@ function _renderRightPanel(page) {
       dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
         + '<div class="cl-right-empty">Sube un PDF o pega<br>texto para ver los datos</div>';
     } else {
-      var periodo = (varsData._periodo) || '—';
-      var nombre  = (varsData._nombre)  || '—';
-      var confObj = (varsData._confianza && typeof varsData._confianza === 'object') ? varsData._confianza : null;
+      var periodo  = (varsData._periodo) || '—';
+      var nombre   = (varsData._nombre)  || '—';
+      var confObj  = (varsData._confianza && typeof varsData._confianza === 'object') ? varsData._confianza : null;
       var confLabel = confObj
         ? (Object.values(confObj).some(function(v) { return v === 'amber'; }) ? 'Media' : 'Alta')
         : null;
-      var hb  = varsData.hb_total != null ? varsData.hb_total : '—';
-      var hv  = varsData.hv_total != null ? varsData.hv_total : '—';
-      var dpo = varsData.dpo      != null ? varsData.dpo      : '—';
       var confHtml = confLabel
         ? '<div class="cl-right-kv"><span class="cl-right-kv-label">Confianza</span>'
           + '<span class="cl-status-badge ' + (confLabel === 'Alta' ? 'cl-st-ok' : 'cl-st-pending') + '">'
           + confLabel + '</span></div>'
         : '';
+      function sec(title) {
+        return '<div style="border-top:1px solid var(--border);margin:6px 0 3px;padding-top:3px">'
+          + '<span style="font-size:10px;text-transform:uppercase;opacity:.55;letter-spacing:.05em">' + title + '</span></div>';
+      }
+      function h(v, unit) { return v != null ? v + (unit ? ' ' + unit : '') : null; }
+      // ── Horas ──
+      var hora_items = '';
+      if (varsData.hb_total != null) hora_items += kv('HB total', h(varsData.hb_total, 'HB'));
+      if (varsData.hv_total != null) hora_items += kv('HV total', h(varsData.hv_total, 'HB'));
+      if (varsData.hv_t1 != null && varsData.hv_t1 > 0) hora_items += kv('HV T1', h(varsData.hv_t1, 'HB'));
+      if (varsData.hv_t2 != null && varsData.hv_t2 > 0) hora_items += kv('HV T2', h(varsData.hv_t2, 'HB'));
+      if (varsData.hv_t3 != null && varsData.hv_t3 > 0) hora_items += kv('HV T3', h(varsData.hv_t3, 'HB'));
+      if (varsData.hv_t4 != null && varsData.hv_t4 > 0) hora_items += kv('HV T4', h(varsData.hv_t4, 'HB'));
+      // ── Variables ──
+      var var_items = '';
+      if (varsData.imaginarias != null && varsData.imaginarias > 0) var_items += kv('Imaginarias', varsData.imaginarias);
+      if (varsData.francos     != null && varsData.francos     > 0) var_items += kv('Francos', varsData.francos);
+      // ── Dietas / Desplazamientos ──
+      var diet_items = '';
+      if (varsData.dieta_vuelo  != null && varsData.dieta_vuelo  > 0) diet_items += kv('Dieta vuelo',    h(varsData.dieta_vuelo, 'días'));
+      if (varsData.dest_nac     != null && varsData.dest_nac     > 0) diet_items += kv('Dest. NAC',       h(varsData.dest_nac,    'días'));
+      if (varsData.dest_int     != null && varsData.dest_int     > 0) diet_items += kv('Dest. INT',       h(varsData.dest_int,    'días'));
+      if (varsData.dieta_nac_sp != null && varsData.dieta_nac_sp > 0) diet_items += kv('Desp. NAC s/p',  h(varsData.dieta_nac_sp,'días'));
+      if (varsData.dieta_nac_cp != null && varsData.dieta_nac_cp > 0) diet_items += kv('Desp. NAC c/p',  h(varsData.dieta_nac_cp,'días'));
+      if (varsData.dieta_int_sp != null && varsData.dieta_int_sp > 0) diet_items += kv('Desp. INT s/p',  h(varsData.dieta_int_sp,'días'));
+      if (varsData.dieta_int_cp != null && varsData.dieta_int_cp > 0) diet_items += kv('Desp. INT c/p',  h(varsData.dieta_int_cp,'días'));
+      // ── Complementos ──
+      var comp_items = '';
+      if (varsData.dpo      != null && varsData.dpo      > 0) comp_items += kv('DPO',       fmt(varsData.dpo));
+      if (varsData.comp_mad != null && varsData.comp_mad > 0) comp_items += kv('Comp. MAD', fmt(varsData.comp_mad));
+
       dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
         + kv('Período', periodo)
         + kv('Piloto', '<span style="font-size:10px">' + nombre + '</span>')
         + confHtml
-        + '<div style="border-top:1px solid var(--border);margin:5px 0"></div>'
-        + kv('HB total', hb)
-        + kv('HV total', hv)
-        + kv('DPO', dpo)
+        + (hora_items ? sec('Horas') + hora_items : '')
+        + (var_items  ? sec('Variables') + var_items  : '')
+        + (diet_items ? sec('Dietas') + diet_items : '')
+        + (comp_items ? sec('Complementos') + comp_items : '')
         + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
     }
     return;
