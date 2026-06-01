@@ -1501,6 +1501,15 @@ input, select, textarea {
     position: relative;
     top: auto;
   }
+
+  /* UX-NORMATIVA-1: scroll aislado en Convenio / Acuerdos (desktop ≥900px) */
+  body:has(#page-convenio.active) main {
+    overflow-y: hidden;
+  }
+  /* Acotar page-convenio al 100% de main para que la cadena flex funcione */
+  #page-convenio.active {
+    height: 100%;
+  }
 }
 
 /* ── HV TRAMOS ── */
@@ -4394,7 +4403,7 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-toc-art-item.cc-toc-art-active .cc-toc-art-name { color: var(--text); font-weight: 600; opacity: 1; }
 
         /* Botón índice — solo visible en móvil */
-        .cc-nav-bar { display: flex; align-items: center; justify-content: space-between; }
+        .cc-nav-bar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         .cc-toc-btn {
           font-size: 10px; font-family: var(--mono); color: var(--text2);
           background: var(--bg2); border: 1px solid var(--border);
