@@ -1269,6 +1269,119 @@ input, select, textarea {
 .sum-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; margin-bottom: 2px; }
 .sum-val { font-family: var(--mono); font-size: 15px; font-weight: 700; }
 
+/* ── CALCULADORA DESKTOP LAYOUT (UX-0 + UX-1) ── */
+#calc-left-panel  { display: none; }
+#calc-center-panel { display: block; }
+#calc-right-panel  { display: block; }
+
+/* UX-1: Densidad — reducir padding/gap en panel central */
+#calc-center-panel .card {
+  padding: 11px 12px;
+  margin-bottom: 8px;
+}
+#calc-center-panel .row {
+  gap: 10px;
+  margin-bottom: 6px;
+}
+#calc-center-panel .card-title {
+  font-size: 11px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+#calc-center-panel .field-input {
+  padding: 7px 10px;
+}
+
+/* UX-1: Subsección dentro de una card */
+.calc-section-sub {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+/* UX-1: Flujo de trabajo en panel izquierdo */
+.calc-flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: default;
+  opacity: .45;
+  transition: opacity .15s;
+}
+.calc-flow-step.clickable { cursor: pointer; }
+.calc-flow-step.active  { opacity: 1; }
+.calc-flow-step.done    { opacity: .8; }
+.calc-flow-step-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-family: var(--mono);
+  color: var(--text3);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.calc-flow-step.done .calc-flow-step-dot {
+  border-color: var(--green);
+  color: var(--green);
+}
+.calc-flow-step.active .calc-flow-step-dot {
+  border-color: var(--blue2);
+  color: var(--blue2);
+}
+.calc-flow-step-label {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text2);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.calc-flow-step-sub {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* Tablet ≥640px: 2 columnas */
+@media (min-width: 640px) {
+  #page-calcular.active {
+    display: grid !important;
+    grid-template-columns: 1fr 240px;
+    align-items: start;
+    gap: 0 12px;
+    padding: 12px;
+  }
+  #calc-center-panel { min-width: 0; }
+  #calc-right-panel  { position: sticky; top: 12px; }
+  #summary-bar {
+    flex-direction: column;
+    overflow-x: visible;
+    gap: 10px;
+  }
+  #summary-bar .sum-item { text-align: left; }
+  #summary-bar .sum-val  { font-size: 17px; }
+}
+
+/* Desktop ≥900px: 3 columnas */
+@media (min-width: 900px) {
+  #page-calcular.active {
+    grid-template-columns: 240px 1fr 260px;
+    gap: 0 16px;
+    padding: 16px;
+  }
+  #calc-left-panel { display: block; }
+}
+
 /* ── HV TRAMOS ── */
 .tramo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tramo-cell {
@@ -1853,8 +1966,72 @@ input[type=number] { -moz-appearance: textfield; }
     <!-- ── TAB: CALCULAR ── -->
     <div class="page" id="page-calcular">
 
+      <!-- ── UX-0: LEFT PANEL ── -->
+      <div id="calc-left-panel">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;position:sticky;top:16px">
+
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:12px">Flujo de trabajo</div>
+
+          <div class="calc-flow-step clickable" id="cl-step-vars" onclick="showTab('variables')">
+            <div class="calc-flow-step-dot" id="cl-step-vars-dot">1</div>
+            <div>
+              <div class="calc-flow-step-label">Variables</div>
+              <div class="calc-flow-step-sub" id="cl-step-vars-sub">PDF · Introducir datos</div>
+            </div>
+          </div>
+
+          <div class="calc-flow-step active">
+            <div class="calc-flow-step-dot">2</div>
+            <div>
+              <div class="calc-flow-step-label">Revisar</div>
+              <div class="calc-flow-step-sub">Ajustar y calcular</div>
+            </div>
+          </div>
+
+          <div class="calc-flow-step clickable" onclick="showTab('nomina')">
+            <div class="calc-flow-step-dot">3</div>
+            <div>
+              <div class="calc-flow-step-label">Nómina</div>
+              <div class="calc-flow-step-sub">Desglose completo</div>
+            </div>
+          </div>
+
+          <div class="calc-flow-step clickable" onclick="showTab('comparativa')">
+            <div class="calc-flow-step-dot">4</div>
+            <div>
+              <div class="calc-flow-step-label">Comparativa</div>
+              <div class="calc-flow-step-sub">Discrepancias</div>
+            </div>
+          </div>
+
+          <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:10px">Perfil activo</div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Función</div>
+              <div id="cl-funcion" style="font-size:13px;font-weight:600;color:var(--text1);font-family:var(--mono)">—</div>
+            </div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Base</div>
+              <div id="cl-base" style="font-size:12px;color:var(--text2);font-family:var(--mono)">—</div>
+            </div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Nivel</div>
+              <div id="cl-nivel" style="font-size:12px;color:var(--text2);font-family:var(--mono)">—</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Período</div>
+              <div id="cl-periodo" style="font-size:11px;color:var(--text3);font-family:var(--mono)">—</div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /calc-left-panel -->
+
+      <!-- ── UX-0: CENTER PANEL ── -->
+      <div id="calc-center-panel">
+
       <!-- ── CONFIGURACIÓN (común a todos) ── -->
-      <div class="card">
+      <div class="card" id="calc-config-card">
         <div class="card-title"><div class="section-dot"></div>Configuración</div>
         <div class="row">
           <div class="field">
@@ -1915,67 +2092,15 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
 
-      <!-- VACACIONES -->
-      <div class="card" style="padding-bottom:14px">
-        <div class="card-title"><div class="section-dot blue"></div>🏖 Vacaciones</div>
-
-        <!-- Fila principal: switch + campos inline -->
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:2px 0">
-
-          <!-- Izquierda: label + hint + switch -->
-          <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
-            <div>
-              <span class="field-label" style="margin-bottom:1px;display:block">Vacaciones este mes</span>
-              <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
-            </div>
-            <label class="ios-toggle" style="flex-shrink:0">
-              <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
-              <span class="ios-slider"></span>
-            </label>
-          </div>
-
-          <!-- Derecha: campos inline (ocultos hasta activar) -->
-          <div id="vac-field" style="display:none;flex-wrap:wrap;align-items:flex-end;gap:14px;flex:1;min-width:0">
-
-            <!-- Días vacaciones -->
-            <div style="display:flex;flex-direction:column;gap:3px">
-              <span class="field-label">Días vacaciones</span>
-              <input class="field-input" id="vac-dias" type="number"
-                     placeholder="ej: 6" min="1" max="31"
-                     oninput="onVacDiasChange()"
-                     style="width:80px;min-width:64px">
-              <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);min-height:14px"></div>
-            </div>
-
-            <!-- Media de Variables -->
-            <div style="display:flex;flex-direction:column;gap:3px">
-              <span class="field-label">Media Variables (€)</span>
-              <input class="field-input" id="media-variables" type="number"
-                     value="0" step="0.01" min="0" placeholder="0"
-                     oninput="recalc()" onchange="recalc()"
-                     style="width:120px;min-width:96px">
-              <div style="min-height:14px"></div>
-            </div>
-
-          </div><!-- /vac-field -->
-        </div><!-- /fila principal -->
-
-        <!-- Nota informativa: aparece solo cuando vac-field está visible (CSS toggle via clase) -->
-        <div id="vac-hint-media" style="display:none;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.5">
-          Media Variables: Tributa IRPF · Suma al devengado · Introducir manualmente cada mes
-        </div>
-
-      </div>
-
-
       <!-- ════════════════════════════════
            PANEL PILOTOS (CMD / COP)
            ════════════════════════════════ -->
       <div id="panel-pilotos">
 
-        <!-- BLOQUE A: Horas de vuelo -->
+        <!-- OPERACIÓN -->
         <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Horas de vuelo</div>
+          <div class="card-title"><div class="section-dot amber"></div>Operación</div>
+
           <div class="row" style="margin-bottom:10px">
             <div class="field">
               <span class="field-label">Total HV (horas vuelo puras)</span>
@@ -2000,13 +2125,8 @@ input[type=number] { -moz-appearance: textfield; }
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 2 HB c/u</div>
             </div>
           </div>
-        </div>
 
-        <!-- BLOQUE B: Horas baremo / horas de pago -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot blue"></div>Horas baremo / horas de pago</div>
-
-          <!-- HB calculado / introducido -->
+          <div class="calc-section-sub">Horas baremo</div>
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
             <div class="row" style="align-items:center;margin-bottom:0">
               <div class="field" style="margin-bottom:0">
@@ -2020,7 +2140,6 @@ input[type=number] { -moz-appearance: textfield; }
                 </div>
               </div>
             </div>
-            <!-- Aviso discrepancia -->
             <div id="hb-discrepancia" style="display:none;margin-top:8px;padding:6px 8px;
                  background:var(--amber-dim,var(--bg3));border-radius:6px;
                  border:1px solid var(--amber2)">
@@ -2029,8 +2148,6 @@ input[type=number] { -moz-appearance: textfield; }
               </span>
             </div>
           </div>
-
-          <!-- Tramos -->
           <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;letter-spacing:.06em">
             TRAMOS · distribuir sobre HB o introducir directamente
           </div>
@@ -2056,10 +2173,43 @@ input[type=number] { -moz-appearance: textfield; }
               <div class="tramo-rate" id="rate-t4">—</div>
             </div>
           </div>
-        </div>
 
-        <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Libres Volados</div>
+          <div class="calc-section-sub">Vacaciones</div>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:2px 0">
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0">
+              <div>
+                <span class="field-label" style="margin-bottom:1px;display:block">Vacaciones este mes</span>
+                <span class="text-xs text-muted" id="vac-hint">Sin vacaciones</span>
+              </div>
+              <label class="ios-toggle" style="flex-shrink:0">
+                <input type="checkbox" id="toggle-vac" onchange="toggleVacaciones()">
+                <span class="ios-slider"></span>
+              </label>
+            </div>
+            <div id="vac-field" style="display:none;flex-wrap:wrap;align-items:flex-end;gap:14px;flex:1;min-width:0">
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <span class="field-label">Días vacaciones</span>
+                <input class="field-input" id="vac-dias" type="number"
+                       placeholder="ej: 6" min="1" max="31"
+                       oninput="onVacDiasChange()"
+                       style="width:80px;min-width:64px">
+                <div id="vac-info" style="font-family:var(--mono);font-size:10px;color:var(--text3);min-height:14px"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <span class="field-label">Media Variables (€)</span>
+                <input class="field-input" id="media-variables" type="number"
+                       value="0" step="0.01" min="0" placeholder="0"
+                       oninput="recalc()" onchange="recalc()"
+                       style="width:120px;min-width:96px">
+                <div style="min-height:14px"></div>
+              </div>
+            </div>
+          </div>
+          <div id="vac-hint-media" style="display:none;font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.5">
+            Media Variables: Tributa IRPF · Suma al devengado · Introducir manualmente cada mes
+          </div>
+
+          <div class="calc-section-sub">Libres volados</div>
           <div class="row">
             <div class="field">
               <span class="field-label">&lt;24h (uds)</span>
@@ -2074,8 +2224,9 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="lv3" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-        </div>
+        </div><!-- /OPERACIÓN -->
 
+        <!-- DIETAS -->
         <div class="card">
           <div class="card-title"><div class="section-dot green"></div>Dietas y Compensatorios</div>
           <div class="dieta-section-label">🛫 Dieta de Vuelo (Manutención)</div>
@@ -2120,12 +2271,11 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="dest-int" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-        </div>
+        </div><!-- /DIETAS -->
 
+        <!-- PRODUCTIVIDAD -->
         <div class="card">
-          <div class="card-title"><div class="section-dot"></div>Otros Conceptos</div>
-
-          <!-- Fila 1: DPO + Comp. MAD -->
+          <div class="card-title"><div class="section-dot blue"></div>Productividad</div>
           <div class="row">
             <div class="field">
               <span class="field-label">DPO mensual (€)</span>
@@ -2136,30 +2286,24 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="comp-mad" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
+        </div><!-- /PRODUCTIVIDAD -->
 
-          <!-- Sección: Préstamo Type Rating -->
-          <div style="margin-top:14px;margin-bottom:6px;font-size:10px;font-family:var(--mono);
-            color:var(--text3);letter-spacing:.08em;border-top:1px solid var(--border);padding-top:12px">
-            PRÉSTAMO TYPE RATING
-          </div>
+        <!-- ESPECIALES -->
+        <div class="card">
+          <div class="card-title"><div class="section-dot"></div>Especiales</div>
           <div class="row">
             <div class="field">
-              <span class="field-label">Amortización préstamo (€)</span>
+              <span class="field-label">Amortización préstamo TR (€)</span>
               <input class="field-input" id="type-rating" type="number" placeholder="0" step="0.01" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Se descuenta del líquido</div>
             </div>
             <div class="field">
-              <span class="field-label">Intereses préstamo (€)</span>
+              <span class="field-label">Intereses préstamo TR (€)</span>
               <input class="field-input" id="type-rating-interest" type="number" placeholder="0" step="0.01" oninput="recalc()" onchange="recalc()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">Sujeto a SS e IRPF</div>
             </div>
           </div>
-
-          <!-- Sección: Seguros y beneficios -->
-          <div style="margin-top:14px;margin-bottom:6px;font-size:10px;font-family:var(--mono);
-            color:var(--text3);letter-spacing:.08em;border-top:1px solid var(--border);padding-top:12px">
-            SEGUROS Y BENEFICIOS
-          </div>
+          <div class="calc-section-sub">Seguros y beneficios</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Seg. Médico</span>
@@ -2189,8 +2333,7 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="pp-amount" type="number" value="29.74" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-
-        </div>
+        </div><!-- /ESPECIALES -->
 
       </div><!-- /panel-pilotos -->
 
@@ -2446,9 +2589,9 @@ input[type=number] { -moz-appearance: textfield; }
 
       </div><!-- /panel-tcp -->
 
-      <!-- BAJAS (común) -->
+      <!-- INCIDENCIAS (común) -->
       <div class="card" id="card-bajas">
-        <div class="card-title"><div class="section-dot amber"></div>Incapacidad Temporal (IT)</div>
+        <div class="card-title"><div class="section-dot amber"></div>Incidencias</div>
         <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.7;margin-bottom:10px">
           Binter aplica la normativa mínima legal.&nbsp;
           <span style="color:var(--amber2)">Días 1–3:</span> sin prestación &nbsp;·&nbsp;
@@ -2516,28 +2659,35 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
 
-      <button class="btn-secondary" style="margin-bottom:8px;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear variables</button>
+      </div><!-- /calc-center-panel -->
 
-      <div class="summary-bar" id="summary-bar" style="justify-content:center">
-        <div class="sum-item">
-          <div class="sum-label">Devengado</div>
-          <div class="sum-val" id="sum-dev" style="color:var(--blue2)">—</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-label">Base IRPF</div>
-          <div class="sum-val" id="sum-irpf-base" style="color:var(--text2)">—</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-label">IRPF</div>
-          <div class="sum-val" id="sum-irpf" style="color:var(--red)">—</div>
-        </div>
-        <div class="sum-item">
-          <div class="sum-label">Neto</div>
-          <div class="sum-val" id="sum-neto" style="color:var(--green)">—</div>
-        </div>
-      </div>
+      <!-- ── UX-0: RIGHT PANEL ── -->
+      <div id="calc-right-panel">
 
-      <button class="btn-secondary" onclick="showTab('nomina')">Ver nómina completa →</button>
+        <div class="summary-bar" id="summary-bar">
+          <div class="sum-item">
+            <div class="sum-label">Devengado</div>
+            <div class="sum-val" id="sum-dev" style="color:var(--blue2)">—</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-label">Base IRPF</div>
+            <div class="sum-val" id="sum-irpf-base" style="color:var(--text2)">—</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-label">IRPF</div>
+            <div class="sum-val" id="sum-irpf" style="color:var(--red)">—</div>
+          </div>
+          <div class="sum-item">
+            <div class="sum-label">Neto</div>
+            <div class="sum-val" id="sum-neto" style="color:var(--green)">—</div>
+          </div>
+        </div>
+
+        <button class="btn-secondary" onclick="showTab('nomina')" style="width:100%;margin-bottom:8px">Ver nómina completa →</button>
+
+        <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear</button>
+
+      </div><!-- /calc-right-panel -->
 
     </div><!-- /page-calcular -->
 
@@ -8415,6 +8565,7 @@ function onBaseChange() {
   }
   updateRates();
   recalc();
+  _syncLeftPanel();
 }
 
 // ── NIVEL ──
@@ -8506,6 +8657,7 @@ function setNivel(n) {
   _bajaBaseManual = false;  // reset manual flag on nivel change
   autoFillBaseReg();
   recalc();
+  _syncLeftPanel();
 }
 function highlightNivel() {
   document.querySelectorAll('.dot-btn').forEach((b,i) => {
@@ -8700,6 +8852,7 @@ function onFuncionChange() {
   _bajaBaseManual = false;  // reset manual flag on function change
   autoFillBaseReg();
   recalc();
+  _syncLeftPanel();
 }
 
 let tcpSegmedActivo = true;
@@ -9183,6 +9336,29 @@ function recalc() {
 
   updateRates();
   _recalcNotifyStore();
+}
+
+// ── CALC LEFT PANEL SYNC (UX-1) ──
+function _syncLeftPanel() {
+  var clFn = document.getElementById('cl-funcion');
+  if (!clFn) return;
+  var fn = (document.getElementById('funcion') || {}).value || '';
+  var bv = parseFloat((document.getElementById('base') || {}).value) || 1;
+  var fnMap = { CMD: 'Comandante', COP: 'Copiloto', SCC: 'Sobrecargo (SCC)', CC: 'TCP · Cabina' };
+  clFn.textContent = fnMap[fn] || fn || '—';
+  document.getElementById('cl-base').textContent  = bv > 1 ? 'Madrid (MAD)' : 'Canarias';
+  document.getElementById('cl-nivel').textContent = 'N' + (window.currentNivel || '—');
+
+  // Flow guide: step 1 (Variables) done state
+  var step1 = document.getElementById('cl-step-vars');
+  var step1dot = document.getElementById('cl-step-vars-dot');
+  var step1sub = document.getElementById('cl-step-vars-sub');
+  if (step1) {
+    var hasVars = typeof varsData !== 'undefined' && varsData && varsData._periodo;
+    step1.className = 'calc-flow-step clickable ' + (hasVars ? 'done' : '');
+    if (step1dot) step1dot.textContent = hasVars ? '✓' : '1';
+    if (step1sub) step1sub.textContent = hasVars ? ('Cargado · ' + varsData._periodo) : 'PDF · Introducir datos';
+  }
 }
 
 // ── NÓMINA COMPLETA ──
