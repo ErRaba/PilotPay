@@ -1269,10 +1269,15 @@ input, select, textarea {
 .sum-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; margin-bottom: 2px; }
 .sum-val { font-family: var(--mono); font-size: 15px; font-weight: 700; }
 
-/* ── CALCULADORA DESKTOP LAYOUT (UX-0 + UX-1) ── */
+/* ── WORKSPACE LAYOUT (UX-WORKSPACE) ── */
+#workspace        { display: none; }
+#workspace.active { display: block; padding: 12px; }
+#workspace-center { min-width: 0; }
+#workspace-center .page         { padding: 0; } /* workspace handles outer spacing */
+#workspace-center .page.active  { display: block; }
 #calc-left-panel  { display: none; }
 #calc-center-panel { display: block; }
-#calc-right-panel  { display: block; }
+#calc-right-panel  { display: none; }
 
 /* UX-1: Densidad — reducir padding/gap en panel central */
 #calc-center-panel .card {
@@ -1352,17 +1357,20 @@ input, select, textarea {
   line-height: 1.3;
 }
 
-/* Tablet ≥640px: 2 columnas */
+/* Tablet ≥640px: workspace 2 columnas (center + right) */
 @media (min-width: 640px) {
-  #page-calcular.active {
+  #workspace.active {
     display: grid !important;
     grid-template-columns: 1fr 240px;
     align-items: start;
     gap: 0 12px;
     padding: 12px;
   }
-  #calc-center-panel { min-width: 0; }
-  #calc-right-panel  { position: sticky; top: 12px; }
+  #workspace.active > #calc-right-panel {
+    display: block;
+    position: sticky;
+    top: 12px;
+  }
   #summary-bar {
     flex-direction: column;
     overflow-x: visible;
@@ -1372,14 +1380,14 @@ input, select, textarea {
   #summary-bar .sum-val  { font-size: 17px; }
 }
 
-/* Desktop ≥900px: 3 columnas */
+/* Desktop ≥900px: workspace 3 columnas (left + center + right) */
 @media (min-width: 900px) {
-  #page-calcular.active {
+  #workspace.active {
     grid-template-columns: 240px 1fr 260px;
     gap: 0 16px;
     padding: 16px;
   }
-  #calc-left-panel { display: block; }
+  #workspace.active > #calc-left-panel { display: block; }
 }
 
 /* ── HV TRAMOS ── */
@@ -1963,10 +1971,10 @@ input[type=number] { -moz-appearance: textfield; }
 
     </div><!-- /page-dashboard -->
 
-    <!-- ── TAB: CALCULAR ── -->
-    <div class="page" id="page-calcular">
+    <!-- ── WORKSPACE: auditoría integrada (Variables · Revisar · Nómina · Comparativa) ── -->
+    <div id="workspace">
 
-      <!-- ── UX-0: LEFT PANEL ── -->
+      <!-- Columna izquierda: flujo de trabajo -->
       <div id="calc-left-panel">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;position:sticky;top:16px">
 
@@ -1980,27 +1988,27 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
           </div>
 
-          <div class="calc-flow-step active">
-            <div class="calc-flow-step-dot">2</div>
+          <div class="calc-flow-step clickable active" id="cl-step-calc" onclick="showTab('calcular')">
+            <div class="calc-flow-step-dot" id="cl-step-calc-dot">2</div>
             <div>
               <div class="calc-flow-step-label">Revisar</div>
-              <div class="calc-flow-step-sub">Ajustar y calcular</div>
+              <div class="calc-flow-step-sub" id="cl-step-calc-sub">Ajustar y calcular</div>
             </div>
           </div>
 
-          <div class="calc-flow-step clickable" onclick="showTab('nomina')">
-            <div class="calc-flow-step-dot">3</div>
+          <div class="calc-flow-step clickable" id="cl-step-nomina" onclick="showTab('nomina')">
+            <div class="calc-flow-step-dot" id="cl-step-nomina-dot">3</div>
             <div>
               <div class="calc-flow-step-label">Nómina</div>
-              <div class="calc-flow-step-sub">Desglose completo</div>
+              <div class="calc-flow-step-sub" id="cl-step-nomina-sub">Desglose completo</div>
             </div>
           </div>
 
-          <div class="calc-flow-step clickable" onclick="showTab('comparativa')">
-            <div class="calc-flow-step-dot">4</div>
+          <div class="calc-flow-step clickable" id="cl-step-comp" onclick="showTab('comparar')">
+            <div class="calc-flow-step-dot" id="cl-step-comp-dot">4</div>
             <div>
               <div class="calc-flow-step-label">Comparativa</div>
-              <div class="calc-flow-step-sub">Discrepancias</div>
+              <div class="calc-flow-step-sub" id="cl-step-comp-sub">Discrepancias</div>
             </div>
           </div>
 
@@ -2027,8 +2035,12 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div><!-- /calc-left-panel -->
 
-      <!-- ── UX-0: CENTER PANEL ── -->
-      <div id="calc-center-panel">
+      <!-- Columna central: páginas del workspace -->
+      <div id="workspace-center">
+
+        <!-- CALCULAR: formulario principal -->
+        <div class="page" id="page-calcular">
+          <div id="calc-center-panel">
 
       <!-- ── CONFIGURACIÓN (común a todos) ── -->
       <div class="card" id="calc-config-card">
@@ -2659,9 +2671,13 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
       </div>
 
-      </div><!-- /calc-center-panel -->
+          </div><!-- /calc-center-panel -->
+        </div><!-- /page-calcular -->
 
-      <!-- ── UX-0: RIGHT PANEL ── -->
+        <!-- page-variables, page-nomina, page-comparar: insertadas por initWorkspace() -->
+      </div><!-- /workspace-center -->
+
+      <!-- Columna derecha: resumen permanente -->
       <div id="calc-right-panel">
 
         <div class="summary-bar" id="summary-bar">
@@ -2689,11 +2705,11 @@ input[type=number] { -moz-appearance: textfield; }
 
       </div><!-- /calc-right-panel -->
 
-    </div><!-- /page-calcular -->
+    </div><!-- /workspace -->
 
 
-    <!-- ── TAB: NÓMINA ── -->
-    <!-- ── TAB: VARIABLES ── -->
+    <!-- ── WORKSPACE PAGES (variables, nomina, comparar) ── -->
+    <!-- Estas páginas son movidas a #workspace-center por initWorkspace() al iniciar. -->
     <div class="page" id="page-variables">
 
       <!-- SELECTOR DE MODO -->
@@ -7140,6 +7156,7 @@ window._p4StatusUpdate = function (msg) {
 
 // ── INIT APP ──
 function initApp() {
+  initWorkspace();
   const u = USERS[currentUser];
   const isAdmin = currentUser === ADMIN_CODE;
   const baseLabel = getBaseLabelShort(profileData.base || u.base);
@@ -8257,6 +8274,10 @@ function showTab(name) {
   const tabEl = document.querySelector(`.tab[onclick="showTab('${name}')"]`);
   if (tabEl) tabEl.classList.add('active');
   document.getElementById('page-'+name).classList.add('active');
+  // Workspace: mostrar/ocultar según si el tab pertenece al workspace de auditoría
+  var _ws = document.getElementById('workspace');
+  if (_ws) _ws.classList.toggle('active', ['variables','calcular','nomina','comparar'].indexOf(name) !== -1);
+  _syncLeftPanel();
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
@@ -9338,10 +9359,22 @@ function recalc() {
   _recalcNotifyStore();
 }
 
-// ── CALC LEFT PANEL SYNC (UX-1) ──
+// ── WORKSPACE INIT: mueve páginas al workspace-center ──
+function initWorkspace() {
+  var wc = document.getElementById('workspace-center');
+  if (!wc) return;
+  ['page-variables', 'page-nomina', 'page-comparar'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.parentNode !== wc) wc.appendChild(el);
+  });
+}
+
+// ── CALC LEFT PANEL SYNC (UX-WORKSPACE) ──
 function _syncLeftPanel() {
   var clFn = document.getElementById('cl-funcion');
   if (!clFn) return;
+
+  // Perfil activo
   var fn = (document.getElementById('funcion') || {}).value || '';
   var bv = parseFloat((document.getElementById('base') || {}).value) || 1;
   var fnMap = { CMD: 'Comandante', COP: 'Copiloto', SCC: 'Sobrecargo (SCC)', CC: 'TCP · Cabina' };
@@ -9349,16 +9382,39 @@ function _syncLeftPanel() {
   document.getElementById('cl-base').textContent  = bv > 1 ? 'Madrid (MAD)' : 'Canarias';
   document.getElementById('cl-nivel').textContent = 'N' + (window.currentNivel || '—');
 
-  // Flow guide: step 1 (Variables) done state
-  var step1 = document.getElementById('cl-step-vars');
-  var step1dot = document.getElementById('cl-step-vars-dot');
-  var step1sub = document.getElementById('cl-step-vars-sub');
-  if (step1) {
-    var hasVars = typeof varsData !== 'undefined' && varsData && varsData._periodo;
-    step1.className = 'calc-flow-step clickable ' + (hasVars ? 'done' : '');
-    if (step1dot) step1dot.textContent = hasVars ? '✓' : '1';
-    if (step1sub) step1sub.textContent = hasVars ? ('Cargado · ' + varsData._periodo) : 'PDF · Introducir datos';
+  // Página activa dentro del workspace
+  var ws = document.getElementById('workspace');
+  var activePage = '';
+  if (ws && ws.classList.contains('active')) {
+    var ap = ws.querySelector('.page.active');
+    if (ap) activePage = ap.id;
   }
+
+  var hasVars = typeof varsData !== 'undefined' && varsData && varsData._periodo;
+
+  // Configuración de cada paso
+  var steps = [
+    { id: 'cl-step-vars',   page: 'page-variables', dot: '1', dotDone: '✓',
+      sub: hasVars ? ('Cargado · ' + (varsData && varsData._periodo)) : 'PDF · Introducir datos' },
+    { id: 'cl-step-calc',   page: 'page-calcular',  dot: '2', sub: null },
+    { id: 'cl-step-nomina', page: 'page-nomina',     dot: '3', sub: null },
+    { id: 'cl-step-comp',   page: 'page-comparar',  dot: '4', sub: null },
+  ];
+
+  steps.forEach(function(s, i) {
+    var el  = document.getElementById(s.id);
+    var dot = document.getElementById(s.id + '-dot');
+    var sub = document.getElementById(s.id + '-sub');
+    if (!el) return;
+    var isActive = activePage === s.page;
+    var isDone   = (i === 0) && hasVars && !isActive;
+    var cls = 'calc-flow-step clickable';
+    if (isActive) cls += ' active';
+    else if (isDone) cls += ' done';
+    el.className = cls;
+    if (dot) dot.textContent = (isDone && s.dotDone) ? s.dotDone : s.dot;
+    if (sub && s.sub) sub.textContent = s.sub;
+  });
 }
 
 // ── NÓMINA COMPLETA ──
