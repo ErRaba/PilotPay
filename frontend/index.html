@@ -1357,6 +1357,72 @@ input, select, textarea {
   line-height: 1.3;
 }
 
+/* ── UX-2: SIDEBAR CONTEXTUAL ── */
+#cl-sidebar-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 60px;
+  max-height: calc(100vh - 76px);
+  overflow: hidden;
+}
+#cl-zone-a {
+  padding: 12px 12px 10px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+#cl-zone-a .calc-flow-step { padding: 3px 0; }
+#cl-zone-a .calc-flow-step-dot { width: 16px; height: 16px; font-size: 8px; }
+#cl-zone-a .calc-flow-step-label { font-size: 11px; }
+#cl-zone-a .calc-flow-step-sub { font-size: 9px; }
+#cl-context-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#cl-context-nav::-webkit-scrollbar { width: 3px; }
+#cl-context-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+#cl-zone-c {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cl-subnav-title {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--text3); font-family: var(--mono); margin-bottom: 6px; padding: 0 4px;
+}
+.cl-subnav-item {
+  display: flex; align-items: center;
+  padding: 5px 4px; border-radius: 5px; cursor: pointer;
+  transition: background .1s, color .1s;
+  font-size: 11px; font-family: var(--mono); color: var(--text3);
+  line-height: 1.3; position: relative;
+}
+.cl-subnav-item::before {
+  content: ''; width: 2px; height: 12px;
+  background: transparent; border-radius: 1px;
+  flex-shrink: 0; margin-right: 8px; transition: background .15s;
+}
+.cl-subnav-item:hover { background: var(--bg3); color: var(--text2); }
+.cl-subnav-item.cl-subnav-active { color: var(--text1); background: color-mix(in srgb, var(--blue2) 8%, transparent); }
+.cl-subnav-item.cl-subnav-active::before { background: var(--blue2); }
+.cl-subnav-item.cl-subnav-disabled { cursor: default; pointer-events: none; opacity: .35; }
+.cl-subnav-badge {
+  font-size: 7px; font-family: var(--mono); color: var(--text3);
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 3px; padding: 0 3px; letter-spacing: .04em;
+  margin-left: auto; white-space: nowrap; opacity: .7;
+}
+/* Resultado card */
+.cl-res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 4px 0; }
+.cl-res-label { font-size: 9px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.cl-res-val { font-size: 18px; font-weight: 700; font-family: var(--mono); }
+
 /* Tablet ≥640px: workspace 2 columnas (center + right) */
 @media (min-width: 640px) {
   #workspace.active {
@@ -1976,63 +2042,61 @@ input[type=number] { -moz-appearance: textfield; }
 
       <!-- Columna izquierda: flujo de trabajo -->
       <div id="calc-left-panel">
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 12px;position:sticky;top:16px">
+        <div id="cl-sidebar-card">
 
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:12px">Flujo de trabajo</div>
+          <!-- Zone A: Flujo de trabajo (compact) -->
+          <div id="cl-zone-a">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:8px">Auditoría salarial</div>
 
-          <div class="calc-flow-step clickable" id="cl-step-vars" onclick="showTab('variables')">
-            <div class="calc-flow-step-dot" id="cl-step-vars-dot">1</div>
-            <div>
-              <div class="calc-flow-step-label">Variables</div>
-              <div class="calc-flow-step-sub" id="cl-step-vars-sub">PDF · Introducir datos</div>
+            <div class="calc-flow-step clickable" id="cl-step-vars" onclick="showTab('variables')">
+              <div class="calc-flow-step-dot" id="cl-step-vars-dot">1</div>
+              <div>
+                <div class="calc-flow-step-label">Variables</div>
+                <div class="calc-flow-step-sub" id="cl-step-vars-sub">PDF · Introducir datos</div>
+              </div>
             </div>
-          </div>
 
-          <div class="calc-flow-step clickable active" id="cl-step-calc" onclick="showTab('calcular')">
-            <div class="calc-flow-step-dot" id="cl-step-calc-dot">2</div>
-            <div>
-              <div class="calc-flow-step-label">Revisar</div>
-              <div class="calc-flow-step-sub" id="cl-step-calc-sub">Ajustar y calcular</div>
+            <div class="calc-flow-step clickable active" id="cl-step-calc" onclick="showTab('calcular')">
+              <div class="calc-flow-step-dot" id="cl-step-calc-dot">2</div>
+              <div>
+                <div class="calc-flow-step-label">Revisar</div>
+                <div class="calc-flow-step-sub" id="cl-step-calc-sub">Ajustar y calcular</div>
+              </div>
             </div>
-          </div>
 
-          <div class="calc-flow-step clickable" id="cl-step-nomina" onclick="showTab('nomina')">
-            <div class="calc-flow-step-dot" id="cl-step-nomina-dot">3</div>
-            <div>
-              <div class="calc-flow-step-label">Nómina</div>
-              <div class="calc-flow-step-sub" id="cl-step-nomina-sub">Desglose completo</div>
+            <div class="calc-flow-step clickable" id="cl-step-nomina" onclick="showTab('nomina')">
+              <div class="calc-flow-step-dot" id="cl-step-nomina-dot">3</div>
+              <div>
+                <div class="calc-flow-step-label">Nómina</div>
+                <div class="calc-flow-step-sub" id="cl-step-nomina-sub">Desglose completo</div>
+              </div>
             </div>
-          </div>
 
-          <div class="calc-flow-step clickable" id="cl-step-comp" onclick="showTab('comparar')">
-            <div class="calc-flow-step-dot" id="cl-step-comp-dot">4</div>
-            <div>
-              <div class="calc-flow-step-label">Comparativa</div>
-              <div class="calc-flow-step-sub" id="cl-step-comp-sub">Discrepancias</div>
+            <div class="calc-flow-step clickable" id="cl-step-comp" onclick="showTab('comparar')">
+              <div class="calc-flow-step-dot" id="cl-step-comp-dot">4</div>
+              <div>
+                <div class="calc-flow-step-label">Comparativa</div>
+                <div class="calc-flow-step-sub" id="cl-step-comp-sub">Discrepancias</div>
+              </div>
             </div>
-          </div>
+          </div><!-- /cl-zone-a -->
 
-          <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:10px">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:10px">Perfil activo</div>
-            <div style="margin-bottom:8px">
-              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Función</div>
-              <div id="cl-funcion" style="font-size:13px;font-weight:600;color:var(--text1);font-family:var(--mono)">—</div>
-            </div>
-            <div style="margin-bottom:8px">
-              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Base</div>
-              <div id="cl-base" style="font-size:12px;color:var(--text2);font-family:var(--mono)">—</div>
-            </div>
-            <div style="margin-bottom:8px">
-              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Nivel</div>
-              <div id="cl-nivel" style="font-size:12px;color:var(--text2);font-family:var(--mono)">—</div>
-            </div>
-            <div>
-              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:2px">Período</div>
-              <div id="cl-periodo" style="font-size:11px;color:var(--text3);font-family:var(--mono)">—</div>
-            </div>
-          </div>
+          <!-- Zone B: Sub-nav contextual (scrollable) -->
+          <div id="cl-context-nav"></div>
 
-        </div>
+          <!-- Zone C: Perfil activo (condensado) -->
+          <div id="cl-zone-c">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:var(--mono);margin-bottom:8px">Perfil activo</div>
+            <div id="cl-funcion" style="font-size:12px;font-weight:600;color:var(--text1);font-family:var(--mono);margin-bottom:4px">—</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <div id="cl-base" style="font-size:10px;color:var(--text3);font-family:var(--mono)">—</div>
+              <span style="color:var(--border);font-size:10px">·</span>
+              <div id="cl-nivel" style="font-size:10px;color:var(--text3);font-family:var(--mono)">—</div>
+            </div>
+            <div id="cl-periodo" style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px">—</div>
+          </div><!-- /cl-zone-c -->
+
+        </div><!-- /cl-sidebar-card -->
       </div><!-- /calc-left-panel -->
 
       <!-- Columna central: páginas del workspace -->
@@ -2110,8 +2174,8 @@ input[type=number] { -moz-appearance: textfield; }
       <div id="panel-pilotos">
 
         <!-- OPERACIÓN -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot amber"></div>Operación</div>
+        <div class="card" id="cl-sec-operacion">
+          <div class="card-title"><div class="section-dot amber"></div>Operación principal</div>
 
           <div class="row" style="margin-bottom:10px">
             <div class="field">
@@ -2239,7 +2303,7 @@ input[type=number] { -moz-appearance: textfield; }
         </div><!-- /OPERACIÓN -->
 
         <!-- DIETAS -->
-        <div class="card">
+        <div class="card" id="cl-sec-dietas">
           <div class="card-title"><div class="section-dot green"></div>Dietas y Compensatorios</div>
           <div class="dieta-section-label">🛫 Dieta de Vuelo (Manutención)</div>
           <div class="row">
@@ -2285,9 +2349,9 @@ input[type=number] { -moz-appearance: textfield; }
           </div>
         </div><!-- /DIETAS -->
 
-        <!-- PRODUCTIVIDAD -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot blue"></div>Productividad</div>
+        <!-- COMPLEMENTOS -->
+        <div class="card" id="cl-sec-complementos">
+          <div class="card-title"><div class="section-dot blue"></div>Complementos</div>
           <div class="row">
             <div class="field">
               <span class="field-label">DPO mensual (€)</span>
@@ -2298,10 +2362,14 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="comp-mad" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-        </div><!-- /PRODUCTIVIDAD -->
+          <div class="calc-section-sub" style="margin-top:14px">Próximamente</div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);line-height:2.2;opacity:.55">
+            Oficinas &nbsp;·&nbsp; Instrucción &nbsp;·&nbsp; LTC &nbsp;·&nbsp; GTI &nbsp;·&nbsp; Inspecciones &nbsp;·&nbsp; Auditorías &nbsp;·&nbsp; Jefatura de Base
+          </div>
+        </div><!-- /COMPLEMENTOS -->
 
         <!-- ESPECIALES -->
-        <div class="card">
+        <div class="card" id="cl-sec-especiales">
           <div class="card-title"><div class="section-dot"></div>Especiales</div>
           <div class="row">
             <div class="field">
@@ -2601,9 +2669,9 @@ input[type=number] { -moz-appearance: textfield; }
 
       </div><!-- /panel-tcp -->
 
-      <!-- INCIDENCIAS (común) -->
+      <!-- SITUACIONES ESPECIALES (común) -->
       <div class="card" id="card-bajas">
-        <div class="card-title"><div class="section-dot amber"></div>Incidencias</div>
+        <div class="card-title"><div class="section-dot amber"></div>Situaciones especiales</div>
         <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.7;margin-bottom:10px">
           Binter aplica la normativa mínima legal.&nbsp;
           <span style="color:var(--amber2)">Días 1–3:</span> sin prestación &nbsp;·&nbsp;
@@ -2668,6 +2736,33 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
           </div>
           <button class="btn-secondary" style="margin-top:10px;border-color:var(--text3);color:var(--text3)" onclick="resetBaja()">↺ Limpiar baja</button>
+        </div>
+        <div class="calc-section-sub" style="margin-top:14px">Próximamente</div>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);line-height:2.2;opacity:.55">
+          Maternidad &nbsp;·&nbsp; Paternidad &nbsp;·&nbsp; Licencia retribuida &nbsp;·&nbsp; Licencia no retribuida &nbsp;·&nbsp; Reducción de jornada
+        </div>
+      </div>
+
+      <!-- RESULTADO -->
+      <div class="card" id="cl-sec-resultado">
+        <div class="card-title"><div class="section-dot blue"></div>Resultado estimado</div>
+        <div class="cl-res-grid">
+          <div>
+            <div class="cl-res-label">Devengado</div>
+            <div class="cl-res-val" id="cl-res-dev" style="color:var(--blue2)">—</div>
+          </div>
+          <div>
+            <div class="cl-res-label">Base IRPF</div>
+            <div class="cl-res-val" id="cl-res-irpf-base" style="color:var(--text2)">—</div>
+          </div>
+          <div>
+            <div class="cl-res-label">IRPF</div>
+            <div class="cl-res-val" id="cl-res-irpf" style="color:var(--red)">—</div>
+          </div>
+          <div>
+            <div class="cl-res-label">Neto</div>
+            <div class="cl-res-val" id="cl-res-neto" style="color:var(--green)">—</div>
+          </div>
         </div>
       </div>
 
@@ -9367,6 +9462,98 @@ function initWorkspace() {
     var el = document.getElementById(id);
     if (el && el.parentNode !== wc) wc.appendChild(el);
   });
+  _initResultadoMirror();
+}
+
+// ── UX-2: SIDEBAR CONTEXTUAL ──
+
+var _sectionObserver = null;
+
+var _CL_SUBNAV = {
+  variables: [
+    { label: 'Subir PDF / Pegar texto', target: 'page-variables' },
+    { label: 'Período', target: 'vars-periodo-confirm' },
+    { label: 'Datos detectados', target: 'vars-result' },
+  ],
+  calcular: [
+    { label: 'Configuración', target: 'calc-config-card' },
+    { label: 'Operación principal', target: 'cl-sec-operacion' },
+    { label: 'Dietas y compensatorios', target: 'cl-sec-dietas' },
+    { label: 'Complementos', target: 'cl-sec-complementos' },
+    { label: 'Especiales', target: 'cl-sec-especiales' },
+    { label: 'Situaciones especiales', target: 'card-bajas' },
+    { label: 'Resultado', target: 'cl-sec-resultado' },
+  ],
+  nomina: [
+    { label: 'Nómina calculada', target: 'nomina-output' },
+    { label: 'Generar PDF', target: 'btn-generar-pdf' },
+  ],
+  comparar: [
+    { label: 'Subir nómina PDF', target: 'upload-zone' },
+    { label: 'Análisis comparativo', target: 'comparativa-result' },
+  ],
+};
+
+function _renderContextNav(page) {
+  var container = document.getElementById('cl-context-nav');
+  if (!container) return;
+  var items = _CL_SUBNAV[page] || [];
+  var sectionLabel = { variables: 'Variables', calcular: 'Calcular', nomina: 'Nómina', comparar: 'Comparativa' }[page] || page;
+  var html = '<div class="cl-subnav-title">' + sectionLabel + '</div>';
+  items.forEach(function(item) {
+    var dis = item.disabled ? ' cl-subnav-disabled' : '';
+    var oc  = item.disabled ? '' : ' onclick="clScrollTo(\'' + item.target + '\')"';
+    html += '<div class="cl-subnav-item' + dis + '"' + oc + ' data-target="' + (item.target || '') + '">' + item.label + '</div>';
+  });
+  container.innerHTML = html;
+  if (page === 'calcular') { _initSectionObserver(); }
+  else { _disconnectSectionObserver(); }
+}
+
+function _disconnectSectionObserver() {
+  if (_sectionObserver) { _sectionObserver.disconnect(); _sectionObserver = null; }
+}
+
+function _initSectionObserver() {
+  _disconnectSectionObserver();
+  if (!window.IntersectionObserver) return;
+  var ids = ['calc-config-card', 'cl-sec-operacion', 'cl-sec-dietas', 'cl-sec-complementos', 'cl-sec-especiales', 'card-bajas', 'cl-sec-resultado'];
+  _sectionObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      document.querySelectorAll('.cl-subnav-item[data-target="' + e.target.id + '"]').forEach(function(el) {
+        el.classList.toggle('cl-subnav-active', e.isIntersecting);
+      });
+    });
+  }, { rootMargin: '-5% 0px -65% 0px', threshold: 0 });
+  ids.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) _sectionObserver.observe(el);
+  });
+}
+
+function clScrollTo(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var hEl = document.querySelector('header');
+  var headerH = hEl ? hEl.offsetHeight : 56;
+  var top = el.getBoundingClientRect().top + window.pageYOffset - headerH - 8;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+}
+
+function _syncResultadoCard() {
+  var pairs = [['sum-dev','cl-res-dev'],['sum-irpf-base','cl-res-irpf-base'],['sum-irpf','cl-res-irpf'],['sum-neto','cl-res-neto']];
+  pairs.forEach(function(p) {
+    var src = document.getElementById(p[0]), dst = document.getElementById(p[1]);
+    if (src && dst) dst.textContent = src.textContent;
+  });
+}
+
+function _initResultadoMirror() {
+  if (!window.MutationObserver) return;
+  var src = document.getElementById('sum-neto');
+  if (!src) return;
+  new MutationObserver(_syncResultadoCard).observe(src, { characterData: true, childList: true, subtree: true });
+  _syncResultadoCard();
 }
 
 // ── CALC LEFT PANEL SYNC (UX-WORKSPACE) ──
@@ -9415,6 +9602,10 @@ function _syncLeftPanel() {
     if (dot) dot.textContent = (isDone && s.dotDone) ? s.dotDone : s.dot;
     if (sub && s.sub) sub.textContent = s.sub;
   });
+
+  // UX-2: sub-nav contextual según sección activa
+  var pageKey = { 'page-variables':'variables','page-calcular':'calcular','page-nomina':'nomina','page-comparar':'comparar' }[activePage] || 'calcular';
+  _renderContextNav(pageKey);
 }
 
 // ── NÓMINA COMPLETA ──
