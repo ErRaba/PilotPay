@@ -1383,7 +1383,7 @@ input, select, textarea {
   overflow-y: auto;
   padding: 10px 8px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(140,140,150,0.30) transparent;
+  scrollbar-color: rgba(155,155,165,0.50) transparent;
 }
 #cl-zone-c {
   padding: 10px 12px;
@@ -1486,7 +1486,7 @@ input, select, textarea {
   #workspace-center {
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(140,140,150,0.30) transparent;
+    scrollbar-color: rgba(155,155,165,0.50) transparent;
   }
   /* Sidebar: columna fija — sticky ya no necesario */
   #cl-sidebar-card {
@@ -1550,13 +1550,13 @@ input[type=number] { -moz-appearance: textfield; }
 @media (min-width: 900px) {
   ::-webkit-scrollbar              { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track        { background: transparent; }
-  ::-webkit-scrollbar-thumb        { background: rgba(140,140,150,0.30); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover  { background: rgba(140,140,150,0.60); }
+  ::-webkit-scrollbar-thumb        { background: rgba(155,155,165,0.50); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover  { background: rgba(155,155,165,0.80); }
   ::-webkit-scrollbar-corner       { background: transparent; }
 }
 /* Mobile fallback: pista invisible, thumb sutil */
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(140,140,150,0.30); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(155,155,165,0.50); border-radius: 10px; }
 
 /* ── MODAL ── */
 .modal-overlay {
@@ -4240,7 +4240,7 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-reader-main {
           flex: 1; min-width: 0;
           overflow-y: auto; scroll-behavior: smooth;
-          scrollbar-width: thin; scrollbar-color: rgba(140,140,150,0.30) transparent;
+          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
         }
 
         /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
@@ -4250,7 +4250,7 @@ Complemento de Base MAD: 1500"></textarea>
           border-right: 1px solid var(--border);
           background: var(--bg);
           display: none; flex-direction: column;
-          scrollbar-width: thin; scrollbar-color: rgba(140,140,150,0.30) transparent;
+          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
         }
         @media (min-width: 900px) { .cc-sidebar { display: flex; } }
         .cc-sidebar.cc-sidebar-open {
@@ -4271,7 +4271,7 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .15s;
         }
         .cc-toc-close:hover { opacity: .9; }
-        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 4px 0 56px; scrollbar-width: thin; scrollbar-color: rgba(140,140,150,0.30) transparent; }
+        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 4px 0 56px; scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent; }
 
         /* ── Chapter rows — card blocks ──────────────────────── */
         .cc-toc-section {
@@ -4646,7 +4646,7 @@ Complemento de Base MAD: 1500"></textarea>
           overflow-y: auto; border-left: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg) 60%, var(--bg2));
           padding: 0 0 48px; display: none;
-          scrollbar-width: thin; scrollbar-color: rgba(140,140,150,0.30) transparent;
+          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
         }
         @media (min-width: 1280px) { .cc-ctx-panel { display: block; } }
 
@@ -9699,14 +9699,17 @@ function _renderRightPanel(page) {
     } else {
       var periodo = (varsData._periodo) || '—';
       var nombre  = (varsData._nombre)  || '—';
-      var conf    = (varsData._confianza) || null;
+      var confObj = (varsData._confianza && typeof varsData._confianza === 'object') ? varsData._confianza : null;
+      var confLabel = confObj
+        ? (Object.values(confObj).some(function(v) { return v === 'amber'; }) ? 'Media' : 'Alta')
+        : null;
       var hb  = varsData.hb_total != null ? varsData.hb_total : '—';
       var hv  = varsData.hv_total != null ? varsData.hv_total : '—';
       var dpo = varsData.dpo      != null ? varsData.dpo      : '—';
-      var confHtml = conf
+      var confHtml = confLabel
         ? '<div class="cl-right-kv"><span class="cl-right-kv-label">Confianza</span>'
-          + '<span class="cl-status-badge ' + (conf === 'alta' ? 'cl-st-ok' : 'cl-st-pending') + '">'
-          + conf.charAt(0).toUpperCase() + conf.slice(1) + '</span></div>'
+          + '<span class="cl-status-badge ' + (confLabel === 'Alta' ? 'cl-st-ok' : 'cl-st-pending') + '">'
+          + confLabel + '</span></div>'
         : '';
       dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
         + kv('Período', periodo)
@@ -13351,17 +13354,19 @@ async function varsProcessPDF(file) {
   document.getElementById('vars-loading').style.display = 'flex';
   document.getElementById('vars-result').style.display = 'none';
   document.getElementById('vars-periodo-confirm').style.display = 'none';
+  let parseOk = false;
   try {
     const text = await extractPdfText(file);
     varsData = varsParseText(text);
     varsMostrarConfirmacionPeriodo();
-    _syncLeftPanel();
+    parseOk = true;
   } catch(e) {
     alert('Error leyendo el PDF. Comprueba que es el PDF de variables de la empresa.');
     console.error(e);
   } finally {
     document.getElementById('vars-loading').style.display = 'none';
   }
+  if (parseOk) _syncLeftPanel();
 }
 
 // ── PEGAR TEXTO ──
