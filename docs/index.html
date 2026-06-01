@@ -1466,14 +1466,41 @@ input, select, textarea {
   #summary-bar .sum-val  { font-size: 17px; }
 }
 
-/* Desktop ≥900px: workspace 3 columnas (left + center + right) */
+/* Desktop ≥900px: workspace 3 columnas + UX-4 scroll aislado */
 @media (min-width: 900px) {
+  /* UX-4: bloquear scroll de página cuando el workspace está activo */
+  body:has(#workspace.active) #app {
+    height: 100dvh;
+    min-height: unset;
+  }
+  body:has(#workspace.active) main {
+    overflow-y: hidden;
+  }
   #workspace.active {
     grid-template-columns: 240px 1fr 260px;
     gap: 0 16px;
     padding: 16px;
+    align-items: stretch;  /* todas las columnas llenan la misma altura */
+    height: 100%;
   }
   #workspace.active > #calc-left-panel { display: block; }
+  /* Centro: único scroll container del workspace */
+  #workspace-center {
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+  /* Sidebar: columna fija — sticky ya no necesario */
+  #cl-sidebar-card {
+    position: relative;
+    top: auto;
+    height: 100%;
+    max-height: 100%;
+  }
+  /* Right panel: columna fija — sticky ya no necesario */
+  #workspace.active > #calc-right-panel {
+    position: relative;
+    top: auto;
+  }
 }
 
 /* ── HV TRAMOS ── */
@@ -8409,7 +8436,13 @@ function showTab(name) {
   document.getElementById('page-'+name).classList.add('active');
   // Workspace: mostrar/ocultar según si el tab pertenece al workspace de auditoría
   var _ws = document.getElementById('workspace');
-  if (_ws) _ws.classList.toggle('active', ['variables','calcular','nomina','comparar'].indexOf(name) !== -1);
+  var _isWorkspace = ['variables','calcular','nomina','comparar'].indexOf(name) !== -1;
+  if (_ws) _ws.classList.toggle('active', _isWorkspace);
+  // UX-4: resetear scroll del centro al cambiar de fase
+  if (_isWorkspace) {
+    var _wc = document.getElementById('workspace-center');
+    if (_wc) _wc.scrollTop = 0;
+  }
   _syncLeftPanel();
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
@@ -9562,7 +9595,7 @@ function _initSectionObserver() {
         el.classList.toggle('cl-subnav-active', e.isIntersecting);
       });
     });
-  }, { rootMargin: '-5% 0px -65% 0px', threshold: 0 });
+  }, { root: document.getElementById('workspace-center'), rootMargin: '-5% 0px -65% 0px', threshold: 0 });
   ids.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) _sectionObserver.observe(el);
@@ -9572,10 +9605,19 @@ function _initSectionObserver() {
 function clScrollTo(id) {
   var el = document.getElementById(id);
   if (!el) return;
-  var hEl = document.querySelector('header');
-  var headerH = hEl ? hEl.offsetHeight : 56;
-  var top = el.getBoundingClientRect().top + window.pageYOffset - headerH - 8;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  var wc = document.getElementById('workspace-center');
+  if (wc && wc.scrollHeight > wc.clientHeight) {
+    // UX-4: scroll aislado dentro de #workspace-center
+    var wcRect = wc.getBoundingClientRect();
+    var elRect = el.getBoundingClientRect();
+    wc.scrollTo({ top: wc.scrollTop + (elRect.top - wcRect.top) - 8, behavior: 'smooth' });
+  } else {
+    // Fallback: scroll de documento (tablet, móvil)
+    var hEl = document.querySelector('header');
+    var headerH = hEl ? hEl.offsetHeight : 56;
+    var top = el.getBoundingClientRect().top + window.pageYOffset - headerH - 8;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
 }
 
 function _syncResultadoCard() {
