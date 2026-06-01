@@ -1423,6 +1423,26 @@ input, select, textarea {
 .cl-res-label { font-size: 9px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
 .cl-res-val { font-size: 18px; font-weight: 700; font-family: var(--mono); }
 
+/* ── UX-3: RIGHT PANEL CONTEXTUAL ── */
+#cl-right-calcular { display: flex; flex-direction: column; gap: 8px; }
+#cl-right-dynamic  { display: flex; flex-direction: column; gap: 8px; }
+#cl-right-calcular .cl-neto-item .sum-val { font-size: 24px; }
+#cl-right-status {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.cl-status-row   { display: flex; align-items: center; justify-content: space-between; }
+.cl-status-label { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+.cl-status-badge { font-size: 10px; font-family: var(--mono); border-radius: 4px; padding: 2px 7px; font-weight: 600; }
+.cl-st-ok        { background: color-mix(in srgb, var(--green) 12%, transparent); color: var(--green); }
+.cl-st-pending   { background: var(--bg2); color: var(--text3); }
+.cl-right-sec-title { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.cl-right-kv       { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; }
+.cl-right-kv-label { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+.cl-right-kv-val   { font-size: 12px; font-family: var(--mono); color: var(--text2); font-weight: 600; text-align: right; max-width: 55%; word-break: break-word; }
+.cl-right-neto-big { font-size: 26px; font-weight: 700; font-family: var(--mono); color: var(--green); margin: 6px 0 10px; }
+.cl-right-empty    { font-size: 11px; font-family: var(--mono); color: var(--text3); text-align: center; padding: 20px 0; line-height: 1.6; }
+
 /* Tablet ≥640px: workspace 2 columnas (center + right) */
 @media (min-width: 640px) {
   #workspace.active {
@@ -2775,28 +2795,46 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- Columna derecha: resumen permanente -->
       <div id="calc-right-panel">
 
-        <div class="summary-bar" id="summary-bar">
-          <div class="sum-item">
-            <div class="sum-label">Devengado</div>
-            <div class="sum-val" id="sum-dev" style="color:var(--blue2)">—</div>
+        <!-- Variante CALCULAR — siempre en DOM: sum-* IDs requeridos por recalc() -->
+        <div id="cl-right-calcular">
+          <div class="summary-bar" id="summary-bar">
+            <div class="sum-item">
+              <div class="sum-label">Devengado</div>
+              <div class="sum-val" id="sum-dev" style="color:var(--blue2)">—</div>
+            </div>
+            <div class="sum-item">
+              <div class="sum-label">Base IRPF</div>
+              <div class="sum-val" id="sum-irpf-base" style="color:var(--text2)">—</div>
+            </div>
+            <div class="sum-item">
+              <div class="sum-label">IRPF</div>
+              <div class="sum-val" id="sum-irpf" style="color:var(--red)">—</div>
+            </div>
+            <div class="sum-item cl-neto-item">
+              <div class="sum-label">Neto</div>
+              <div class="sum-val" id="sum-neto" style="color:var(--green)">—</div>
+            </div>
           </div>
-          <div class="sum-item">
-            <div class="sum-label">Base IRPF</div>
-            <div class="sum-val" id="sum-irpf-base" style="color:var(--text2)">—</div>
+          <div id="cl-right-status">
+            <div class="cl-status-row" id="cl-st-vars">
+              <span class="cl-status-label">Variables</span>
+              <span class="cl-status-badge cl-st-pending">No cargadas</span>
+            </div>
+            <div class="cl-status-row" id="cl-st-nomina">
+              <span class="cl-status-label">Nómina</span>
+              <span class="cl-status-badge cl-st-pending">Pendiente</span>
+            </div>
+            <div class="cl-status-row" id="cl-st-comp">
+              <span class="cl-status-label">Comparativa</span>
+              <span class="cl-status-badge cl-st-pending">Pendiente</span>
+            </div>
           </div>
-          <div class="sum-item">
-            <div class="sum-label">IRPF</div>
-            <div class="sum-val" id="sum-irpf" style="color:var(--red)">—</div>
-          </div>
-          <div class="sum-item">
-            <div class="sum-label">Neto</div>
-            <div class="sum-val" id="sum-neto" style="color:var(--green)">—</div>
-          </div>
+          <button class="btn-secondary" onclick="showTab('nomina')" style="width:100%;margin-bottom:8px">Ver nómina completa →</button>
+          <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear</button>
         </div>
 
-        <button class="btn-secondary" onclick="showTab('nomina')" style="width:100%;margin-bottom:8px">Ver nómina completa →</button>
-
-        <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear</button>
+        <!-- Variante dinámica para las demás fases del workspace -->
+        <div id="cl-right-dynamic" style="display:none"></div>
 
       </div><!-- /calc-right-panel -->
 
@@ -9546,6 +9584,7 @@ function _syncResultadoCard() {
     var src = document.getElementById(p[0]), dst = document.getElementById(p[1]);
     if (src && dst) dst.textContent = src.textContent;
   });
+  _updateRightPanelStatus();
 }
 
 function _initResultadoMirror() {
@@ -9554,6 +9593,123 @@ function _initResultadoMirror() {
   if (!src) return;
   new MutationObserver(_syncResultadoCard).observe(src, { characterData: true, childList: true, subtree: true });
   _syncResultadoCard();
+}
+
+// ── UX-3: RIGHT PANEL CONTEXTUAL ──
+
+function _updateRightPanelStatus() {
+  var varsLoaded = typeof varsData !== 'undefined' && varsData && Object.keys(varsData).some(function(k) { return !k.startsWith('_'); });
+  var nominaOk   = typeof calcResult !== 'undefined' && calcResult !== null;
+  var compOk     = typeof nomDataCached !== 'undefined' && nomDataCached !== null;
+
+  function _setBadge(rowId, ok, lblOk, lblPending) {
+    var row = document.getElementById(rowId);
+    if (!row) return;
+    var badge = row.querySelector('.cl-status-badge');
+    if (!badge) return;
+    badge.textContent = ok ? lblOk : lblPending;
+    badge.className   = 'cl-status-badge ' + (ok ? 'cl-st-ok' : 'cl-st-pending');
+  }
+
+  _setBadge('cl-st-vars',   varsLoaded, 'Cargadas',   'No cargadas');
+  _setBadge('cl-st-nomina', nominaOk,   'Disponible', 'Pendiente');
+  _setBadge('cl-st-comp',   compOk,     'Disponible', 'Pendiente');
+}
+
+function _renderRightPanel(page) {
+  var calcDiv    = document.getElementById('cl-right-calcular');
+  var dynamicDiv = document.getElementById('cl-right-dynamic');
+  if (!calcDiv || !dynamicDiv) return;
+
+  if (page === 'calcular') {
+    calcDiv.style.display    = '';
+    dynamicDiv.style.display = 'none';
+    _updateRightPanelStatus();
+    return;
+  }
+
+  calcDiv.style.display    = 'none';
+  dynamicDiv.style.display = '';
+
+  var fmt = function(v) {
+    return (v != null) ? v.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' : '—';
+  };
+  var kv = function(label, val) {
+    return '<div class="cl-right-kv"><span class="cl-right-kv-label">' + label + '</span><span class="cl-right-kv-val">' + val + '</span></div>';
+  };
+
+  if (page === 'variables') {
+    var hasVars = typeof varsData !== 'undefined' && varsData && Object.keys(varsData).some(function(k) { return !k.startsWith('_'); });
+    if (!hasVars) {
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
+        + '<div class="cl-right-empty">Sube un PDF o pega<br>texto para ver los datos</div>';
+    } else {
+      var periodo = (varsData._periodo) || '—';
+      var nombre  = (varsData._nombre)  || '—';
+      var conf    = (varsData._confianza) || null;
+      var hb  = varsData.hb_total != null ? varsData.hb_total : '—';
+      var hv  = varsData.hv_total != null ? varsData.hv_total : '—';
+      var dpo = varsData.dpo      != null ? varsData.dpo      : '—';
+      var confHtml = conf
+        ? '<div class="cl-right-kv"><span class="cl-right-kv-label">Confianza</span>'
+          + '<span class="cl-status-badge ' + (conf === 'alta' ? 'cl-st-ok' : 'cl-st-pending') + '">'
+          + conf.charAt(0).toUpperCase() + conf.slice(1) + '</span></div>'
+        : '';
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
+        + kv('Período', periodo)
+        + kv('Piloto', '<span style="font-size:10px">' + nombre + '</span>')
+        + confHtml
+        + '<div style="border-top:1px solid var(--border);margin:5px 0"></div>'
+        + kv('HB total', hb)
+        + kv('HV total', hv)
+        + kv('DPO', dpo)
+        + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
+    }
+    return;
+  }
+
+  if (page === 'nomina') {
+    var r = (typeof calcResult !== 'undefined' && calcResult) || (typeof window._calcResultBackup !== 'undefined' && window._calcResultBackup) || null;
+    if (!r) {
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Resultado</div>'
+        + '<div class="cl-right-empty">Rellena la calculadora<br>para generar la nómina</div>'
+        + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
+    } else {
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Resultado calculado</div>'
+        + '<div class="cl-right-neto-big">' + fmt(r.liquidoReal) + '</div>'
+        + kv('Devengado', fmt(r.totalDevengado))
+        + kv('Base SS',   fmt(r.baseSS))
+        + kv('IRPF', (r.irpf_pct != null ? r.irpf_pct : '—') + ' %');
+    }
+    return;
+  }
+
+  if (page === 'comparar') {
+    var hasPDF  = typeof nomDataCached !== 'undefined' && nomDataCached !== null;
+    var hasCalc = typeof calcResult !== 'undefined' && calcResult !== null;
+    if (!hasPDF) {
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Comparativa</div>'
+        + '<div class="cl-right-empty">Sube la nómina PDF<br>en el área central</div>';
+    } else if (!hasCalc) {
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Comparativa</div>'
+        + '<div class="cl-right-empty">PDF cargado.<br>Completa la calculadora<br>para comparar.</div>'
+        + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
+    } else {
+      var t        = nomDataCached.totales || {};
+      var netoCalc = calcResult.liquidoReal;
+      var netoNom  = t.liquido;
+      var diff     = (netoCalc != null && netoNom != null) ? netoCalc - netoNom : null;
+      var diffColor = diff === null ? 'var(--text3)' : (diff >= 0 ? 'var(--green)' : 'var(--red)');
+      var diffStr   = diff === null ? '—' : (diff >= 0 ? '+' : '') + fmt(diff);
+      dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Discrepancia neta</div>'
+        + kv('Calculado',  fmt(netoCalc))
+        + kv('En nómina',  fmt(netoNom))
+        + '<div style="border-top:1px solid var(--border);margin:5px 0"></div>'
+        + '<div class="cl-right-kv"><span class="cl-right-kv-label">Diferencia</span>'
+        + '<span class="cl-right-kv-val" style="color:' + diffColor + ';font-size:16px">' + diffStr + '</span></div>';
+    }
+    return;
+  }
 }
 
 // ── CALC LEFT PANEL SYNC (UX-WORKSPACE) ──
@@ -9606,6 +9762,8 @@ function _syncLeftPanel() {
   // UX-2: sub-nav contextual según sección activa
   var pageKey = { 'page-variables':'variables','page-calcular':'calcular','page-nomina':'nomina','page-comparar':'comparar' }[activePage] || 'calcular';
   _renderContextNav(pageKey);
+  // UX-3: panel derecho contextual
+  _renderRightPanel(pageKey);
 }
 
 // ── NÓMINA COMPLETA ──
