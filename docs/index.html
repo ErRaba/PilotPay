@@ -59,7 +59,12 @@
   --mono: 'Space Mono', monospace;
   --sans: 'DM Sans', sans-serif;
   --r: 10px;
-  --pp-bottom-safe: 20px; /* margen inferior seguro en desktop — evita que contenido quede en borde viewport */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-pill: 20px;
+  --sidebar-w: 240px;
+  --panel-w: 260px;
+  --pp-bottom-safe: 20px;
 }
 
 /* ── TEMA: CLARO ── */
@@ -872,7 +877,7 @@ main { flex: 1; overflow-y: auto; }
 .form-input {
   width: 100%; padding: 10px 14px;
   background: #151d35; border: 1px solid #253555;
-  border-radius: 8px; color: #e2e8f0;
+  border-radius: var(--r-sm); color: #e2e8f0;
   font-family: var(--mono); font-size: 14px;
   outline: none; margin-bottom: 16px;
   transition: border-color .2s;
@@ -882,7 +887,7 @@ main { flex: 1; overflow-y: auto; }
 .btn-primary {
   width: 100%; padding: 12px;
   background: var(--blue);
-  color: white; border: none; border-radius: 8px;
+  color: white; border: none; border-radius: var(--r-sm);
   font-size: 14px; font-weight: 600;
   cursor: pointer; font-family: var(--sans);
   transition: background .2s, transform .1s;
@@ -981,7 +986,7 @@ main { flex: 1; overflow-y: auto; }
 .field-input {
   width: 100%; padding: 9px 12px;
   background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 7px; color: var(--text);
+  border-radius: var(--r-sm); color: var(--text);
   font-family: var(--mono); font-size: 13px;
   outline: none;
   transition: border-color .2s;
@@ -1013,7 +1018,7 @@ input, select, textarea {
 .toggle-btn {
   flex: 1; padding: 8px;
   background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: 6px; color: var(--text2);
+  border-radius: var(--r-sm); color: var(--text2);
   font-size: 12px; text-align: center;
   cursor: pointer; font-family: var(--sans); font-weight: 500;
   transition: all .15s;
@@ -1226,7 +1231,7 @@ input, select, textarea {
 .btn-secondary {
   padding: 10px 20px;
   background: var(--bg3); border: 1px solid var(--border2);
-  color: var(--text2); border-radius: 8px;
+  color: var(--text2); border-radius: var(--r-sm);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: var(--sans);
   transition: all .15s;
@@ -1237,7 +1242,7 @@ input, select, textarea {
 .btn-danger {
   padding: 10px 20px;
   background: var(--red-dim); border: 1px solid var(--red);
-  color: var(--red); border-radius: 8px;
+  color: var(--red); border-radius: var(--r-sm);
   font-size: 13px; font-weight: 500;
   cursor: pointer; font-family: var(--sans);
   width: 100%; margin-bottom: 8px;
@@ -1385,10 +1390,6 @@ input, select, textarea {
   overflow-y: auto;
   padding: 10px 8px;
 }
-#cl-context-nav::-webkit-scrollbar        { width: 3px; }
-#cl-context-nav::-webkit-scrollbar-track  { background: transparent; }
-#cl-context-nav::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
-#cl-context-nav::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
 #cl-zone-c {
   padding: 10px 12px;
   border-top: 1px solid var(--border);
@@ -1449,7 +1450,7 @@ input, select, textarea {
 @media (min-width: 640px) {
   #workspace.active {
     display: grid !important;
-    grid-template-columns: 1fr 240px;
+    grid-template-columns: 1fr var(--panel-w);
     align-items: start;
     gap: 0 12px;
     padding: 12px;
@@ -1479,7 +1480,7 @@ input, select, textarea {
     overflow-y: hidden;
   }
   #workspace.active {
-    grid-template-columns: 240px 1fr 260px;
+    grid-template-columns: var(--sidebar-w) 1fr var(--panel-w);
     grid-template-rows: 100%; /* fija la fila al alto del contenedor, no al del contenido */
     gap: 0 16px;
     padding: 16px 16px calc(16px + var(--pp-bottom-safe)) 16px; /* margen inferior seguro */
@@ -1492,10 +1493,6 @@ input, select, textarea {
     overflow-y: auto;
     /* sin scrollbar-width/color: Chrome usa solo las reglas ::-webkit-scrollbar */
   }
-  #workspace-center::-webkit-scrollbar        { width: 3px; }
-  #workspace-center::-webkit-scrollbar-track  { background: transparent; }
-  #workspace-center::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
-  #workspace-center::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
   /* Sidebar izquierdo: acotado al alto de la fila, Zone B scrollea internamente */
   #cl-sidebar-card {
     position: relative;
@@ -1512,11 +1509,6 @@ input, select, textarea {
     overflow-y: auto;
     /* sin scrollbar-width: Chrome usa solo las reglas ::-webkit-scrollbar */
   }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar        { width: 3px; }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar-track  { background: transparent; }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
-
   /* UX-NORMATIVA-1: scroll aislado en Convenio / Acuerdos (desktop ≥900px) */
   body:has(#page-convenio.active) main {
     overflow-y: hidden;
@@ -1531,7 +1523,7 @@ input, select, textarea {
 .tramo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tramo-cell {
   background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 7px; padding: 8px 10px;
+  border-radius: var(--r-sm); padding: 8px 10px;
 }
 .tramo-label { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-bottom: 4px; }
 .tramo-input {
@@ -1860,23 +1852,23 @@ input[type=number] { -moz-appearance: textfield; }
       <span id="user-initials-header">ESH</span>
     </div>
     <div id="user-dropdown">
-      <button class="user-drop-item" onclick="userMenuGo('perfil')">👤 &nbsp;Perfil</button>
-      <button class="user-drop-item" onclick="userMenuGo('config')">⚙️ &nbsp;Configuración</button>
-      <button class="user-drop-item" id="drop-admin" style="display:none" onclick="userMenuGo('admin')">🛡 &nbsp;Admin</button>
+      <button class="user-drop-item" onclick="userMenuGo('perfil')">Perfil</button>
+      <button class="user-drop-item" onclick="userMenuGo('config')">Configuración</button>
+      <button class="user-drop-item" id="drop-admin" style="display:none" onclick="userMenuGo('admin')">Admin</button>
       <div class="user-drop-sep"></div>
       <button class="user-drop-item danger" onclick="userMenuLogout()">↩ &nbsp;Cerrar sesión</button>
     </div>
   </header>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('dashboard')"><span class="tab-icon">🏠</span>Dashboard</button>
-    <button class="tab" onclick="showTab('variables')"><span class="tab-icon">📋</span>Variables</button>
-    <button class="tab" onclick="showTab('calcular')"><span class="tab-icon">⚡</span>Calcular</button>
-    <button class="tab" onclick="showTab('nomina')"><span class="tab-icon">📄</span>Nómina</button>
-    <button class="tab" onclick="showTab('comparar')"><span class="tab-icon">🔍</span>Comparativa</button>
-    <button class="tab" onclick="showTab('simulador')"><span class="tab-icon">🔮</span>Simulador</button>
-    <button class="tab" id="tab-historial" onclick="showTab('historial')"><span class="tab-icon">🗂</span>Historial</button>
-    <button class="tab" onclick="showTab('convenio')"><span class="tab-icon">📘</span>Convenio</button>
+    <button class="tab active" onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="showTab('variables')">Variables</button>
+    <button class="tab" onclick="showTab('calcular')">Calcular</button>
+    <button class="tab" onclick="showTab('nomina')">Nómina</button>
+    <button class="tab" onclick="showTab('comparar')">Comparativa</button>
+    <button class="tab" onclick="showTab('simulador')">Simulador</button>
+    <button class="tab" id="tab-historial" onclick="showTab('historial')">Historial</button>
+    <button class="tab" onclick="showTab('convenio')">Convenio</button>
     <!-- Perfil / Config / Admin accesibles desde el menú del avatar -->
     <button class="tab" id="tab-perfil" style="display:none" onclick="showTab('perfil')"></button>
     <button class="tab" id="tab-config" style="display:none" onclick="showTab('config')"></button>
@@ -1891,7 +1883,6 @@ input[type=number] { -moz-appearance: textfield; }
   <main>
     <!-- ── BANNER MODO SIMULACIÓN ── -->
     <div id="sim-banner" class="sim-banner" style="display:none">
-      <span style="font-size:14px;flex-shrink:0">⚠</span>
       <span>Modo simulación — los cálculos no se guardan en el historial ni afectan a estadísticas.</span>
     </div>
 
@@ -2060,7 +2051,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- ── Expediente activo — solo pending_* y con_diferencias ── -->
         <div class="dsh-card accent-amber full-width" id="dsh-audit-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">🗂</span>Expediente activo</span>
+            <span class="dsh-card-label">Expediente activo</span>
             <span class="dsh-status dim" id="dsh-audit-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-audit-body">
@@ -2071,7 +2062,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- ── Última auditoría — estados terminados: auditado/regularizado/reclamado/cerrado ── -->
         <div class="dsh-card accent-green full-width" id="dsh-last-audit-card" style="display:none">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">✓</span>Última auditoría</span>
+            <span class="dsh-card-label">Última auditoría</span>
             <span class="dsh-status dim" id="dsh-last-audit-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-last-audit-body">
@@ -2082,7 +2073,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- ── Resumen anual ── -->
         <div class="dsh-card accent-green" id="dsh-calc-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">📋</span>Resumen anual</span>
+            <span class="dsh-card-label">Resumen anual</span>
             <span class="dsh-status dim" id="dsh-calc-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-calc-body">
@@ -2093,7 +2084,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- ── Proyección IRPF ── -->
         <div class="dsh-card" id="dsh-sim-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">📊</span>Proyección IRPF</span>
+            <span class="dsh-card-label">Proyección IRPF</span>
             <span class="dsh-status dim" id="dsh-sim-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-sim-body">
@@ -2104,7 +2095,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- ── Alertas — strip inferior ── -->
         <div class="dsh-card accent-red full-width" id="dsh-alerts-card">
           <div class="dsh-card-head">
-            <span class="dsh-card-label"><span class="dsh-card-label-icon">⚠️</span>Alertas</span>
+            <span class="dsh-card-label">Alertas</span>
             <span class="dsh-status dim" id="dsh-alerts-status">—</span>
           </div>
           <div class="dsh-card-body" id="dsh-alerts-body">
@@ -2300,7 +2291,7 @@ input[type=number] { -moz-appearance: textfield; }
                  background:var(--amber-dim,var(--bg3));border-radius:6px;
                  border:1px solid var(--amber2)">
               <span style="font-size:11px;font-family:var(--mono);color:var(--amber2)">
-                ⚠️ <span id="hb-discrepancia-txt"></span>
+                <span id="hb-discrepancia-txt"></span>
               </span>
             </div>
           </div>
@@ -2385,7 +2376,7 @@ input[type=number] { -moz-appearance: textfield; }
         <!-- DIETAS -->
         <div class="card" id="cl-sec-dietas">
           <div class="card-title"><div class="section-dot green"></div>Dietas y Compensatorios</div>
-          <div class="dieta-section-label">🛫 Dieta de Vuelo (Manutención)</div>
+          <div class="dieta-section-label">Dieta de Vuelo (Manutención)</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Manutención NAC (períodos)</span>
@@ -2394,7 +2385,7 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
             <div class="field"></div>
           </div>
-          <div class="dieta-section-label">🏨 Compensatorio por Desplazamiento Nacional</div>
+          <div class="dieta-section-label">Compensatorio por Desplazamiento Nacional</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
@@ -2405,7 +2396,7 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="d-nac-cp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-          <div class="dieta-section-label">🌍 Compensatorio por Desplazamiento Internacional</div>
+          <div class="dieta-section-label">Compensatorio por Desplazamiento Internacional</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Sin pernocta (días)</span>
@@ -2416,7 +2407,7 @@ input[type=number] { -moz-appearance: textfield; }
               <input class="field-input" id="d-int-cp" type="number" placeholder="0" oninput="recalc()" onchange="recalc()">
             </div>
           </div>
-          <div class="dieta-section-label">📍 Compensatorio por Destacamento</div>
+          <div class="dieta-section-label">Compensatorio por Destacamento</div>
           <div class="row">
             <div class="field">
               <span class="field-label">Nacional (días)</span>
@@ -2890,7 +2881,7 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
           </div>
           <button class="btn-secondary" onclick="showTab('nomina')" style="width:100%;margin-bottom:8px">Ver nómina completa →</button>
-          <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">🔄 Resetear</button>
+          <button class="btn-secondary" style="width:100%;border-color:var(--red);color:var(--red)" onclick="resetCalculadora()">Resetear</button>
         </div>
 
         <!-- Variante dinámica para las demás fases del workspace -->
@@ -2908,8 +2899,8 @@ input[type=number] { -moz-appearance: textfield; }
       <!-- SELECTOR DE MODO -->
       <div class="card" style="padding:12px">
         <div style="display:flex;gap:6px">
-          <div class="toggle-btn active" id="vars-mode-pdf"   onclick="varsSwitchMode('pdf')"   style="flex:1;font-size:12px;padding:10px 8px">📂 Subir PDF</div>
-          <div class="toggle-btn"        id="vars-mode-paste" onclick="varsSwitchMode('paste')" style="flex:1;font-size:12px;padding:10px 8px">📋 Pegar texto</div>
+          <div class="toggle-btn active" id="vars-mode-pdf"   onclick="varsSwitchMode('pdf')"   style="flex:1;font-size:12px;padding:10px 8px">Subir PDF</div>
+          <div class="toggle-btn"        id="vars-mode-paste" onclick="varsSwitchMode('paste')" style="flex:1;font-size:12px;padding:10px 8px">Pegar texto</div>
         </div>
       </div>
 
@@ -2920,7 +2911,7 @@ input[type=number] { -moz-appearance: textfield; }
              ondragover="event.preventDefault();this.classList.add('drag')"
              ondragleave="this.classList.remove('drag')"
              ondrop="varsHandleDrop(event)">
-          <div class="upload-icon">📂</div>
+          <div class="upload-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
           <div class="upload-text" id="vars-upload-text">Toca para subir PDF de Variables</div>
           <div class="upload-sub" id="vars-upload-sub">Variables de <span id="vars-mes-esperado">—</span> · PDF Binter</div>
         </div>
@@ -2962,7 +2953,7 @@ Complemento de Base MAD: 1500"></textarea>
               style="background:none;border:1px solid var(--text3);border-radius:8px;color:var(--text3);
                      font-size:11px;font-family:var(--mono);padding:8px 12px;cursor:pointer;
                      white-space:nowrap;flex-shrink:0">
-              🗑 Limpiar
+              Limpiar
             </button>
           </div>
         </div>
@@ -2990,7 +2981,7 @@ Complemento de Base MAD: 1500"></textarea>
             <button class="btn-secondary" style="border-color:var(--green);color:var(--green);flex:1"
               onclick="varsConfirmarPeriodo(true)">✓ Confirmar</button>
             <button class="btn-secondary" style="border-color:var(--amber2);color:var(--amber2);flex:1"
-              onclick="varsConfirmarPeriodo(false)">✏️ Corregir</button>
+              onclick="varsConfirmarPeriodo(false)">Corregir</button>
           </div>
           <!-- Campo de corrección manual -->
           <div id="vars-periodo-edit" style="display:none;margin-top:12px">
@@ -3021,7 +3012,7 @@ Complemento de Base MAD: 1500"></textarea>
           <span>·</span>
           <span id="vars-nomina-badge">Nómina de —</span>
           <button onclick="varsEditarPeriodo()" style="background:none;border:none;cursor:pointer;
-            color:var(--text3);font-size:10px;font-family:var(--mono);padding:0;margin-left:4px">✏️</button>
+            color:var(--text3);font-size:10px;font-family:var(--mono);padding:0;margin-left:4px">editar</button>
         </div>
 
         <!-- Tabla editable -->
@@ -3045,7 +3036,7 @@ Complemento de Base MAD: 1500"></textarea>
         <button onclick="varsReset()"
           style="background:none;border:1px solid var(--text3);border-radius:8px;color:var(--text3);
                  font-size:11px;font-family:var(--mono);padding:8px 14px;cursor:pointer;display:inline-block">
-          🗑 Limpiar
+          Limpiar
         </button>
         <div id="vars-status" style="font-size:11px;font-family:var(--mono);color:var(--green);
              text-align:center;margin-top:6px;min-height:18px"></div>
@@ -3077,7 +3068,6 @@ Complemento de Base MAD: 1500"></textarea>
 
       <div id="nomina-output">
         <div class="card" style="text-align:center;padding:32px">
-          <div style="font-size:32px;margin-bottom:8px">📄</div>
           <div style="color:var(--text2);font-size:13px">Rellena los datos en la pestaña Calcular</div>
         </div>
       </div>
@@ -3088,7 +3078,7 @@ Complemento de Base MAD: 1500"></textarea>
     <div class="page" id="page-comparar">
 
       <div class="alert info">
-        <div class="alert-icon">💡</div>
+        <div class="alert-icon"></div>
         <div class="alert-content">
           <div class="alert-title">Cómo funciona</div>
           <div class="alert-text">Sube tu nómina en PDF. La app extrae los datos automáticamente sin conexión y los compara con el cálculo teórico según convenio BCSA 2026.</div>
@@ -3096,7 +3086,7 @@ Complemento de Base MAD: 1500"></textarea>
       </div>
 
       <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="handleDrop(event)">
-        <div class="upload-icon">📂</div>
+        <div class="upload-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
         <div class="upload-text">Toca para subir nómina PDF</div>
         <div class="upload-sub">Nómina Binter · formato PDF</div>
       </div>
@@ -3104,7 +3094,6 @@ Complemento de Base MAD: 1500"></textarea>
 
       <!-- Aviso de simulación — visible solo en modo simulación (CSS: #app.pp-sim-mode #sim-comp-notice) -->
       <div id="sim-comp-notice" class="sim-banner" style="margin-bottom:12px;border-radius:8px;border:1px solid var(--amber)">
-        <span style="font-size:14px;flex-shrink:0">⚠</span>
         <span>
           <strong>Modo simulación.</strong>
           Esta comparativa no se guardará como auditoría ni afectará a estadísticas, historial ni dashboard.
@@ -3119,8 +3108,8 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
         <div id="comp-action-btns" style="display:none;margin-bottom:12px">
           <div class="row">
-            <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2)" onclick="actualizarComparativa()">🔄 Actualizar comparativa</button>
-            <button class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="resetComparativa()">🗑 Reset PDF</button>
+            <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2)" onclick="actualizarComparativa()">Actualizar comparativa</button>
+            <button class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="resetComparativa()">Reset PDF</button>
           </div>
         </div>
         <div id="comp-output"></div>
@@ -3130,7 +3119,7 @@ Complemento de Base MAD: 1500"></textarea>
       <div id="apikey-card" style="display:none;margin-top:8px">
         <details style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
           <summary style="font-size:11px;color:var(--text3);font-family:var(--mono);cursor:pointer;letter-spacing:.06em;list-style:none">
-            ⚙ Análisis IA · configurar API key
+            Análisis IA · configurar API key
           </summary>
           <div style="margin-top:10px">
             <div style="font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:8px">
@@ -3257,7 +3246,7 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
         <!-- Avanzado -->
         <button class="sim-avanzado-toggle" id="sim-avanzado-btn" onclick="toggleSimAvanzado()">
-          <span>⚙</span><span id="sim-avanzado-btn-label">Ajustes fiscales avanzados</span><span id="sim-avanzado-arrow" style="margin-left:auto;font-size:10px">▼</span>
+          <span id="sim-avanzado-btn-label">Ajustes fiscales avanzados</span><span id="sim-avanzado-arrow" style="margin-left:auto;font-size:10px">▼</span>
         </button>
         <div id="sim-avanzado-wrap" style="display:none">
           <div class="row" style="margin-top:8px">
@@ -3324,7 +3313,7 @@ Complemento de Base MAD: 1500"></textarea>
               background:var(--bg3);display:flex;align-items:center;justify-content:center;
               flex-shrink:0;transition:box-shadow .2s">
               <img id="prf-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none">
-              <span id="prf-avatar-initials" style="font-size:40px;font-family:var(--mono);color:var(--blue2)">👤</span>
+              <span id="prf-avatar-initials" style="font-size:40px;font-family:var(--mono);color:var(--blue2)"></span>
             </div>
             <div class="profile-name" id="prf-nombre" style="text-align:center;margin-bottom:0">—</div>
           </div>
@@ -3502,13 +3491,13 @@ Complemento de Base MAD: 1500"></textarea>
             Todos
           </button>
           <button class="av-filter-btn" data-filter="cmd" onclick="filterAvatarGrid('cmd',this)">
-            ✈️ CMD
+            CMD
           </button>
           <button class="av-filter-btn" data-filter="cop" onclick="filterAvatarGrid('cop',this)">
-            🛫 COP
+            COP
           </button>
           <button class="av-filter-btn" data-filter="tcp" onclick="filterAvatarGrid('tcp',this)">
-            🧳 TCP
+            TCP
           </button>
         </div>
 
@@ -3565,7 +3554,7 @@ Complemento de Base MAD: 1500"></textarea>
               style="resize:none;font-family:var(--mono);font-size:12px" placeholder="Añade contexto si lo necesitas"></textarea>
           </div>
           <button class="btn-secondary" style="border-color:var(--blue);color:var(--blue2);margin-top:6px"
-            onclick="enviarSolicitudCambio()">📤 Enviar solicitud</button>
+            onclick="enviarSolicitudCambio()">Enviar solicitud</button>
           <div id="sol-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
         </div>
       </div>
@@ -3593,7 +3582,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar3" style="background:#64748b;width:50%"></div>
               </div>
               <div class="theme-slide-info" style="background:#0f1526">
-                <div class="theme-slide-name" style="color:#e2e8f0">🌙 Oscuro</div>
+                <div class="theme-slide-name" style="color:#e2e8f0">Oscuro</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#64748b">Por defecto</div>
               </div>
@@ -3609,7 +3598,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar3" style="background:#94a3b8;width:50%"></div>
               </div>
               <div class="theme-slide-info" style="background:#ffffff;border-top:1px solid #e2e8f0">
-                <div class="theme-slide-name" style="color:#0f172a">☀️ Claro</div>
+                <div class="theme-slide-name" style="color:#0f172a">Claro</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#64748b">Fondo blanco</div>
               </div>
@@ -3625,7 +3614,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar3" style="background:#4ade80;width:50%"></div>
               </div>
               <div class="theme-slide-info" style="background:#071209">
-                <div class="theme-slide-name" style="color:#dcfce7">🛩️ Cockpit</div>
+                <div class="theme-slide-name" style="color:#dcfce7">Cockpit</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#4ade80">Verde aviación</div>
               </div>
@@ -3641,7 +3630,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar3" style="background:#6db88a;width:50%"></div>
               </div>
               <div class="theme-slide-info" style="background:#f0f7f2;border-top:1px solid #a8d5b5">
-                <div class="theme-slide-name" style="color:#0a2e14">✈️ Binter</div>
+                <div class="theme-slide-name" style="color:#0a2e14">Binter</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#4a8c5c">Verde corporativo</div>
               </div>
@@ -3661,7 +3650,7 @@ Complemento de Base MAD: 1500"></textarea>
                 </div>
               </div>
               <div class="theme-slide-info" style="background:#130000">
-                <div class="theme-slide-name" style="color:#f5e6e6">⚔️ Imperio</div>
+                <div class="theme-slide-name" style="color:#f5e6e6">Imperio</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#8b5c5c">Dark side</div>
               </div>
@@ -3682,7 +3671,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar2" style="background:#00d4ff;width:60%;margin-top:4px"></div>
               </div>
               <div class="theme-slide-info" style="background:#050505">
-                <div class="theme-slide-name" style="color:#00d4ff">🖥️ ECAM</div>
+                <div class="theme-slide-name" style="color:#00d4ff">ECAM</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#00e000">Embraer E195-E2</div>
               </div>
@@ -3703,7 +3692,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar2" style="background:#35E6E6;width:65%;margin-top:4px"></div>
               </div>
               <div class="theme-slide-info" style="background:#0B1820;border-top:1px solid #344B56">
-                <div class="theme-slide-name" style="color:#35E6E6;font-family:'Space Mono',monospace;font-size:11px">✈ EMB2·FMS</div>
+                <div class="theme-slide-name" style="color:#35E6E6;font-family:'Space Mono',monospace;font-size:11px">EMB2·FMS</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#9BA8A8">Cabina semántica</div>
               </div>
@@ -3728,7 +3717,7 @@ Complemento de Base MAD: 1500"></textarea>
                 </div>
               </div>
               <div class="theme-slide-info" style="background:#1A3060;border-top:1px solid #2D4D85">
-                <div class="theme-slide-name" style="color:#8CE000;font-size:11px">🫱 Binter Cabina</div>
+                <div class="theme-slide-name" style="color:#8CE000;font-size:11px">Binter Cabina</div>
                 <div class="theme-slide-desc" style="color:#B8C6D8">TCP · Uniforme azul</div>
               </div>
             </div>
@@ -3746,7 +3735,7 @@ Complemento de Base MAD: 1500"></textarea>
                 <div class="theme-slide-bar2" style="background:#deeef7;width:75%;margin-top:4px"></div>
               </div>
               <div class="theme-slide-info" style="background:#f5f5f5;border-top:1px solid #e0e0e0">
-                <div class="theme-slide-name" style="color:#201f1e">📊 Office</div>
+                <div class="theme-slide-name" style="color:#201f1e">Office</div>
                 <div class="theme-active-dot"></div>
                 <div class="theme-slide-desc" style="color:#605e5c">Microsoft 365</div>
               </div>
@@ -3794,19 +3783,19 @@ Complemento de Base MAD: 1500"></textarea>
       <div style="display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:12px">
         <button id="adm-tab-alta"     onclick="adminTab('alta')"
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:var(--blue);color:#fff">
-          ➕ Alta
+          Alta
         </button>
         <button id="adm-tab-usuarios" onclick="adminTab('usuarios')"
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          👥 Usuarios
+          Usuarios
         </button>
         <button id="adm-tab-avatares" onclick="adminTab('avatares')"
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          🧑‍✈️ Avatares
+          Avatares
         </button>
         <button id="adm-tab-monitor" onclick="adminTab('monitor')"
           style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          📡 Monitor
+          Monitor
         </button>
       </div>
 
@@ -3881,8 +3870,8 @@ Complemento de Base MAD: 1500"></textarea>
               <input class="field-input" id="adm-expires" type="date">
             </div>
           </div>
-          <button class="btn-secondary" onclick="generarAltaUsuario()">✉️ Generar plantilla</button>
-          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">➕ Crear usuario</button>
+          <button class="btn-secondary" onclick="generarAltaUsuario()">Generar plantilla</button>
+          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">Crear usuario</button>
         </div>
       </div>
 
@@ -3890,7 +3879,7 @@ Complemento de Base MAD: 1500"></textarea>
       <div id="adm-panel-usuarios" style="display:none">
         <!-- Buscador -->
         <div style="position:relative;margin-bottom:10px">
-          <input class="field-input" id="adm-buscar" type="text" placeholder="🔍 Buscar por nombre o código..."
+          <input class="field-input" id="adm-buscar" type="text" placeholder="Buscar por nombre o código..."
             oninput="renderAdmin()" style="padding-left:14px">
         </div>
         <div id="admin-users-list">
@@ -3935,17 +3924,17 @@ Complemento de Base MAD: 1500"></textarea>
             </div>
           </div>
           <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
-            onclick="adminAddAvatar()">➕ Añadir avatar</button>
+            onclick="adminAddAvatar()">Añadir avatar</button>
           <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
         </div>
 
         <!-- Filtros -->
         <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
           <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">✈️ CMD</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">🛫 COP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">🧳 TCP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">🚫 Inactivos</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">CMD</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">COP</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">TCP</button>
+          <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">Inactivos</button>
         </div>
 
         <!-- Grid de avatares -->
@@ -4261,7 +4250,7 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
         .cc-sidebar {
-          width: 280px; flex-shrink: 0;
+          width: var(--sidebar-w); flex-shrink: 0;
           overflow-y: auto; overflow-x: hidden;
           border-right: 1px solid var(--border);
           background: var(--bg);
@@ -4272,7 +4261,7 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-sidebar.cc-sidebar-open {
           display: flex; flex-direction: column;
           position: fixed; top: 0; left: 0; bottom: 0;
-          width: 280px; z-index: 300;
+          width: var(--sidebar-w); z-index: 300;
           box-shadow: 4px 0 28px rgba(0,0,0,.18);
         }
         .cc-toc-hd { display: none; flex-shrink: 0; }
@@ -4658,7 +4647,7 @@ Complemento de Base MAD: 1500"></textarea>
 
         /* ═══ PANEL CONTEXTUAL DERECHO ═══════════════════════════════ */
         .cc-ctx-panel {
-          width: 290px; flex-shrink: 0;
+          width: var(--panel-w); flex-shrink: 0;
           overflow-y: auto; border-left: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg) 60%, var(--bg2));
           padding: 0 0 48px; display: none;
@@ -5835,10 +5824,10 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
       <div class="card">
         <div class="hst-header">
           <div class="hst-header-left">
-            <div class="hst-header-title">🗂 Historial de auditorías</div>
+            <div class="hst-header-title">Historial de auditorías</div>
             <span class="hst-header-count" id="hst-count">0</span>
           </div>
-          <button class="hst-clear-btn" onclick="hstClearAll()">🗑 Borrar todo</button>
+          <button class="hst-clear-btn" onclick="hstClearAll()">Borrar todo</button>
         </div>
         <div style="font-size:11px;color:var(--text3);font-family:var(--mono);line-height:1.5">
           Registro automático de cada comparativa PDF completada en esta sesión o anteriores.
@@ -6104,7 +6093,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
     if (list.length === 0) {
       listEl.innerHTML = `
         <div class="hst-empty">
-          <div class="hst-empty-icon">🗂</div>
+          <div class="hst-empty-icon"></div>
           <div>Todavía no hay auditorías registradas.</div>
           <div class="hst-empty-sub">Sube una nómina en la pestaña Comparativa<br>y el resultado se guardará automáticamente aquí.</div>
         </div>`;
@@ -6298,7 +6287,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
           <div class="hst-det-label">Datos extraídos de la nómina</div>
           ${kvHTML}
           <div class="hst-actions">
-            <button class="hst-del-btn" onclick="hstDelete('${rec.id}')">🗑 Eliminar este registro</button>
+            <button class="hst-del-btn" onclick="hstDelete('${rec.id}')">Eliminar este registro</button>
           </div>
           ${regHTML}
         </div>
@@ -7001,7 +6990,7 @@ function updateOnlineIndicator() {
     const q = _getQueue();
     const pending = Object.keys(q).length;
     if (pending > 0) {
-      el.textContent = '🟡 Pendiente de subir';
+      el.textContent = 'Pendiente de subir';
       el.style.color = 'var(--amber2)';
     } else {
       el.textContent = '';
@@ -7017,12 +7006,12 @@ function updateOnlineIndicator() {
     return;
   }
   if (st.isFlushing || st.isPulling) {
-    el.textContent = '🔵 Sincronizando…';
+    el.textContent = 'Sincronizando…';
     el.style.color = 'var(--blue, #89b4fa)';
     return;
   }
   if (st.pendingOps > 0) {
-    el.textContent = '🟡 Pendiente de subir';
+    el.textContent = 'Pendiente de subir';
     el.style.color = 'var(--amber2)';
     return;
   }
@@ -7097,7 +7086,7 @@ async function doLogin() {
   if (USERS[u] && USERS[u].pass === p) {
     // Comprobar bloqueo antes de entrar
     if (USERS[u].bloqueado) {
-      errEl.textContent = '🔒 Usuario bloqueado por el administrador';
+      errEl.textContent = 'Usuario bloqueado por el administrador';
       errEl.style.display = 'block';
       card.classList.add('login-shake');
       setTimeout(() => card.classList.remove('login-shake'), 400);
@@ -7741,7 +7730,7 @@ function renderAdminAvatarGrid(filter) {
           style="width:100%;padding:4px 0;border-radius:6px;border:1px solid ${active ? 'var(--red)' : 'var(--green)'};
           background:none;color:${active ? 'var(--red)' : 'var(--green)'};
           font-size:10px;font-family:var(--mono);cursor:pointer">
-          ${active ? '🚫 Desactivar' : '✓ Activar'}
+          ${active ? 'Desactivar' : 'Activar'}
         </button>
       </div>`;
   }).join('');
@@ -7810,7 +7799,7 @@ function renderAdmin() {
       el.parentNode.insertBefore(_warnEl, el);
     }
     _warnEl.style.display = 'block';
-    _warnEl.textContent = '⚠️ Lista de usuarios no disponible desde Firebase (fallback temporal). Mostrando solo datos locales. Creación y edición de usuarios desactivadas hasta restaurar conexión.';
+    _warnEl.textContent = 'Lista de usuarios no disponible desde Firebase (fallback temporal). Mostrando solo datos locales. Creación y edición de usuarios desactivadas hasta restaurar conexión.';
   } else if (_warnEl) {
     _warnEl.style.display = 'none';
   }
@@ -7856,10 +7845,10 @@ function renderAdmin() {
         background:var(--blue-dim);padding:1px 6px;border-radius:3px;margin-right:3px">+${x}</span>`
     ).join('');
 
-    const fnIcon     = {CMD:'✈️ CMD',COP:'🛫 COP',SCC:'👔 SCC',CC:'🧳 CC'}[u.funcion]||u.funcion;
+    const fnIcon     = u.funcion;
     const ingresoStr = u.ingreso ? ` · Alta: ${u.ingreso}` : '';
     const bloqBadge  = u.bloqueado
-      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">🔒 BLOQUEADO</span>`
+      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">BLOQ.</span>`
       : '';
     const tempBadge  = (!u.bloqueado && u.temporal && u.accessExpiresAt)
       ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);background:var(--amber-dim);padding:2px 6px;border-radius:4px">⏰ Temporal hasta ${u.accessExpiresAt}</span>`
@@ -7880,30 +7869,30 @@ function renderAdmin() {
           ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);flex-shrink:0">ADMIN</span>`
           : `<button onclick="confirmarEliminarUsuario('${code}')"
               style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
-              font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono);flex-shrink:0;margin-left:8px">🗑</button>`}
+              font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono);flex-shrink:0;margin-left:8px">×</button>`}
       </div>
       ${isAdmin ? `
         <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
           <button onclick="editarUsuario('${code}')"
             style="font-family:var(--mono);font-size:10px;padding:4px 10px;
             background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer">✏️ Editar perfil</button>
+            color:var(--blue2);border-radius:5px;cursor:pointer">Editar perfil</button>
         </div>` : `
         <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap">
           <button onclick="editarUsuario('${code}')"
             style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
             background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer;white-space:nowrap">✏️ Identidad</button>
+            color:var(--blue2);border-radius:5px;cursor:pointer;white-space:nowrap">Identidad</button>
           <button onclick="gestionarPermisos('${code}')"
             style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
             background:var(--bg3);border:1px solid var(--border);
-            color:var(--text2);border-radius:5px;cursor:pointer;white-space:nowrap">🔑 Permisos</button>
+            color:var(--text2);border-radius:5px;cursor:pointer;white-space:nowrap">Permisos</button>
           <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
             style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
             background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
             border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
             color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            border-radius:5px;cursor:pointer;white-space:nowrap">${u.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}</button>
+            border-radius:5px;cursor:pointer;white-space:nowrap">${u.bloqueado ? 'Desbloquear' : 'Bloquear'}</button>
         </div>`}
     </div>`;
   }).join('');
@@ -7965,7 +7954,7 @@ async function crearUsuarioLocal() {
     alert(`El código ${codigo} ya existe`); return;
   }
   if (_USERS_FROM_FALLBACK) {
-    alert('⚠️ Lista de usuarios no disponible desde Firebase.\nNo se puede crear usuarios en modo fallback: los datos reales podrían perderse o duplicarse.\nEspera a que se restaure la conexión y recarga la aplicación.');
+    alert('Lista de usuarios no disponible desde Firebase.\nNo se puede crear usuarios en modo fallback: los datos reales podrían perderse o duplicarse.\nEspera a que se restaure la conexión y recarga la aplicación.');
     return;
   }
 
@@ -8210,15 +8199,15 @@ function editarUsuario(code) {
     ${!isAdmin ? `<div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
       background:var(--amber-dim);border:1px solid var(--amber);border-radius:6px;
       padding:8px 10px;margin-bottom:12px;line-height:1.5">
-      ⚠️ Cambiar cargo, base o nivel reseteará los permisos operativos adicionales.
+      Cambiar cargo, base o nivel reseteará los permisos operativos adicionales.
     </div>` : ''}
-    <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">💾 Guardar cambios</button>
+    <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">Guardar cambios</button>
     ${!isAdmin ? `
     <button onclick="confirmarEliminarUsuario('${code}')"
       style="width:100%;padding:10px;background:var(--red-dim);border:1px solid var(--red);
       color:var(--red);border-radius:var(--r);font-family:var(--mono);font-size:12px;
       letter-spacing:1px;text-transform:uppercase;cursor:pointer">
-      🗑 Eliminar perfil
+      Eliminar perfil
     </button>` : `<div style="font-size:11px;color:var(--amber);font-family:var(--mono);text-align:center">
       El perfil de administrador no se puede eliminar
     </div>`}
@@ -8232,7 +8221,7 @@ async function confirmarEliminarUsuario(code) {
   const nombre = `${u.name||''} ${u.apellidos||''}`.trim() || code;
   document.getElementById('day-modal-content').innerHTML = `
     <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:12px;color:var(--red)">
-      🗑 Eliminar perfil
+      Eliminar perfil
     </div>
     <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
       ¿Estás seguro de que quieres eliminar el perfil de<br>
@@ -8371,7 +8360,7 @@ function gestionarPermisos(code) {
 
   document.getElementById('day-modal-content').innerHTML = `
     <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:4px;color:var(--text)">
-      🔑 Permisos operativos — <span style="color:var(--blue2)">${code}</span>
+      Permisos operativos — <span style="color:var(--blue2)">${code}</span>
     </div>
     <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-bottom:14px">
       Cargo real: ${u.funcion||'—'} · NVL${u.nivel||'—'} · ${getBaseCode(u.base)||'—'}
@@ -8488,15 +8477,15 @@ function showTab(name) {
 
 // ── THEMES ──
 const THEMES = {
-  dark:     { label: '🌙 Oscuro',      desc: 'Por defecto' },
-  light:    { label: '☀️ Claro',       desc: 'Fondo blanco' },
-  cockpit:  { label: '🛩️ Cockpit',     desc: 'Verde aviación' },
-  binter:   { label: '✈️ Binter',      desc: 'Verde corporativo' },
-  starwars: { label: '⚔️ Imperio',     desc: 'Dark side of the Force' },
-  ecam:     { label: '🖥️ ECAM',        desc: 'Embraer E195-E2' },
-  emb2:     { label: '✈️ EMB2·FMS',    desc: 'Cabina técnica' },
-  tcp:      { label: '🫱 Binter Cabina', desc: 'TCP · Uniforme azul' },
-  office:   { label: '📊 Office',      desc: 'Microsoft 365' },
+  dark:     { label: 'Oscuro',       desc: 'Por defecto' },
+  light:    { label: 'Claro',        desc: 'Fondo blanco' },
+  cockpit:  { label: 'Cockpit',      desc: 'Verde aviación' },
+  binter:   { label: 'Binter',       desc: 'Verde corporativo' },
+  starwars: { label: 'Imperio',      desc: 'Dark side of the Force' },
+  ecam:     { label: 'ECAM',         desc: 'Embraer E195-E2' },
+  emb2:     { label: 'EMB2·FMS',     desc: 'Cabina técnica' },
+  tcp:      { label: 'Binter Cabina', desc: 'TCP · Uniforme azul' },
+  office:   { label: 'Office',       desc: 'Microsoft 365' },
 };
 let currentTheme = 'emb2';
 
@@ -8753,7 +8742,7 @@ function showWelcome() {
   roleEl.innerHTML =
     `${roleLabel}${nivelLine} · ${baseLabel.toUpperCase()}<br>
      <span style="font-size:10px;letter-spacing:3px;opacity:0.6">BINTER CANARIAS</span>` +
-    (isAdmin ? `<br><span style="font-size:10px;color:var(--amber2);letter-spacing:2px">★ ADMINISTRADOR</span>` : '');
+    (isAdmin ? `<br><span style="font-size:10px;color:var(--amber2);letter-spacing:2px">ADMINISTRADOR</span>` : '');
 
   const epEl = document.getElementById('welcome-epaulettes');
   if (isTCP) {
@@ -9995,7 +9984,6 @@ function renderNomina() {
   if (!r) {
     document.getElementById('nomina-output').innerHTML = `
       <div class="card" style="text-align:center;padding:32px">
-        <div style="font-size:32px;margin-bottom:8px">📄</div>
         <div style="color:var(--text2);font-size:13px">Rellena los datos en la pestaña Calcular</div>
       </div>`;
     return;
@@ -10127,7 +10115,7 @@ function renderNomina() {
       </div>
       <div class="nomina-wrap">
         ${rowHTML}
-        <div class="nomina-row total-row"><span class="nomina-concept">💰 LÍQUIDO A PERCIBIR</span><span class="nomina-amount">${fmt(r.liquidoReal)} €</span></div>
+        <div class="nomina-row total-row"><span class="nomina-concept">LÍQUIDO A PERCIBIR</span><span class="nomina-amount">${fmt(r.liquidoReal)} €</span></div>
       </div>
     </div>
     <div class="result-grid">
@@ -11650,7 +11638,7 @@ function resetComparativa() {
   document.getElementById('comp-output').innerHTML = '';
   document.getElementById('upload-zone').style.display = 'block';
   document.getElementById('upload-zone').innerHTML = `
-    <div class="upload-icon">📂</div>
+    <div class="upload-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg></div>
     <div class="upload-text">Toca para subir nómina PDF</div>
     <div class="upload-sub">Nómina Binter · formato PDF</div>
   `;
@@ -11937,7 +11925,7 @@ function renderComparativa(nomData) {
             ${JSON.stringify(totalDelta)},
             ${JSON.stringify(diffsDerivados.map(d=>d.concept)).replace(/"/g,'&quot;')}
           )">
-          📄 Generar consulta de revisión
+          Generar consulta de revisión
         </button>
       </div>`;
   }
@@ -11968,7 +11956,7 @@ function renderComparativa(nomData) {
       ${canSendToSim && window.PilotPayMode !== 'simulation' ? `
         <button class="btn-secondary" style="margin-top:12px;border-color:var(--green);color:var(--green)"
           onclick="enviarAcumuladosAlSimulador(${ac.base_irpf||0}, ${ac.irpf||0})">
-          📊 Enviar al Simulador IRPF
+          Enviar al Simulador IRPF
         </button>
         <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;line-height:1.5">
           Actualiza Bruto acumulado e IRPF retenido en el Simulador con los datos de esta nómina.
@@ -14903,7 +14891,7 @@ window.PILOTPAY_BACKEND_READY = true;
 
     /* Actualizar label con el año en curso */
     const _labelEl = document.querySelector('#dsh-calc-card .dsh-card-label');
-    if (_labelEl) _labelEl.innerHTML = '<span class="dsh-card-label-icon">📋</span>Resumen ' + _yr;
+    if (_labelEl) _labelEl.textContent = 'Resumen ' + _yr;
 
     if (!_ready || _nMeses === 0) {
       setAttr('dsh-calc-status', 'dim');
@@ -14950,43 +14938,43 @@ window.PILOTPAY_BACKEND_READY = true;
     /* 0. Sin auditorías — primera vez en la app */
     const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);
     if (_totalAudits === 0) {
-      alerts.push({ cls:'amber', icon:'📂', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
+      alerts.push({ cls:'amber', icon:'', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
     }
 
     /* 1. pending_variables — falta calcular */
     if (_exp && _exp.estado === 'pending_variables') {
       const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
-      alerts.push({ cls:'amber', icon:'🧮', msg:`<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en la pestaña Calcular.` });
+      alerts.push({ cls:'amber', icon:'', msg:`<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en la pestaña Calcular.` });
     }
 
     /* 2. pending_comparison / pending_calculation — falta nómina oficial */
     if (_exp && (_exp.estado === 'pending_comparison' || _exp.estado === 'pending_calculation')) {
       const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
       const _mStr = (MESES_N[_exp.month] || '') + ' ' + _exp.year;
-      alerts.push({ cls:'amber', icon:'⏳', msg:`<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
+      alerts.push({ cls:'amber', icon:'', msg:`<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
     }
 
     /* 3. con_diferencias — problema activo (MonthRecord sin regularizar) */
     if (_exp && _exp.estado === 'con_diferencias') {
       const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
-      alerts.push({ cls:'red', icon:'⚠️', msg:`<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
+      alerts.push({ cls:'red', icon:'', msg:`<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
     }
 
     /* 4. Integridad del store */
     if (_statsReady && _statsFinancial.mesesAuditados > 0) {
       if (_statsFinancial.hasErrors) {
-        alerts.push({ cls:'red', icon:'⚠️', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Revisa el Historial.' });
+        alerts.push({ cls:'red', icon:'', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Revisa el Historial.' });
       } else if (_statsFinancial.hasWarnings) {
-        alerts.push({ cls:'amber', icon:'⚙️', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos. Revisa el Historial.' });
+        alerts.push({ cls:'amber', icon:'', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos. Revisa el Historial.' });
       }
       if (_statsFinancial.inconsistencias > 0) {
-        alerts.push({ cls:'amber', icon:'🔍', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta.` });
+        alerts.push({ cls:'amber', icon:'', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta.` });
       }
     }
 
     /* 5. Todo en orden */
     if (alerts.length === 0) {
-      alerts.push({ cls:'green', icon:'✅', msg:'<strong>Todo en orden.</strong> No hay acciones pendientes.' });
+      alerts.push({ cls:'green', icon:'', msg:'<strong>Todo en orden.</strong> No hay acciones pendientes.' });
     }
 
     /* Badge */
