@@ -59,6 +59,7 @@
   --mono: 'Space Mono', monospace;
   --sans: 'DM Sans', sans-serif;
   --r: 10px;
+  --pp-bottom-safe: 20px; /* margen inferior seguro en desktop — evita que contenido quede en borde viewport */
 }
 
 /* ── TEMA: CLARO ── */
@@ -1380,15 +1381,14 @@ input, select, textarea {
 #cl-zone-a .calc-flow-step-sub { font-size: 9px; }
 #cl-context-nav {
   flex: 1;
-  min-height: 0; /* permite que flex shrink funcione correctamente */
+  min-height: 0;
   overflow-y: auto;
   padding: 10px 8px;
-  scrollbar-width: thin; /* Firefox */
 }
-#cl-context-nav::-webkit-scrollbar        { width: 4px; }
+#cl-context-nav::-webkit-scrollbar        { width: 3px; }
 #cl-context-nav::-webkit-scrollbar-track  { background: transparent; }
-#cl-context-nav::-webkit-scrollbar-thumb  { background: rgba(155,155,165,0.55); border-radius: 4px; }
-#cl-context-nav::-webkit-scrollbar-thumb:hover { background: rgba(155,155,165,0.85); }
+#cl-context-nav::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
+#cl-context-nav::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
 #cl-zone-c {
   padding: 10px 12px;
   border-top: 1px solid var(--border);
@@ -1482,7 +1482,7 @@ input, select, textarea {
     grid-template-columns: 240px 1fr 260px;
     grid-template-rows: 100%; /* fija la fila al alto del contenedor, no al del contenido */
     gap: 0 16px;
-    padding: 16px;
+    padding: 16px 16px calc(16px + var(--pp-bottom-safe)) 16px; /* margen inferior seguro */
     align-items: stretch;
     height: 100%;
   }
@@ -1490,20 +1490,19 @@ input, select, textarea {
   /* Centro: único scroll container del workspace */
   #workspace-center {
     overflow-y: auto;
-    scrollbar-width: thin; /* Firefox */
-    /* scrollbar-color omitida: en Chrome 121+ anula las reglas ::-webkit-scrollbar */
+    /* sin scrollbar-width/color: Chrome usa solo las reglas ::-webkit-scrollbar */
   }
-  #workspace-center::-webkit-scrollbar        { width: 4px; }
+  #workspace-center::-webkit-scrollbar        { width: 3px; }
   #workspace-center::-webkit-scrollbar-track  { background: transparent; }
-  #workspace-center::-webkit-scrollbar-thumb  { background: rgba(155,155,165,0.55); border-radius: 4px; }
-  #workspace-center::-webkit-scrollbar-thumb:hover { background: rgba(155,155,165,0.85); }
-  /* Sidebar izquierdo: acotado al alto de la fila, scroll interno en Zone B */
+  #workspace-center::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
+  #workspace-center::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
+  /* Sidebar izquierdo: acotado al alto de la fila, Zone B scrollea internamente */
   #cl-sidebar-card {
     position: relative;
     top: auto;
     height: 100%;
     max-height: 100%;
-    overflow: hidden; /* Zone B (#cl-context-nav) scrollea; A y C quedan fijos */
+    overflow: visible; /* visible: Zone C no se recorta por diferencias de 1-2px en DPI/font */
   }
   /* Panel derecho: acotado al alto de la fila, scroll interno */
   #workspace.active > #calc-right-panel {
@@ -1511,12 +1510,12 @@ input, select, textarea {
     top: auto;
     height: 100%;
     overflow-y: auto;
-    scrollbar-width: thin; /* Firefox */
+    /* sin scrollbar-width: Chrome usa solo las reglas ::-webkit-scrollbar */
   }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar        { width: 4px; }
+  #workspace.active > #calc-right-panel::-webkit-scrollbar        { width: 3px; }
   #workspace.active > #calc-right-panel::-webkit-scrollbar-track  { background: transparent; }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb  { background: rgba(155,155,165,0.55); border-radius: 4px; }
-  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb:hover { background: rgba(155,155,165,0.85); }
+  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb  { background: rgba(130,130,140,0.75); border-radius: 3px; }
+  #workspace.active > #calc-right-panel::-webkit-scrollbar-thumb:hover { background: rgba(130,130,140,1); }
 
   /* UX-NORMATIVA-1: scroll aislado en Convenio / Acuerdos (desktop ≥900px) */
   body:has(#page-convenio.active) main {
@@ -1565,15 +1564,15 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
 input[type=number] { -moz-appearance: textfield; }
 /* ── UX-5: Premium thin scrollbars (desktop ≥900px) ── */
 @media (min-width: 900px) {
-  ::-webkit-scrollbar              { width: 4px; height: 4px; }
+  ::-webkit-scrollbar              { width: 3px; height: 3px; }
   ::-webkit-scrollbar-track        { background: transparent; }
-  ::-webkit-scrollbar-thumb        { background: rgba(155,155,165,0.50); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover  { background: rgba(155,155,165,0.80); }
+  ::-webkit-scrollbar-thumb        { background: rgba(130,130,140,0.75); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover  { background: rgba(130,130,140,1); }
   ::-webkit-scrollbar-corner       { background: transparent; }
 }
-/* Mobile fallback: pista invisible, thumb sutil */
+/* Mobile fallback */
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(155,155,165,0.50); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(130,130,140,0.75); border-radius: 3px; }
 
 /* ── MODAL ── */
 .modal-overlay {
@@ -4257,7 +4256,7 @@ Complemento de Base MAD: 1500"></textarea>
         .cc-reader-main {
           flex: 1; min-width: 0;
           overflow-y: auto; scroll-behavior: smooth;
-          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
+          scrollbar-width: thin;
         }
 
         /* ═══ SIDEBAR ═══════════════════════════════════════════════ */
@@ -4267,7 +4266,7 @@ Complemento de Base MAD: 1500"></textarea>
           border-right: 1px solid var(--border);
           background: var(--bg);
           display: none; flex-direction: column;
-          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
+          scrollbar-width: thin;
         }
         @media (min-width: 900px) { .cc-sidebar { display: flex; } }
         .cc-sidebar.cc-sidebar-open {
@@ -4288,7 +4287,7 @@ Complemento de Base MAD: 1500"></textarea>
           transition: opacity .15s;
         }
         .cc-toc-close:hover { opacity: .9; }
-        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 4px 0 56px; scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent; }
+        .cc-toc-scroll { flex: 1; overflow-y: auto; padding: 4px 0 56px; scrollbar-width: thin; }
 
         /* ── Chapter rows — card blocks ──────────────────────── */
         .cc-toc-section {
@@ -4663,7 +4662,7 @@ Complemento de Base MAD: 1500"></textarea>
           overflow-y: auto; border-left: 1px solid var(--border);
           background: color-mix(in srgb, var(--bg) 60%, var(--bg2));
           padding: 0 0 48px; display: none;
-          scrollbar-width: thin; scrollbar-color: rgba(155,155,165,0.50) transparent;
+          scrollbar-width: thin;
         }
         @media (min-width: 1280px) { .cc-ctx-panel { display: block; } }
 
