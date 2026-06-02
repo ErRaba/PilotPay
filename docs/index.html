@@ -1970,11 +1970,9 @@ input[type=number] { -moz-appearance: textfield; }
         /* ── Temporal strip ── */
         .d2-hero-temporal {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          /* Futuro: grid-template-columns: 1fr 1fr 1fr */
+          grid-template-columns: 1fr 1fr 1fr;
           flex: 1;
         }
-        .d2-hero-col.d2-hero-futuro { display: none; }
         .d2-hero-col {
           padding: 16px 18px 18px;
           display: flex; flex-direction: column; gap: 5px;
@@ -1996,6 +1994,7 @@ input[type=number] { -moz-appearance: textfield; }
         }
         .d2-col-amount.confirmed   { color: var(--green); }
         .d2-col-amount.in-progress { color: var(--text2); font-size: 26px; }
+        .d2-col-amount.reference   { color: var(--text2); font-size: 28px; }
         .d2-col-amount.empty       { color: var(--text3); font-size: 20px; font-weight: 400; }
         .d2-col-badge {
           display: flex; align-items: center; gap: 6px; margin-top: 3px;
@@ -2112,38 +2111,39 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
           </div>
           <div class="d2-hero-temporal">
-            <!-- PASADO: último mes auditado/confirmado -->
+            <!-- SITUACIÓN ACTUAL: último mes real (activo o auditado) — nunca el mes calendario -->
             <div class="d2-hero-col">
-              <div class="d2-col-label">Pasado</div>
-              <div id="d2-p-mes" class="d2-col-mes">—</div>
-              <div id="d2-p-amount" class="d2-col-amount empty">—</div>
+              <div class="d2-col-label">Situación actual</div>
+              <div id="d2-a-mes" class="d2-col-mes">—</div>
+              <div id="d2-a-amount" class="d2-col-amount empty">—</div>
               <div class="d2-col-badge">
-                <span id="d2-p-dot" class="d2-col-dot dim"></span>
-                <span id="d2-p-estado"></span>
+                <span id="d2-a-dot" class="d2-col-dot dim"></span>
+                <span id="d2-a-estado"></span>
               </div>
-              <div id="d2-p-ctx" class="d2-col-ctx" style="display:none"></div>
+              <div id="d2-a-ctx" class="d2-col-ctx" style="display:none"></div>
             </div>
-            <!-- PRESENTE: expediente activo o mes en curso -->
+            <!-- REFERENCIA: media anual + delta -->
             <div class="d2-hero-col">
-              <div class="d2-col-label">Presente</div>
-              <div id="d2-n-mes" class="d2-col-mes">—</div>
-              <div id="d2-n-amount" class="d2-col-amount empty">—</div>
+              <div class="d2-col-label">Referencia</div>
+              <div id="d2-r-mes" class="d2-col-mes">—</div>
+              <div id="d2-r-amount" class="d2-col-amount empty">—</div>
               <div class="d2-col-badge">
-                <span id="d2-n-dot" class="d2-col-dot dim"></span>
-                <span id="d2-n-estado"></span>
+                <span id="d2-r-dot" class="d2-col-dot dim"></span>
+                <span id="d2-r-estado"></span>
               </div>
-              <div id="d2-n-ctx" class="d2-col-ctx" style="display:none"></div>
-              <button id="d2-n-cta" class="d2-col-cta" style="display:none"></button>
+              <div id="d2-r-ctx" class="d2-col-ctx" style="display:none"></div>
             </div>
-            <!-- FUTURO: reservado para parser de programación eCrew -->
-            <div class="d2-hero-col d2-hero-futuro">
-              <div class="d2-col-label">Futuro</div>
-              <div id="d2-f-mes" class="d2-col-mes">—</div>
-              <div id="d2-f-amount" class="d2-col-amount empty">—</div>
+            <!-- PRÓXIMO CICLO: siguiente acción real (mes activo o mes siguiente) -->
+            <div class="d2-hero-col">
+              <div id="d2-c-label" class="d2-col-label">Próximo ciclo</div>
+              <div id="d2-c-mes" class="d2-col-mes">—</div>
+              <div id="d2-c-amount" class="d2-col-amount empty" style="display:none"></div>
               <div class="d2-col-badge">
-                <span id="d2-f-dot" class="d2-col-dot dim"></span>
-                <span id="d2-f-estado"></span>
+                <span id="d2-c-dot" class="d2-col-dot dim"></span>
+                <span id="d2-c-estado"></span>
               </div>
+              <div id="d2-c-ctx" class="d2-col-ctx" style="display:none"></div>
+              <button id="d2-c-cta" class="d2-col-cta" style="display:none"></button>
             </div>
           </div><!-- /d2-hero-temporal -->
         </div>
@@ -14603,11 +14603,11 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ══════════════════════════════════════════
-     RENDER: HERO — briefing temporal
-     PASADO | PRESENTE | FUTURO (reservado)
+     RENDER: HERO — briefing económico del piloto
+     SITUACIÓN ACTUAL | REFERENCIA | PRÓXIMO CICLO
   ══════════════════════════════════════════ */
   function _d2RenderHero(data) {
-    const { u, pd, expedienteActivo, ultimaAuditoria, statsFinancial, _userId } = data;
+    const { u, pd, expedienteActivo, ultimaAuditoria, statsFinancial, statsAnual, currentYear, _userId } = data;
 
     // ── Avatar + Identity Header ──────────────────────────────────────────────
     const fn       = pd.funcion || u.funcion || '';
@@ -14647,127 +14647,144 @@ window.PILOTPAY_BACKEND_READY = true;
     setHTML('d2-chips', chips.join(''));
     setText('d2-hero-name', pd.name || pd.fullName || u.name || userId || '—');
 
-    // ── PASADO: último mes auditado/confirmado ────────────────────────────────
-    var ua     = ultimaAuditoria;
-    var uaCalc = ua ? (ua.calculoTeorico || {}) : {};
-    var uaAud  = ua ? (ua.auditoria      || {}) : {};
-    var uaReg  = ua ? (ua.regularizacion || null) : null;
-    var pNeto  = null;
-    if (uaReg && uaReg.netoFinalAjustado != null) pNeto = uaReg.netoFinalAjustado;
-    else if (uaAud.liqReal != null)               pNeto = uaAud.liqReal;
-    else if (uaCalc.liquidoReal != null)          pNeto = uaCalc.liquidoReal;
+    // ── Fuente de datos principal ─────────────────────────────────────────────
+    // SITUACIÓN ACTUAL es siempre datos reales: expediente activo o último mes auditado.
+    // Nunca se usa el mes calendario como sustituto.
+    var mr = expedienteActivo;
+    var ua = ultimaAuditoria;
+    var atual = mr || ua;
 
-    var PASADO_ESTADO = {
-      'auditado': { dot: 'ok', txt: 'Auditado' }, 'regularizado': { dot: 'ok', txt: 'Regularizado' },
-      'reclamado': { dot: 'ok', txt: 'Reclamado' }, 'cerrado': { dot: 'ok', txt: 'Cerrado' },
+    var ESTADO_DOTS = {
+      'pending_variables':   { dot: 'info',  txt: 'Variables cargadas'   },
+      'pending_calculation': { dot: 'info',  txt: 'Cálculo disponible'   },
+      'pending_comparison':  { dot: 'info',  txt: 'Pendiente de nómina'  },
+      'con_diferencias':     { dot: 'alert', txt: 'Diferencias activas'  },
+      'auditado':            { dot: 'ok',    txt: 'Auditado'              },
+      'regularizado':        { dot: 'ok',    txt: 'Regularizado'          },
+      'reclamado':           { dot: 'ok',    txt: 'Reclamado'             },
+      'cerrado':             { dot: 'ok',    txt: 'Cerrado'               },
     };
 
-    if (ua) {
-      setText('d2-p-mes', (MESES_ES[ua.month] || '') + (ua.year ? ' ' + ua.year : '') || '—');
-      var pAmtEl = el('d2-p-amount');
-      if (pAmtEl) { pAmtEl.textContent = pNeto != null ? fmt(pNeto) : '—'; pAmtEl.className = 'd2-col-amount' + (pNeto != null ? ' confirmed' : ' empty'); }
-      var pCfg = PASADO_ESTADO[ua.estado] || { dot: 'dim', txt: ua.estado || '—' };
-      var pDotEl = el('d2-p-dot'); if (pDotEl) pDotEl.className = 'd2-col-dot ' + pCfg.dot;
-      setText('d2-p-estado', pCfg.txt);
-      var pCtxEl = el('d2-p-ctx');
-      if (pCtxEl) {
-        var media = statsFinancial && statsFinancial.mediaNetaFinal;
-        if (pNeto != null && media != null && Math.abs(pNeto - media) > 0.5) {
-          var delta = pNeto - media;
-          var dCls  = delta >= 0 ? 'pos' : 'neg';
-          var dSign = delta >= 0 ? '▲' : '▼';
-          var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
-          pCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € vs media</span>`;
-          pCtxEl.style.display = 'flex';
-        } else { pCtxEl.style.display = 'none'; }
+    // ── Extraer neto del período actual ───────────────────────────────────────
+    var atualNeto = null; var atualAmtClass = 'empty';
+    if (mr) {
+      var mrCalc = mr.calculoTeorico || {}; var mrAud = mr.auditoria || {};
+      if (mr.estado === 'pending_comparison' || mr.estado === 'pending_calculation') {
+        if (mrCalc.liquidoReal != null) { atualNeto = mrCalc.liquidoReal; atualAmtClass = 'in-progress'; }
+      } else if (mr.estado === 'con_diferencias') {
+        if (mrAud.liqReal != null)           { atualNeto = mrAud.liqReal;       atualAmtClass = 'in-progress'; }
+        else if (mrCalc.liquidoReal != null)  { atualNeto = mrCalc.liquidoReal; atualAmtClass = 'in-progress'; }
       }
-    } else {
-      setText('d2-p-mes', '—');
-      var pAmtEl = el('d2-p-amount'); if (pAmtEl) { pAmtEl.textContent = '—'; pAmtEl.className = 'd2-col-amount empty'; }
-      var pDotEl = el('d2-p-dot'); if (pDotEl) pDotEl.className = 'd2-col-dot dim';
-      setText('d2-p-estado', 'Sin historial');
-      var pCtxEl = el('d2-p-ctx'); if (pCtxEl) pCtxEl.style.display = 'none';
+    } else if (ua) {
+      var uaCalc = ua.calculoTeorico || {}; var uaAud = ua.auditoria || {}; var uaReg = ua.regularizacion || null;
+      if (uaReg && uaReg.netoFinalAjustado != null) { atualNeto = uaReg.netoFinalAjustado; atualAmtClass = 'confirmed'; }
+      else if (uaAud.liqReal != null)               { atualNeto = uaAud.liqReal;           atualAmtClass = 'confirmed'; }
+      else if (uaCalc.liquidoReal != null)          { atualNeto = uaCalc.liquidoReal;       atualAmtClass = 'confirmed'; }
     }
 
-    // ── PRESENTE: mejor información disponible del ciclo activo ──────────────
-    var mr     = expedienteActivo;
-    var mrCalc = mr ? (mr.calculoTeorico || {}) : {};
-    var mrAud  = mr ? (mr.auditoria      || {}) : {};
+    // ── COL 1: SITUACIÓN ACTUAL ───────────────────────────────────────────────
+    if (atual) {
+      setText('d2-a-mes', (MESES_ES[atual.month] || '') + (atual.year ? ' ' + atual.year : ''));
+      var aAmtEl = el('d2-a-amount');
+      if (aAmtEl) { aAmtEl.textContent = atualNeto != null ? fmt(atualNeto) : '—'; aAmtEl.className = 'd2-col-amount ' + atualAmtClass; }
+      var aCfg = ESTADO_DOTS[atual.estado] || { dot: 'dim', txt: atual.estado || '—' };
+      var aDotEl = el('d2-a-dot'); if (aDotEl) aDotEl.className = 'd2-col-dot ' + aCfg.dot;
+      setText('d2-a-estado', aCfg.txt);
+      var aCtxEl = el('d2-a-ctx');
+      if (aCtxEl) {
+        if (atualAmtClass === 'in-progress') {
+          aCtxEl.textContent = 'Neto estimado · pendiente de auditoría'; aCtxEl.style.display = 'flex';
+        } else { aCtxEl.style.display = 'none'; }
+      }
+    } else {
+      setText('d2-a-mes', '—');
+      var aAmtEl = el('d2-a-amount'); if (aAmtEl) { aAmtEl.textContent = '—'; aAmtEl.className = 'd2-col-amount empty'; }
+      var aDotEl = el('d2-a-dot'); if (aDotEl) aDotEl.className = 'd2-col-dot dim';
+      setText('d2-a-estado', 'Sin expedientes');
+      var aCtxEl = el('d2-a-ctx'); if (aCtxEl) aCtxEl.style.display = 'none';
+    }
 
-    var PRESENTE_CFG = {
-      'pending_variables':   { dot: 'info',  txt: 'Variables cargadas',  cta: { tab: 'calcular',    btn: '→ Ir a Calcular',    cls: '' } },
-      'pending_calculation': { dot: 'info',  txt: 'Cálculo disponible',  cta: { tab: 'comparativa', btn: '→ Ir a Comparativa', cls: '' } },
-      'pending_comparison':  { dot: 'info',  txt: 'Pendiente de nómina', cta: { tab: 'comparativa', btn: '→ Ir a Comparativa', cls: '' } },
-      'con_diferencias':     { dot: 'alert', txt: 'Diferencias activas', cta: { tab: 'historial',   btn: '→ Ir a Historial',   cls: 'alert' } },
+    // ── COL 2: REFERENCIA — media anual + delta ───────────────────────────────
+    var mediaAnual = (statsAnual && statsAnual.mediaNetaFinal != null) ? statsAnual.mediaNetaFinal
+                   : (statsFinancial && statsFinancial.mediaNetaFinal != null) ? statsFinancial.mediaNetaFinal
+                   : null;
+    var mediaLbl = statsAnual ? ('Media ' + currentYear) : 'Media histórica';
+
+    setText('d2-r-mes', mediaLbl);
+    var rAmtEl = el('d2-r-amount');
+    if (rAmtEl) { rAmtEl.textContent = mediaAnual != null ? fmt(mediaAnual) : '—'; rAmtEl.className = 'd2-col-amount ' + (mediaAnual != null ? 'reference' : 'empty'); }
+    var rDotEl = el('d2-r-dot'); if (rDotEl) rDotEl.className = 'd2-col-dot ' + (mediaAnual != null ? 'info' : 'dim');
+    setText('d2-r-estado', mediaAnual != null ? 'Base de referencia' : 'Sin histórico suficiente');
+    var rCtxEl = el('d2-r-ctx');
+    if (rCtxEl) {
+      if (atualNeto != null && mediaAnual != null && Math.abs(atualNeto - mediaAnual) > 0.5) {
+        var delta = atualNeto - mediaAnual;
+        var dCls  = delta >= 0 ? 'pos' : 'neg';
+        var dSign = delta >= 0 ? '▲' : '▼';
+        var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
+        rCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € vs media</span>`;
+        rCtxEl.style.display = 'flex';
+      } else { rCtxEl.style.display = 'none'; }
+    }
+
+    // ── COL 3: PRÓXIMO CICLO ──────────────────────────────────────────────────
+    // Expediente activo → acción pendiente del mes en curso (label dinámico).
+    // Todo auditado → siguiente mes natural con CTA de inicio.
+    var CICLO_MAP = {
+      'pending_variables':   { dot: 'info',  txt: 'Genera la previsión en Calcular',       btn: '→ Ir a Calcular',    tab: 'calcular',    cls: '' },
+      'pending_calculation': { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: '→ Ir a Comparativa', tab: 'comparativa', cls: '' },
+      'pending_comparison':  { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: '→ Ir a Comparativa', tab: 'comparativa', cls: '' },
+      'con_diferencias':     { dot: 'alert', txt: 'Gestiona las diferencias en Historial', btn: '→ Ir a Historial',   tab: 'historial',   cls: 'alert' },
     };
 
     if (mr) {
-      setText('d2-n-mes', (MESES_ES[mr.month] || '') + (mr.year ? ' ' + mr.year : '') || '—');
+      var cLblEl = el('d2-c-label'); if (cLblEl) cLblEl.textContent = 'Acción pendiente';
+      setText('d2-c-mes', (MESES_ES[mr.month] || '') + (mr.year ? ' ' + mr.year : ''));
+      var cCfg = CICLO_MAP[mr.estado];
+      var cDotEl = el('d2-c-dot'); if (cDotEl) cDotEl.className = 'd2-col-dot ' + (cCfg ? cCfg.dot : 'info');
+      setText('d2-c-estado', cCfg ? cCfg.txt : 'Acción pendiente');
+      var cCtaEl = el('d2-c-cta');
+      if (cCtaEl && cCfg) {
+        cCtaEl.textContent = cCfg.btn; cCtaEl.style.display = '';
+        cCtaEl.className = 'd2-col-cta' + (cCfg.cls ? ' ' + cCfg.cls : '');
+        cCtaEl.onclick = (function(t) { return function() { try { showTab(t); } catch(e) {} }; })(cCfg.tab);
+      } else if (cCtaEl) { cCtaEl.style.display = 'none'; }
+      var cCtxEl = el('d2-c-ctx'); if (cCtxEl) cCtxEl.style.display = 'none';
 
-      // Mejor neto disponible según estado del ciclo
-      var nNeto = null; var nAmtClass = 'empty';
-      if (mr.estado === 'pending_comparison' || mr.estado === 'pending_calculation') {
-        if (mrCalc.liquidoReal != null) { nNeto = mrCalc.liquidoReal; nAmtClass = 'in-progress'; }
-      } else if (mr.estado === 'con_diferencias') {
-        if (mrAud.liqReal != null)          { nNeto = mrAud.liqReal;       nAmtClass = 'in-progress'; }
-        else if (mrCalc.liquidoReal != null) { nNeto = mrCalc.liquidoReal; nAmtClass = 'in-progress'; }
+    } else if (ua) {
+      var nextMonth = (ua.month % 12) + 1;
+      var nextYear  = ua.month === 12 ? ua.year + 1 : ua.year;
+      var cLblEl = el('d2-c-label'); if (cLblEl) cLblEl.textContent = 'Próximo ciclo';
+      setText('d2-c-mes', MESES_ES[nextMonth] + ' ' + nextYear);
+      var cDotEl = el('d2-c-dot'); if (cDotEl) cDotEl.className = 'd2-col-dot dim';
+      setText('d2-c-estado', 'Pendiente de cargar variables');
+      var cCtaEl = el('d2-c-cta');
+      if (cCtaEl) {
+        cCtaEl.textContent = '→ Cargar variables'; cCtaEl.className = 'd2-col-cta done';
+        cCtaEl.style.display = '';
+        cCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
       }
-
-      var nAmtEl = el('d2-n-amount');
-      if (nAmtEl) { nAmtEl.textContent = nNeto != null ? fmt(nNeto) : '—'; nAmtEl.className = 'd2-col-amount ' + nAmtClass; }
-
-      var nCfg = PRESENTE_CFG[mr.estado];
-      var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot ' + (nCfg ? nCfg.dot : 'dim');
-      setText('d2-n-estado', nCfg ? nCfg.txt : (mr.estado || '—'));
-
-      var nCtxEl = el('d2-n-ctx');
-      if (nCtxEl) {
-        if (nNeto != null && (mr.estado === 'pending_comparison' || mr.estado === 'pending_calculation')) {
-          nCtxEl.textContent = 'Estimado · pendiente de auditoría'; nCtxEl.style.display = 'flex';
-        } else { nCtxEl.style.display = 'none'; }
-      }
-
-      var nCtaEl = el('d2-n-cta');
-      if (nCtaEl && nCfg && nCfg.cta) {
-        nCtaEl.textContent = nCfg.cta.btn; nCtaEl.style.display = '';
-        nCtaEl.className = 'd2-col-cta' + (nCfg.cta.cls ? ' ' + nCfg.cta.cls : '');
-        nCtaEl.onclick = (function(t) { return function() { try { showTab(t); } catch(e) {} }; })(nCfg.cta.tab);
-      } else if (nCtaEl) { nCtaEl.style.display = 'none'; }
+      var cCtxEl = el('d2-c-ctx'); if (cCtxEl) cCtxEl.style.display = 'none';
 
     } else {
-      // Sin expediente activo
-      var now = new Date();
-      var nowYear = now.getFullYear(); var nowMonth = now.getMonth() + 1;
-      var sameAsUa = ua && ua.year === nowYear && ua.month === nowMonth;
-
-      if (sameAsUa) {
-        // Mes actual ya auditado → ciclo cerrado
-        setText('d2-n-mes', (MESES_ES[nowMonth] || '') + ' ' + nowYear);
-        var nAmtEl = el('d2-n-amount'); if (nAmtEl) { nAmtEl.textContent = ''; nAmtEl.className = 'd2-col-amount empty'; }
-        var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot ok';
-        setText('d2-n-estado', 'Ciclo cerrado');
-        var nCtaEl = el('d2-n-cta'); if (nCtaEl) nCtaEl.style.display = 'none';
-      } else {
-        // Mes actual sin datos
-        setText('d2-n-mes', (MESES_ES[nowMonth] || '') + ' ' + nowYear);
-        var nAmtEl = el('d2-n-amount'); if (nAmtEl) { nAmtEl.textContent = '—'; nAmtEl.className = 'd2-col-amount empty'; }
-        var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot dim';
-        setText('d2-n-estado', 'Sin datos del mes');
-        var nCtaEl = el('d2-n-cta');
-        if (nCtaEl) {
-          nCtaEl.textContent = '→ Cargar variables'; nCtaEl.className = 'd2-col-cta done';
-          nCtaEl.style.display = '';
-          nCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
-        }
+      var cLblEl = el('d2-c-label'); if (cLblEl) cLblEl.textContent = 'Primer ciclo';
+      setText('d2-c-mes', '—');
+      var cDotEl = el('d2-c-dot'); if (cDotEl) cDotEl.className = 'd2-col-dot dim';
+      setText('d2-c-estado', 'Carga las variables del mes actual para empezar');
+      var cCtaEl = el('d2-c-cta');
+      if (cCtaEl) {
+        cCtaEl.textContent = '→ Cargar variables'; cCtaEl.className = 'd2-col-cta done';
+        cCtaEl.style.display = '';
+        cCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
       }
-      var nCtxEl = el('d2-n-ctx'); if (nCtxEl) nCtxEl.style.display = 'none';
+      var cCtxEl = el('d2-c-ctx'); if (cCtxEl) cCtxEl.style.display = 'none';
     }
   }
 
   /* ══════════════════════════════════════════
-     RENDER: PRÓXIMO PASO — absorbido en PRESENTE
+     RENDER: PRÓXIMO PASO — no-op
   ══════════════════════════════════════════ */
-  function _d2RenderNextStep(data) { /* no-op: lógica absorbida en _d2RenderHero PRESENTE */ }
+  function _d2RenderNextStep(data) { /* absorbido en _d2RenderHero */ }
 
   /* ══════════════════════════════════════════
      RENDER: ACTIVIDAD RECIENTE
