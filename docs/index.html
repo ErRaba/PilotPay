@@ -1891,220 +1891,274 @@ input[type=number] { -moz-appearance: textfield; }
     ══════════════════════════════════════════ -->
     <div class="page" id="page-dashboard">
       <style>
-        /* ─── Dashboard scoped styles ─── */
+        /* ─── Dashboard 2.0 scoped styles ─── */
 
-        /* Cabecera de panel */
-        .dsh-greeting {
-          padding: 20px 20px 16px;
-          border-bottom: 1px solid var(--border);
-          display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-        }
-        .dsh-greeting-left { flex: 1; min-width: 0; }
-        .dsh-greeting-name {
-          font-size: 16px; font-weight: 600; color: var(--text);
-          letter-spacing: .01em; line-height: 1.3;
-        }
-        .dsh-greeting-date {
-          font-size: 11px; color: var(--text3); font-family: var(--mono); margin-top: 4px; opacity: .6;
-        }
-        .dsh-greeting-sub {
-          font-size: 11px; color: var(--text3); font-family: var(--mono);
-          margin-top: 4px; line-height: 1.5;
-        }
-        /* Widget METAR compacto en cabecera */
-        .dsh-metar-widget {
-          display: flex; flex-direction: column; align-items: flex-end;
-          padding-top: 2px; flex-shrink: 0;
-        }
-        .dsh-metar-icao {
-          font-family: var(--mono); font-size: 12px; font-weight: 700;
-          color: var(--blue); letter-spacing: .07em;
-        }
-        .dsh-metar-line {
-          font-family: var(--mono); font-size: 10px; color: var(--text3);
-          margin-top: 3px; text-align: right; max-width: 220px; line-height: 1.4;
-        }
-        .dsh-metar-obs {
-          font-family: var(--mono); font-size: 9px; color: var(--text3);
-          opacity: .5; margin-top: 2px; text-align: right;
-        }
-        @media (max-width: 420px) { .dsh-metar-widget { display: none; } }
-
-        /* Grid 2 columnas */
-        .dsh-grid {
+        .d2-layout {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          grid-template-columns: 1fr 296px;
+          grid-template-areas:
+            "hero  next"
+            "hero  activity"
+            "flujo flujo"
+            "audits audits"
+            "alerts alerts";
+          gap: 14px;
+          padding: 20px 24px;
+          align-content: start;
         }
-        @media (max-width: 520px) { .dsh-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) {
+          .d2-layout {
+            grid-template-columns: 1fr;
+            grid-template-areas: "hero" "next" "activity" "flujo" "audits" "alerts";
+            padding: 14px 16px;
+          }
+        }
 
-        /* Tarjeta base */
-        .dsh-card {
+        .d2-hero, .d2-next, .d2-activity, .d2-flujo, .d2-audits, .d2-alerts {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--r);
           overflow: hidden;
-          position: relative;
         }
-        /* Acento superior: trazo fino y sobrio */
-        .dsh-card::after {
-          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-          background: var(--border2);
-        }
-        .dsh-card.accent-amber::after { background: var(--amber); opacity: .55; }
-        .dsh-card.accent-green::after { background: var(--green);  opacity: .45; }
-        .dsh-card.accent-blue::after  { background: var(--blue);   opacity: .45; }
-        /* accent-red → neutralizado a ámbar para menor agresividad */
-        .dsh-card.accent-red::after   { background: var(--amber);  opacity: .4;  }
-        .dsh-card.full-width { grid-column: 1 / -1; }
+        .d2-hero     { grid-area: hero; }
+        .d2-next     { grid-area: next; }
+        .d2-activity { grid-area: activity; }
+        .d2-flujo    { grid-area: flujo; }
+        .d2-audits   { grid-area: audits; }
+        .d2-alerts   { grid-area: alerts; }
 
-        /* Cabecera de tarjeta */
-        .dsh-card-head {
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 13px 16px 10px;
-        }
-        .dsh-card-label {
+        .d2-block-title {
           font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
           text-transform: uppercase; color: var(--text3);
-          display: flex; align-items: center; gap: 5px;
+          padding: 13px 16px 0;
         }
-        .dsh-card-label-icon { font-size: 12px; opacity: .75; }
 
-        /* Badge de estado — más discreto */
-        .dsh-status {
+        /* ── Hero ── */
+        .d2-hero { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .d2-hero-identity { display: flex; align-items: center; gap: 14px; }
+        .d2-avatar-wrap { position: relative; flex-shrink: 0; }
+        .d2-avatar {
+          width: 72px; height: 72px; border-radius: 50%;
+          border: 3px solid var(--border2);
+          object-fit: cover; display: block;
+        }
+        .d2-avatar-initials {
+          width: 72px; height: 72px; border-radius: 50%;
+          border: 3px solid var(--border2);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 20px; font-weight: 700; color: var(--text2);
+          background: var(--card); letter-spacing: .02em;
+        }
+        .d2-hero-id { flex: 1; min-width: 0; }
+        .d2-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+        .d2-chip {
           font-size: 9px; font-family: var(--mono); font-weight: 600;
-          padding: 2px 6px; border-radius: 3px; white-space: nowrap;
-          letter-spacing: .04em;
+          letter-spacing: .06em; text-transform: uppercase;
+          padding: 2px 7px; border-radius: 3px; border: 1px solid transparent;
         }
-        .dsh-status.ok     { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(16,185,129,.25); }
-        .dsh-status.aviso  { background: var(--amber-dim);  color: var(--amber2); border: 1px solid rgba(245,158,11,.25); }
-        .dsh-status.alerta { background: rgba(239,68,68,.08); color: var(--red);   border: 1px solid rgba(239,68,68,.3);  }
-        .dsh-status.info   { background: var(--blue-dim);   color: var(--blue2);  border: 1px solid rgba(59,130,246,.25); }
-        .dsh-status.dim    { background: transparent;       color: var(--text3);  border: 1px solid var(--border); }
-
-        /* Cuerpo */
-        .dsh-card-body { padding: 2px 16px 16px; }
-
-        /* Valor grande */
-        .dsh-val-big {
-          font-size: 20px; font-weight: 700; color: var(--text);
-          font-family: var(--mono); line-height: 1.15; margin-bottom: 4px;
+        .d2-chip.fn   { color: var(--blue2);  background: var(--blue-dim);  border-color: rgba(59,130,246,.25); }
+        .d2-chip.nvl  { color: var(--text3);  background: transparent;      border-color: var(--border2); }
+        .d2-chip.base { color: var(--text3);  background: transparent;      border-color: var(--border2); }
+        .d2-hero-name {
+          font-size: 15px; font-weight: 600; color: var(--text);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .dsh-val-big.green { color: var(--green); }
-        .dsh-val-big.amber { color: var(--amber2); }
-        .dsh-val-big.dim   { color: var(--text3); font-size: 15px; font-weight: 400; }
 
-        /* Pares clave-valor — sin líneas separadoras, solo espaciado */
-        .dsh-kv-list { display: flex; flex-direction: column; margin-top: 10px; gap: 2px; }
-        .dsh-kv {
-          display: flex; justify-content: space-between; align-items: baseline;
-          font-size: 11px; padding: 2px 0;
+        /* ── Neto ── */
+        .d2-neto-block { display: flex; flex-direction: column; gap: 3px; }
+        .d2-neto-label {
+          font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
+          text-transform: uppercase; color: var(--text3);
         }
-        .dsh-kv-k { color: var(--text3); font-family: var(--mono); }
-        .dsh-kv-v { color: var(--text2); font-family: var(--mono); font-weight: 500; text-align: right; }
-        .dsh-kv-v.pos { color: var(--green); }
-        .dsh-kv-v.neg { color: var(--amber2); }  /* ámbar en vez de rojo */
-        .dsh-kv-v.amb { color: var(--amber2); }
-
-        /* Vacío suave */
-        .dsh-empty {
-          padding: 12px 0 4px;
+        .d2-neto-amount {
+          font-family: var(--mono); font-size: 44px; font-weight: 700;
+          color: var(--text); letter-spacing: -.02em; line-height: 1.05;
+        }
+        .d2-neto-amount.has-data { color: var(--green); }
+        .d2-neto-context {
           font-size: 11px; font-family: var(--mono); color: var(--text3);
-          text-align: left; line-height: 1.55;
+          display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;
         }
+        .d2-neto-delta {
+          font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px;
+        }
+        .d2-neto-delta.pos { color: var(--green);  background: var(--green-dim); }
+        .d2-neto-delta.neg { color: var(--amber2); background: var(--amber-dim); }
 
-        /* Lista de alertas — acento lateral por severidad */
-        .dsh-alert-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-        .dsh-alert-item {
-          display: flex; align-items: flex-start; gap: 8px;
-          padding: 4px 0 4px 8px;
-          border-left: 2px solid transparent;
+        /* ── Estado ── */
+        .d2-estado-wrap {
+          display: flex; align-items: center; gap: 7px;
+          padding-top: 14px; border-top: 1px solid var(--border);
+        }
+        .d2-estado-dot {
+          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        }
+        .d2-estado-dot.ok    { background: var(--green);  box-shadow: 0 0 6px rgba(16,185,129,.4); }
+        .d2-estado-dot.warn  { background: var(--amber); }
+        .d2-estado-dot.alert { background: var(--red); }
+        .d2-estado-dot.info  { background: var(--blue2); }
+        .d2-estado-dot.dim   { background: var(--border2); }
+        .d2-estado-text { font-size: 11px; font-family: var(--mono); color: var(--text3); line-height: 1.4; }
+
+        /* ── Próximo paso ── */
+        .d2-next { padding: 13px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .d2-flow { display: flex; align-items: flex-start; gap: 0; }
+        .d2-flow-step {
+          display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
+        }
+        .d2-flow-dot {
+          width: 10px; height: 10px; border-radius: 50%;
+          border: 2px solid var(--border2); background: transparent;
+        }
+        .d2-flow-dot.done    { background: var(--green);  border-color: var(--green); }
+        .d2-flow-dot.active  { background: var(--blue2);  border-color: var(--blue2); box-shadow: 0 0 6px rgba(59,130,246,.35); }
+        .d2-flow-dot.pending { background: transparent;   border-color: var(--border2); }
+        .d2-flow-label {
+          font-size: 9px; font-family: var(--mono); color: var(--text3);
+          text-align: center; letter-spacing: .02em; line-height: 1.35;
+        }
+        .d2-flow-label.active { color: var(--blue2); font-weight: 600; }
+        .d2-flow-connector {
+          height: 1px; background: var(--border2);
+          flex: 1; max-width: 24px; margin-top: 5px; flex-shrink: 0;
+        }
+        .d2-flow-connector.done { background: var(--green); }
+        .d2-next-label {
+          font-size: 12px; color: var(--text2); line-height: 1.5; font-family: var(--mono);
+        }
+        .d2-next-btn {
+          background: var(--blue2); color: #fff;
+          border: none; border-radius: var(--r-sm, 4px);
+          font-size: 12px; font-family: var(--mono); font-weight: 600;
+          padding: 8px 12px; cursor: pointer; width: 100%;
+          letter-spacing: .02em; transition: opacity .15s;
+        }
+        .d2-next-btn:hover { opacity: .88; }
+        .d2-next-btn.done  { background: transparent; border: 1px solid var(--border2); color: var(--text3); }
+
+        /* ── Actividad reciente ── */
+        .d2-activity { padding: 13px 16px 14px; }
+        .d2-activity-body { margin-top: 8px; display: flex; flex-direction: column; }
+        .d2-act-item {
+          display: flex; align-items: baseline; gap: 8px;
+          padding: 5px 0; border-bottom: 1px solid var(--border);
           font-size: 11px;
         }
-        .dsh-alert-item.red   { border-left-color: var(--red); }
-        .dsh-alert-item.amber { border-left-color: var(--amber); opacity: .9; }
-        .dsh-alert-item.green { border-left-color: var(--green); opacity: .8; }
-        .dsh-alert-dot { font-size: 11px; flex-shrink: 0; margin-top: 1px; opacity: .7; }
-        .dsh-alert-text { color: var(--text2); line-height: 1.5; }
-        .dsh-alert-text strong { color: var(--text); font-weight: 600; }
+        .d2-act-item:last-child { border-bottom: none; }
+        .d2-act-time { font-family: var(--mono); color: var(--text3); flex-shrink: 0; font-size: 10px; min-width: 54px; }
+        .d2-act-desc { color: var(--text2); line-height: 1.4; }
+        .d2-act-empty { font-size: 11px; font-family: var(--mono); color: var(--text3); padding: 8px 0; }
+
+        /* ── Flujo del mes ── */
+        .d2-flujo { padding: 0; }
+        .d2-flujo-body { display: flex; align-items: stretch; min-height: 58px; }
+        .d2-flujo-step {
+          flex: 1; display: flex; flex-direction: column; justify-content: center;
+          padding: 12px 16px; border-right: 1px solid var(--border);
+        }
+        .d2-flujo-step:last-child { border-right: none; }
+        .d2-flujo-step.done    { background: rgba(16,185,129,.04); }
+        .d2-flujo-step.active  { background: rgba(59,130,246,.06); }
+        .d2-flujo-step.pending { opacity: .45; }
+        .d2-flujo-num { font-size: 9px; font-family: var(--mono); color: var(--text3); letter-spacing: .06em; margin-bottom: 2px; }
+        .d2-flujo-lbl { font-size: 11px; font-family: var(--mono); font-weight: 500; color: var(--text2); line-height: 1.3; }
+        .d2-flujo-step.active .d2-flujo-lbl { color: var(--blue2); }
+        .d2-flujo-step.done   .d2-flujo-lbl { color: var(--text3); }
+        .d2-flujo-tick { font-size: 9px; color: var(--green); margin-top: 2px; font-family: var(--mono); }
+
+        /* ── Auditorías recientes ── */
+        .d2-audits { padding: 13px 0 14px; }
+        .d2-audits .d2-block-title { padding-bottom: 6px; }
+        .d2-audits-body { display: flex; flex-direction: column; }
+        .d2-audit-row {
+          display: flex; align-items: center; gap: 10px;
+          padding: 7px 16px; border-bottom: 1px solid var(--border); font-size: 11px;
+        }
+        .d2-audit-row:last-child { border-bottom: none; }
+        .d2-audit-period { font-family: var(--mono); font-weight: 600; color: var(--text2); flex: 0 0 96px; }
+        .d2-audit-badge {
+          font-size: 9px; font-family: var(--mono); font-weight: 600;
+          padding: 2px 6px; border-radius: 3px; letter-spacing: .04em; white-space: nowrap; flex-shrink: 0;
+        }
+        .d2-audit-badge.ok   { background: var(--green-dim);         color: var(--green);  border: 1px solid rgba(16,185,129,.25); }
+        .d2-audit-badge.red  { background: rgba(239,68,68,.08);       color: var(--red);    border: 1px solid rgba(239,68,68,.3); }
+        .d2-audit-badge.blue { background: var(--blue-dim);           color: var(--blue2);  border: 1px solid rgba(59,130,246,.25); }
+        .d2-audit-badge.warn { background: var(--amber-dim);          color: var(--amber2); border: 1px solid rgba(245,158,11,.25); }
+        .d2-audit-badge.dim  { background: transparent;               color: var(--text3);  border: 1px solid var(--border2); }
+        .d2-audit-neto { font-family: var(--mono); color: var(--text2); margin-left: auto; text-align: right; flex-shrink: 0; }
+        .d2-audit-empty { padding: 10px 16px; font-size: 11px; font-family: var(--mono); color: var(--text3); }
+
+        /* ── Alertas ── */
+        .d2-alerts { padding: 13px 16px 14px; }
+        .d2-alerts-body { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+        .d2-alert-row {
+          display: flex; align-items: flex-start;
+          padding: 4px 0 4px 8px; border-left: 2px solid transparent; font-size: 11px;
+        }
+        .d2-alert-row.red   { border-left-color: var(--red); }
+        .d2-alert-row.amber { border-left-color: var(--amber); }
+        .d2-alert-row.info  { border-left-color: var(--blue2); }
+        .d2-alert-msg { color: var(--text2); line-height: 1.5; }
+        .d2-alert-msg strong { color: var(--text); font-weight: 600; }
       </style>
 
-      <!-- Cabecera panel -->
-      <div class="card" style="padding:0">
-        <div class="dsh-greeting">
-          <div class="dsh-greeting-left">
-            <div class="dsh-greeting-name">Centro de control financiero</div>
-            <div class="dsh-greeting-sub" id="dsh-sub">Resumen operativo, auditoría y simulación financiera · PilotPay Beta 3.0</div>
-            <div class="dsh-greeting-date" id="dsh-date"></div>
-          </div>
-          <div class="dsh-metar-widget" id="dsh-metar-widget">
-            <span class="dsh-metar-icao" id="dsh-metar-icao">—</span>
-            <span class="dsh-metar-line" id="dsh-metar-line">—</span>
-            <span class="dsh-metar-obs"  id="dsh-metar-obs"></span>
-          </div>
-        </div>
-      </div>
+      <div class="d2-layout">
 
-      <!-- Grid principal de tarjetas -->
-      <div class="dsh-grid">
-
-        <!-- ── Expediente activo — solo pending_* y con_diferencias ── -->
-        <div class="dsh-card accent-amber full-width" id="dsh-audit-card">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label">Expediente activo</span>
-            <span class="dsh-status dim" id="dsh-audit-status">—</span>
+        <!-- ── HERO ── -->
+        <div class="d2-hero">
+          <div class="d2-hero-identity">
+            <div class="d2-avatar-wrap">
+              <img id="d2-avatar-img" class="d2-avatar" style="display:none" alt="">
+              <div id="d2-avatar-initials" class="d2-avatar-initials"></div>
+            </div>
+            <div class="d2-hero-id">
+              <div id="d2-chips" class="d2-chips"></div>
+              <div id="d2-hero-name" class="d2-hero-name">—</div>
+            </div>
           </div>
-          <div class="dsh-card-body" id="dsh-audit-body">
-            <div class="dsh-empty">Sin expediente activo</div>
+          <div class="d2-neto-block">
+            <div id="d2-neto-label" class="d2-neto-label">NETO</div>
+            <div id="d2-neto-amount" class="d2-neto-amount">—</div>
+            <div id="d2-neto-context" class="d2-neto-context" style="display:none"></div>
+          </div>
+          <div class="d2-estado-wrap">
+            <span id="d2-estado-dot" class="d2-estado-dot dim"></span>
+            <span id="d2-estado-text" class="d2-estado-text">—</span>
           </div>
         </div>
 
-        <!-- ── Última auditoría — estados terminados: auditado/regularizado/reclamado/cerrado ── -->
-        <div class="dsh-card accent-green full-width" id="dsh-last-audit-card" style="display:none">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label">Última auditoría</span>
-            <span class="dsh-status dim" id="dsh-last-audit-status">—</span>
-          </div>
-          <div class="dsh-card-body" id="dsh-last-audit-body">
-            <div class="dsh-empty">Sin auditorías previas</div>
-          </div>
+        <!-- ── PRÓXIMO PASO ── -->
+        <div class="d2-next">
+          <div class="d2-block-title" style="padding:0 0 2px">Próximo paso</div>
+          <div id="d2-flow" class="d2-flow"></div>
+          <div id="d2-next-label" class="d2-next-label"></div>
+          <button id="d2-next-btn" class="d2-next-btn"></button>
         </div>
 
-        <!-- ── Resumen anual ── -->
-        <div class="dsh-card accent-green" id="dsh-calc-card">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label">Resumen anual</span>
-            <span class="dsh-status dim" id="dsh-calc-status">—</span>
-          </div>
-          <div class="dsh-card-body" id="dsh-calc-body">
-            <div class="dsh-empty">Sin datos calculados</div>
-          </div>
+        <!-- ── ACTIVIDAD RECIENTE ── -->
+        <div class="d2-activity">
+          <div class="d2-block-title">Actividad reciente</div>
+          <div id="d2-activity-body" class="d2-activity-body"></div>
         </div>
 
-        <!-- ── Proyección IRPF ── -->
-        <div class="dsh-card" id="dsh-sim-card">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label">Proyección IRPF</span>
-            <span class="dsh-status dim" id="dsh-sim-status">—</span>
-          </div>
-          <div class="dsh-card-body" id="dsh-sim-body">
-            <div class="dsh-empty">Sin datos</div>
-          </div>
+        <!-- ── FLUJO DEL MES ── -->
+        <div class="d2-flujo">
+          <div id="d2-flujo-body" class="d2-flujo-body"></div>
         </div>
 
-        <!-- ── Alertas — strip inferior ── -->
-        <div class="dsh-card accent-red full-width" id="dsh-alerts-card">
-          <div class="dsh-card-head">
-            <span class="dsh-card-label">Alertas</span>
-            <span class="dsh-status dim" id="dsh-alerts-status">—</span>
-          </div>
-          <div class="dsh-card-body" id="dsh-alerts-body">
-            <div class="dsh-empty">Calculando…</div>
-          </div>
+        <!-- ── AUDITORÍAS RECIENTES ── -->
+        <div class="d2-audits">
+          <div class="d2-block-title">Auditorías recientes</div>
+          <div id="d2-audits-body" class="d2-audits-body"></div>
         </div>
 
-      </div><!-- /dsh-grid -->
+        <!-- ── ALERTAS ── -->
+        <div id="d2-alerts" class="d2-alerts" style="display:none">
+          <div class="d2-block-title">Alertas</div>
+          <div id="d2-alerts-body" class="d2-alerts-body"></div>
+        </div>
 
+      </div><!-- /d2-layout -->
 
     </div><!-- /page-dashboard -->
 
@@ -14313,8 +14367,8 @@ window.PILOTPAY_BACKEND_READY = true;
   <script src="js/avatarManager.js"></script>
 
 <!-- ══════════════════════════════════════════
-     MÓDULO: DASHBOARD
-     Pantalla principal de entrada a PilotPay
+     MÓDULO: DASHBOARD 2.0
+     Centro de control del piloto
 ══════════════════════════════════════════ -->
 <script>
 (function(){
@@ -14519,484 +14573,430 @@ window.PILOTPAY_BACKEND_READY = true;
 
     return { u, pd, calc, hist, baseNum, baseICAO, ccaa, irpf,
              storeSummary, statsFinancial, statsAnual,
-             expedienteActivo, nextAction, ultimaAuditoria, currentYear };
+             expedienteActivo, nextAction, ultimaAuditoria, currentYear,
+             _userId, _allMR };
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: HERO
+  ══════════════════════════════════════════ */
+  function _d2RenderHero(data) {
+    const { u, pd, expedienteActivo, ultimaAuditoria, statsFinancial, statsAnual, currentYear, _userId } = data;
+
+    // ── Avatar ──
+    const fn       = pd.funcion || u.funcion || '';
+    const fnColors = { CMD: '#3b82f6', COP: '#06b6d4', TCP: '#f59e0b' };
+    const fnColor  = fnColors[fn] || '#6b7280';
+    const userId   = _userId || '';
+
+    const imgEl  = el('d2-avatar-img');
+    const initEl = el('d2-avatar-initials');
+    if (imgEl && initEl) {
+      let avatarSet = false;
+      if (typeof AvatarManager !== 'undefined') {
+        try {
+          const avObj = AvatarManager.resolveSelection(userId);
+          const src   = avObj ? AvatarManager.resolveSrc(avObj) : null;
+          if (src) {
+            imgEl.src = src;
+            imgEl.style.borderColor = fnColor;
+            imgEl.style.display = 'block';
+            initEl.style.display = 'none';
+            avatarSet = true;
+          }
+        } catch(e) {}
+      }
+      if (!avatarSet) {
+        imgEl.style.display = 'none';
+        initEl.style.display = 'flex';
+        initEl.textContent = fn || userId.substring(0, 3).toUpperCase();
+        initEl.style.borderColor = fnColor;
+        initEl.style.color = fnColor;
+      }
+    }
+
+    // ── Chips: cargo → base → nivel ──
+    const nvl  = pd.nivelActual != null ? pd.nivelActual : (pd.nivel != null ? pd.nivel : (u.nivel != null ? u.nivel : ''));
+    const base = pd.base || u.base || '';
+    const baseLabel = (base === 'MAD' || parseFloat(base) > 1) ? 'MAD' : (base === 'TFN' ? 'TFN' : (base ? 'GC' : ''));
+    const chips = [];
+    if (fn)        chips.push(`<span class="d2-chip fn">${fn}</span>`);
+    if (baseLabel) chips.push(`<span class="d2-chip base">${baseLabel}</span>`);
+    if (nvl)       chips.push(`<span class="d2-chip nvl">NVL ${nvl}</span>`);
+    setHTML('d2-chips', chips.join(''));
+
+    // ── Nombre ──
+    const name = pd.name || pd.fullName || u.name || userId;
+    setText('d2-hero-name', name || '—');
+
+    // ── Neto protagonista — cascada de fuentes ──
+    const mr    = expedienteActivo;
+    const _calc = mr ? (mr.calculoTeorico || {}) : {};
+    const _aud  = mr ? (mr.auditoria      || {}) : {};
+
+    let netoVal   = null;
+    let netoLabel = 'NETO';
+    let mesRef    = '';
+
+    if (mr && _calc.liquidoReal != null) {
+      netoVal = _calc.liquidoReal;
+      netoLabel = 'NETO ESTIMADO';
+      mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+    } else if (mr && _aud.liqReal != null) {
+      netoVal = _aud.liqReal;
+      netoLabel = 'ÚLTIMO NETO OFICIAL';
+      mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+    } else if (ultimaAuditoria) {
+      const _ua    = ultimaAuditoria;
+      const _uReg  = _ua.regularizacion || null;
+      const _uAud  = _ua.auditoria      || {};
+      const _uCalc = _ua.calculoTeorico || {};
+      if (_uReg && _uReg.netoFinalAjustado != null)  netoVal = _uReg.netoFinalAjustado;
+      else if (_uAud.liqReal != null)                netoVal = _uAud.liqReal;
+      else if (_uCalc.liquidoReal != null)           netoVal = _uCalc.liquidoReal;
+      netoLabel = 'ÚLTIMO NETO OFICIAL';
+      mesRef = ((_ua.mesLabel || '') + ' ' + (_ua.year || '')).trim();
+    } else if (statsAnual && statsAnual.mediaNetaFinal != null) {
+      netoVal = statsAnual.mediaNetaFinal;
+      netoLabel = 'MEDIA MENSUAL ' + currentYear;
+    }
+
+    const amtEl = el('d2-neto-amount');
+    const lblEl = el('d2-neto-label');
+    const ctxEl = el('d2-neto-context');
+    if (lblEl) lblEl.textContent = netoLabel;
+    if (amtEl) {
+      amtEl.textContent = netoVal != null ? fmt(netoVal) : '—';
+      amtEl.className   = 'd2-neto-amount' + (netoVal != null ? ' has-data' : '');
+    }
+    if (ctxEl) {
+      const ctxParts = [];
+      if (mesRef) ctxParts.push(mesRef);
+      const media = statsFinancial && statsFinancial.mediaNetaFinal;
+      if (netoVal != null && media != null && Math.abs(netoVal - media) > 0.5) {
+        const delta   = netoVal - media;
+        const sign    = delta >= 0 ? '▲' : '▼';
+        const cls     = delta >= 0 ? 'pos' : 'neg';
+        const absFmt  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+        ctxParts.push(`<span class="d2-neto-delta ${cls}">${sign} ${absFmt} € vs media</span>`);
+      }
+      if (ctxParts.length > 0) {
+        ctxEl.innerHTML     = ctxParts.join(' · ');
+        ctxEl.style.display = 'flex';
+      } else {
+        ctxEl.style.display = 'none';
+      }
+    }
+
+    // ── Estado ──
+    const ESTADO_CFG = {
+      'pending_variables':   { dot: 'info',  txt: 'Variables cargadas · Pendiente de cálculo' },
+      'pending_calculation': { dot: 'info',  txt: 'Previsión generada · Pendiente de nómina' },
+      'pending_comparison':  { dot: 'info',  txt: 'Previsión generada · Pendiente de nómina' },
+      'con_diferencias':     { dot: 'alert', txt: 'Diferencias detectadas · Requiere atención' },
+      'auditado':            { dot: 'ok',    txt: 'Auditado · Sin diferencias pendientes' },
+      'regularizado':        { dot: 'ok',    txt: 'Regularizado' },
+      'reclamado':           { dot: 'ok',    txt: 'Reclamado' },
+      'cerrado':             { dot: 'ok',    txt: 'Cerrado' },
+    };
+    const estado = mr ? mr.estado : (ultimaAuditoria ? ultimaAuditoria.estado : null);
+    const cfg    = estado ? ESTADO_CFG[estado] : null;
+    const dotEl  = el('d2-estado-dot');
+    const txtEl  = el('d2-estado-text');
+    if (dotEl) dotEl.className = 'd2-estado-dot ' + (cfg ? cfg.dot : 'dim');
+    if (txtEl) txtEl.textContent = cfg ? cfg.txt : 'Sin expediente activo · Inicia cargando variables';
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: PRÓXIMO PASO
+  ══════════════════════════════════════════ */
+  function _d2RenderNextStep(data) {
+    const mr     = data.expedienteActivo;
+    const estado = mr ? mr.estado : null;
+
+    const FLOW_LABELS = ['01 Datos\nrecibidos', '02 Cálculo\ngenerado', '03 Comparativa', '04 Resultado'];
+    const DONE_SETS   = [
+      ['pending_variables','pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'],
+      ['pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'],
+      ['con_diferencias','auditado','regularizado','reclamado','cerrado'],
+      ['auditado','regularizado','reclamado','cerrado'],
+    ];
+
+    const flowParts = [];
+    for (var i = 0; i < FLOW_LABELS.length; i++) {
+      var cls = 'pending';
+      if (!estado) {
+        cls = (i === 0) ? 'active' : 'pending';
+      } else if (DONE_SETS[i].indexOf(estado) !== -1) {
+        cls = 'done';
+      } else {
+        cls = (i === 0 || DONE_SETS[i-1].indexOf(estado) !== -1) ? 'active' : 'pending';
+      }
+      var lblHtml = FLOW_LABELS[i].replace('\n', '<br>');
+      flowParts.push(`<div class="d2-flow-step"><div class="d2-flow-dot ${cls}"></div><div class="d2-flow-label ${cls}">${lblHtml}</div></div>`);
+      if (i < FLOW_LABELS.length - 1) {
+        var connCls = (estado && DONE_SETS[i].indexOf(estado) !== -1) ? ' done' : '';
+        flowParts.push(`<div class="d2-flow-connector${connCls}"></div>`);
+      }
+    }
+    setHTML('d2-flow', flowParts.join(''));
+
+    const ACTION_LABELS = {
+      'pending_variables':   'Variables cargadas. Genera la previsión en Calcular.',
+      'pending_calculation': 'Previsión generada. Sube la nómina oficial en Comparativa.',
+      'pending_comparison':  'Previsión generada. Sube la nómina oficial en Comparativa.',
+      'con_diferencias':     'Diferencias detectadas. Revisa y gestiona en el Historial.',
+      'auditado':            'Ciclo completado. Inicia el próximo mes con las variables.',
+      'regularizado':        'Ciclo completado. Inicia el próximo mes con las variables.',
+      'reclamado':           'Ciclo completado. Inicia el próximo mes con las variables.',
+      'cerrado':             'Ciclo completado. Inicia el próximo mes con las variables.',
+    };
+    const CTA_MAP = {
+      'pending_variables':   { tab: 'calcular',    btn: 'Ir a Calcular',    cls: '' },
+      'pending_calculation': { tab: 'comparativa', btn: 'Ir a Comparativa', cls: '' },
+      'pending_comparison':  { tab: 'comparativa', btn: 'Ir a Comparativa', cls: '' },
+      'con_diferencias':     { tab: 'historial',   btn: 'Ir a Historial',   cls: '' },
+    };
+    const DONE_ESTADOS = ['auditado','regularizado','reclamado','cerrado'];
+
+    var labelTxt, cta;
+    if (!estado) {
+      labelTxt = 'Sin expediente activo. Comienza cargando las variables del mes.';
+      cta = { tab: 'variables', btn: 'Cargar variables', cls: '' };
+    } else if (DONE_ESTADOS.indexOf(estado) !== -1) {
+      labelTxt = ACTION_LABELS[estado];
+      cta = { tab: 'variables', btn: 'Nuevo mes', cls: 'done' };
+    } else {
+      labelTxt = ACTION_LABELS[estado] || '';
+      cta = CTA_MAP[estado] || { tab: 'variables', btn: 'Cargar variables', cls: '' };
+    }
+
+    const labelEl = el('d2-next-label');
+    const btnEl   = el('d2-next-btn');
+    if (labelEl) labelEl.textContent = labelTxt;
+    if (btnEl) {
+      btnEl.textContent = cta.btn;
+      btnEl.className   = 'd2-next-btn' + (cta.cls ? ' ' + cta.cls : '');
+      btnEl.onclick     = (function(tab) { return function() { try { showTab(tab); } catch(e) {} }; })(cta.tab);
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: ACTIVIDAD RECIENTE
+  ══════════════════════════════════════════ */
+  function _d2RenderActivity(data) {
+    const { _allMR, _userId } = data;
+    const events = [];
+
+    const _relTime = function(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return null;
+      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+      if (days === 0) return 'Hoy';
+      if (days === 1) return 'Ayer';
+      if (days < 7)   return 'Hace ' + days + 'd';
+      if (days < 30)  return 'Hace ' + Math.floor(days / 7) + 'sem';
+      const m = Math.floor(days / 30);
+      return 'Hace ' + m + 'm';
+    };
+
+    const EVENTO = {
+      'pending_variables':   'Variables cargadas',
+      'pending_calculation': 'Cálculo generado',
+      'pending_comparison':  'Pendiente comparativa',
+      'con_diferencias':     'Diferencias detectadas',
+      'auditado':            'Auditoría completada',
+      'regularizado':        'Regularizado',
+      'reclamado':           'Reclamado',
+      'cerrado':             'Cerrado',
+    };
+
+    var sorted = (_allMR || []).slice().sort(function(a, b) {
+      var ta = a._updatedAt ? new Date(a._updatedAt).getTime() : 0;
+      var tb = b._updatedAt ? new Date(b._updatedAt).getTime() : 0;
+      return tb - ta;
+    });
+
+    sorted.slice(0, 4).forEach(function(mr) {
+      var rel  = _relTime(mr._updatedAt);
+      var desc = (EVENTO[mr.estado] || 'Actualizado');
+      var per  = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
+      if (per) desc += ' · ' + per;
+      events.push({ time: rel || '—', desc: desc });
+    });
+
+    var syncKey = window.storageKey
+      ? window.storageKey('last_sync_at')
+      : 'pilotpay:' + (_userId || '_') + ':last_sync_at';
+    var syncTs = localStorage.getItem(syncKey);
+    if (syncTs) {
+      var rel = _relTime(new Date(parseInt(syncTs, 10)).toISOString());
+      if (rel) events.push({ time: rel, desc: 'Sincronizado' });
+    }
+
+    const bodyEl = el('d2-activity-body');
+    if (!bodyEl) return;
+    if (events.length === 0) {
+      bodyEl.innerHTML = '<div class="d2-act-empty">Sin actividad reciente</div>';
+      return;
+    }
+    bodyEl.innerHTML = events.slice(0, 5).map(function(ev) {
+      return `<div class="d2-act-item"><span class="d2-act-time">${ev.time}</span><span class="d2-act-desc">${ev.desc}</span></div>`;
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: FLUJO DEL MES
+  ══════════════════════════════════════════ */
+  function _d2RenderFlujo(data) {
+    const mr     = data.expedienteActivo;
+    const estado = mr ? mr.estado : null;
+
+    const STEPS = [
+      { num: '01', lbl: 'Datos recibidos',  done: ['pending_variables','pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'] },
+      { num: '02', lbl: 'Cálculo generado', done: ['pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'] },
+      { num: '03', lbl: 'Comparativa',      done: ['con_diferencias','auditado','regularizado','reclamado','cerrado'] },
+      { num: '04', lbl: 'Resultado',        done: ['auditado','regularizado','reclamado','cerrado'] },
+    ];
+
+    const html = STEPS.map(function(step, i) {
+      var cls = 'pending';
+      if (!estado) {
+        cls = (i === 0) ? 'active' : 'pending';
+      } else if (step.done.indexOf(estado) !== -1) {
+        cls = 'done';
+      } else {
+        var prevDone = i === 0 || STEPS[i-1].done.indexOf(estado) !== -1;
+        cls = prevDone ? 'active' : 'pending';
+      }
+      var tick = cls === 'done' ? '<div class="d2-flujo-tick">✓</div>' : '';
+      return `<div class="d2-flujo-step ${cls}"><div class="d2-flujo-num">${step.num}</div><div class="d2-flujo-lbl">${step.lbl}</div>${tick}</div>`;
+    }).join('');
+
+    setHTML('d2-flujo-body', html);
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: AUDITORÍAS RECIENTES
+  ══════════════════════════════════════════ */
+  function _d2RenderAudits(data) {
+    const bodyEl = el('d2-audits-body');
+    if (!bodyEl) return;
+    const allMR = data._allMR || [];
+
+    if (allMR.length === 0) {
+      bodyEl.innerHTML = '<div class="d2-audit-empty">Sin auditorías registradas</div>';
+      return;
+    }
+
+    const BADGE = {
+      'auditado':            { cls: 'ok',   txt: 'Auditada' },
+      'regularizado':        { cls: 'ok',   txt: 'Regularizada' },
+      'reclamado':           { cls: 'ok',   txt: 'Reclamada' },
+      'cerrado':             { cls: 'ok',   txt: 'Cerrada' },
+      'con_diferencias':     { cls: 'red',  txt: 'Diferencias' },
+      'pending_comparison':  { cls: 'blue', txt: 'Previsión' },
+      'pending_calculation': { cls: 'blue', txt: 'Previsión' },
+      'pending_variables':   { cls: 'dim',  txt: 'Pendiente' },
+    };
+
+    var sorted = allMR.slice().sort(function(a, b) {
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+
+    bodyEl.innerHTML = sorted.slice(0, 6).map(function(mr) {
+      var period = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim() || '—';
+      var badge  = BADGE[mr.estado] || { cls: 'dim', txt: mr.estado || '—' };
+      var _calc  = mr.calculoTeorico || {};
+      var _aud   = mr.auditoria      || {};
+      var _reg   = mr.regularizacion || null;
+      var neto   = null;
+      if (_reg && _reg.netoFinalAjustado != null) neto = _reg.netoFinalAjustado;
+      else if (_aud.liqReal != null)              neto = _aud.liqReal;
+      else if (_calc.liquidoReal != null)         neto = _calc.liquidoReal;
+      return `<div class="d2-audit-row"><span class="d2-audit-period">${period}</span><span class="d2-audit-badge ${badge.cls}">${badge.txt}</span><span class="d2-audit-neto">${neto != null ? fmt(neto) : '—'}</span></div>`;
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════
+     RENDER: ALERTAS
+  ══════════════════════════════════════════ */
+  function _d2RenderAlerts(data) {
+    const { hist, storeSummary, statsFinancial, expedienteActivo } = data;
+    const alerts = [];
+
+    const _storeReady = !!(storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
+    const _auditStats = _storeReady ? storeSummary.auditStats : null;
+    const _statsReady = !!(_storeReady && statsFinancial && statsFinancial.mesesAuditados !== undefined);
+    const _exp        = expedienteActivo;
+
+    const _total = _auditStats ? _auditStats.total : (hist ? hist.length : 0);
+    if (_total === 0) {
+      alerts.push({ cls: 'amber', msg: '<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
+    }
+    if (_exp && _exp.estado === 'pending_variables') {
+      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
+      alerts.push({ cls: 'amber', msg: `<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en Calcular.` });
+    }
+    if (_exp && (_exp.estado === 'pending_comparison' || _exp.estado === 'pending_calculation')) {
+      const _mStr = (MESES_ES[_exp.month] || '') + ' ' + _exp.year;
+      alerts.push({ cls: 'amber', msg: `<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
+    }
+    if (_exp && _exp.estado === 'con_diferencias') {
+      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
+      alerts.push({ cls: 'red', msg: `<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
+    }
+    if (_statsReady && statsFinancial.mesesAuditados > 0) {
+      if (statsFinancial.hasErrors) {
+        alerts.push({ cls: 'red', msg: '<strong>Integridad de datos comprometida.</strong> Errores en expedientes auditados. Revisa el Historial.' });
+      } else if (statsFinancial.hasWarnings) {
+        alerts.push({ cls: 'amber', msg: '<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos.' });
+      }
+      if (statsFinancial.inconsistencias > 0) {
+        alerts.push({ cls: 'amber', msg: `<strong>${statsFinancial.inconsistencias} expediente${statsFinancial.inconsistencias > 1 ? 's' : ''} sin auditoría registrada.</strong> Posible migración incompleta.` });
+      }
+    }
+
+    const blockEl = el('d2-alerts');
+    const bodyEl  = el('d2-alerts-body');
+    if (!blockEl || !bodyEl) return;
+    if (alerts.length === 0) { blockEl.style.display = 'none'; return; }
+
+    blockEl.style.display = '';
+    bodyEl.innerHTML = alerts.map(function(a) {
+      return `<div class="d2-alert-row ${a.cls}"><span class="d2-alert-msg">${a.msg}</span></div>`;
+    }).join('');
   }
 
   /* ══════════════════════════════════════════
      RENDER PRINCIPAL
   ══════════════════════════════════════════ */
   window.renderDashboard = function renderDashboard() {
-    const derived = getDashboardData();
-    const { u, pd, calc, hist, baseICAO } = derived;
-
-    console.log('[Dashboard] profileData snapshot:', {
-      name: pd.name || pd.fullName || u.name,
-      nif: pd.nif,
-      ccaa: pd.ccaa, ccaaDerived: derived.ccaa,
-      irpf: pd.irpf, irpfUser: u.irpf, irpfDerived: derived.irpf,
-      estadoCivil: pd.estadoCivil,
-      baseNum: derived.baseNum, baseICAO,
-    });
-    if (derived.storeSummary && window._PP_DEBUG) {
-      console.log('[Dashboard] PilotPayStore connected ✓', {
-        auditorias : derived.storeSummary.auditStats.total,
-        conDifs    : derived.storeSummary.auditStats.conDiferencias,
-        mesActual  : derived.storeSummary.mesActual.label + ' ' + derived.storeSummary.mesActual.estado,
-        expediente : derived.storeSummary.expedition.totalMeses + ' meses indexados'
-      });
-    }
-    if (derived.statsFinancial && window._PP_DEBUG) {
-      const _sf = derived.statsFinancial;
-      console.log('[Dashboard] stats.getSummary ✓', {
-        mesesAuditados          : _sf.mesesAuditados,
-        mesesConDifsHistoricas  : _sf.mesesConDiferenciasHistoricas,
-        mesesRegularizados      : _sf.mesesRegularizados,
-        totalNetoCobrado        : _sf.totalNetoCobrado,
-        diferenciaNetaAcumulada : _sf.diferenciaNetaAcumulada,
-        mediaNetaFinal          : _sf.mediaNetaFinal,
-        hasErrors               : _sf.hasErrors,
-        hasWarnings             : _sf.hasWarnings,
-        primerMes               : _sf.primerMesAuditado,
-        ultimoMes               : _sf.ultimoMesAuditado
-      });
-    }
+    const data = getDashboardData();
     if (window._PP_DEBUG) {
-      const _ea = derived.expedienteActivo;
-      console.log('[Dashboard] expedienteActivo ✓', {
-        id         : _ea ? _ea.id                  : null,
-        estado     : _ea ? _ea.estado               : '(vacío)',
-        mesLabel   : _ea ? (_ea.mesLabel + ' ' + _ea.year) : '—',
-        nextAction : derived.nextAction ? derived.nextAction.texto : null,
-        statsAnual : derived.statsAnual ? {
-          mesesAuditados   : derived.statsAnual.mesesAuditados,
-          totalNetoCobrado : derived.statsAnual.totalNetoCobrado,
-          mediaNetaFinal   : derived.statsAnual.mediaNetaFinal,
-          year             : derived.currentYear
-        } : null
+      const { pd, u, expedienteActivo, statsAnual, currentYear } = data;
+      console.log('[Dashboard 2.0] init', {
+        name: pd.name || pd.fullName || u.name,
+        fn: pd.funcion || u.funcion,
+        nivel: pd.nivelActual != null ? pd.nivelActual : (pd.nivel != null ? pd.nivel : u.nivel),
+        expediente: expedienteActivo ? (expedienteActivo.estado + ' ' + (expedienteActivo.mesLabel||'') + ' ' + (expedienteActivo.year||'')) : 'ninguno',
+        statsAnual: statsAnual ? { year: currentYear, meses: statsAnual.mesesAuditados, media: statsAnual.mediaNetaFinal } : null,
       });
     }
-
-    /* ── Subtítulo contextual ── */
-    const fn  = pd.funcion || u.funcion || '';
-    const nvl = pd.nivelActual ?? pd.nivel ?? u.nivel ?? '';
-    const userCtx = [];
-    if (fn)  userCtx.push(fn);
-    if (nvl) userCtx.push('NVL ' + nvl);
-    userCtx.push('PilotPay Beta 3.0');
-    setText('dsh-sub', 'Resumen operativo, auditoría y simulación financiera · ' + userCtx.join(' · '));
-
-    /* ── Fecha en el encabezado ── */
-    const now = new Date();
-    setText('dsh-date', MESES_ES[now.getMonth() + 1] + ' ' + now.getFullYear());
-
-    renderExpedienteActivoCard(derived.expedienteActivo, derived.nextAction, derived.storeSummary);
-    renderUltimaAuditoriaCard(derived.ultimaAuditoria);
-    renderSimCard(pd);
-    renderResumenAnualCard(derived.statsAnual, derived.currentYear);
-    renderAlertsCard(hist, pd, calc, derived);
-    renderMetarWidget(baseICAO);
+    _d2RenderHero(data);
+    _d2RenderNextStep(data);
+    _d2RenderActivity(data);
+    _d2RenderFlujo(data);
+    _d2RenderAudits(data);
+    _d2RenderAlerts(data);
   };
 
-  /* ─────────────────────────────────────────
-     TARJETA: EXPEDIENTE ACTIVO
-  ───────────────────────────────────────── */
-  function renderExpedienteActivoCard(expedienteActivo, nextAction, storeSummary) {
-    const mr = expedienteActivo;
-
-    if (!mr) {
-      setAttr('dsh-audit-status', 'dim');
-      setText('dsh-audit-status', '—');
-      setHTML('dsh-audit-body', '<div class="dsh-empty">Sin expediente activo.<br>Carga las variables del mes cuando tengas el PDF de variables.</div>');
-      return;
-    }
-
-    const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
-    const _aud   = mr.auditoria      || {};
-    const _calc  = mr.calculoTeorico || {};
-    const _reg   = mr.regularizacion || null;
-
-    /* Badge — información neutra, color por urgencia real */
-    const _estadoCls = ({
-      con_diferencias:     'alerta',
-      auditado:            'ok',
-      regularizado:        'ok',
-      reclamado:           'ok',
-      cerrado:             'ok',
-      pending_variables:   'info',
-      pending_calculation: 'info',
-      pending_comparison:  'info'
-    })[mr.estado] || 'dim';
-    setAttr('dsh-audit-status', _estadoCls);
-    setText('dsh-audit-status', mesRef || '—');
-
-    /* Helper: tiempo relativo desde ISO */
-    const _relTime = function(iso) {
-      if (!iso) return null;
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return null;
-      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-      if (days === 0) return 'hoy';
-      if (days === 1) return 'hace 1 día';
-      if (days < 30)  return 'hace ' + days + ' días';
-      const m = Math.floor(days / 30);
-      return m === 1 ? 'hace 1 mes' : 'hace ' + m + ' meses';
-    };
-
-    /* Helper: fecha legible */
-    const _fmtFecha = function(iso) {
-      if (!iso) return null;
-      const d = new Date(iso);
-      return isNaN(d.getTime()) ? iso : d.toLocaleDateString('es-ES');
-    };
-
-    /* ── RAMA 1: pendiente del flujo mensual ─────────────────────────── */
-    const _isPending = ['pending_variables','pending_calculation','pending_comparison'].indexOf(mr.estado) !== -1;
-    if (_isPending) {
-      const _needsCalc = mr.estado === 'pending_variables';
-      const _hasCalc   = _calc.liquidoReal != null;
-
-      const _check = function(done, label) {
-        const icon = done ? '✓' : '⏳';
-        const col  = done ? 'var(--pos)' : 'var(--amber)';
-        return `<div style="font-size:11px;font-family:var(--mono);color:${col};margin-bottom:3px">${icon} ${label}</div>`;
-      };
-
-      let checks = _check(true, 'Variables cargadas');
-      if (_needsCalc) {
-        checks += _check(false, 'Calcular nómina teórica');
-      } else {
-        checks += _check(true, 'Previsión generada');
-        checks += _check(false, 'Pendiente de nómina oficial');
-      }
-
-      const _netoHtml = (_hasCalc && !_needsCalc)
-        ? `<div style="margin-top:10px">
-             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:1px">Neto estimado</div>
-             <div class="dsh-val-big green" style="margin-bottom:0">${fmt(_calc.liquidoReal)}</div>
-           </div>`
-        : '';
-
-      const _updAt = _relTime(mr._updatedAt);
-      const _updHtml = _updAt ? `<div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px">Actualizado: ${_updAt}</div>` : '';
-
-      const _ctaHtml = nextAction
-        ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
-             <span style="font-size:10px;font-family:var(--mono);color:var(--text3)">Próximo paso  </span>
-             <span onclick="showTab('${nextAction.tab}')" style="font-size:10px;font-family:var(--mono);color:var(--blue2);cursor:pointer;text-decoration:underline">${nextAction.texto} →</span>
-           </div>`
-        : '';
-
-      setHTML('dsh-audit-body', `<div style="margin-bottom:2px">${checks}</div>${_netoHtml}${_updHtml}${_ctaHtml}`);
-      return;
-    }
-
-    /* ── RAMA 2: con_diferencias — alerta activa, sin detalle técnico ── */
-    if (mr.estado === 'con_diferencias') {
-      const _liq      = _aud.liqReal;
-      const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
-      const bigHtml   = _liq != null
-        ? `<div class="dsh-val-big">${fmt(_liq)}</div>
-           <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto oficial</div>`
-        : '';
-      const rows = [];
-      if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
-      setHTML('dsh-audit-body', bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
-      return;
-    }
-
-    /* ── RAMA 3: definitivo (auditado / regularizado / reclamado / cerrado) ── */
-    const _estadoLabel = ({
-      auditado:    'Auditado',
-      regularizado:'Regularizado',
-      reclamado:   'Reclamado',
-      cerrado:     'Cerrado'
-    })[mr.estado] || mr.estado;
-
-    let _neto = null, _netoLabel = 'Neto';
-    if (_reg && _reg.netoFinalAjustado != null) {
-      _neto = _reg.netoFinalAjustado; _netoLabel = 'Neto final';
-    } else if (_aud.liqReal != null) {
-      _neto = _aud.liqReal; _netoLabel = 'Neto oficial';
-    }
-
-    const _fechaFmt = _fmtFecha(_aud.fechaAuditoria);
-
-    /* Estado como chip separado, período ya en badge */
-    const statusLine = `<div style="display:inline-block;font-size:10px;font-family:var(--mono);color:var(--pos);background:var(--green-dim);border:1px solid rgba(16,185,129,.2);border-radius:4px;padding:2px 7px;margin-bottom:10px;letter-spacing:.02em">✓ ${_estadoLabel}</div>`;
-    const bigHtml = _neto != null
-      ? `<div class="dsh-val-big">${fmt(_neto)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_netoLabel}</div>`
-      : '';
-
-    const rows = [];
-    if (_reg && _reg.importeNeto != null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
-    if (_fechaFmt) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaFmt}</span></div>`);
-
-    setHTML('dsh-audit-body', statusLine + bigHtml + (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
-  }
-
-  /* ─────────────────────────────────────────
-     TARJETA: ÚLTIMA AUDITORÍA
-     Estados terminados: auditado / regularizado / reclamado / cerrado.
-     Se oculta si no existe ningún registro terminado.
-  ───────────────────────────────────────── */
-  function renderUltimaAuditoriaCard(mr) {
-    const card = document.getElementById('dsh-last-audit-card');
-    if (!card) return;
-
-    if (!mr) {
-      card.style.display = 'none';
-      return;
-    }
-    card.style.display = '';
-
-    const mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
-    const _aud   = mr.auditoria      || {};
-    const _reg   = mr.regularizacion || null;
-    const _calc  = mr.calculoTeorico || {};
-
-    // Badge: período
-    setAttr('dsh-last-audit-status', 'ok');
-    setText('dsh-last-audit-status', mesRef || '—');
-
-    // Fecha legible
-    const _fmtFecha = function(iso) {
-      if (!iso) return null;
-      const d = new Date(iso);
-      return isNaN(d.getTime()) ? iso : d.toLocaleDateString('es-ES');
-    };
-
-    // Etiqueta y neto según estado
-    const _estadoLabel = ({
-      auditado:    'Auditado',
-      regularizado:'Regularizado',
-      reclamado:   'Reclamado',
-      cerrado:     'Cerrado'
-    })[mr.estado] || mr.estado;
-
-    let _neto = null, _netoLabel = 'Neto';
-    if (_reg && _reg.netoFinalAjustado != null) {
-      _neto = _reg.netoFinalAjustado; _netoLabel = 'Neto final';
-    } else if (_aud.liqReal != null) {
-      _neto = _aud.liqReal; _netoLabel = 'Neto oficial';
-    } else if (_calc.liquidoReal != null) {
-      _neto = _calc.liquidoReal; _netoLabel = 'Neto estimado';
-    }
-
-    const statusChip = `<div style="display:inline-block;font-size:10px;font-family:var(--mono);color:var(--pos);background:var(--green-dim);border:1px solid rgba(16,185,129,.2);border-radius:4px;padding:2px 7px;margin-bottom:10px;letter-spacing:.02em">✓ ${_estadoLabel}</div>`;
-
-    const bigHtml = _neto != null
-      ? `<div class="dsh-val-big">${fmt(_neto)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">${_netoLabel}</div>`
-      : '';
-
-    const rows = [];
-    const _fechaAudit = _fmtFecha(_aud.fechaAuditoria);
-    if (_reg && _reg.importeNeto != null)
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularización</span><span class="dsh-kv-v pos">${fmtD(_reg.importeNeto)}</span></div>`);
-    if (_fechaAudit)
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Auditado</span><span class="dsh-kv-v">${_fechaAudit}</span></div>`);
-    if (_aud.nDiscrepancias != null && mr.estado === 'auditado')
-      rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Discrepancias</span><span class="dsh-kv-v">${_aud.nDiscrepancias}</span></div>`);
-
-    setHTML('dsh-last-audit-body', statusChip + bigHtml +
-      (rows.length ? `<div class="dsh-kv-list">${rows.join('')}</div>` : ''));
-  }
-
   window.refreshP4DebugPanel = function () {};
-  // ══ fin DEBUG/ADMIN refreshP4DebugPanel (no-op — panel en Admin → Monitor) ══
+  // ══ fin no-op refreshP4DebugPanel (Admin → Monitor) ══
 
-  /* ─────────────────────────────────────────
-     TARJETA: SIMULADOR IRPF
-  ───────────────────────────────────────── */
-  function renderSimCard(pd) {
-    /* Fuente de verdad: inputs del simulador */
-    const brutoEl  = el('sim-bruto-acum');
-    const irpfEl   = el('sim-irpf-acum');
-    const brutoVal = brutoEl ? (parseFloat(brutoEl.value) || null) : null;
-    const irpfVal  = irpfEl  ? (parseFloat(irpfEl.value)  || null) : null;
-
-    const hasData = brutoVal > 0 || irpfVal > 0;
-
-    /* Calcular tipo efectivo estimado */
-    let tipoEfectivo = null;
-    if (brutoVal > 0 && irpfVal > 0) {
-      tipoEfectivo = (irpfVal / brutoVal * 100).toFixed(2);
-    }
-
-    /* Cuántos meses tiene el histórico y rango */
-    /* Fuente de verdad: historicoFiscal auditado */
-    const _yearNow = new Date().getFullYear();
-    const hist = (pd.historicoFiscal && pd.historicoFiscal[_yearNow]) || {};
-    const ABREV_M = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    const mesesNums = Object.keys(hist).map(Number).filter(k => k >= 1 && k <= 12 && hist[k] && (hist[k].brutoAcum != null || hist[k].irpfAcum != null)).sort((a, b) => a - b);
-    const mesesConDatos = mesesNums.length;
-
-    if (!hasData) {
-      setAttr('dsh-sim-status', 'dim');
-      setText('dsh-sim-status', '—');
-      setHTML('dsh-sim-body', '<div class="dsh-empty">Sin datos del simulador.<br>Actualiza desde Comparativa o el Simulador IRPF.</div>');
-      return;
-    }
-
-    setAttr('dsh-sim-status', 'info');
-    setText('dsh-sim-status', mesesConDatos > 0 ? mesesConDatos + ' meses' : 'Activo');
-
-    const bigHtml = brutoVal
-      ? `<div class="dsh-val-big">${fmt(brutoVal)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Bruto acumulado</div>`
-      : '';
-
-    let fechaLabel = '—';
-    let rangoLabel = '—';
-    if (mesesConDatos > 0) {
-      const anioSim = new Date().getFullYear();
-      const maxMes  = mesesNums[mesesNums.length - 1];
-      const minMes  = mesesNums[0];
-      fechaLabel = (MESES_ES[maxMes] || '—') + ' ' + anioSim;
-      rangoLabel = mesesConDatos === 1
-        ? ABREV_M[minMes]
-        : mesesConDatos + ' · ' + ABREV_M[minMes] + '–' + ABREV_M[maxMes];
-    }
-
-    const kvHtml = `<div class="dsh-kv-list">
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">IRPF acumulado</span>
-        <span class="dsh-kv-v">${fmt(irpfVal)}</span>
-      </div>
-      ${tipoEfectivo ? `<div class="dsh-kv">
-        <span class="dsh-kv-k">Tipo efectivo acumulado</span>
-        <span class="dsh-kv-v">${tipoEfectivo} %</span>
-      </div>` : ''}
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Último actualizado</span>
-        <span class="dsh-kv-v">${fechaLabel}</span>
-      </div>
-      <div class="dsh-kv">
-        <span class="dsh-kv-k">Meses con histórico</span>
-        <span class="dsh-kv-v">${rangoLabel}</span>
-      </div>
-    </div>`;
-
-    setHTML('dsh-sim-body', bigHtml + kvHtml);
-  }
-
-  /* ─────────────────────────────────────────
-     TARJETA: RESUMEN ANUAL
-  ───────────────────────────────────────── */
-  function renderResumenAnualCard(statsAnual, currentYear) {
-    const _yr    = currentYear || new Date().getFullYear();
-    const _ready = !!(statsAnual && statsAnual.mesesAuditados !== undefined);
-    const _nMeses = _ready ? statsAnual.mesesAuditados : 0;
-
-    /* Actualizar label con el año en curso */
-    const _labelEl = document.querySelector('#dsh-calc-card .dsh-card-label');
-    if (_labelEl) _labelEl.textContent = 'Resumen ' + _yr;
-
-    if (!_ready || _nMeses === 0) {
-      setAttr('dsh-calc-status', 'dim');
-      setText('dsh-calc-status', '—');
-      setHTML('dsh-calc-body', `<div class="dsh-empty">Sin auditorías en ${_yr}.</div>`);
-      return;
-    }
-
-    setAttr('dsh-calc-status', 'info');
-    setText('dsh-calc-status', _nMeses + ' mes' + (_nMeses !== 1 ? 'es' : ''));
-
-    const _netoAcum  = statsAnual.totalNetoCobrado;
-    const _mediaNeta = statsAnual.mediaNetaFinal;
-    const _regs      = statsAnual.mesesRegularizados;
-
-    const bigHtml = _netoAcum !== null
-      ? `<div class="dsh-val-big">${fmt(_netoAcum)}</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`
-      : `<div class="dsh-val-big dim">Sin datos de neto</div>
-         <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-bottom:6px">Neto cobrado en ${_yr}</div>`;
-
-    const rows = [];
-    rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Meses auditados</span><span class="dsh-kv-v">${_nMeses}</span></div>`);
-    if (_mediaNeta !== null) rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Media mensual</span><span class="dsh-kv-v">${fmt(_mediaNeta)}</span></div>`);
-    if (_regs > 0)   rows.push(`<div class="dsh-kv"><span class="dsh-kv-k">Regularizados</span><span class="dsh-kv-v pos">${_regs}</span></div>`);
-
-    setHTML('dsh-calc-body', bigHtml + `<div class="dsh-kv-list">${rows.join('')}</div>`);
-  }
-
-  /* ─────────────────────────────────────────
-     TARJETA: ALERTAS
-     Detecta situaciones que merecen atención
-  ───────────────────────────────────────── */
-  function renderAlertsCard(list, pd, calc, derived) {
-    derived = derived || {};
-    const alerts = [];
-
-    const _storeReady     = !!(derived.storeSummary && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready());
-    const _auditStats     = _storeReady ? derived.storeSummary.auditStats : null;
-    const _statsFinancial = derived.statsFinancial || null;
-    const _statsReady     = !!(_storeReady && _statsFinancial && _statsFinancial.mesesAuditados !== undefined);
-    const _exp            = derived.expedienteActivo;
-
-    /* 0. Sin auditorías — primera vez en la app */
-    const _totalAudits = _auditStats ? _auditStats.total : (list ? list.length : 0);
-    if (_totalAudits === 0) {
-      alerts.push({ cls:'amber', icon:'', msg:'<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
-    }
-
-    /* 1. pending_variables — falta calcular */
-    if (_exp && _exp.estado === 'pending_variables') {
-      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
-      alerts.push({ cls:'amber', icon:'', msg:`<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en la pestaña Calcular.` });
-    }
-
-    /* 2. pending_comparison / pending_calculation — falta nómina oficial */
-    if (_exp && (_exp.estado === 'pending_comparison' || _exp.estado === 'pending_calculation')) {
-      const MESES_N = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-      const _mStr = (MESES_N[_exp.month] || '') + ' ' + _exp.year;
-      alerts.push({ cls:'amber', icon:'', msg:`<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
-    }
-
-    /* 3. con_diferencias — problema activo (MonthRecord sin regularizar) */
-    if (_exp && _exp.estado === 'con_diferencias') {
-      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
-      alerts.push({ cls:'red', icon:'', msg:`<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
-    }
-
-    /* 4. Integridad del store */
-    if (_statsReady && _statsFinancial.mesesAuditados > 0) {
-      if (_statsFinancial.hasErrors) {
-        alerts.push({ cls:'red', icon:'', msg:'<strong>Integridad de datos comprometida.</strong> Se han detectado errores en expedientes auditados. Revisa el Historial.' });
-      } else if (_statsFinancial.hasWarnings) {
-        alerts.push({ cls:'amber', icon:'', msg:'<strong>Advertencias en expedientes.</strong> Algunos registros tienen datos incompletos. Revisa el Historial.' });
-      }
-      if (_statsFinancial.inconsistencias > 0) {
-        alerts.push({ cls:'amber', icon:'', msg:`<strong>${_statsFinancial.inconsistencias} expediente${_statsFinancial.inconsistencias > 1 ? 's' : ''} en estado definitivo sin auditoría registrada.</strong> Posible migración incompleta.` });
-      }
-    }
-
-    /* 5. Todo en orden */
-    if (alerts.length === 0) {
-      alerts.push({ cls:'green', icon:'', msg:'<strong>Todo en orden.</strong> No hay acciones pendientes.' });
-    }
-
-    /* Badge */
-    const nProblemas = alerts.filter(a => a.cls !== 'green').length;
-    setAttr('dsh-alerts-status', nProblemas === 0 ? 'ok' : nProblemas <= 2 ? 'aviso' : 'alerta');
-    setText('dsh-alerts-status', nProblemas === 0 ? 'OK' : nProblemas + ' aviso' + (nProblemas > 1 ? 's' : ''));
-
-    const alertsHTML = `<div class="dsh-alert-list">
-      ${alerts.map(a => `
-        <div class="dsh-alert-item ${a.cls}">
-          <span class="dsh-alert-dot">${a.icon}</span>
-          <span class="dsh-alert-text">${a.msg}</span>
-        </div>`).join('')}
-    </div>`;
-
-    setHTML('dsh-alerts-body', alertsHTML);
-  }
-
-  /* ─────────────────────────────────────────
-     WIDGET: METAR COMPACTO (cabecera)
-  ───────────────────────────────────────── */
-
+  /* ── METAR preservado para uso futuro ── */
   async function _fetchMetar(icao) {
     try {
       const res = await fetch(
@@ -15004,84 +15004,9 @@ window.PILOTPAY_BACKEND_READY = true;
         { cache: 'no-store' }
       );
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      return Array.isArray(data) && data.length > 0 ? data[0] : null;
-    } catch(e) {
-      return null;
-    }
-  }
-
-  async function renderMetarWidget(icao) {
-    const w  = document.getElementById('dsh-metar-widget');
-    const ei = document.getElementById('dsh-metar-icao');
-    const el = document.getElementById('dsh-metar-line');
-    const eo = document.getElementById('dsh-metar-obs');
-    if (!w || !ei || !el) return;
-
-    if (!icao) {
-      w.style.opacity = '0.35';
-      ei.textContent = '—';
-      el.textContent = 'base no configurada';
-      if (eo) eo.textContent = '';
-      return;
-    }
-
-    w.style.opacity = '1';
-    ei.textContent = icao;
-    el.textContent = 'cargando…';
-    if (eo) eo.textContent = '';
-
-    const m = await _fetchMetar(icao);
-
-    if (!m) {
-      el.textContent = 'sin METAR';
-      return;
-    }
-
-    // Construir línea compacta estilo aviation: WIND · VIS/CLOUDS · TEMP · QNH
-    const parts = [];
-
-    // Viento
-    if (m.wdir != null && m.wspd != null) {
-      const dir  = String(Math.round(m.wdir)).padStart(3, '0');
-      const spd  = String(Math.round(m.wspd)).padStart(2, '0');
-      const gust = m.wgst != null ? 'G' + Math.round(m.wgst) : '';
-      parts.push(dir + spd + gust + 'KT');
-    }
-
-    // Visibilidad o CAVOK
-    const layers = (m.skyLayers || m.clouds || []);
-    const hasSig = (m.wxString && m.wxString.trim()) ||
-                   layers.some(function(l) { return l.cover !== 'SKC' && l.cover !== 'CLR' && l.cover !== 'NSC'; });
-    if (!hasSig) {
-      parts.push('CAVOK');
-    } else {
-      if (m.visib != null) {
-        parts.push(parseFloat(m.visib) >= 9999 ? '9999' : m.visib + ' SM');
-      }
-      if (layers.length) {
-        const cld = layers.slice(0,2).map(function(c) {
-          return (c.cover || c.sky) + (c.base != null ? c.base : '');
-        }).join(' ');
-        parts.push(cld);
-      }
-    }
-
-    // Temperatura
-    if (m.temp != null) parts.push(m.temp + '°C');
-
-    // QNH
-    if (m.altim != null) parts.push('Q' + Math.round(m.altim));
-
-    el.textContent = parts.join(' · ') || '—';
-
-    // Hora observación
-    if (eo && m.obsTime) {
-      const t = new Date(m.obsTime * 1000);
-      const hh = String(t.getUTCHours()).padStart(2,'0');
-      const mm = String(t.getUTCMinutes()).padStart(2,'0');
-      eo.textContent = 'OBS ' + hh + mm + 'Z';
-    }
+      const json = await res.json();
+      return Array.isArray(json) && json.length > 0 ? json[0] : null;
+    } catch(e) { return null; }
   }
 
 })();
