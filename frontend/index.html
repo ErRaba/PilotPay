@@ -14471,8 +14471,20 @@ window.PILOTPAY_BACKEND_READY = true;
   function _selectExpedienteActivo(allMR) {
     if (!allMR || allMR.length === 0) return null;
 
-    // Prioridad 1: con_diferencias — requiere acción inmediata
-    var conDifs = allMR.filter(function(m) { return m.estado === 'con_diferencias'; });
+    // Prioridad 1: con_diferencias con errores reales no resueltos.
+    // Se excluyen dos casos que generan falsa urgencia:
+    //   a) mr.regularizacion !== null: el expediente fue regularizado y luego re-auditado;
+    //      onAuditoriaCompletada forzó el estado de vuelta a con_diferencias, pero la
+    //      regularización previa lo cierra. El Historial lo muestra OK (badge forzado a 'ok').
+    //   b) Sin discrepancias de tipo 'err': la auditoría produjo solo avisos (status==='warn').
+    //      El usuario los revisó y el Historial los muestra como AVISO (estado='aviso'),
+    //      no como ALERTA. No requieren acción inmediata.
+    var conDifs = allMR.filter(function(m) {
+      if (m.estado !== 'con_diferencias') return false;
+      if (m.regularizacion) return false;
+      var disc = (m.auditoria && m.auditoria.discrepancias) || [];
+      return disc.some(function(d) { return d.status === 'err'; });
+    });
     if (conDifs.length > 0) {
       return conDifs.reduce(function(a, b) {
         return (a.year > b.year || (a.year === b.year && a.month > b.month)) ? a : b;
