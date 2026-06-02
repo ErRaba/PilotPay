@@ -1897,11 +1897,10 @@ input[type=number] { -moz-appearance: textfield; }
           display: grid;
           grid-template-columns: 1fr 296px;
           grid-template-areas:
-            "hero  next"
-            "hero  activity"
-            "flujo flujo"
-            "audits audits"
-            "alerts alerts";
+            "hero     activity"
+            "flujo    flujo"
+            "audits   audits"
+            "alerts   alerts";
           gap: 14px;
           padding: 20px 24px;
           align-content: start;
@@ -1909,19 +1908,18 @@ input[type=number] { -moz-appearance: textfield; }
         @media (max-width: 900px) {
           .d2-layout {
             grid-template-columns: 1fr;
-            grid-template-areas: "hero" "next" "activity" "flujo" "audits" "alerts";
+            grid-template-areas: "hero" "activity" "flujo" "audits" "alerts";
             padding: 14px 16px;
           }
         }
 
-        .d2-hero, .d2-next, .d2-activity, .d2-flujo, .d2-audits, .d2-alerts {
+        .d2-hero, .d2-activity, .d2-flujo, .d2-audits, .d2-alerts {
           background: var(--card);
           border: 1px solid var(--border);
           border-radius: var(--r);
           overflow: hidden;
         }
         .d2-hero     { grid-area: hero; }
-        .d2-next     { grid-area: next; }
         .d2-activity { grid-area: activity; }
         .d2-flujo    { grid-area: flujo; }
         .d2-audits   { grid-area: audits; }
@@ -1933,24 +1931,29 @@ input[type=number] { -moz-appearance: textfield; }
           padding: 13px 16px 0;
         }
 
-        /* ── Hero ── */
-        .d2-hero { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        .d2-hero-identity { display: flex; align-items: center; gap: 14px; }
+        /* ── Hero — briefing temporal ── */
+        .d2-hero { padding: 0; display: flex; flex-direction: column; }
+        .d2-hero-header {
+          padding: 14px 18px; border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; gap: 12px;
+        }
         .d2-avatar-wrap { position: relative; flex-shrink: 0; }
         .d2-avatar {
-          width: 72px; height: 72px; border-radius: 50%;
-          border: 3px solid var(--border2);
-          object-fit: cover; display: block;
+          width: 52px; height: 52px; border-radius: 50%;
+          border: 2px solid var(--border2); object-fit: cover; display: block;
         }
         .d2-avatar-initials {
-          width: 72px; height: 72px; border-radius: 50%;
-          border: 3px solid var(--border2);
+          width: 52px; height: 52px; border-radius: 50%;
+          border: 2px solid var(--border2);
           display: flex; align-items: center; justify-content: center;
-          font-size: 20px; font-weight: 700; color: var(--text2);
+          font-size: 16px; font-weight: 700; color: var(--text2);
           background: var(--card); letter-spacing: .02em;
         }
-        .d2-hero-id { flex: 1; min-width: 0; }
-        .d2-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+        .d2-hero-id {
+          flex: 1; min-width: 0;
+          display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .d2-chips { display: flex; flex-wrap: wrap; gap: 5px; }
         .d2-chip {
           font-size: 9px; font-family: var(--mono); font-weight: 600;
           letter-spacing: .06em; text-transform: uppercase;
@@ -1960,81 +1963,73 @@ input[type=number] { -moz-appearance: textfield; }
         .d2-chip.nvl  { color: var(--text3);  background: transparent;      border-color: var(--border2); }
         .d2-chip.base { color: var(--text3);  background: transparent;      border-color: var(--border2); }
         .d2-hero-name {
-          font-size: 15px; font-weight: 600; color: var(--text);
+          font-size: 13px; font-weight: 600; color: var(--text2);
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* ── Neto ── */
-        .d2-neto-block { display: flex; flex-direction: column; gap: 3px; }
-        .d2-neto-label {
-          font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
-          text-transform: uppercase; color: var(--text3);
+        /* ── Temporal strip ── */
+        .d2-hero-temporal {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          /* Futuro: grid-template-columns: 1fr 1fr 1fr */
+          flex: 1;
         }
-        .d2-neto-amount {
-          font-family: var(--mono); font-size: 44px; font-weight: 700;
-          color: var(--text); letter-spacing: -.02em; line-height: 1.05;
+        .d2-hero-col.d2-hero-futuro { display: none; }
+        .d2-hero-col {
+          padding: 16px 18px 18px;
+          display: flex; flex-direction: column; gap: 5px;
+          min-width: 0;
         }
-        .d2-neto-amount.has-data { color: var(--green); }
-        .d2-neto-context {
+        .d2-hero-col + .d2-hero-col { border-left: 1px solid var(--border); }
+
+        .d2-col-label {
+          font-size: 9px; font-family: var(--mono); letter-spacing: .1em;
+          text-transform: uppercase; color: var(--text3); margin-bottom: 1px;
+        }
+        .d2-col-mes {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+          margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;
+        }
+        .d2-col-amount {
+          font-family: var(--mono); font-size: 36px; font-weight: 700;
+          color: var(--text); letter-spacing: -.02em; line-height: 1.1;
+        }
+        .d2-col-amount.confirmed   { color: var(--green); }
+        .d2-col-amount.in-progress { color: var(--text2); font-size: 26px; }
+        .d2-col-amount.empty       { color: var(--text3); font-size: 20px; font-weight: 400; }
+        .d2-col-badge {
+          display: flex; align-items: center; gap: 6px; margin-top: 3px;
           font-size: 11px; font-family: var(--mono); color: var(--text3);
-          display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px;
         }
-        .d2-neto-delta {
+        .d2-col-dot {
+          width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+        }
+        .d2-col-dot.ok    { background: var(--green); box-shadow: 0 0 5px rgba(16,185,129,.4); }
+        .d2-col-dot.info  { background: var(--blue2); }
+        .d2-col-dot.warn  { background: var(--amber); }
+        .d2-col-dot.alert { background: var(--red); box-shadow: 0 0 5px rgba(239,68,68,.4); }
+        .d2-col-dot.dim   { background: var(--border2); }
+        .d2-col-ctx {
+          font-size: 10px; font-family: var(--mono); color: var(--text3);
+          margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+        }
+        .d2-col-delta {
           font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px;
         }
-        .d2-neto-delta.pos { color: var(--green);  background: var(--green-dim); }
-        .d2-neto-delta.neg { color: var(--amber2); background: var(--amber-dim); }
-
-        /* ── Estado ── */
-        .d2-estado-wrap {
-          display: flex; align-items: center; gap: 7px;
-          padding-top: 14px; border-top: 1px solid var(--border);
+        .d2-col-delta.pos { color: var(--green);  background: var(--green-dim); }
+        .d2-col-delta.neg { color: var(--amber2); background: var(--amber-dim); }
+        .d2-col-cta {
+          margin-top: auto;
+          background: transparent; border: 1px solid var(--blue2); color: var(--blue2);
+          font-family: var(--mono); font-size: 11px; font-weight: 600;
+          padding: 7px 10px; border-radius: 4px; cursor: pointer; width: 100%;
+          text-align: left; letter-spacing: .02em; transition: background .15s;
         }
-        .d2-estado-dot {
-          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-        }
-        .d2-estado-dot.ok    { background: var(--green);  box-shadow: 0 0 6px rgba(16,185,129,.4); }
-        .d2-estado-dot.warn  { background: var(--amber); }
-        .d2-estado-dot.alert { background: var(--red); }
-        .d2-estado-dot.info  { background: var(--blue2); }
-        .d2-estado-dot.dim   { background: var(--border2); }
-        .d2-estado-text { font-size: 11px; font-family: var(--mono); color: var(--text3); line-height: 1.4; }
-
-        /* ── Próximo paso ── */
-        .d2-next { padding: 13px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
-        .d2-flow { display: flex; align-items: flex-start; gap: 0; }
-        .d2-flow-step {
-          display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
-        }
-        .d2-flow-dot {
-          width: 10px; height: 10px; border-radius: 50%;
-          border: 2px solid var(--border2); background: transparent;
-        }
-        .d2-flow-dot.done    { background: var(--green);  border-color: var(--green); }
-        .d2-flow-dot.active  { background: var(--blue2);  border-color: var(--blue2); box-shadow: 0 0 6px rgba(59,130,246,.35); }
-        .d2-flow-dot.pending { background: transparent;   border-color: var(--border2); }
-        .d2-flow-label {
-          font-size: 9px; font-family: var(--mono); color: var(--text3);
-          text-align: center; letter-spacing: .02em; line-height: 1.35;
-        }
-        .d2-flow-label.active { color: var(--blue2); font-weight: 600; }
-        .d2-flow-connector {
-          height: 1px; background: var(--border2);
-          flex: 1; max-width: 24px; margin-top: 5px; flex-shrink: 0;
-        }
-        .d2-flow-connector.done { background: var(--green); }
-        .d2-next-label {
-          font-size: 12px; color: var(--text2); line-height: 1.5; font-family: var(--mono);
-        }
-        .d2-next-btn {
-          background: var(--blue2); color: #fff;
-          border: none; border-radius: var(--r-sm, 4px);
-          font-size: 12px; font-family: var(--mono); font-weight: 600;
-          padding: 8px 12px; cursor: pointer; width: 100%;
-          letter-spacing: .02em; transition: opacity .15s;
-        }
-        .d2-next-btn:hover { opacity: .88; }
-        .d2-next-btn.done  { background: transparent; border: 1px solid var(--border2); color: var(--text3); }
+        .d2-col-cta:hover  { background: rgba(59,130,246,.08); }
+        .d2-col-cta.alert  { border-color: var(--red);     color: var(--red); }
+        .d2-col-cta.alert:hover { background: rgba(239,68,68,.08); }
+        .d2-col-cta.done   { border-color: var(--border2); color: var(--text3); }
+        .d2-col-cta.done:hover  { background: rgba(255,255,255,.03); }
 
         /* ── Actividad reciente ── */
         .d2-activity { padding: 13px 16px 14px; }
@@ -2104,9 +2099,9 @@ input[type=number] { -moz-appearance: textfield; }
 
       <div class="d2-layout">
 
-        <!-- ── HERO ── -->
+        <!-- ── HERO — briefing temporal ── -->
         <div class="d2-hero">
-          <div class="d2-hero-identity">
+          <div class="d2-hero-header">
             <div class="d2-avatar-wrap">
               <img id="d2-avatar-img" class="d2-avatar" style="display:none" alt="">
               <div id="d2-avatar-initials" class="d2-avatar-initials"></div>
@@ -2116,23 +2111,41 @@ input[type=number] { -moz-appearance: textfield; }
               <div id="d2-hero-name" class="d2-hero-name">—</div>
             </div>
           </div>
-          <div class="d2-neto-block">
-            <div id="d2-neto-label" class="d2-neto-label">NETO</div>
-            <div id="d2-neto-amount" class="d2-neto-amount">—</div>
-            <div id="d2-neto-context" class="d2-neto-context" style="display:none"></div>
-          </div>
-          <div class="d2-estado-wrap">
-            <span id="d2-estado-dot" class="d2-estado-dot dim"></span>
-            <span id="d2-estado-text" class="d2-estado-text">—</span>
-          </div>
-        </div>
-
-        <!-- ── PRÓXIMO PASO ── -->
-        <div class="d2-next">
-          <div class="d2-block-title" style="padding:0 0 2px">Próximo paso</div>
-          <div id="d2-flow" class="d2-flow"></div>
-          <div id="d2-next-label" class="d2-next-label"></div>
-          <button id="d2-next-btn" class="d2-next-btn"></button>
+          <div class="d2-hero-temporal">
+            <!-- PASADO: último mes auditado/confirmado -->
+            <div class="d2-hero-col">
+              <div class="d2-col-label">Pasado</div>
+              <div id="d2-p-mes" class="d2-col-mes">—</div>
+              <div id="d2-p-amount" class="d2-col-amount empty">—</div>
+              <div class="d2-col-badge">
+                <span id="d2-p-dot" class="d2-col-dot dim"></span>
+                <span id="d2-p-estado"></span>
+              </div>
+              <div id="d2-p-ctx" class="d2-col-ctx" style="display:none"></div>
+            </div>
+            <!-- PRESENTE: expediente activo o mes en curso -->
+            <div class="d2-hero-col">
+              <div class="d2-col-label">Presente</div>
+              <div id="d2-n-mes" class="d2-col-mes">—</div>
+              <div id="d2-n-amount" class="d2-col-amount empty">—</div>
+              <div class="d2-col-badge">
+                <span id="d2-n-dot" class="d2-col-dot dim"></span>
+                <span id="d2-n-estado"></span>
+              </div>
+              <div id="d2-n-ctx" class="d2-col-ctx" style="display:none"></div>
+              <button id="d2-n-cta" class="d2-col-cta" style="display:none"></button>
+            </div>
+            <!-- FUTURO: reservado para parser de programación eCrew -->
+            <div class="d2-hero-col d2-hero-futuro">
+              <div class="d2-col-label">Futuro</div>
+              <div id="d2-f-mes" class="d2-col-mes">—</div>
+              <div id="d2-f-amount" class="d2-col-amount empty">—</div>
+              <div class="d2-col-badge">
+                <span id="d2-f-dot" class="d2-col-dot dim"></span>
+                <span id="d2-f-estado"></span>
+              </div>
+            </div>
+          </div><!-- /d2-hero-temporal -->
         </div>
 
         <!-- ── ACTIVIDAD RECIENTE ── -->
@@ -14590,12 +14603,13 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ══════════════════════════════════════════
-     RENDER: HERO
+     RENDER: HERO — briefing temporal
+     PASADO | PRESENTE | FUTURO (reservado)
   ══════════════════════════════════════════ */
   function _d2RenderHero(data) {
-    const { u, pd, expedienteActivo, ultimaAuditoria, statsFinancial, statsAnual, currentYear, _userId } = data;
+    const { u, pd, expedienteActivo, ultimaAuditoria, statsFinancial, _userId } = data;
 
-    // ── Avatar ──
+    // ── Avatar + Identity Header ──────────────────────────────────────────────
     const fn       = pd.funcion || u.funcion || '';
     const fnColors = { CMD: '#3b82f6', COP: '#06b6d4', TCP: '#f59e0b' };
     const fnColor  = fnColors[fn] || '#6b7280';
@@ -14610,24 +14624,19 @@ window.PILOTPAY_BACKEND_READY = true;
           const avObj = AvatarManager.resolveSelection(userId);
           const src   = avObj ? AvatarManager.resolveSrc(avObj) : null;
           if (src) {
-            imgEl.src = src;
-            imgEl.style.borderColor = fnColor;
-            imgEl.style.display = 'block';
-            initEl.style.display = 'none';
+            imgEl.src = src; imgEl.style.borderColor = fnColor;
+            imgEl.style.display = 'block'; initEl.style.display = 'none';
             avatarSet = true;
           }
         } catch(e) {}
       }
       if (!avatarSet) {
-        imgEl.style.display = 'none';
-        initEl.style.display = 'flex';
+        imgEl.style.display = 'none'; initEl.style.display = 'flex';
         initEl.textContent = fn || userId.substring(0, 3).toUpperCase();
-        initEl.style.borderColor = fnColor;
-        initEl.style.color = fnColor;
+        initEl.style.borderColor = fnColor; initEl.style.color = fnColor;
       }
     }
 
-    // ── Chips: cargo → base → nivel ──
     const nvl  = pd.nivelActual != null ? pd.nivelActual : (pd.nivel != null ? pd.nivel : (u.nivel != null ? u.nivel : ''));
     const base = pd.base || u.base || '';
     const baseLabel = (base === 'MAD' || parseFloat(base) > 1) ? 'MAD' : (base === 'TFN' ? 'TFN' : (base ? 'GC' : ''));
@@ -14636,162 +14645,129 @@ window.PILOTPAY_BACKEND_READY = true;
     if (baseLabel) chips.push(`<span class="d2-chip base">${baseLabel}</span>`);
     if (nvl)       chips.push(`<span class="d2-chip nvl">NVL ${nvl}</span>`);
     setHTML('d2-chips', chips.join(''));
+    setText('d2-hero-name', pd.name || pd.fullName || u.name || userId || '—');
 
-    // ── Nombre ──
-    const name = pd.name || pd.fullName || u.name || userId;
-    setText('d2-hero-name', name || '—');
+    // ── PASADO: último mes auditado/confirmado ────────────────────────────────
+    var ua     = ultimaAuditoria;
+    var uaCalc = ua ? (ua.calculoTeorico || {}) : {};
+    var uaAud  = ua ? (ua.auditoria      || {}) : {};
+    var uaReg  = ua ? (ua.regularizacion || null) : null;
+    var pNeto  = null;
+    if (uaReg && uaReg.netoFinalAjustado != null) pNeto = uaReg.netoFinalAjustado;
+    else if (uaAud.liqReal != null)               pNeto = uaAud.liqReal;
+    else if (uaCalc.liquidoReal != null)          pNeto = uaCalc.liquidoReal;
 
-    // ── Neto protagonista — cascada de fuentes ──
-    const mr    = expedienteActivo;
-    const _calc = mr ? (mr.calculoTeorico || {}) : {};
-    const _aud  = mr ? (mr.auditoria      || {}) : {};
-
-    let netoVal   = null;
-    let netoLabel = 'NETO';
-    let mesRef    = '';
-
-    if (mr && _calc.liquidoReal != null) {
-      netoVal = _calc.liquidoReal;
-      netoLabel = 'NETO ESTIMADO';
-      mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
-    } else if (mr && _aud.liqReal != null) {
-      netoVal = _aud.liqReal;
-      netoLabel = 'ÚLTIMO NETO OFICIAL';
-      mesRef = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
-    } else if (ultimaAuditoria) {
-      const _ua    = ultimaAuditoria;
-      const _uReg  = _ua.regularizacion || null;
-      const _uAud  = _ua.auditoria      || {};
-      const _uCalc = _ua.calculoTeorico || {};
-      if (_uReg && _uReg.netoFinalAjustado != null)  netoVal = _uReg.netoFinalAjustado;
-      else if (_uAud.liqReal != null)                netoVal = _uAud.liqReal;
-      else if (_uCalc.liquidoReal != null)           netoVal = _uCalc.liquidoReal;
-      netoLabel = 'ÚLTIMO NETO OFICIAL';
-      mesRef = ((_ua.mesLabel || '') + ' ' + (_ua.year || '')).trim();
-    } else if (statsAnual && statsAnual.mediaNetaFinal != null) {
-      netoVal = statsAnual.mediaNetaFinal;
-      netoLabel = 'MEDIA MENSUAL ' + currentYear;
-    }
-
-    const amtEl = el('d2-neto-amount');
-    const lblEl = el('d2-neto-label');
-    const ctxEl = el('d2-neto-context');
-    if (lblEl) lblEl.textContent = netoLabel;
-    if (amtEl) {
-      amtEl.textContent = netoVal != null ? fmt(netoVal) : '—';
-      amtEl.className   = 'd2-neto-amount' + (netoVal != null ? ' has-data' : '');
-    }
-    if (ctxEl) {
-      const ctxParts = [];
-      if (mesRef) ctxParts.push(mesRef);
-      const media = statsFinancial && statsFinancial.mediaNetaFinal;
-      if (netoVal != null && media != null && Math.abs(netoVal - media) > 0.5) {
-        const delta   = netoVal - media;
-        const sign    = delta >= 0 ? '▲' : '▼';
-        const cls     = delta >= 0 ? 'pos' : 'neg';
-        const absFmt  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
-        ctxParts.push(`<span class="d2-neto-delta ${cls}">${sign} ${absFmt} € vs media</span>`);
-      }
-      if (ctxParts.length > 0) {
-        ctxEl.innerHTML     = ctxParts.join(' · ');
-        ctxEl.style.display = 'flex';
-      } else {
-        ctxEl.style.display = 'none';
-      }
-    }
-
-    // ── Estado ──
-    const ESTADO_CFG = {
-      'pending_variables':   { dot: 'info',  txt: 'Variables cargadas · Pendiente de cálculo' },
-      'pending_calculation': { dot: 'info',  txt: 'Previsión generada · Pendiente de nómina' },
-      'pending_comparison':  { dot: 'info',  txt: 'Previsión generada · Pendiente de nómina' },
-      'con_diferencias':     { dot: 'alert', txt: 'Diferencias detectadas · Requiere atención' },
-      'auditado':            { dot: 'ok',    txt: 'Auditado · Sin diferencias pendientes' },
-      'regularizado':        { dot: 'ok',    txt: 'Regularizado' },
-      'reclamado':           { dot: 'ok',    txt: 'Reclamado' },
-      'cerrado':             { dot: 'ok',    txt: 'Cerrado' },
+    var PASADO_ESTADO = {
+      'auditado': { dot: 'ok', txt: 'Auditado' }, 'regularizado': { dot: 'ok', txt: 'Regularizado' },
+      'reclamado': { dot: 'ok', txt: 'Reclamado' }, 'cerrado': { dot: 'ok', txt: 'Cerrado' },
     };
-    const estado = mr ? mr.estado : (ultimaAuditoria ? ultimaAuditoria.estado : null);
-    const cfg    = estado ? ESTADO_CFG[estado] : null;
-    const dotEl  = el('d2-estado-dot');
-    const txtEl  = el('d2-estado-text');
-    if (dotEl) dotEl.className = 'd2-estado-dot ' + (cfg ? cfg.dot : 'dim');
-    if (txtEl) txtEl.textContent = cfg ? cfg.txt : 'Sin expediente activo · Inicia cargando variables';
+
+    if (ua) {
+      setText('d2-p-mes', (MESES_ES[ua.month] || '') + (ua.year ? ' ' + ua.year : '') || '—');
+      var pAmtEl = el('d2-p-amount');
+      if (pAmtEl) { pAmtEl.textContent = pNeto != null ? fmt(pNeto) : '—'; pAmtEl.className = 'd2-col-amount' + (pNeto != null ? ' confirmed' : ' empty'); }
+      var pCfg = PASADO_ESTADO[ua.estado] || { dot: 'dim', txt: ua.estado || '—' };
+      var pDotEl = el('d2-p-dot'); if (pDotEl) pDotEl.className = 'd2-col-dot ' + pCfg.dot;
+      setText('d2-p-estado', pCfg.txt);
+      var pCtxEl = el('d2-p-ctx');
+      if (pCtxEl) {
+        var media = statsFinancial && statsFinancial.mediaNetaFinal;
+        if (pNeto != null && media != null && Math.abs(pNeto - media) > 0.5) {
+          var delta = pNeto - media;
+          var dCls  = delta >= 0 ? 'pos' : 'neg';
+          var dSign = delta >= 0 ? '▲' : '▼';
+          var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
+          pCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € vs media</span>`;
+          pCtxEl.style.display = 'flex';
+        } else { pCtxEl.style.display = 'none'; }
+      }
+    } else {
+      setText('d2-p-mes', '—');
+      var pAmtEl = el('d2-p-amount'); if (pAmtEl) { pAmtEl.textContent = '—'; pAmtEl.className = 'd2-col-amount empty'; }
+      var pDotEl = el('d2-p-dot'); if (pDotEl) pDotEl.className = 'd2-col-dot dim';
+      setText('d2-p-estado', 'Sin historial');
+      var pCtxEl = el('d2-p-ctx'); if (pCtxEl) pCtxEl.style.display = 'none';
+    }
+
+    // ── PRESENTE: mejor información disponible del ciclo activo ──────────────
+    var mr     = expedienteActivo;
+    var mrCalc = mr ? (mr.calculoTeorico || {}) : {};
+    var mrAud  = mr ? (mr.auditoria      || {}) : {};
+
+    var PRESENTE_CFG = {
+      'pending_variables':   { dot: 'info',  txt: 'Variables cargadas',  cta: { tab: 'calcular',    btn: '→ Ir a Calcular',    cls: '' } },
+      'pending_calculation': { dot: 'info',  txt: 'Cálculo disponible',  cta: { tab: 'comparativa', btn: '→ Ir a Comparativa', cls: '' } },
+      'pending_comparison':  { dot: 'info',  txt: 'Pendiente de nómina', cta: { tab: 'comparativa', btn: '→ Ir a Comparativa', cls: '' } },
+      'con_diferencias':     { dot: 'alert', txt: 'Diferencias activas', cta: { tab: 'historial',   btn: '→ Ir a Historial',   cls: 'alert' } },
+    };
+
+    if (mr) {
+      setText('d2-n-mes', (MESES_ES[mr.month] || '') + (mr.year ? ' ' + mr.year : '') || '—');
+
+      // Mejor neto disponible según estado del ciclo
+      var nNeto = null; var nAmtClass = 'empty';
+      if (mr.estado === 'pending_comparison' || mr.estado === 'pending_calculation') {
+        if (mrCalc.liquidoReal != null) { nNeto = mrCalc.liquidoReal; nAmtClass = 'in-progress'; }
+      } else if (mr.estado === 'con_diferencias') {
+        if (mrAud.liqReal != null)          { nNeto = mrAud.liqReal;       nAmtClass = 'in-progress'; }
+        else if (mrCalc.liquidoReal != null) { nNeto = mrCalc.liquidoReal; nAmtClass = 'in-progress'; }
+      }
+
+      var nAmtEl = el('d2-n-amount');
+      if (nAmtEl) { nAmtEl.textContent = nNeto != null ? fmt(nNeto) : '—'; nAmtEl.className = 'd2-col-amount ' + nAmtClass; }
+
+      var nCfg = PRESENTE_CFG[mr.estado];
+      var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot ' + (nCfg ? nCfg.dot : 'dim');
+      setText('d2-n-estado', nCfg ? nCfg.txt : (mr.estado || '—'));
+
+      var nCtxEl = el('d2-n-ctx');
+      if (nCtxEl) {
+        if (nNeto != null && (mr.estado === 'pending_comparison' || mr.estado === 'pending_calculation')) {
+          nCtxEl.textContent = 'Estimado · pendiente de auditoría'; nCtxEl.style.display = 'flex';
+        } else { nCtxEl.style.display = 'none'; }
+      }
+
+      var nCtaEl = el('d2-n-cta');
+      if (nCtaEl && nCfg && nCfg.cta) {
+        nCtaEl.textContent = nCfg.cta.btn; nCtaEl.style.display = '';
+        nCtaEl.className = 'd2-col-cta' + (nCfg.cta.cls ? ' ' + nCfg.cta.cls : '');
+        nCtaEl.onclick = (function(t) { return function() { try { showTab(t); } catch(e) {} }; })(nCfg.cta.tab);
+      } else if (nCtaEl) { nCtaEl.style.display = 'none'; }
+
+    } else {
+      // Sin expediente activo
+      var now = new Date();
+      var nowYear = now.getFullYear(); var nowMonth = now.getMonth() + 1;
+      var sameAsUa = ua && ua.year === nowYear && ua.month === nowMonth;
+
+      if (sameAsUa) {
+        // Mes actual ya auditado → ciclo cerrado
+        setText('d2-n-mes', (MESES_ES[nowMonth] || '') + ' ' + nowYear);
+        var nAmtEl = el('d2-n-amount'); if (nAmtEl) { nAmtEl.textContent = ''; nAmtEl.className = 'd2-col-amount empty'; }
+        var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot ok';
+        setText('d2-n-estado', 'Ciclo cerrado');
+        var nCtaEl = el('d2-n-cta'); if (nCtaEl) nCtaEl.style.display = 'none';
+      } else {
+        // Mes actual sin datos
+        setText('d2-n-mes', (MESES_ES[nowMonth] || '') + ' ' + nowYear);
+        var nAmtEl = el('d2-n-amount'); if (nAmtEl) { nAmtEl.textContent = '—'; nAmtEl.className = 'd2-col-amount empty'; }
+        var nDotEl = el('d2-n-dot'); if (nDotEl) nDotEl.className = 'd2-col-dot dim';
+        setText('d2-n-estado', 'Sin datos del mes');
+        var nCtaEl = el('d2-n-cta');
+        if (nCtaEl) {
+          nCtaEl.textContent = '→ Cargar variables'; nCtaEl.className = 'd2-col-cta done';
+          nCtaEl.style.display = '';
+          nCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
+        }
+      }
+      var nCtxEl = el('d2-n-ctx'); if (nCtxEl) nCtxEl.style.display = 'none';
+    }
   }
 
   /* ══════════════════════════════════════════
-     RENDER: PRÓXIMO PASO
+     RENDER: PRÓXIMO PASO — absorbido en PRESENTE
   ══════════════════════════════════════════ */
-  function _d2RenderNextStep(data) {
-    const mr     = data.expedienteActivo;
-    const estado = mr ? mr.estado : null;
-
-    const FLOW_LABELS = ['01 Datos\nrecibidos', '02 Cálculo\ngenerado', '03 Comparativa', '04 Resultado'];
-    const DONE_SETS   = [
-      ['pending_variables','pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'],
-      ['pending_calculation','pending_comparison','con_diferencias','auditado','regularizado','reclamado','cerrado'],
-      ['con_diferencias','auditado','regularizado','reclamado','cerrado'],
-      ['auditado','regularizado','reclamado','cerrado'],
-    ];
-
-    const flowParts = [];
-    for (var i = 0; i < FLOW_LABELS.length; i++) {
-      var cls = 'pending';
-      if (!estado) {
-        cls = (i === 0) ? 'active' : 'pending';
-      } else if (DONE_SETS[i].indexOf(estado) !== -1) {
-        cls = 'done';
-      } else {
-        cls = (i === 0 || DONE_SETS[i-1].indexOf(estado) !== -1) ? 'active' : 'pending';
-      }
-      var lblHtml = FLOW_LABELS[i].replace('\n', '<br>');
-      flowParts.push(`<div class="d2-flow-step"><div class="d2-flow-dot ${cls}"></div><div class="d2-flow-label ${cls}">${lblHtml}</div></div>`);
-      if (i < FLOW_LABELS.length - 1) {
-        var connCls = (estado && DONE_SETS[i].indexOf(estado) !== -1) ? ' done' : '';
-        flowParts.push(`<div class="d2-flow-connector${connCls}"></div>`);
-      }
-    }
-    setHTML('d2-flow', flowParts.join(''));
-
-    const ACTION_LABELS = {
-      'pending_variables':   'Variables cargadas. Genera la previsión en Calcular.',
-      'pending_calculation': 'Previsión generada. Sube la nómina oficial en Comparativa.',
-      'pending_comparison':  'Previsión generada. Sube la nómina oficial en Comparativa.',
-      'con_diferencias':     'Diferencias detectadas. Revisa y gestiona en el Historial.',
-      'auditado':            'Ciclo completado. Inicia el próximo mes con las variables.',
-      'regularizado':        'Ciclo completado. Inicia el próximo mes con las variables.',
-      'reclamado':           'Ciclo completado. Inicia el próximo mes con las variables.',
-      'cerrado':             'Ciclo completado. Inicia el próximo mes con las variables.',
-    };
-    const CTA_MAP = {
-      'pending_variables':   { tab: 'calcular',    btn: 'Ir a Calcular',    cls: '' },
-      'pending_calculation': { tab: 'comparativa', btn: 'Ir a Comparativa', cls: '' },
-      'pending_comparison':  { tab: 'comparativa', btn: 'Ir a Comparativa', cls: '' },
-      'con_diferencias':     { tab: 'historial',   btn: 'Ir a Historial',   cls: '' },
-    };
-    const DONE_ESTADOS = ['auditado','regularizado','reclamado','cerrado'];
-
-    var labelTxt, cta;
-    if (!estado) {
-      labelTxt = 'Sin expediente activo. Comienza cargando las variables del mes.';
-      cta = { tab: 'variables', btn: 'Cargar variables', cls: '' };
-    } else if (DONE_ESTADOS.indexOf(estado) !== -1) {
-      labelTxt = ACTION_LABELS[estado];
-      cta = { tab: 'variables', btn: 'Nuevo mes', cls: 'done' };
-    } else {
-      labelTxt = ACTION_LABELS[estado] || '';
-      cta = CTA_MAP[estado] || { tab: 'variables', btn: 'Cargar variables', cls: '' };
-    }
-
-    const labelEl = el('d2-next-label');
-    const btnEl   = el('d2-next-btn');
-    if (labelEl) labelEl.textContent = labelTxt;
-    if (btnEl) {
-      btnEl.textContent = cta.btn;
-      btnEl.className   = 'd2-next-btn' + (cta.cls ? ' ' + cta.cls : '');
-      btnEl.onclick     = (function(tab) { return function() { try { showTab(tab); } catch(e) {} }; })(cta.tab);
-    }
-  }
+  function _d2RenderNextStep(data) { /* no-op: lógica absorbida en _d2RenderHero PRESENTE */ }
 
   /* ══════════════════════════════════════════
      RENDER: ACTIVIDAD RECIENTE
