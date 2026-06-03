@@ -14974,15 +14974,17 @@ window.PILOTPAY_BACKEND_READY = true;
     var yRange = yMax - yMin;
 
     // ── Sistema de coordenadas SVG ────────────────────────────────────────────
+    // X: distribuye solo los meses auditados; la gráfica crece con el histórico real.
     var VW = 1000, VH = 100, ML = 46, YT = 8, YB = 76, CH = YB - YT, XLBL = 93;
-    var xOf = function(m) { return ML + (VW - ML) / 12 * (m - 1) + (VW - ML) / 24; };
-    var yOf = function(v) { return YB - (v - yMin) / yRange * CH; };
+    var N   = pts.length;
+    var xOf = function(idx) { return ML + (VW - ML) / N * idx + (VW - ML) / (2 * N); };
+    var yOf = function(v)   { return YB - (v - yMin) / yRange * CH; };
 
     // ── Ticks Y — 6k, 7k, 8k ────────────────────────────────────────────────
     var ticks = [6000, 7000, 8000].filter(function(tv) { return tv > yMin && tv <= yMax; });
 
     // ── Curva bezier suave ────────────────────────────────────────────────────
-    var sp = pts.map(function(p) { return { x: xOf(p.month), y: yOf(p.value), m: p.month }; });
+    var sp = pts.map(function(p, idx) { return { x: xOf(idx), y: yOf(p.value), m: p.month }; });
     var pathD;
     if (sp.length === 1) {
       pathD = 'M ' + sp[0].x + ' ' + sp[0].y;
@@ -14999,7 +15001,6 @@ window.PILOTPAY_BACKEND_READY = true;
 
     // ── Construir SVG ─────────────────────────────────────────────────────────
     var MABR = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-    var auditSet = {}; pts.forEach(function(p) { auditSet[p.month] = 1; });
 
     var s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="none"'
           + ' style="width:100%;height:' + VH + 'px;display:block;overflow:visible">';
@@ -15034,15 +15035,6 @@ window.PILOTPAY_BACKEND_READY = true;
     s += '<path d="' + pathD + '" fill="none" stroke="#89b4fa" stroke-width="1.5"'
       +  ' stroke-linecap="round" stroke-linejoin="round"/>';
 
-    // Prolongación tenue desde último punto auditado → Diciembre
-    // (visual: espacio por completar, no datos inventados)
-    if (lastM < 12) {
-      var decX = xOf(12);
-      s += '<line x1="' + lastPt.x + '" y1="' + lastPt.y + '"'
-        +  ' x2="' + decX + '" y2="' + lastPt.y + '"'
-        +  ' stroke="#89b4fa" stroke-width="0.7" stroke-dasharray="1.5,9" opacity="0.16"/>';
-    }
-
     // ── Previsión futura — activar cuando exista el motor eCrew:
     // s += '<path d="M lastPt.x lastPt.y C ..."'
     //   +  ' fill="none" stroke="#89b4fa" stroke-width="1.4" stroke-dasharray="4,4" opacity="0.4"/>';
@@ -15065,14 +15057,14 @@ window.PILOTPAY_BACKEND_READY = true;
         +  ' font-size="8" fill="#6c7086" font-family="monospace">' + lbl + '</text>';
     });
 
-    // Etiquetas X — 12 meses
-    for (var m = 1; m <= 12; m++) {
-      var lx  = xOf(m);
-      var clr = m === lastM ? '#89b4fa' : (auditSet[m] ? '#6c7086' : '#313244');
+    // Etiquetas X — solo meses auditados
+    pts.forEach(function(p, idx) {
+      var lx  = xOf(idx);
+      var clr = p.month === lastM ? '#89b4fa' : '#6c7086';
       s += '<text x="' + lx + '" y="' + XLBL + '" text-anchor="middle"'
         +  ' font-size="8" fill="' + clr + '" font-family="monospace">'
-        +  MABR[m - 1] + '</text>';
-    }
+        +  MABR[p.month - 1] + '</text>';
+    });
 
     s += '</svg>';
 
