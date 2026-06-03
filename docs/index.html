@@ -1996,6 +1996,9 @@ input[type=number] { -moz-appearance: textfield; }
           font-size: 10px; font-family: var(--mono); color: var(--text3);
           margin-bottom: 0; text-transform: uppercase; letter-spacing: .04em;
         }
+        .d2-mes-fecha  { color: var(--text2); }
+        .d2-mes-sep    { color: var(--border2); margin: 0 3px; }
+        .d2-mes-estado { color: var(--text3); text-transform: none; font-size: 9px; letter-spacing: 0; }
         .d2-col-amount {
           font-family: var(--mono); font-size: 32px; font-weight: 700;
           color: var(--text); letter-spacing: -.02em; line-height: 1.1;
@@ -14687,9 +14690,14 @@ window.PILOTPAY_BACKEND_READY = true;
     if (atual) {
       var aAmtEl = el('d2-a-amount');
       if (aAmtEl) { aAmtEl.textContent = atualNeto != null ? fmt(atualNeto) : '—'; aAmtEl.className = 'd2-col-amount ' + atualAmtClass; }
-      var aCfg = ESTADO_DOTS[atual.estado] || { dot: 'dim', txt: atual.estado || '—' };
+      var aCfg   = ESTADO_DOTS[atual.estado] || { dot: 'dim', txt: atual.estado || '—' };
       var mesStr = (MESES_ES[atual.month] || '') + (atual.year ? ' ' + atual.year : '');
-      setText('d2-a-mes', mesStr + (aCfg.txt ? ' · ' + aCfg.txt : ''));
+      var aMesEl = el('d2-a-mes');
+      if (aMesEl) {
+        aMesEl.innerHTML = '<span class="d2-mes-fecha">' + mesStr + '</span>'
+          + (aCfg.txt ? '<span class="d2-mes-sep">·</span>'
+            + '<span class="d2-mes-estado">' + aCfg.txt + '</span>' : '');
+      }
       var aCtxEl = el('d2-a-ctx');
       if (aCtxEl) {
         if (atualAmtClass === 'in-progress') {
