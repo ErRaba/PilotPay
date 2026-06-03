@@ -1927,7 +1927,11 @@ input[type=number] { -moz-appearance: textfield; }
         .d2-prevision  { grid-area: prevision; }
 
         /* ── Evolución anual ── */
-        .d2-anual-chart { padding: 4px 14px 10px; }
+        .d2-anual-chart { padding: 10px 14px 4px; }
+        .d2-anual-frase {
+          font-size: 10px; font-family: var(--mono); font-style: italic;
+          color: var(--text3); padding: 0 16px 12px; opacity: .75;
+        }
 
         .d2-block-title {
           font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
@@ -14960,29 +14964,22 @@ window.PILOTPAY_BACKEND_READY = true;
 
     var mediaVal = (statsAnual && statsAnual.mediaNetaFinal != null) ? statsAnual.mediaNetaFinal : null;
 
-    // ── Rango Y (redondeado a 500, con margen) ────────────────────────────────
+    // ── Rango Y — dinámico pero siempre incluye 8k en el techo ───────────────
     var vals = pts.map(function(p) { return p.value; });
     if (mediaVal != null) vals.push(mediaVal);
     var rawMin = Math.min.apply(null, vals);
     var rawMax = Math.max.apply(null, vals);
     var yMin   = Math.floor((rawMin * 0.93) / 500) * 500;
-    var yMax   = Math.ceil( (rawMax * 1.04) / 500) * 500;
+    var yMax   = Math.max(Math.ceil((rawMax * 1.04) / 500) * 500, 8500);
     var yRange = yMax - yMin;
-    if (yRange < 500) { yMax = yMin + 2000; yRange = 2000; }
 
     // ── Sistema de coordenadas SVG ────────────────────────────────────────────
-    // viewBox 1000×100, preserveAspectRatio=none → ancho 100%, alto fijo 100px
-    // Margen izquierdo para etiquetas Y: 46 unidades
     var VW = 1000, VH = 100, ML = 46, YT = 8, YB = 76, CH = YB - YT, XLBL = 93;
-    var xOf = function(m) { return ML + (1000 - ML) / 12 * (m - 1) + (1000 - ML) / 24; };
+    var xOf = function(m) { return ML + (VW - ML) / 12 * (m - 1) + (VW - ML) / 24; };
     var yOf = function(v) { return YB - (v - yMin) / yRange * CH; };
 
-    // ── Ticks Y — siempre múltiplos de 1000 para etiquetas limpias ──────────
-    var step = 1000;
-    var ticks = [];
-    for (var tv = Math.ceil(yMin / step) * step; tv < yMax; tv += step) {
-      if (tv > yMin) ticks.push(tv);
-    }
+    // ── Ticks Y — 6k, 7k, 8k ────────────────────────────────────────────────
+    var ticks = [6000, 7000, 8000].filter(function(tv) { return tv > yMin && tv <= yMax; });
 
     // ── Curva bezier suave ────────────────────────────────────────────────────
     var sp = pts.map(function(p) { return { x: xOf(p.month), y: yOf(p.value), m: p.month }; });
@@ -14996,73 +14993,82 @@ window.PILOTPAY_BACKEND_READY = true;
         pathD += ' C ' + (a.x+dx) + ' ' + a.y + ' ' + (b.x-dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y;
       }
     }
-    var fillD = pathD + ' L ' + sp[sp.length-1].x + ' ' + YB + ' L ' + sp[0].x + ' ' + YB + ' Z';
+    var lastPt = sp[sp.length - 1];
+    var fillD  = pathD + ' L ' + lastPt.x + ' ' + YB + ' L ' + sp[0].x + ' ' + YB + ' Z';
+    var lastM  = pts[pts.length - 1].month;
 
     // ── Construir SVG ─────────────────────────────────────────────────────────
     var MABR = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
     var auditSet = {}; pts.forEach(function(p) { auditSet[p.month] = 1; });
-    var lastM = pts[pts.length - 1].month;
 
     var s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="none"'
           + ' style="width:100%;height:' + VH + 'px;display:block;overflow:visible">';
 
-    // Gradiente de relleno
+    // Gradiente de relleno — más sutil
     s += '<defs><linearGradient id="d2AnualFill" x1="0" y1="0" x2="0" y2="1">'
-      +  '<stop offset="0%" stop-color="#89b4fa" stop-opacity="0.16"/>'
+      +  '<stop offset="0%" stop-color="#89b4fa" stop-opacity="0.12"/>'
       +  '<stop offset="100%" stop-color="#89b4fa" stop-opacity="0"/>'
       +  '</linearGradient></defs>';
 
-    // Líneas de grid en posiciones de tick
+    // Líneas de grid en 6k/7k/8k
     ticks.forEach(function(tv) {
       var gy = yOf(tv);
       s += '<line x1="' + ML + '" y1="' + gy + '" x2="' + VW + '" y2="' + gy + '"'
-        +  ' stroke="#313244" stroke-width="0.5" opacity="0.7"/>';
+        +  ' stroke="#313244" stroke-width="0.5" opacity="0.6"/>';
     });
 
     // Área de relleno
     s += '<path d="' + fillD + '" fill="url(#d2AnualFill)"/>';
 
-    // Línea de referencia — media (tenue, punteada)
+    // Línea de referencia — media (muy discreta)
     if (mediaVal != null) {
       var my = yOf(mediaVal);
       s += '<line x1="' + ML + '" y1="' + my + '" x2="' + VW + '" y2="' + my + '"'
-        +  ' stroke="#585b70" stroke-width="0.8" stroke-dasharray="3,6" opacity="0.85"/>';
+        +  ' stroke="#45475a" stroke-width="0.7" stroke-dasharray="2,7" opacity="0.65"/>';
       s += '<text x="' + (VW - 2) + '" y="' + (my - 2.5) + '" text-anchor="end"'
-        +  ' font-size="7.5" fill="#585b70" opacity="0.9" font-family="monospace">'
+        +  ' font-size="7" fill="#45475a" opacity="0.65" font-family="monospace">'
         +  Math.round(mediaVal).toLocaleString('es-ES') + '</text>';
     }
 
-    // Línea auditada
-    s += '<path d="' + pathD + '" fill="none" stroke="#89b4fa" stroke-width="1.6"'
+    // Línea auditada — principal
+    s += '<path d="' + pathD + '" fill="none" stroke="#89b4fa" stroke-width="1.5"'
       +  ' stroke-linecap="round" stroke-linejoin="round"/>';
 
-    // ── Placeholder para previsión futura (línea punteada desde último punto)
-    // Activar cuando exista el motor eCrew:
-    // s += '<path d="M ' + xOf(lastM) + ' ' + yOf(lastValue) + ' C ...'
-    //   +  '" fill="none" stroke="#89b4fa" stroke-width="1.4" stroke-dasharray="4,4" opacity="0.4"/>';
+    // Prolongación tenue desde último punto auditado → Diciembre
+    // (visual: espacio por completar, no datos inventados)
+    if (lastM < 12) {
+      var decX = xOf(12);
+      s += '<line x1="' + lastPt.x + '" y1="' + lastPt.y + '"'
+        +  ' x2="' + decX + '" y2="' + lastPt.y + '"'
+        +  ' stroke="#89b4fa" stroke-width="0.7" stroke-dasharray="1.5,9" opacity="0.16"/>';
+    }
+
+    // ── Previsión futura — activar cuando exista el motor eCrew:
+    // s += '<path d="M lastPt.x lastPt.y C ..."'
+    //   +  ' fill="none" stroke="#89b4fa" stroke-width="1.4" stroke-dasharray="4,4" opacity="0.4"/>';
 
     // Puntos mensuales
     sp.forEach(function(p) {
       if (p.m === lastM) {
-        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.5" fill="#89b4fa"/>';
-        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="6.5" fill="none"'
-          +  ' stroke="#89b4fa" stroke-width="0.7" opacity="0.3"/>';
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.2" fill="#89b4fa"/>';
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="5.5" fill="none"'
+          +  ' stroke="#89b4fa" stroke-width="0.6" opacity="0.22"/>';
       } else {
-        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="2.2" fill="#89b4fa" opacity="0.65"/>';
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="2" fill="#89b4fa" opacity="0.6"/>';
       }
     });
 
-    // Etiquetas Y (dentro del SVG, margen izquierdo)
+    // Etiquetas Y — 6k/7k/8k, más contrastadas
     ticks.forEach(function(tv) {
       var gy = yOf(tv), lbl = Math.floor(tv / 1000) + 'k';
       s += '<text x="' + (ML - 4) + '" y="' + (gy + 3) + '" text-anchor="end"'
-        +  ' font-size="8" fill="#45475a" font-family="monospace">' + lbl + '</text>';
+        +  ' font-size="8" fill="#6c7086" font-family="monospace">' + lbl + '</text>';
     });
 
     // Etiquetas X — 12 meses
     for (var m = 1; m <= 12; m++) {
-      var lx   = xOf(m);
-      var clr  = m === lastM ? '#89b4fa' : (auditSet[m] ? '#6c7086' : '#313244');
+      var lx  = xOf(m);
+      var clr = m === lastM ? '#89b4fa' : (auditSet[m] ? '#6c7086' : '#313244');
       s += '<text x="' + lx + '" y="' + XLBL + '" text-anchor="middle"'
         +  ' font-size="8" fill="' + clr + '" font-family="monospace">'
         +  MABR[m - 1] + '</text>';
@@ -15070,8 +15076,36 @@ window.PILOTPAY_BACKEND_READY = true;
 
     s += '</svg>';
 
+    // ── Frase contextual automática ───────────────────────────────────────────
+    var lastValue    = pts[pts.length - 1].value;
+    var lastMesNombre = MESES_ES[lastM] || '';
+    var frase = '';
+    if (mediaVal != null) {
+      var delta = lastValue - mediaVal;
+      var pct   = Math.abs(delta) / mediaVal;
+      if (pct > 0.06) {
+        frase = delta < 0
+          ? lastMesNombre + ' se sitúa por debajo de tu nivel habitual.'
+          : lastMesNombre + ' se sitúa por encima de tu nivel habitual.';
+      } else if (pts.length >= 3) {
+        var v2 = pts[pts.length - 3].value, v1 = pts[pts.length - 2].value, v0 = lastValue;
+        if (v0 < v1 && v1 < v2) {
+          frase = 'La evolución muestra una tendencia descendente en los últimos meses.';
+        } else if (v0 > v1 && v1 > v2) {
+          frase = 'La evolución muestra una tendencia ascendente en los últimos meses.';
+        } else {
+          frase = 'Los ingresos se mantienen alineados con tu referencia habitual.';
+        }
+      } else {
+        frase = 'Los ingresos se mantienen alineados con tu referencia habitual.';
+      }
+    } else if (pts.length === 1) {
+      frase = 'Primer mes auditado del año en curso.';
+    }
+
     blockEl.innerHTML = '<div class="d2-block-title">Evolución ' + currentYear + '</div>'
-      + '<div class="d2-anual-chart">' + s + '</div>';
+      + '<div class="d2-anual-chart">' + s + '</div>'
+      + (frase ? '<div class="d2-anual-frase">' + frase + '</div>' : '');
     blockEl.style.display = '';
   }
 
