@@ -2017,6 +2017,7 @@ input[type=number] { -moz-appearance: textfield; }
         }
         .d2-col-delta.pos { color: var(--green);  background: var(--green-dim); }
         .d2-col-delta.neg { color: var(--amber2); background: var(--amber-dim); }
+        .d2-col-delta.ref { color: var(--text3);  background: var(--bg3); }
         .d2-col-cta {
           margin-top: auto;
           background: transparent; border: 1px solid var(--blue2); color: var(--blue2);
@@ -14682,6 +14683,12 @@ window.PILOTPAY_BACKEND_READY = true;
       else if (uaCalc.liquidoReal != null)          { atualNeto = uaCalc.liquidoReal;       atualAmtClass = 'confirmed'; }
     }
 
+    // ── Pre-computar media anual ──────────────────────────────────────────────
+    var mediaAnual = (statsAnual && statsAnual.mediaNetaFinal != null) ? statsAnual.mediaNetaFinal
+                   : (statsFinancial && statsFinancial.mediaNetaFinal != null) ? statsFinancial.mediaNetaFinal
+                   : null;
+    var mediaLbl = statsAnual ? ('Media ' + currentYear) : 'Media histórica';
+
     // ── COL 1: SITUACIÓN ACTUAL ───────────────────────────────────────────────
     if (atual) {
       setText('d2-a-mes', (MESES_ES[atual.month] || '') + (atual.year ? ' ' + atual.year : ''));
@@ -14694,6 +14701,18 @@ window.PILOTPAY_BACKEND_READY = true;
       if (aCtxEl) {
         if (atualAmtClass === 'in-progress') {
           aCtxEl.textContent = 'Neto estimado · pendiente de auditoría'; aCtxEl.style.display = 'flex';
+        } else if (atualNeto != null && mediaAnual != null) {
+          var delta = atualNeto - mediaAnual;
+          if (Math.abs(delta) > 0.5) {
+            var dSign = delta >= 0 ? '▲' : '▼';
+            var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
+            var dDir  = delta >= 0 ? 'por encima de tu media' : 'por debajo de tu media';
+            var dCls  = delta >= 0 ? 'pos' : 'neg';
+            aCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € ${dDir}</span>`;
+          } else {
+            aCtxEl.innerHTML = '<span class="d2-col-delta ref">En línea con tu media</span>';
+          }
+          aCtxEl.style.display = 'flex';
         } else { aCtxEl.style.display = 'none'; }
       }
     } else {
@@ -14704,12 +14723,7 @@ window.PILOTPAY_BACKEND_READY = true;
       var aCtxEl = el('d2-a-ctx'); if (aCtxEl) aCtxEl.style.display = 'none';
     }
 
-    // ── COL 2: REFERENCIA — media anual + delta ───────────────────────────────
-    var mediaAnual = (statsAnual && statsAnual.mediaNetaFinal != null) ? statsAnual.mediaNetaFinal
-                   : (statsFinancial && statsFinancial.mediaNetaFinal != null) ? statsFinancial.mediaNetaFinal
-                   : null;
-    var mediaLbl = statsAnual ? ('Media ' + currentYear) : 'Media histórica';
-
+    // ── COL 2: REFERENCIA ────────────────────────────────────────────────────
     setText('d2-r-mes', mediaLbl);
     var rAmtEl = el('d2-r-amount');
     if (rAmtEl) { rAmtEl.textContent = mediaAnual != null ? fmt(mediaAnual) : '—'; rAmtEl.className = 'd2-col-amount ' + (mediaAnual != null ? 'reference' : 'empty'); }
@@ -14717,12 +14731,9 @@ window.PILOTPAY_BACKEND_READY = true;
     setText('d2-r-estado', mediaAnual != null ? 'Base de referencia' : 'Sin histórico suficiente');
     var rCtxEl = el('d2-r-ctx');
     if (rCtxEl) {
-      if (atualNeto != null && mediaAnual != null && Math.abs(atualNeto - mediaAnual) > 0.5) {
-        var delta = atualNeto - mediaAnual;
-        var dCls  = delta >= 0 ? 'pos' : 'neg';
-        var dSign = delta >= 0 ? '▲' : '▼';
-        var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
-        rCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € vs media</span>`;
+      var mesesRef = statsAnual ? statsAnual.mesesAuditados : (statsFinancial ? statsFinancial.mesesAuditados : null);
+      if (mesesRef != null && mesesRef > 0) {
+        rCtxEl.textContent = mesesRef + ' ' + (mesesRef === 1 ? 'mes auditado' : 'meses auditados');
         rCtxEl.style.display = 'flex';
       } else { rCtxEl.style.display = 'none'; }
     }
