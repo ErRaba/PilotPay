@@ -1926,29 +1926,8 @@ input[type=number] { -moz-appearance: textfield; }
         .d2-alerts     { grid-area: alerts; }
         .d2-prevision  { grid-area: prevision; }
 
-        /* ── Estado del año ── */
-        .d2-anual-body {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          padding: 0 16px 12px;
-          gap: 0;
-        }
-        .d2-anual-row {
-          display: flex; align-items: baseline; justify-content: space-between;
-          padding: 5px 12px 5px 0; border-bottom: 1px solid var(--border);
-          font-size: 11px;
-        }
-        .d2-anual-row:nth-last-child(-n+3) { border-bottom: none; }
-        .d2-anual-mes  { font-family: var(--mono); color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
-        .d2-anual-neto { font-family: var(--mono); color: var(--text2); font-weight: 600; }
-        .d2-anual-footer {
-          display: flex; align-items: baseline; justify-content: flex-end; gap: 16px;
-          padding: 8px 16px 12px;
-          border-top: 1px solid var(--border);
-          margin-top: 2px;
-        }
-        .d2-anual-media-lbl { font-size: 9px; font-family: var(--mono); color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
-        .d2-anual-media-val { font-size: 15px; font-family: var(--mono); font-weight: 700; color: var(--text2); }
+        /* ── Evolución anual ── */
+        .d2-anual-chart { padding: 4px 14px 10px; }
 
         .d2-block-title {
           font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
@@ -14947,47 +14926,152 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ══════════════════════════════════════════
-     RENDER: ESTADO DEL AÑO
+     RENDER: EVOLUCIÓN ANUAL — gráfica SVG inline
   ══════════════════════════════════════════ */
   function _d2RenderAnual(data) {
-    const blockEl = el('d2-anual');
+    var blockEl = el('d2-anual');
     if (!blockEl) return;
 
-    const { _allMR, statsAnual, currentYear } = data;
-    const DEFINITIVOS = { auditado:1, regularizado:1, reclamado:1, cerrado:1, con_diferencias:1 };
+    var _allMR      = data._allMR;
+    var statsAnual  = data.statsAnual;
+    var currentYear = data.currentYear;
+
+    var DEFINITIVOS = { auditado:1, regularizado:1, reclamado:1, cerrado:1, con_diferencias:1 };
 
     var meses = (_allMR || [])
       .filter(function(mr) { return mr.year === currentYear && DEFINITIVOS[mr.estado]; })
-      .sort(function(a, b) { return a.month - b.month; });
+      .sort(function(a, b)  { return a.month - b.month; });
 
     if (meses.length === 0) { blockEl.style.display = 'none'; return; }
 
-    var rows = meses.map(function(mr) {
+    // ── Extraer neto por mes ──────────────────────────────────────────────────
+    var pts = [];
+    meses.forEach(function(mr) {
       var _reg  = mr.regularizacion || null;
       var _aud  = mr.auditoria      || {};
       var _calc = mr.calculoTeorico || {};
       var neto  = null;
-      if (_reg  && _reg.netoFinalAjustado != null)  neto = _reg.netoFinalAjustado;
-      else if (_aud.liqReal != null)                 neto = _aud.liqReal;
-      else if (_calc.liquidoReal != null)            neto = _calc.liquidoReal;
-      var mesNombre = MESES_ES[mr.month] || ('Mes ' + mr.month);
-      return '<div class="d2-anual-row">'
-        + '<span class="d2-anual-mes">'  + mesNombre + '</span>'
-        + '<span class="d2-anual-neto">' + (neto != null ? fmt(neto) : '—') + '</span>'
-        + '</div>';
-    }).join('');
+      if (_reg  && _reg.netoFinalAjustado != null) neto = _reg.netoFinalAjustado;
+      else if (_aud.liqReal    != null)            neto = _aud.liqReal;
+      else if (_calc.liquidoReal != null)          neto = _calc.liquidoReal;
+      if (neto != null) pts.push({ month: mr.month, value: neto });
+    });
+    if (pts.length === 0) { blockEl.style.display = 'none'; return; }
 
-    var mediaVal = statsAnual && statsAnual.mediaNetaFinal != null ? statsAnual.mediaNetaFinal : null;
-    var footer = mediaVal != null
-      ? '<div class="d2-anual-footer">'
-          + '<span class="d2-anual-media-lbl">Media ' + currentYear + '</span>'
-          + '<span class="d2-anual-media-val">' + fmt(mediaVal) + '</span>'
-        + '</div>'
-      : '';
+    var mediaVal = (statsAnual && statsAnual.mediaNetaFinal != null) ? statsAnual.mediaNetaFinal : null;
 
-    blockEl.innerHTML = '<div class="d2-block-title">Estado del año</div>'
-      + '<div class="d2-anual-body">' + rows + '</div>'
-      + footer;
+    // ── Rango Y (redondeado a 500, con margen) ────────────────────────────────
+    var vals = pts.map(function(p) { return p.value; });
+    if (mediaVal != null) vals.push(mediaVal);
+    var rawMin = Math.min.apply(null, vals);
+    var rawMax = Math.max.apply(null, vals);
+    var yMin   = Math.floor((rawMin * 0.93) / 500) * 500;
+    var yMax   = Math.ceil( (rawMax * 1.04) / 500) * 500;
+    var yRange = yMax - yMin;
+    if (yRange < 500) { yMax = yMin + 2000; yRange = 2000; }
+
+    // ── Sistema de coordenadas SVG ────────────────────────────────────────────
+    // viewBox 1000×100, preserveAspectRatio=none → ancho 100%, alto fijo 100px
+    // Margen izquierdo para etiquetas Y: 46 unidades
+    var VW = 1000, VH = 100, ML = 46, YT = 8, YB = 76, CH = YB - YT, XLBL = 93;
+    var xOf = function(m) { return ML + (1000 - ML) / 12 * (m - 1) + (1000 - ML) / 24; };
+    var yOf = function(v) { return YB - (v - yMin) / yRange * CH; };
+
+    // ── Ticks Y — siempre múltiplos de 1000 para etiquetas limpias ──────────
+    var step = 1000;
+    var ticks = [];
+    for (var tv = Math.ceil(yMin / step) * step; tv < yMax; tv += step) {
+      if (tv > yMin) ticks.push(tv);
+    }
+
+    // ── Curva bezier suave ────────────────────────────────────────────────────
+    var sp = pts.map(function(p) { return { x: xOf(p.month), y: yOf(p.value), m: p.month }; });
+    var pathD;
+    if (sp.length === 1) {
+      pathD = 'M ' + sp[0].x + ' ' + sp[0].y;
+    } else {
+      pathD = 'M ' + sp[0].x + ' ' + sp[0].y;
+      for (var i = 1; i < sp.length; i++) {
+        var a = sp[i-1], b = sp[i], dx = (b.x - a.x) / 2.6;
+        pathD += ' C ' + (a.x+dx) + ' ' + a.y + ' ' + (b.x-dx) + ' ' + b.y + ' ' + b.x + ' ' + b.y;
+      }
+    }
+    var fillD = pathD + ' L ' + sp[sp.length-1].x + ' ' + YB + ' L ' + sp[0].x + ' ' + YB + ' Z';
+
+    // ── Construir SVG ─────────────────────────────────────────────────────────
+    var MABR = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    var auditSet = {}; pts.forEach(function(p) { auditSet[p.month] = 1; });
+    var lastM = pts[pts.length - 1].month;
+
+    var s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" preserveAspectRatio="none"'
+          + ' style="width:100%;height:' + VH + 'px;display:block;overflow:visible">';
+
+    // Gradiente de relleno
+    s += '<defs><linearGradient id="d2AnualFill" x1="0" y1="0" x2="0" y2="1">'
+      +  '<stop offset="0%" stop-color="#89b4fa" stop-opacity="0.16"/>'
+      +  '<stop offset="100%" stop-color="#89b4fa" stop-opacity="0"/>'
+      +  '</linearGradient></defs>';
+
+    // Líneas de grid en posiciones de tick
+    ticks.forEach(function(tv) {
+      var gy = yOf(tv);
+      s += '<line x1="' + ML + '" y1="' + gy + '" x2="' + VW + '" y2="' + gy + '"'
+        +  ' stroke="#313244" stroke-width="0.5" opacity="0.7"/>';
+    });
+
+    // Área de relleno
+    s += '<path d="' + fillD + '" fill="url(#d2AnualFill)"/>';
+
+    // Línea de referencia — media (tenue, punteada)
+    if (mediaVal != null) {
+      var my = yOf(mediaVal);
+      s += '<line x1="' + ML + '" y1="' + my + '" x2="' + VW + '" y2="' + my + '"'
+        +  ' stroke="#585b70" stroke-width="0.8" stroke-dasharray="3,6" opacity="0.85"/>';
+      s += '<text x="' + (VW - 2) + '" y="' + (my - 2.5) + '" text-anchor="end"'
+        +  ' font-size="7.5" fill="#585b70" opacity="0.9" font-family="monospace">'
+        +  Math.round(mediaVal).toLocaleString('es-ES') + '</text>';
+    }
+
+    // Línea auditada
+    s += '<path d="' + pathD + '" fill="none" stroke="#89b4fa" stroke-width="1.6"'
+      +  ' stroke-linecap="round" stroke-linejoin="round"/>';
+
+    // ── Placeholder para previsión futura (línea punteada desde último punto)
+    // Activar cuando exista el motor eCrew:
+    // s += '<path d="M ' + xOf(lastM) + ' ' + yOf(lastValue) + ' C ...'
+    //   +  '" fill="none" stroke="#89b4fa" stroke-width="1.4" stroke-dasharray="4,4" opacity="0.4"/>';
+
+    // Puntos mensuales
+    sp.forEach(function(p) {
+      if (p.m === lastM) {
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3.5" fill="#89b4fa"/>';
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="6.5" fill="none"'
+          +  ' stroke="#89b4fa" stroke-width="0.7" opacity="0.3"/>';
+      } else {
+        s += '<circle cx="' + p.x + '" cy="' + p.y + '" r="2.2" fill="#89b4fa" opacity="0.65"/>';
+      }
+    });
+
+    // Etiquetas Y (dentro del SVG, margen izquierdo)
+    ticks.forEach(function(tv) {
+      var gy = yOf(tv), lbl = Math.floor(tv / 1000) + 'k';
+      s += '<text x="' + (ML - 4) + '" y="' + (gy + 3) + '" text-anchor="end"'
+        +  ' font-size="8" fill="#45475a" font-family="monospace">' + lbl + '</text>';
+    });
+
+    // Etiquetas X — 12 meses
+    for (var m = 1; m <= 12; m++) {
+      var lx   = xOf(m);
+      var clr  = m === lastM ? '#89b4fa' : (auditSet[m] ? '#6c7086' : '#313244');
+      s += '<text x="' + lx + '" y="' + XLBL + '" text-anchor="middle"'
+        +  ' font-size="8" fill="' + clr + '" font-family="monospace">'
+        +  MABR[m - 1] + '</text>';
+    }
+
+    s += '</svg>';
+
+    blockEl.innerHTML = '<div class="d2-block-title">Evolución ' + currentYear + '</div>'
+      + '<div class="d2-anual-chart">' + s + '</div>';
     blockEl.style.display = '';
   }
 
