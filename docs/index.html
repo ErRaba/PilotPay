@@ -2036,13 +2036,13 @@ input[type=number] { -moz-appearance: textfield; }
         .d2-activity-body { margin-top: 8px; display: flex; flex-direction: column; }
         .d2-act-item {
           display: flex; align-items: baseline; gap: 8px;
-          padding: 5px 0; border-bottom: 1px solid var(--border);
-          font-size: 11px;
+          padding: 4px 0; border-bottom: 1px solid var(--border);
+          font-size: 10.5px; opacity: .72;
         }
         .d2-act-item:last-child { border-bottom: none; }
         .d2-act-time { font-family: var(--mono); color: var(--text3); flex-shrink: 0; font-size: 10px; min-width: 54px; }
-        .d2-act-desc { color: var(--text2); line-height: 1.4; }
-        .d2-act-empty { font-size: 11px; font-family: var(--mono); color: var(--text3); padding: 8px 0; }
+        .d2-act-desc { color: var(--text3); line-height: 1.4; }
+        .d2-act-empty { font-size: 11px; font-family: var(--mono); color: var(--text3); padding: 8px 0; opacity: .6; }
 
         /* ── Flujo del mes ── */
         .d2-flujo { padding: 0; }
@@ -2112,26 +2112,17 @@ input[type=number] { -moz-appearance: textfield; }
             </div>
           </div>
           <div class="d2-hero-temporal">
-            <!-- SITUACIÓN ACTUAL: último mes real (activo o auditado) — nunca el mes calendario -->
+            <!-- COL 1: último salario auditado — protagonista -->
             <div class="d2-hero-col">
-              <div class="d2-col-label">Situación actual</div>
-              <div id="d2-a-mes" class="d2-col-mes">—</div>
+              <div class="d2-col-label">Último salario auditado</div>
               <div id="d2-a-amount" class="d2-col-amount empty">—</div>
-              <div class="d2-col-badge">
-                <span id="d2-a-dot" class="d2-col-dot dim"></span>
-                <span id="d2-a-estado"></span>
-              </div>
+              <div id="d2-a-mes" class="d2-col-mes">—</div>
               <div id="d2-a-ctx" class="d2-col-ctx" style="display:none"></div>
             </div>
-            <!-- REFERENCIA: media anual + delta -->
+            <!-- COL 2: referencia habitual — contexto -->
             <div class="d2-hero-col">
-              <div class="d2-col-label">Referencia</div>
-              <div id="d2-r-mes" class="d2-col-mes">—</div>
+              <div class="d2-col-label">Tu referencia habitual</div>
               <div id="d2-r-amount" class="d2-col-amount empty">—</div>
-              <div class="d2-col-badge">
-                <span id="d2-r-dot" class="d2-col-dot dim"></span>
-                <span id="d2-r-estado"></span>
-              </div>
               <div id="d2-r-ctx" class="d2-col-ctx" style="display:none"></div>
             </div>
             <!-- PRÓXIMO CICLO: siguiente acción real (mes activo o mes siguiente) -->
@@ -14689,14 +14680,13 @@ window.PILOTPAY_BACKEND_READY = true;
                    : null;
     var mediaLbl = statsAnual ? ('Media ' + currentYear) : 'Media histórica';
 
-    // ── COL 1: SITUACIÓN ACTUAL ───────────────────────────────────────────────
+    // ── COL 1: ÚLTIMO SALARIO AUDITADO ───────────────────────────────────────
     if (atual) {
-      setText('d2-a-mes', (MESES_ES[atual.month] || '') + (atual.year ? ' ' + atual.year : ''));
       var aAmtEl = el('d2-a-amount');
       if (aAmtEl) { aAmtEl.textContent = atualNeto != null ? fmt(atualNeto) : '—'; aAmtEl.className = 'd2-col-amount ' + atualAmtClass; }
       var aCfg = ESTADO_DOTS[atual.estado] || { dot: 'dim', txt: atual.estado || '—' };
-      var aDotEl = el('d2-a-dot'); if (aDotEl) aDotEl.className = 'd2-col-dot ' + aCfg.dot;
-      setText('d2-a-estado', aCfg.txt);
+      var mesStr = (MESES_ES[atual.month] || '') + (atual.year ? ' ' + atual.year : '');
+      setText('d2-a-mes', mesStr + (aCfg.txt ? ' · ' + aCfg.txt : ''));
       var aCtxEl = el('d2-a-ctx');
       if (aCtxEl) {
         if (atualAmtClass === 'in-progress') {
@@ -14706,34 +14696,32 @@ window.PILOTPAY_BACKEND_READY = true;
           if (Math.abs(delta) > 0.5) {
             var dSign = delta >= 0 ? '▲' : '▼';
             var dAbs  = Math.abs(delta).toLocaleString('es-ES', {minimumFractionDigits:2,maximumFractionDigits:2});
-            var dDir  = delta >= 0 ? 'por encima de tu media' : 'por debajo de tu media';
+            var dDir  = delta >= 0 ? 'por encima de tu nivel habitual' : 'por debajo de tu nivel habitual';
             var dCls  = delta >= 0 ? 'pos' : 'neg';
             aCtxEl.innerHTML = `<span class="d2-col-delta ${dCls}">${dSign} ${dAbs} € ${dDir}</span>`;
           } else {
-            aCtxEl.innerHTML = '<span class="d2-col-delta ref">En línea con tu media</span>';
+            aCtxEl.innerHTML = '<span class="d2-col-delta ref">En línea con tu nivel habitual</span>';
           }
           aCtxEl.style.display = 'flex';
         } else { aCtxEl.style.display = 'none'; }
       }
     } else {
-      setText('d2-a-mes', '—');
       var aAmtEl = el('d2-a-amount'); if (aAmtEl) { aAmtEl.textContent = '—'; aAmtEl.className = 'd2-col-amount empty'; }
-      var aDotEl = el('d2-a-dot'); if (aDotEl) aDotEl.className = 'd2-col-dot dim';
-      setText('d2-a-estado', 'Sin expedientes');
+      setText('d2-a-mes', '—');
       var aCtxEl = el('d2-a-ctx'); if (aCtxEl) aCtxEl.style.display = 'none';
     }
 
-    // ── COL 2: REFERENCIA ────────────────────────────────────────────────────
-    setText('d2-r-mes', mediaLbl);
+    // ── COL 2: TU REFERENCIA HABITUAL ────────────────────────────────────────
     var rAmtEl = el('d2-r-amount');
     if (rAmtEl) { rAmtEl.textContent = mediaAnual != null ? fmt(mediaAnual) : '—'; rAmtEl.className = 'd2-col-amount ' + (mediaAnual != null ? 'reference' : 'empty'); }
-    var rDotEl = el('d2-r-dot'); if (rDotEl) rDotEl.className = 'd2-col-dot ' + (mediaAnual != null ? 'info' : 'dim');
-    setText('d2-r-estado', mediaAnual != null ? 'Base de referencia' : 'Sin histórico suficiente');
     var rCtxEl = el('d2-r-ctx');
     if (rCtxEl) {
       var mesesRef = statsAnual ? statsAnual.mesesAuditados : (statsFinancial ? statsFinancial.mesesAuditados : null);
-      if (mesesRef != null && mesesRef > 0) {
-        rCtxEl.textContent = mesesRef + ' ' + (mesesRef === 1 ? 'mes auditado' : 'meses auditados');
+      if (mediaAnual != null && mesesRef != null && mesesRef > 0) {
+        rCtxEl.textContent = 'Media de los últimos ' + mesesRef + ' ' + (mesesRef === 1 ? 'mes auditado' : 'meses auditados');
+        rCtxEl.style.display = 'flex';
+      } else if (mediaAnual != null) {
+        rCtxEl.textContent = 'Referencia histórica';
         rCtxEl.style.display = 'flex';
       } else { rCtxEl.style.display = 'none'; }
     }
@@ -14742,10 +14730,10 @@ window.PILOTPAY_BACKEND_READY = true;
     // Expediente activo → acción pendiente del mes en curso (label dinámico).
     // Todo auditado → siguiente mes natural con CTA de inicio.
     var CICLO_MAP = {
-      'pending_variables':   { dot: 'info',  txt: 'Genera la previsión en Calcular',       btn: '→ Ir a Calcular',    tab: 'calcular',    cls: '' },
-      'pending_calculation': { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: '→ Ir a Comparativa', tab: 'comparativa', cls: '' },
-      'pending_comparison':  { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: '→ Ir a Comparativa', tab: 'comparativa', cls: '' },
-      'con_diferencias':     { dot: 'alert', txt: 'Gestiona las diferencias en Historial', btn: '→ Ir a Historial',   tab: 'historial',   cls: 'alert' },
+      'pending_variables':   { dot: 'info',  txt: 'Genera la previsión en Calcular',       btn: 'Ir a Calcular',    tab: 'calcular',    cls: '' },
+      'pending_calculation': { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: 'Ir a Comparativa', tab: 'comparativa', cls: '' },
+      'pending_comparison':  { dot: 'info',  txt: 'Sube la nómina oficial en Comparativa', btn: 'Ir a Comparativa', tab: 'comparativa', cls: '' },
+      'con_diferencias':     { dot: 'alert', txt: 'Gestiona las diferencias en Historial', btn: 'Ir a Historial',   tab: 'historial',   cls: 'alert' },
     };
 
     if (mr) {
@@ -14768,27 +14756,29 @@ window.PILOTPAY_BACKEND_READY = true;
       var cLblEl = el('d2-c-label'); if (cLblEl) cLblEl.textContent = 'Próximo ciclo';
       setText('d2-c-mes', MESES_ES[nextMonth] + ' ' + nextYear);
       var cDotEl = el('d2-c-dot'); if (cDotEl) cDotEl.className = 'd2-col-dot dim';
-      setText('d2-c-estado', 'Pendiente de cargar variables');
+      setText('d2-c-estado', 'Pendiente de variables');
       var cCtaEl = el('d2-c-cta');
       if (cCtaEl) {
-        cCtaEl.textContent = '→ Cargar variables'; cCtaEl.className = 'd2-col-cta done';
+        cCtaEl.textContent = 'Cargar variables'; cCtaEl.className = 'd2-col-cta done';
         cCtaEl.style.display = '';
         cCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
       }
-      var cCtxEl = el('d2-c-ctx'); if (cCtxEl) cCtxEl.style.display = 'none';
+      var cCtxEl = el('d2-c-ctx');
+      if (cCtxEl) { cCtxEl.textContent = 'Carga el PDF cuando lo recibas'; cCtxEl.style.display = 'flex'; }
 
     } else {
       var cLblEl = el('d2-c-label'); if (cLblEl) cLblEl.textContent = 'Primer ciclo';
       setText('d2-c-mes', '—');
       var cDotEl = el('d2-c-dot'); if (cDotEl) cDotEl.className = 'd2-col-dot dim';
-      setText('d2-c-estado', 'Carga las variables del mes actual para empezar');
+      setText('d2-c-estado', 'Sin expedientes');
       var cCtaEl = el('d2-c-cta');
       if (cCtaEl) {
-        cCtaEl.textContent = '→ Cargar variables'; cCtaEl.className = 'd2-col-cta done';
+        cCtaEl.textContent = 'Cargar variables'; cCtaEl.className = 'd2-col-cta done';
         cCtaEl.style.display = '';
         cCtaEl.onclick = function() { try { showTab('variables'); } catch(e) {} };
       }
-      var cCtxEl = el('d2-c-ctx'); if (cCtxEl) cCtxEl.style.display = 'none';
+      var cCtxEl = el('d2-c-ctx');
+      if (cCtxEl) { cCtxEl.textContent = 'Carga el PDF de variables para empezar'; cCtxEl.style.display = 'flex'; }
     }
   }
 
@@ -14834,7 +14824,7 @@ window.PILOTPAY_BACKEND_READY = true;
       return tb - ta;
     });
 
-    sorted.slice(0, 4).forEach(function(mr) {
+    sorted.slice(0, 3).forEach(function(mr) {
       var rel  = _relTime(mr._updatedAt);
       var desc = (EVENTO[mr.estado] || 'Actualizado');
       var per  = ((mr.mesLabel || '') + ' ' + (mr.year || '')).trim();
@@ -14857,7 +14847,7 @@ window.PILOTPAY_BACKEND_READY = true;
       bodyEl.innerHTML = '<div class="d2-act-empty">Sin actividad reciente</div>';
       return;
     }
-    bodyEl.innerHTML = events.slice(0, 5).map(function(ev) {
+    bodyEl.innerHTML = events.slice(0, 3).map(function(ev) {
       return `<div class="d2-act-item"><span class="d2-act-time">${ev.time}</span><span class="d2-act-desc">${ev.desc}</span></div>`;
     }).join('');
   }
