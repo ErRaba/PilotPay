@@ -1899,6 +1899,7 @@ input[type=number] { -moz-appearance: textfield; }
           grid-template-areas:
             "hero"
             "flujo"
+            "anual"
             "alerts"
             "prevision";
           gap: 8px;
@@ -1908,7 +1909,7 @@ input[type=number] { -moz-appearance: textfield; }
         @media (max-width: 900px) {
           .d2-layout {
             grid-template-columns: 1fr;
-            grid-template-areas: "hero" "flujo" "alerts" "prevision";
+            grid-template-areas: "hero" "flujo" "anual" "alerts" "prevision";
             padding: 10px 14px;
           }
         }
@@ -1921,8 +1922,33 @@ input[type=number] { -moz-appearance: textfield; }
         }
         .d2-hero       { grid-area: hero; }
         .d2-flujo      { grid-area: flujo; }
+        .d2-anual      { grid-area: anual; }
         .d2-alerts     { grid-area: alerts; }
         .d2-prevision  { grid-area: prevision; }
+
+        /* ── Estado del año ── */
+        .d2-anual-body {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          padding: 0 16px 12px;
+          gap: 0;
+        }
+        .d2-anual-row {
+          display: flex; align-items: baseline; justify-content: space-between;
+          padding: 5px 12px 5px 0; border-bottom: 1px solid var(--border);
+          font-size: 11px;
+        }
+        .d2-anual-row:nth-last-child(-n+3) { border-bottom: none; }
+        .d2-anual-mes  { font-family: var(--mono); color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+        .d2-anual-neto { font-family: var(--mono); color: var(--text2); font-weight: 600; }
+        .d2-anual-footer {
+          display: flex; align-items: baseline; justify-content: flex-end; gap: 16px;
+          padding: 8px 16px 12px;
+          border-top: 1px solid var(--border);
+          margin-top: 2px;
+        }
+        .d2-anual-media-lbl { font-size: 9px; font-family: var(--mono); color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+        .d2-anual-media-val { font-size: 15px; font-family: var(--mono); font-weight: 700; color: var(--text2); }
 
         .d2-block-title {
           font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
@@ -2145,6 +2171,9 @@ input[type=number] { -moz-appearance: textfield; }
         <div class="d2-flujo">
           <div id="d2-flujo-body" class="d2-flujo-body"></div>
         </div>
+
+        <!-- ── ESTADO DEL AÑO ── -->
+        <div id="d2-anual" class="d2-anual" style="display:none"></div>
 
         <!-- ── ALERTAS — solo si existen alertas reales ── -->
         <div id="d2-alerts" class="d2-alerts" style="display:none">
@@ -14918,6 +14947,51 @@ window.PILOTPAY_BACKEND_READY = true;
   }
 
   /* ══════════════════════════════════════════
+     RENDER: ESTADO DEL AÑO
+  ══════════════════════════════════════════ */
+  function _d2RenderAnual(data) {
+    const blockEl = el('d2-anual');
+    if (!blockEl) return;
+
+    const { _allMR, statsAnual, currentYear } = data;
+    const DEFINITIVOS = { auditado:1, regularizado:1, reclamado:1, cerrado:1, con_diferencias:1 };
+
+    var meses = (_allMR || [])
+      .filter(function(mr) { return mr.year === currentYear && DEFINITIVOS[mr.estado]; })
+      .sort(function(a, b) { return a.month - b.month; });
+
+    if (meses.length === 0) { blockEl.style.display = 'none'; return; }
+
+    var rows = meses.map(function(mr) {
+      var _reg  = mr.regularizacion || null;
+      var _aud  = mr.auditoria      || {};
+      var _calc = mr.calculoTeorico || {};
+      var neto  = null;
+      if (_reg  && _reg.netoFinalAjustado != null)  neto = _reg.netoFinalAjustado;
+      else if (_aud.liqReal != null)                 neto = _aud.liqReal;
+      else if (_calc.liquidoReal != null)            neto = _calc.liquidoReal;
+      var mesNombre = MESES_ES[mr.month] || ('Mes ' + mr.month);
+      return '<div class="d2-anual-row">'
+        + '<span class="d2-anual-mes">'  + mesNombre + '</span>'
+        + '<span class="d2-anual-neto">' + (neto != null ? fmt(neto) : '—') + '</span>'
+        + '</div>';
+    }).join('');
+
+    var mediaVal = statsAnual && statsAnual.mediaNetaFinal != null ? statsAnual.mediaNetaFinal : null;
+    var footer = mediaVal != null
+      ? '<div class="d2-anual-footer">'
+          + '<span class="d2-anual-media-lbl">Media ' + currentYear + '</span>'
+          + '<span class="d2-anual-media-val">' + fmt(mediaVal) + '</span>'
+        + '</div>'
+      : '';
+
+    blockEl.innerHTML = '<div class="d2-block-title">Estado del año</div>'
+      + '<div class="d2-anual-body">' + rows + '</div>'
+      + footer;
+    blockEl.style.display = '';
+  }
+
+  /* ══════════════════════════════════════════
      RENDER: ALERTAS
   ══════════════════════════════════════════ */
   function _d2RenderAlerts(data) {
@@ -14974,6 +15048,7 @@ window.PILOTPAY_BACKEND_READY = true;
     _d2RenderNextStep(data);
     _d2RenderActivity(data);
     _d2RenderFlujo(data);
+    _d2RenderAnual(data);
     _d2RenderAudits(data);
     _d2RenderAlerts(data);
   };
