@@ -1895,12 +1895,12 @@ input[type=number] { -moz-appearance: textfield; }
 
         .d2-layout {
           display: grid;
-          grid-template-columns: 1fr 296px;
+          grid-template-columns: 1fr;
           grid-template-areas:
-            "hero     activity"
-            "flujo    flujo"
-            "audits   audits"
-            "alerts   alerts";
+            "hero"
+            "flujo"
+            "alerts"
+            "prevision";
           gap: 8px;
           padding: 14px 20px;
           align-content: start;
@@ -1908,7 +1908,7 @@ input[type=number] { -moz-appearance: textfield; }
         @media (max-width: 900px) {
           .d2-layout {
             grid-template-columns: 1fr;
-            grid-template-areas: "hero" "activity" "flujo" "audits" "alerts";
+            grid-template-areas: "hero" "flujo" "alerts" "prevision";
             padding: 10px 14px;
           }
         }
@@ -1919,11 +1919,10 @@ input[type=number] { -moz-appearance: textfield; }
           border-radius: var(--r);
           overflow: hidden;
         }
-        .d2-hero     { grid-area: hero; }
-        .d2-activity { grid-area: activity; }
-        .d2-flujo    { grid-area: flujo; }
-        .d2-audits   { grid-area: audits; }
-        .d2-alerts   { grid-area: alerts; }
+        .d2-hero       { grid-area: hero; }
+        .d2-flujo      { grid-area: flujo; }
+        .d2-alerts     { grid-area: alerts; }
+        .d2-prevision  { grid-area: prevision; }
 
         .d2-block-title {
           font-size: 9px; font-family: var(--mono); letter-spacing: .09em;
@@ -2142,28 +2141,18 @@ input[type=number] { -moz-appearance: textfield; }
           </div><!-- /d2-hero-temporal -->
         </div>
 
-        <!-- ── ACTIVIDAD RECIENTE ── -->
-        <div class="d2-activity">
-          <div class="d2-block-title">Actividad reciente</div>
-          <div id="d2-activity-body" class="d2-activity-body"></div>
-        </div>
-
         <!-- ── FLUJO DEL MES ── -->
         <div class="d2-flujo">
           <div id="d2-flujo-body" class="d2-flujo-body"></div>
         </div>
 
-        <!-- ── AUDITORÍAS RECIENTES ── -->
-        <div class="d2-audits">
-          <div class="d2-block-title">Auditorías recientes</div>
-          <div id="d2-audits-body" class="d2-audits-body"></div>
-        </div>
-
-        <!-- ── ALERTAS ── -->
+        <!-- ── ALERTAS — solo si existen alertas reales ── -->
         <div id="d2-alerts" class="d2-alerts" style="display:none">
-          <div class="d2-block-title">Alertas</div>
           <div id="d2-alerts-body" class="d2-alerts-body"></div>
         </div>
+
+        <!-- ── PREVISIÓN PRÓXIMO CICLO — reservado, pendiente motor programación eCrew ── -->
+        <div id="d2-prevision" class="d2-prevision" style="display:none"></div>
 
       </div><!-- /d2-layout -->
 
@@ -14940,18 +14929,6 @@ window.PILOTPAY_BACKEND_READY = true;
     const _statsReady = !!(_storeReady && statsFinancial && statsFinancial.mesesAuditados !== undefined);
     const _exp        = expedienteActivo;
 
-    const _total = _auditStats ? _auditStats.total : (hist ? hist.length : 0);
-    if (_total === 0) {
-      alerts.push({ cls: 'amber', msg: '<strong>Sin auditorías guardadas.</strong> Sube una nómina en Comparativa para empezar a verificar.' });
-    }
-    if (_exp && _exp.estado === 'pending_variables') {
-      const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
-      alerts.push({ cls: 'amber', msg: `<strong>Variables cargadas para ${_m}.</strong> Calcula la nómina teórica en Calcular.` });
-    }
-    if (_exp && (_exp.estado === 'pending_comparison' || _exp.estado === 'pending_calculation')) {
-      const _mStr = (MESES_ES[_exp.month] || '') + ' ' + _exp.year;
-      alerts.push({ cls: 'amber', msg: `<strong>Previsión generada para ${_mStr}.</strong> Cuando recibas la nómina oficial, súbela en Comparativa.` });
-    }
     if (_exp && _exp.estado === 'con_diferencias') {
       const _m = ((_exp.mesLabel || '') + ' ' + (_exp.year || '')).trim();
       alerts.push({ cls: 'red', msg: `<strong>Diferencias detectadas en ${_m}.</strong> Revisa el Historial para gestionar o regularizar.` });
