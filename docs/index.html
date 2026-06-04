@@ -12117,10 +12117,6 @@ function parseBinterNominaV2(text) {
   result.confidence = confidence;
   result._debug = debugInfo;
 
-  // ── MANTENER confidence.global = 0 HASTA REVISIÓN ──────────────────────────
-  confidence.global = 0;  // TODO: quitar cuando validemos resultados
-  warnings.push('[DEBUG] confidence.global forzado a 0 — V2 en modo prueba');
-
   // LOG PUNTO 5: Valores finales (solo si debug)
   if (_DEBUG_PARSE) {
     console.log('[V2 TRACE 5] RESULTADO FINAL deducciones:', {
