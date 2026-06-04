@@ -20146,6 +20146,27 @@ window.PILOTPAY_BACKEND_READY = true;
       <div class="pd-field-group"><div class="pd-field-label">Líquido</div><div class="pd-field-value highlight">${fmtEur(v2.totales.liquido)}</div></div>
       <div class="pd-field-group"><div class="pd-field-label">IRPF %</div><div class="pd-field-value">${fmt(v2.deducciones.irpf_pct)}%</div></div>
       <div class="pd-field-group"><div class="pd-field-label">SS CC %</div><div class="pd-field-value ${v2.deducciones.ss_cc_pct ? 'highlight' : 'missing'}">${fmt(v2.deducciones.ss_cc_pct)}%</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div style="font-weight:600; margin-bottom:10px; color:var(--blue)">📊 Acumulados</div>
+      <div class="pd-field-group"><div class="pd-field-label">Base IRPF</div><div class="pd-field-value ${v2.acumulados.base_irpf ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF</div><div class="pd-field-value ${v2.acumulados.irpf ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Cotiz. SS</div><div class="pd-field-value ${v2.acumulados.cotiz_ss ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.cotiz_ss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base Esp. Rep.</div><div class="pd-field-value ${v2.acumulados.base_esp_rep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_esp_rep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF Esp. Rep.</div><div class="pd-field-value ${v2.acumulados.irpf_esp_rep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf_esp_rep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base Esp. No Rep.</div><div class="pd-field-value ${v2.acumulados.base_esp_norep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_esp_norep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF Esp. No Rep.</div><div class="pd-field-value ${v2.acumulados.irpf_esp_norep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf_esp_norep)}</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div style="font-weight:600; margin-bottom:10px; color:var(--blue)">🏢 Coste Empresa</div>
+      <div class="pd-field-group"><div class="pd-field-label">Total</div><div class="pd-field-value ${v2.costeEmpresa.total ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.total)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">CC</div><div class="pd-field-value ${v2.costeEmpresa.cc ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.cc)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">MEI</div><div class="pd-field-value ${v2.costeEmpresa.mei ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.mei)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">FP</div><div class="pd-field-value ${v2.costeEmpresa.fp ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.fp)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Desempleo</div><div class="pd-field-value ${v2.costeEmpresa.desempleo ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.desempleo)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IT/IMS</div><div class="pd-field-value ${v2.costeEmpresa.it_ims ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.it_ims)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">FOGASA</div><div class="pd-field-value ${v2.costeEmpresa.fogasa ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.fogasa)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr1</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr1 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr1)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr2</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr2 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr2)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr3</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr3 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr3)}</div></div>
     `;
 
     document.getElementById('pd-v1-data').innerHTML = v1Html;
@@ -20156,7 +20177,7 @@ window.PILOTPAY_BACKEND_READY = true;
     tbody.innerHTML = v2.tablaConceptos.map((c, i) => {
       const tipoClass = c.tipo === 'devengo' ? 'pd-tipo-devengo' : (c.tipo === 'deduccion' ? 'pd-tipo-deduccion' : 'pd-tipo-desconocido');
       const confClass = c.confidence >= 0.8 ? 'pd-conf-high' : (c.confidence >= 0.5 ? 'pd-conf-medium' : 'pd-conf-low');
-      const imp = c.devengo || c.retencion;
+      const imp = c.devengo || c.retencion || c.importe;  // FIX: incluir .importe para costeEmpresa
       const fmtVal = v => v !== null && v !== undefined ? v : '—';
       const fmtNum = v => v !== null ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
       return `
