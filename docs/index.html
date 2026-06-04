@@ -11746,6 +11746,7 @@ function parseBinterNominaV2(text) {
 
   const _NUM_RE = /[\d]{1,3}(?:\.[\d]{3})*,[\d]{2}/;
   const _PCT_RE = /\d{1,2},\d{2}%/;
+  const _DEBUG_PARSE = localStorage.getItem('pilotpay_parser_debug') === '1';
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -11761,6 +11762,13 @@ function parseBinterNominaV2(text) {
       const conceptoM = line.match(/([A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ\s\.]+?)(?:\s+[\d.,]+|$)/);
 
       const conceptoRaw = conceptoM ? conceptoM[1].trim() : null;
+
+      // LOG PUNTO 1: Línea raw + match porcentaje (solo IRPF y SS)
+      if (_DEBUG_PARSE && (/irpf|cotizaci[oó]n/i.test(line))) {
+        console.log('[V2 TRACE 1] Línea raw:', line);
+        console.log('[V2 TRACE 1] Porcentaje match:', pctM);
+        console.log('[V2 TRACE 1] Porcentaje capturado:', pctM ? parseFloat(pctM[0].replace(',','.').replace('%','')) : null);
+      }
 
       // Clasificar tipo
       let tipo = 'desconocido';
@@ -11824,10 +11832,23 @@ function parseBinterNominaV2(text) {
         especieInfo: /especie/i.test(line) ? 'repercutida' : (/no\s*rep/i.test(line) ? 'no_repercutida' : null),
         devengo: tipo === 'devengo' ? nums[nums.length - 1] : null,
         retencion: tipo === 'deduccion' ? nums[nums.length - 1] : null,
+        importe: (tipo !== 'devengo' && tipo !== 'deduccion' && nums.length > 0) ? nums[nums.length - 1] : null,
         tipo: tipo,
         subtipo: subtipo,
         confidence: confLinea,
       };
+
+      // LOG PUNTO 2: Objeto almacenado en tablaConceptos (solo IRPF y SS)
+      if (_DEBUG_PARSE && (subtipo === 'irpf' || subtipo === 'ss_cc' || subtipo === 'ss_mei' || subtipo === 'ss_dfp')) {
+        console.log('[V2 TRACE 2] tablaConceptos almacena:', {
+          tipo: lineObj.tipo,
+          subtipo: lineObj.subtipo,
+          porcentaje: lineObj.porcentaje,
+          base: lineObj.base,
+          retencion: lineObj.retencion,
+          concepto: lineObj.concepto
+        });
+      }
 
       result.tablaConceptos.push(lineObj);
       debugInfo.linesClassified++;
@@ -11876,10 +11897,12 @@ function parseBinterNominaV2(text) {
 
   // SS Porcentajes y Bases
   const ssccLinea = result.tablaConceptos.find(c => c.subtipo === 'ss_cc');
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] SS CC find result:', ssccLinea);
   if (ssccLinea) {
     if (ssccLinea.porcentaje) {
       result.deducciones.ss_cc_pct = ssccLinea.porcentaje;
       confidence.ss_cc_pct = 0.95;
+      if (_DEBUG_PARSE) console.log('[V2 TRACE 3] SS CC % asignado:', result.deducciones.ss_cc_pct);
     }
     if (ssccLinea.base) {
       result.deducciones.ss_cc_base = ssccLinea.base;
@@ -11887,12 +11910,14 @@ function parseBinterNominaV2(text) {
   }
 
   const ssmeiLinea = result.tablaConceptos.find(c => c.subtipo === 'ss_mei');
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] SS MEI find result:', ssmeiLinea);
   if (ssmeiLinea) {
     if (ssmeiLinea.porcentaje) result.deducciones.ss_mei_pct = ssmeiLinea.porcentaje;
     if (ssmeiLinea.base) result.deducciones.ss_mei_base = ssmeiLinea.base;
   }
 
   const ssdfpLinea = result.tablaConceptos.find(c => c.subtipo === 'ss_dfp');
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] SS D+FP find result:', ssdfpLinea);
   if (ssdfpLinea) {
     if (ssdfpLinea.porcentaje) result.deducciones.ss_dfp_pct = ssdfpLinea.porcentaje;
     if (ssdfpLinea.base) result.deducciones.ss_dfp_base = ssdfpLinea.base;
@@ -11900,10 +11925,12 @@ function parseBinterNominaV2(text) {
 
   // IRPF % y Base
   const irpfLinea = result.tablaConceptos.find(c => c.subtipo === 'irpf' && !/especie/i.test(c.rawLine));
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] IRPF find result:', irpfLinea);
   if (irpfLinea) {
     if (irpfLinea.porcentaje) {
       result.deducciones.irpf_pct = irpfLinea.porcentaje;
       confidence.irpf_pct = 0.95;
+      if (_DEBUG_PARSE) console.log('[V2 TRACE 3] IRPF % asignado:', result.deducciones.irpf_pct);
     }
     if (irpfLinea.base) {
       result.deducciones.irpf_base = irpfLinea.base;
@@ -11911,23 +11938,25 @@ function parseBinterNominaV2(text) {
   }
 
   const irpfEspecieLinea = result.tablaConceptos.find(c => c.subtipo === 'irpf' && /especie/i.test(c.rawLine));
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] IRPF Especie find result:', irpfEspecieLinea);
   if (irpfEspecieLinea) {
     if (irpfEspecieLinea.porcentaje) result.deducciones.irpf_especie_pct = irpfEspecieLinea.porcentaje;
     if (irpfEspecieLinea.base) result.deducciones.irpf_especie_base = irpfEspecieLinea.base;
     result.deducciones.irpf_especie_retencion = irpfEspecieLinea.retencion;
   }
 
-  // Coste Empresa
-  result.costeEmpresa.total = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'total')?.devengo || null;
-  result.costeEmpresa.cc = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'cc')?.devengo || null;
-  result.costeEmpresa.mei = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'mei')?.devengo || null;
-  result.costeEmpresa.solidaridad_tr1 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr1')?.devengo || null;
-  result.costeEmpresa.solidaridad_tr2 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr2')?.devengo || null;
-  result.costeEmpresa.solidaridad_tr3 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr3')?.devengo || null;
-  result.costeEmpresa.it_ims = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'it_ims')?.devengo || null;
-  result.costeEmpresa.desempleo = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'desempleo')?.devengo || null;
-  result.costeEmpresa.fp = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'fp')?.devengo || null;
-  result.costeEmpresa.fogasa = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'fogasa')?.devengo || null;
+  // Coste Empresa (FIX: usar .importe en lugar de .devengo)
+  result.costeEmpresa.total = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'total')?.importe || null;
+  result.costeEmpresa.cc = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'cc')?.importe || null;
+  result.costeEmpresa.mei = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'mei')?.importe || null;
+  result.costeEmpresa.solidaridad_tr1 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr1')?.importe || null;
+  result.costeEmpresa.solidaridad_tr2 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr2')?.importe || null;
+  result.costeEmpresa.solidaridad_tr3 = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'solidaridad_tr3')?.importe || null;
+  result.costeEmpresa.it_ims = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'it_ims')?.importe || null;
+  result.costeEmpresa.desempleo = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'desempleo')?.importe || null;
+  result.costeEmpresa.fp = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'fp')?.importe || null;
+  result.costeEmpresa.fogasa = result.tablaConceptos.find(c => c.tipo === 'coste_empresa' && c.subtipo === 'fogasa')?.importe || null;
+  if (_DEBUG_PARSE) console.log('[V2 TRACE 3] Coste Empresa extraído:', result.costeEmpresa);
 
   // ── 6. BASES Y TOTALES (línea 8 números del V1) ───────────────────────────
   for (const line of lines) {
@@ -12010,6 +12039,11 @@ function parseBinterNominaV2(text) {
   result.acumulados.base_esp_norep = _findAcum(_lns_acm_split, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
   result.acumulados.irpf_esp_norep = _findAcum(_lns_acm_split, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
 
+  if (_DEBUG_PARSE) {
+    console.log('[V2 TRACE 4] Acumulados búsqueda en líneas split:', _lns_acm_split.filter(l => /acum/i.test(l)));
+    console.log('[V2 TRACE 4] Acumulados extraídos:', result.acumulados);
+  }
+
   if (result.acumulados.base_irpf) confidence.acumulados = 0.85;
 
   // ── 8. CALENDARIO MENSUAL (tira días del V1) ──────────────────────────────
@@ -12086,6 +12120,20 @@ function parseBinterNominaV2(text) {
   // ── MANTENER confidence.global = 0 HASTA REVISIÓN ──────────────────────────
   confidence.global = 0;  // TODO: quitar cuando validemos resultados
   warnings.push('[DEBUG] confidence.global forzado a 0 — V2 en modo prueba');
+
+  // LOG PUNTO 5: Valores finales (solo si debug)
+  if (_DEBUG_PARSE) {
+    console.log('[V2 TRACE 5] RESULTADO FINAL deducciones:', {
+      irpf_pct: result.deducciones.irpf_pct,
+      irpf_base: result.deducciones.irpf_base,
+      irpf_retencion: result.deducciones.irpf_retencion,
+      ss_cc_pct: result.deducciones.ss_cc_pct,
+      ss_mei_pct: result.deducciones.ss_mei_pct,
+      ss_dfp_pct: result.deducciones.ss_dfp_pct,
+    });
+    console.log('[V2 TRACE 5] RESULTADO FINAL acumulados:', result.acumulados);
+    console.log('[V2 TRACE 5] RESULTADO FINAL costeEmpresa:', result.costeEmpresa);
+  }
 
   return result;
 }
