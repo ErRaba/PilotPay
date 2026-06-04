@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Parser V2 — PilotPay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0a0e1a;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #89b4fa;
+    }
+    .upload-zone {
+      border: 2px dashed #313244;
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      margin-bottom: 30px;
+      transition: all 0.2s;
+    }
+    .upload-zone:hover {
+      border-color: #89b4fa;
+      background: #11111b;
+    }
+    .btn {
+      background: #89b4fa;
+      color: #1e1e2e;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn:hover { background: #a6bcf7; }
+    .section {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #89b4fa;
+      margin-bottom: 15px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: #11111b;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #313244;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #6c7086;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #cdd6f4;
+    }
+    .stat-value.green { color: #a6e3a1; }
+    .stat-value.amber { color: #f9e2af; }
+    .stat-value.red { color: #f38ba8; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #313244;
+    }
+    th {
+      background: #11111b;
+      color: #6c7086;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+    }
+    tr:hover { background: #11111b; }
+    .conf-high { color: #a6e3a1; }
+    .conf-medium { color: #f9e2af; }
+    .conf-low { color: #f38ba8; }
+    .tipo-devengo { color: #a6e3a1; }
+    .tipo-deduccion { color: #f38ba8; }
+    .tipo-desconocido { color: #6c7086; }
+    pre {
+      background: #11111b;
+      padding: 15px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 11px;
+      line-height: 1.5;
+      border: 1px solid #313244;
+    }
+    .warning {
+      background: #3a2a1a;
+      border-left: 3px solid #f9e2af;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Test Parser V2 — Extracción Documental</h1>
+
+    <div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+      <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="processPDF(this.files[0])">
+      <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+      <div style="font-size: 16px; font-weight: 600; margin-bottom: 5px;">Cargar nómina PDF</div>
+      <div style="font-size: 12px; color: #6c7086;">Click para seleccionar archivo</div>
+    </div>
+
+    <div id="loading" style="display:none; text-align:center; padding:40px;">
+      <div style="font-size: 48px;">⏳</div>
+      <div style="margin-top: 10px;">Procesando...</div>
+    </div>
+
+    <div id="results" style="display:none;">
+      <!-- STATS -->
+      <div class="section">
+        <div class="section-title">📊 Estadísticas de Extracción</div>
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Parser usado</div>
+            <div class="stat-value" id="stat-version">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Confidence global</div>
+            <div class="stat-value" id="stat-confidence">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Líneas totales</div>
+            <div class="stat-value" id="stat-total-lines">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">tablaConceptos</div>
+            <div class="stat-value green" id="stat-conceptos">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Clasificadas</div>
+            <div class="stat-value green" id="stat-classified">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Desconocidas</div>
+            <div class="stat-value amber" id="stat-unknown">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Sin clasificar</div>
+            <div class="stat-value red" id="stat-unclassified">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Tiempo parsing</div>
+            <div class="stat-value" id="stat-time">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WARNINGS -->
+      <div class="section" id="warnings-section" style="display:none;">
+        <div class="section-title">⚠️ Warnings</div>
+        <div id="warnings-list"></div>
+      </div>
+
+      <!-- TABLA CONCEPTOS -->
+      <div class="section">
+        <div class="section-title">📋 Tabla de Conceptos Extraídos</div>
+        <div style="overflow-x:auto;">
+          <table id="tabla-conceptos">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tipo</th>
+                <th>Subtipo</th>
+                <th>Concepto</th>
+                <th>Unidades</th>
+                <th>%</th>
+                <th>Base</th>
+                <th>Devengo</th>
+                <th>Retención</th>
+                <th>Conf</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CAMPOS NUEVOS VS V1 -->
+      <div class="section">
+        <div class="section-title">✨ Campos Nuevos Detectados (vs V1)</div>
+        <div id="new-fields"></div>
+      </div>
+
+      <!-- CONFIDENCE POR CAMPO -->
+      <div class="section">
+        <div class="section-title">🎯 Confidence por Campo</div>
+        <div style="overflow-x:auto;">
+          <table id="tabla-confidence">
+            <thead>
+              <tr>
+                <th>Campo</th>
+                <th>Confidence</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LÍNEAS NO CLASIFICADAS -->
+      <div class="section" id="unclassified-section" style="display:none;">
+        <div class="section-title">❓ Líneas No Clasificadas</div>
+        <pre id="unclassified-list"></pre>
+      </div>
+
+      <!-- RAW DATA V2 -->
+      <div class="section">
+        <div class="section-title">🔍 Estructura Completa V2 (JSON)</div>
+        <pre id="raw-v2"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    // Copiar funciones del parser desde index.html
+    // (simplificado para testing standalone)
+
+    async function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    async function extractPdfText(file) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      const buf = await readFileAsArrayBuffer(file);
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let fullText = '';
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const content = await page.getTextContent();
+        const rows = {};
+        for (const item of content.items) {
+          if (!item.str.trim()) continue;
+          const y = Math.round(item.transform[5]);
+          const x = item.transform[4];
+          if (!rows[y]) rows[y] = [];
+          rows[y].push({ x, str: item.str });
+        }
+        const sortedYs = Object.keys(rows).map(Number).sort((a, b) => b - a);
+        for (const y of sortedYs) {
+          const rowItems = rows[y].sort((a, b) => a.x - b.x);
+          fullText += rowItems.map(i => i.str).join('  ') + '\n';
+        }
+        fullText += '\n';
+      }
+      return fullText;
+    }
+
+    async function processPDF(file) {
+      if (!file) return;
+
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+
+      // Activar debug mode
+      localStorage.setItem('pilotpay_parser_debug', '1');
+
+      try {
+        const text = await extractPdfText(file);
+
+        // Aquí se llamaría a parseBinterNominaSeguro(text) desde index.html
+        // Para este test, necesitas copiar las funciones o cargar index.html como módulo
+
+        alert('Para ejecutar el test completo:\n\n' +
+              '1. Abre PilotPay en el navegador\n' +
+              '2. Abre la consola (F12)\n' +
+              '3. Activa debug: localStorage.setItem("pilotpay_parser_debug", "1")\n' +
+              '4. Carga una nómina en Comparativa\n' +
+              '5. Revisa console.log para ver:\n' +
+              '   - [Parser] V2 OK / fallback V1\n' +
+              '   - TablaConceptos extraídos\n' +
+              '   - Líneas no clasificadas\n\n' +
+              'En la próxima sesión integraré este test directamente en la app.');
+
+      } catch (e) {
+        alert('Error: ' + e.message);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
