@@ -1933,8 +1933,10 @@ input[type=number] { -moz-appearance: textfield; }
           color: var(--text3); padding: 0 16px 12px; opacity: .75;
         }
         .d2-anual-punto {
-          cursor: pointer;
           transition: all 0.2s ease;
+        }
+        .d2-anual-hitbox {
+          cursor: pointer;
         }
         .d2-anual-tooltip {
           display: none;
@@ -15070,9 +15072,9 @@ window.PILOTPAY_BACKEND_READY = true;
     if (mediaVal != null) {
       var my = yOf(mediaVal);
       s += '<line x1="' + ML + '" y1="' + my + '" x2="' + VW + '" y2="' + my + '"'
-        +  ' stroke="#45475a" stroke-width="0.7" stroke-dasharray="2,7" opacity="0.65"/>';
+        +  ' stroke="#45475a" stroke-width="0.7" stroke-dasharray="2,7" opacity="0.65" pointer-events="none"/>';
       s += '<text x="' + (VW - 2) + '" y="' + (my - 2.5) + '" text-anchor="end"'
-        +  ' font-size="7" fill="#45475a" opacity="0.65" font-family="monospace">'
+        +  ' font-size="7" fill="#45475a" opacity="0.65" font-family="monospace" pointer-events="none">'
         +  Math.round(mediaVal).toLocaleString('es-ES') + '</text>';
     }
 
@@ -15108,7 +15110,7 @@ window.PILOTPAY_BACKEND_READY = true;
     ticks.forEach(function(tv) {
       var gy = yOf(tv), lbl = Math.floor(tv / 1000) + 'k';
       s += '<text x="' + (ML - 4) + '" y="' + (gy + 3) + '" text-anchor="end"'
-        +  ' font-size="8" fill="#6c7086" font-family="monospace">' + lbl + '</text>';
+        +  ' font-size="8" fill="#6c7086" font-family="monospace" pointer-events="none">' + lbl + '</text>';
     });
 
     // Etiquetas X — solo meses auditados
@@ -15116,8 +15118,21 @@ window.PILOTPAY_BACKEND_READY = true;
       var lx  = xOf(idx);
       var clr = p.month === lastM ? '#89b4fa' : '#6c7086';
       s += '<text x="' + lx + '" y="' + XLBL + '" text-anchor="middle"'
-        +  ' font-size="8" fill="' + clr + '" font-family="monospace">'
+        +  ' font-size="8" fill="' + clr + '" font-family="monospace" pointer-events="none">'
         +  MABR[p.month - 1] + '</text>';
+    });
+
+    // Hitboxes invisibles para hover (renderizados al final = encima de todo)
+    sp.forEach(function(p, idx) {
+      var mesNombre = MESES_ES[p.m] || '';
+      var mesValue = pts[idx].value;
+      var diffVsMedia = mediaVal != null ? (mesValue - mediaVal) : 0;
+      var isLast = (p.m === lastM);
+
+      s += '<circle class="d2-anual-hitbox" cx="' + p.x + '" cy="' + p.y + '" r="12"'
+        +  ' fill="transparent" pointer-events="all"'
+        +  ' data-mes="' + mesNombre + '" data-year="' + currentYear + '"'
+        +  ' data-value="' + mesValue + '" data-diff="' + diffVsMedia + '" data-last="' + isLast + '"/>';
     });
 
     s += '</svg>';
@@ -15162,8 +15177,8 @@ window.PILOTPAY_BACKEND_READY = true;
     var chartContainer = blockEl.querySelector('.d2-anual-chart');
     if (!chartContainer) return;
 
-    var puntos = chartContainer.querySelectorAll('.d2-anual-punto');
-    if (puntos.length === 0) return;
+    var hitboxes = chartContainer.querySelectorAll('.d2-anual-hitbox');
+    if (hitboxes.length === 0) return;
 
     // Crear tooltip
     var tooltip = document.createElement('div');
@@ -15175,21 +15190,27 @@ window.PILOTPAY_BACKEND_READY = true;
       return Number(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
     }
 
-    puntos.forEach(function(punto) {
-      punto.style.cursor = 'pointer';
-      punto.style.transition = 'all 0.2s ease';
+    hitboxes.forEach(function(hitbox, idx) {
+      hitbox.style.cursor = 'pointer';
 
-      punto.addEventListener('mouseenter', function(e) {
-        var mes    = punto.getAttribute('data-mes');
-        var year   = punto.getAttribute('data-year');
-        var value  = parseFloat(punto.getAttribute('data-value'));
-        var diff   = parseFloat(punto.getAttribute('data-diff'));
-        var isLast = punto.getAttribute('data-last') === 'true';
+      hitbox.addEventListener('mouseenter', function(e) {
+        var mes    = hitbox.getAttribute('data-mes');
+        var year   = hitbox.getAttribute('data-year');
+        var value  = parseFloat(hitbox.getAttribute('data-value'));
+        var diff   = parseFloat(hitbox.getAttribute('data-diff'));
+        var isLast = hitbox.getAttribute('data-last') === 'true';
+        var cx     = parseFloat(hitbox.getAttribute('cx'));
+        var cy     = parseFloat(hitbox.getAttribute('cy'));
 
-        // Escalar punto (lógica explícita basada en data-last, NO en radio)
-        punto.setAttribute('r', isLast ? 4.2 : 2.8);
-        punto.style.strokeWidth = '1px';
-        punto.style.stroke = '#89b4fa';
+        // Buscar el punto visual correspondiente para resaltarlo
+        var puntos = chartContainer.querySelectorAll('.d2-anual-punto');
+        var puntoVisual = puntos[idx];
+        if (puntoVisual) {
+          puntoVisual.setAttribute('r', isLast ? 4.2 : 2.8);
+          puntoVisual.style.strokeWidth = '1px';
+          puntoVisual.style.stroke = '#89b4fa';
+          puntoVisual.style.transition = 'all 0.2s ease';
+        }
 
         // Rellenar tooltip con formato exacto
         var diffHTML = '';
@@ -15206,7 +15227,6 @@ window.PILOTPAY_BACKEND_READY = true;
 
         // Posicionar tooltip
         var svgRect = chartContainer.querySelector('svg').getBoundingClientRect();
-        var cx = parseFloat(punto.getAttribute('cx'));
         var svgWidth = 1000; // viewBox width
         var tooltipX = (cx / svgWidth) * svgRect.width;
 
@@ -15229,12 +15249,17 @@ window.PILOTPAY_BACKEND_READY = true;
         });
       });
 
-      punto.addEventListener('mouseleave', function() {
-        // Restaurar punto (lógica explícita basada en data-last, NO en radio)
-        var isLast = punto.getAttribute('data-last') === 'true';
-        punto.setAttribute('r', isLast ? 3.2 : 2);
-        punto.style.strokeWidth = '';
-        punto.style.stroke = '';
+      hitbox.addEventListener('mouseleave', function() {
+        var isLast = hitbox.getAttribute('data-last') === 'true';
+
+        // Restaurar punto visual
+        var puntos = chartContainer.querySelectorAll('.d2-anual-punto');
+        var puntoVisual = puntos[idx];
+        if (puntoVisual) {
+          puntoVisual.setAttribute('r', isLast ? 3.2 : 2);
+          puntoVisual.style.strokeWidth = '';
+          puntoVisual.style.stroke = '';
+        }
 
         // Ocultar tooltip
         tooltip.style.opacity = '0';
