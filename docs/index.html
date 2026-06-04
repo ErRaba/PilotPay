@@ -11467,6 +11467,259 @@ function parseBinterNomina(text) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PARSER NÓMINA BINTER V2 — Extracción completa con tabla de conceptos
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * parseBinterNominaV2 — Parser V2 con extracción exhaustiva
+ *
+ * Mejoras vs V1:
+ * - Extrae TODAS las líneas de tabla de conceptos (incluidas desconocidas)
+ * - Detecta empresa (NIF/nombre)
+ * - Extrae SS porcentajes
+ * - Extrae Total Deducciones
+ * - Calendario mensual completo
+ * - Sistema de confianza por campo
+ * - Warnings detallados
+ * - Logging/debug estructurado
+ *
+ * @param {string} text — texto extraído del PDF
+ * @returns {object} — estructura completa V2 con metadata
+ */
+function parseBinterNominaV2(text) {
+  const startTime = performance.now();
+  const warnings = [];
+  const confidence = {};
+  const debugInfo = {
+    rawLineCount: text.split('\n').length,
+    linesClassified: 0,
+    linesUnclassified: [],
+    detectionStrategies: {},
+  };
+
+  // ── Helper: parse número español ───────────────────────────────────────────
+  const n = s => {
+    if (!s) return null;
+    const cleaned = s.replace(/\./g, '').replace(',', '.');
+    const val = parseFloat(cleaned);
+    return isNaN(val) ? null : val;
+  };
+
+  const findNum = (pattern) => {
+    const m = text.match(pattern);
+    return m ? n(m[1]) : null;
+  };
+
+  const findTxt = (pattern) => {
+    const m = text.match(pattern);
+    return m ? m[1].trim() : null;
+  };
+
+  // ── ESTRUCTURA V2 (skeleton) ───────────────────────────────────────────────
+  const result = {
+    version: "2.0",
+
+    empresa: {
+      nombre: null,
+      nif: null,
+      domicilio: null,
+      ccc: null,
+    },
+
+    trabajador: {
+      nombre: null,
+      nif: null,
+      nss: null,
+      fecha_ingreso: null,
+      funcion: null,
+      nivel: null,
+      base: null,
+      puesto: null,
+      categoria: null,
+      grupo_profesional: null,
+      centro_trabajo: null,
+    },
+
+    periodo: {
+      mes: null,
+      anio: null,
+      fecha_inicio: null,
+      fecha_fin: null,
+    },
+
+    // ── TABLA DE CONCEPTOS — prioridad máxima ─────────────────────────────────
+    // Extrae TODAS las líneas, incluso desconocidas
+    tablaConceptos: [],
+
+    devengos: {},
+    deducciones: {},
+    bases: {},
+    totales: {},
+    acumulados: {},
+    costeEmpresa: {},
+    calendarioMensual: {},
+    observaciones: {},
+
+    // ── Compatibilidad legacy ──────────────────────────────────────────────────
+    legacy: null,  // Se poblará con adaptNominaV2ToLegacy()
+
+    // ── Metadata ───────────────────────────────────────────────────────────────
+    raw: {
+      text: text,
+      lines: text.split('\n'),
+      parsingTimeMs: 0,
+    },
+    warnings: warnings,
+    confidence: confidence,
+    _debug: debugInfo,
+  };
+
+  // ── FASE 1: Implementación skeleton (devuelve estructura vacía) ────────────
+  // TODO: Implementar extracción real en siguientes fases
+
+  result.raw.parsingTimeMs = performance.now() - startTime;
+  warnings.push('parseBinterNominaV2: skeleton implementation — extracción pendiente');
+  confidence.global = 0;  // Forzar fallback a V1
+
+  return result;
+}
+
+/**
+ * adaptNominaV2ToLegacy — Adapta estructura V2 a formato V1
+ *
+ * Garantiza compatibilidad con auditEngine.js y resto de la app
+ * sin modificar código existente.
+ *
+ * @param {object} nominaV2 — resultado de parseBinterNominaV2()
+ * @returns {object} — formato legacy compatible con parseBinterNomina()
+ */
+function adaptNominaV2ToLegacy(nominaV2) {
+  return {
+    trabajador: {
+      nombre: nominaV2.trabajador.nombre,
+      nif: nominaV2.trabajador.nif,
+      nss: nominaV2.trabajador.nss,
+      fecha_ingreso: nominaV2.trabajador.fecha_ingreso,
+      funcion: nominaV2.trabajador.funcion,
+      nivel: nominaV2.trabajador.nivel,
+      base: nominaV2.trabajador.base,
+    },
+    periodo: {
+      mes: nominaV2.periodo.mes,
+      anio: nominaV2.periodo.anio,
+    },
+    irpf_pct: nominaV2.deducciones.irpf_pct || null,
+    hv: {
+      t1_uds: nominaV2.devengos.hv_t1_uds || null,
+      t2_uds: nominaV2.devengos.hv_t2_uds || null,
+      t1_imp: nominaV2.devengos.hv_t1_imp || null,
+      t2_imp: nominaV2.devengos.hv_t2_imp || null,
+    },
+    devengos: {
+      salario_base: nominaV2.devengos.salario_base || null,
+      plus_transporte: nominaV2.devengos.plus_transporte || null,
+      horas_vuelo: nominaV2.devengos.horas_vuelo || null,
+      dpo: nominaV2.devengos.dpo || null,
+      complemento_mad: nominaV2.devengos.complemento_mad || null,
+      dietas_exentas: nominaV2.devengos.dietas_exentas || null,
+      dietas_sujetas: nominaV2.devengos.dietas_sujetas || null,
+    },
+    deducciones: {
+      ss_cc: nominaV2.deducciones.ss_cc || null,
+      ss_mei: nominaV2.deducciones.ss_mei || null,
+      ss_dfp: nominaV2.deducciones.ss_dfp || null,
+      ss_solidaridad: nominaV2.deducciones.ss_solidaridad || null,
+      irpf_especie: nominaV2.deducciones.irpf_especie || null,
+      irpf_retencion: nominaV2.deducciones.irpf_retencion || null,
+      seguro_medico: nominaV2.deducciones.seguro_medico || null,
+    },
+    totales: {
+      total_devengado: nominaV2.totales.total_devengado || null,
+      base_irpf: nominaV2.totales.base_irpf || null,
+      base_ss: nominaV2.totales.base_ss || null,
+      liquido: nominaV2.totales.liquido || null,
+    },
+    acumulados: {
+      base_irpf: nominaV2.acumulados.base_irpf || null,
+      irpf: nominaV2.acumulados.irpf || null,
+      cotiz_ss: nominaV2.acumulados.cotiz_ss || null,
+      base_esp_rep: nominaV2.acumulados.base_esp_rep || null,
+      irpf_esp_rep: nominaV2.acumulados.irpf_esp_rep || null,
+      base_esp_norep: nominaV2.acumulados.base_esp_norep || null,
+      irpf_esp_norep: nominaV2.acumulados.irpf_esp_norep || null,
+    },
+    bajaInfo: nominaV2.calendarioMensual.bajaInfo || { detectada: false },
+    diasInfo: nominaV2.calendarioMensual.diasInfo || {},
+  };
+}
+
+/**
+ * parseBinterNominaSeguro — Selector con fallback V1 si V2 falla
+ *
+ * Estrategia:
+ * 1. Intenta parseBinterNominaV2()
+ * 2. Si V2 falla (throw) o confidence global < 50% → fallback a V1
+ * 3. Logging detallado de decisión
+ *
+ * @param {string} text — texto extraído del PDF
+ * @returns {object} — formato legacy (siempre)
+ */
+function parseBinterNominaSeguro(text) {
+  const _PP_PARSER_DEBUG = localStorage.getItem('pilotpay_parser_debug') === '1';
+
+  let useV2 = false;
+  let nominaV2 = null;
+  let nominaV1 = null;
+  let error = null;
+
+  // ── Intenta V2 ─────────────────────────────────────────────────────────────
+  try {
+    nominaV2 = parseBinterNominaV2(text);
+
+    // Validar confidence mínima
+    const confGlobal = nominaV2.confidence.global || 0;
+    if (confGlobal >= 0.5) {
+      useV2 = true;
+      if (_PP_PARSER_DEBUG) {
+        console.log('[Parser] V2 OK — confidence:', confGlobal.toFixed(2));
+        console.log('[Parser] V2 warnings:', nominaV2.warnings);
+      }
+    } else {
+      if (_PP_PARSER_DEBUG) {
+        console.warn('[Parser] V2 confidence bajo (' + confGlobal.toFixed(2) + ') → fallback V1');
+      }
+    }
+  } catch (e) {
+    error = e;
+    if (_PP_PARSER_DEBUG) {
+      console.error('[Parser] V2 falló → fallback V1', e);
+    }
+  }
+
+  // ── Fallback V1 si necesario ───────────────────────────────────────────────
+  if (!useV2) {
+    nominaV1 = parseBinterNomina(text);
+    if (_PP_PARSER_DEBUG) {
+      console.log('[Parser] Usando V1 (fallback)');
+    }
+    return nominaV1;
+  }
+
+  // ── V2 OK → adaptar a legacy ───────────────────────────────────────────────
+  const legacy = adaptNominaV2ToLegacy(nominaV2);
+  legacy._parserVersion = 'V2';
+  legacy._nominaV2 = nominaV2;  // Adjuntar estructura completa para debugging
+
+  if (_PP_PARSER_DEBUG) {
+    console.log('[Parser] V2 → legacy adaptado');
+    console.log('[Parser] TablaConceptos extraídos:', nominaV2.tablaConceptos.length);
+    console.log('[Parser] Líneas no clasificadas:', nominaV2._debug.linesUnclassified.length);
+  }
+
+  return legacy;
+}
+
 async function processNomina(file) {
   if (!file) return;
   document.getElementById('comparativa-result').style.display = 'block';
@@ -11479,7 +11732,7 @@ async function processNomina(file) {
     const text = await extractPdfText(file);
 
     document.getElementById('comp-loading-text').textContent = 'Analizando nómina...';
-    const nomData = parseBinterNomina(text);
+    const nomData = parseBinterNominaSeguro(text);
 
     document.getElementById('comp-loading').style.display = 'none';
 
