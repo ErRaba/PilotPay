@@ -11575,12 +11575,405 @@ function parseBinterNominaV2(text) {
     _debug: debugInfo,
   };
 
-  // ── FASE 1: Implementación skeleton (devuelve estructura vacía) ────────────
-  // TODO: Implementar extracción real en siguientes fases
+  // ══════════════════════════════════════════════════════════════════════════
+  // FASE 2: EXTRACCIÓN DOCUMENTAL COMPLETA
+  // ══════════════════════════════════════════════════════════════════════════
 
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  // ── 1. EMPRESA ─────────────────────────────────────────────────────────────
+  // NIF empresa: formato [A-Z]\d{7}[A-Z0-9]
+  const empresaNifM = text.match(/\b([A-Z]\d{7}[A-Z0-9])\b/);
+  if (empresaNifM) {
+    result.empresa.nif = empresaNifM[1];
+    confidence.empresa_nif = empresaNifM[1] === 'B76038235' ? 1 : 0.8;
+    if (empresaNifM[1] !== 'B76038235') {
+      warnings.push('NIF empresa (' + empresaNifM[1] + ') no es Binter Canarias (B76038235)');
+    }
+  }
+
+  const empresaNombreM = text.match(/BINTER\s+CANARIAS\s+S\.?A\.?/i);
+  if (empresaNombreM) {
+    result.empresa.nombre = empresaNombreM[0];
+    confidence.empresa_nombre = 1;
+  }
+
+  // ── 2. TRABAJADOR ──────────────────────────────────────────────────────────
+  // Nombre
+  const nombreM = text.match(/TRABAJADOR\s+([\w\s]+?)\s+(?:N\.?I\.?F|NIF)/i)
+    || text.match(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/)
+    || text.match(/Estimado\/a\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúña-z\s]+?)(?:\n|Se adelantan)/i);
+  if (nombreM) {
+    result.trabajador.nombre = nombreM[1].trim();
+    confidence.trabajador_nombre = 0.9;
+  }
+
+  // NIF trabajador (lógica robusta del V1)
+  const _NIF_RE = /\b(\d{8}[A-Z])\b/g;
+  const _nssAnchorM = text.match(/\b\d{11,12}\b/) || text.match(/\d{2}[\/-]\d{8}[\/-]\d{2}/);
+  const _nssAnchorPos = _nssAnchorM ? text.indexOf(_nssAnchorM[0]) : -1;
+  const _nifCands = [];
+  let _nifTmp;
+  while ((_nifTmp = _NIF_RE.exec(text)) !== null) {
+    _nifCands.push({ nif: _nifTmp[1], pos: _nifTmp.index });
+  }
+  let nif = null;
+  if (_nifCands.length === 1) {
+    nif = _nifCands[0].nif;
+    confidence.trabajador_nif = 0.9;
+  } else if (_nifCands.length > 1 && _nssAnchorPos >= 0) {
+    const _antes = _nifCands.filter(c => c.pos < _nssAnchorPos);
+    if (_antes.length > 0) {
+      const _cercano = _antes.reduce((a, b) => b.pos > a.pos ? b : a);
+      if (_nssAnchorPos - _cercano.pos < 600) {
+        nif = _cercano.nif;
+        confidence.trabajador_nif = 0.8;
+      }
+    }
+    if (!nif) {
+      const _despues = _nifCands.filter(c => c.pos > _nssAnchorPos && c.pos - _nssAnchorPos < 200);
+      if (_despues.length > 0) {
+        nif = _despues[0].nif;
+        confidence.trabajador_nif = 0.7;
+      }
+    }
+  }
+  result.trabajador.nif = nif;
+
+  // NSS
+  const nssM = text.match(/N[ºo°]?\s*(?:AFILIACI[ÓO]N|INS\.?\s*SEG\.?\s*SOC\.?|SS)\.?\s*(\d{11,12})/i)
+    || text.match(/(\d{11,12})\s+(?:\d{8}[A-Z]|[A-Z]\d{7})/);
+  if (nssM) {
+    result.trabajador.nss = nssM[1];
+    confidence.trabajador_nss = 0.9;
+  }
+
+  // Fecha ingreso
+  const ingresoM = text.match(/ANTIG[ÜU]EDAD\s+EMP\.?\s*(\d{2}\/\d{2}\/\d{4})/i)
+    || text.match(/(\d{2}\/\d{2}\/\d{4})\s+PILOTO/i);
+  if (ingresoM) {
+    result.trabajador.fecha_ingreso = ingresoM[1];
+    confidence.trabajador_fecha_ingreso = 0.9;
+  }
+
+  // Función/Cargo
+  const puestoLineM = text.match(/(?:PUESTO|Puesto)[:\s]+([^\n]+)/i);
+  const puestoTxt = puestoLineM ? puestoLineM[1].trim() : '';
+  result.trabajador.puesto = puestoTxt || null;
+  let funcion = 'CMD';
+  if (/comandante/i.test(puestoTxt)) funcion = 'CMD';
+  else if (/copiloto/i.test(puestoTxt)) funcion = 'COP';
+  else if (/SCC|sobrecargo/i.test(puestoTxt)) funcion = 'SCC';
+  else if (/CC|tripulante.*cabina/i.test(puestoTxt)) funcion = 'CC';
+  else if (/CMDT|COMANDANTE|CMD/i.test(text)) funcion = 'CMD';
+  else if (/COP|COPILOTO/i.test(text)) funcion = 'COP';
+  result.trabajador.funcion = funcion;
+  confidence.trabajador_funcion = puestoTxt ? 0.9 : 0.6;
+
+  // Nivel
+  const nivelM = text.match(/(?:CMDT|COP)\.?\s*(\d)/i);
+  if (nivelM) {
+    result.trabajador.nivel = parseInt(nivelM[1]);
+    confidence.trabajador_nivel = 0.8;
+  }
+
+  // Base (centro trabajo)
+  const centroLineM = text.match(/CENTRO\s+DE\s+TRABAJO[:\s]+([^\n]+)/i)
+    || text.match(/Aeropuerto\s+([A-Z]{3})/i);
+  let base = 'CANARIAS';
+  if (centroLineM) {
+    const ct = centroLineM[1].trim();
+    result.trabajador.centro_trabajo = ct;
+    if (/MAD|MADRID/i.test(ct)) base = 'MADRID';
+    else if (/TFN|TENERIFE/i.test(ct)) base = 'TENERIFE';
+    else if (/LPA|PALMAS|CANARIA/i.test(ct)) base = 'GRAN_CANARIA';
+    confidence.trabajador_base = 0.9;
+  } else if (/MAD|MADRID/i.test(text)) {
+    base = 'MADRID';
+    confidence.trabajador_base = 0.6;
+  }
+  result.trabajador.base = base;
+
+  // ── 3. PERIODO ─────────────────────────────────────────────────────────────
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const periodoM = text.match(/(\d{2})\/(\d{2})\/(\d{4})\s*[-–]?\s*(\d{2})\/(\d{2})\/(\d{4})/);
+  if (periodoM) {
+    const mesIdx = parseInt(periodoM[2]) - 1;
+    result.periodo.mes = MESES[mesIdx];
+    result.periodo.anio = parseInt(periodoM[6]);
+    result.periodo.fecha_inicio = periodoM[1] + '/' + periodoM[2] + '/' + periodoM[3];
+    result.periodo.fecha_fin = periodoM[4] + '/' + periodoM[5] + '/' + periodoM[6];
+    confidence.periodo = 0.95;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 4. TABLA DE CONCEPTOS — PRIORIDAD MÁXIMA
+  // ══════════════════════════════════════════════════════════════════════════
+  // Estrategia: extraer TODAS las líneas que parezcan filas de conceptos
+  // Formato típico Binter: UNIDADES  PRECIO/PCT  BASE  CONCEPTO  DEVENGO  RETENCION
+
+  const _NUM_RE = /[\d]{1,3}(?:\.[\d]{3})*,[\d]{2}/;
+  const _PCT_RE = /\d{1,2},\d{2}%/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Detectar línea de concepto: contiene al menos 1 número monetario Y texto descriptivo
+    const nums = (line.match(new RegExp(_NUM_RE.source, 'g')) || []).map(s => n(s));
+    const hasConcepto = /[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{3,}/.test(line);  // Al menos 4 letras seguidas
+
+    if (nums.length > 0 && hasConcepto) {
+      // Extraer componentes
+      const unidadesM = line.match(/^([\d]+[,.][\d]{4})\s/);  // Primero número con 4 decimales
+      const pctM = line.match(_PCT_RE);
+      const conceptoM = line.match(/([A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ\s\.]+?)(?:\s+[\d.,]+|$)/);
+
+      const conceptoRaw = conceptoM ? conceptoM[1].trim() : null;
+
+      // Clasificar tipo
+      let tipo = 'desconocido';
+      let subtipo = null;
+      let confLinea = 0.5;
+
+      // Devengos
+      if (/salario\s*base/i.test(line)) { tipo = 'devengo'; subtipo = 'salario_base'; confLinea = 1; }
+      else if (/plus.*transporte/i.test(line)) { tipo = 'devengo'; subtipo = 'plus_transporte'; confLinea = 1; }
+      else if (/hora.*vuelo.*t[1-4]/i.test(line)) { tipo = 'devengo'; subtipo = 'horas_vuelo'; confLinea = 0.95; }
+      else if (/otros.*conceptos/i.test(line)) { tipo = 'devengo'; subtipo = 'dpo'; confLinea = 0.7; }
+      else if (/complemento.*base/i.test(line)) { tipo = 'devengo'; subtipo = 'complemento_mad'; confLinea = 0.9; }
+      else if (/dieta/i.test(line)) { tipo = 'devengo'; subtipo = 'dietas'; confLinea = 0.85; }
+
+      // Deducciones
+      else if (/cotizaci[oó]n.*cont.*comunes/i.test(line)) { tipo = 'deduccion'; subtipo = 'ss_cc'; confLinea = 1; }
+      else if (/cotizaci[oó]n.*mei/i.test(line)) { tipo = 'deduccion'; subtipo = 'ss_mei'; confLinea = 1; }
+      else if (/cotizaci[oó]n.*d\+?fp/i.test(line)) { tipo = 'deduccion'; subtipo = 'ss_dfp'; confLinea = 1; }
+      else if (/solid.*tramo/i.test(line)) { tipo = 'deduccion'; subtipo = 'ss_solidaridad'; confLinea = 0.9; }
+      else if (/retenci[oó]n.*irpf/i.test(line)) { tipo = 'deduccion'; subtipo = 'irpf'; confLinea = 1; }
+      else if (/seguro.*m[eé]dico/i.test(line)) { tipo = 'deduccion'; subtipo = 'seguro_medico'; confLinea = 0.9; }
+
+      // Si tiene números pero no clasificamos, marcar como desconocido
+      if (tipo === 'desconocido' && nums.length >= 2) {
+        confLinea = 0.3;
+      }
+
+      const lineObj = {
+        rawLine: line,
+        unidades: unidadesM ? n(unidadesM[1]) : null,
+        precio: null,  // TODO: extraer si hay patrón precio unitario
+        porcentaje: pctM ? parseFloat(pctM[0].replace(',','.').replace('%','')) : null,
+        base: nums.length >= 2 ? nums[nums.length - 2] : null,
+        concepto: conceptoRaw,
+        especieInfo: /especie/i.test(line) ? 'repercutida' : (/no\s*rep/i.test(line) ? 'no_repercutida' : null),
+        devengo: tipo === 'devengo' ? nums[nums.length - 1] : null,
+        retencion: tipo === 'deduccion' ? nums[nums.length - 1] : null,
+        tipo: tipo,
+        subtipo: subtipo,
+        confidence: confLinea,
+      };
+
+      result.tablaConceptos.push(lineObj);
+      debugInfo.linesClassified++;
+    }
+    // Si línea tiene números pero no parece concepto, guardar para análisis
+    else if (nums.length > 0 && !hasConcepto) {
+      debugInfo.linesUnclassified.push({ line, reason: 'tiene números pero sin concepto descriptivo' });
+    }
+  }
+
+  // ── 5. DEVENGOS/DEDUCCIONES (agregados desde tablaConceptos) ──────────────
+  result.devengos.salario_base = result.tablaConceptos.find(c => c.subtipo === 'salario_base')?.devengo || null;
+  result.devengos.plus_transporte = result.tablaConceptos.find(c => c.subtipo === 'plus_transporte')?.devengo || null;
+  result.devengos.dpo = result.tablaConceptos.find(c => c.subtipo === 'dpo')?.devengo || null;
+  result.devengos.complemento_mad = result.tablaConceptos.find(c => c.subtipo === 'complemento_mad')?.devengo || null;
+
+  // HV: sumar todos los tramos
+  const hvLineas = result.tablaConceptos.filter(c => c.subtipo === 'horas_vuelo');
+  result.devengos.horas_vuelo = hvLineas.reduce((sum, c) => sum + (c.devengo || 0), 0) || null;
+  result.devengos.hv_t1_imp = hvLineas.find(c => /t1/i.test(c.rawLine))?.devengo || null;
+  result.devengos.hv_t2_imp = hvLineas.find(c => /t2/i.test(c.rawLine))?.devengo || null;
+  result.devengos.hv_t3_imp = hvLineas.find(c => /t3/i.test(c.rawLine))?.devengo || null;
+  result.devengos.hv_t4_imp = hvLineas.find(c => /t4/i.test(c.rawLine))?.devengo || null;
+  result.devengos.hv_t1_uds = hvLineas.find(c => /t1/i.test(c.rawLine))?.unidades || null;
+  result.devengos.hv_t2_uds = hvLineas.find(c => /t2/i.test(c.rawLine))?.unidades || null;
+
+  // Dietas
+  const dietasExLineas = result.tablaConceptos.filter(c => c.subtipo === 'dietas' && /exenta/i.test(c.rawLine));
+  const dietasSujLineas = result.tablaConceptos.filter(c => c.subtipo === 'dietas' && /sujeta/i.test(c.rawLine));
+  result.devengos.dietas_exentas = dietasExLineas.reduce((s, c) => s + (c.devengo || 0), 0) || null;
+  result.devengos.dietas_sujetas = dietasSujLineas.reduce((s, c) => s + (c.devengo || 0), 0) || null;
+
+  // Deducciones
+  result.deducciones.ss_cc = result.tablaConceptos.find(c => c.subtipo === 'ss_cc')?.retencion || null;
+  result.deducciones.ss_mei = result.tablaConceptos.find(c => c.subtipo === 'ss_mei')?.retencion || null;
+  result.deducciones.ss_dfp = result.tablaConceptos.find(c => c.subtipo === 'ss_dfp')?.retencion || null;
+  const ssSolLineas = result.tablaConceptos.filter(c => c.subtipo === 'ss_solidaridad');
+  result.deducciones.ss_solidaridad = ssSolLineas.reduce((s, c) => s + (c.retencion || 0), 0) || null;
+  result.deducciones.irpf_retencion = result.tablaConceptos.find(c => c.subtipo === 'irpf' && !/especie/i.test(c.rawLine))?.retencion || null;
+  result.deducciones.irpf_especie = result.tablaConceptos.find(c => c.subtipo === 'irpf' && /especie/i.test(c.rawLine))?.retencion || null;
+  result.deducciones.seguro_medico = result.tablaConceptos.find(c => c.subtipo === 'seguro_medico')?.retencion || null;
+
+  // SS Porcentajes
+  const ssccLinea = result.tablaConceptos.find(c => c.subtipo === 'ss_cc');
+  if (ssccLinea && ssccLinea.porcentaje) {
+    result.deducciones.ss_cc_pct = ssccLinea.porcentaje;
+    confidence.ss_cc_pct = 0.9;
+  }
+
+  // IRPF %
+  const irpfLineaM = text.split('\n').find(l =>
+    /Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i.test(l) && !/[Ee]specie/i.test(l)
+  );
+  if (irpfLineaM) {
+    const pctM = irpfLineaM.match(/^([\d]+[,.][\d]+)%/);
+    if (pctM) {
+      result.deducciones.irpf_pct = parseFloat(pctM[1].replace(',','.'));
+      confidence.irpf_pct = 0.95;
+    }
+  }
+
+  // ── 6. BASES Y TOTALES (línea 8 números del V1) ───────────────────────────
+  for (const line of lines) {
+    const nums = (line.match(new RegExp(_NUM_RE.source, 'g')) || []).map(s => n(s)).filter(v => v !== null);
+    if (nums.length >= 8 && nums[0] > 1000 && nums[3] > 1000) {
+      result.bases.base_ss = nums[3];
+      result.bases.base_irpf = nums[5];
+      result.totales.total_devengado = nums[6];
+      result.totales.total_deducciones = nums[7];
+      confidence.bases_totales_pie = 0.9;
+      break;
+    }
+  }
+
+  // Líquido neto
+  for (const line of lines) {
+    const liqM = line.match(/([\d.]+,\d+)\s*€/);
+    if (liqM && !line.includes('Acum.')) {
+      result.totales.liquido = n(liqM[1]);
+      confidence.liquido = 0.85;
+      break;
+    }
+  }
+
+  // ── 7. ACUMULADOS (lógica _findAcum del V1) ────────────────────────────────
+  const _RN_ACM = '[\\d]{1,3}(?:\\.\\d{3})*,\\d{2}';
+  const _RN_ACM_RE = new RegExp('^' + _RN_ACM + '$');
+  function _findAcum(lns, labelRe) {
+    for (let _i = 0; _i < lns.length; _i++) {
+      const _line = lns[_i];
+      if (!labelRe.test(_line)) continue;
+      const _nAcum = (_line.match(/Acum\./g) || []).length;
+      const _inlineNums = _line.match(new RegExp(_RN_ACM, 'g')) || [];
+      const _firstAcumIdx = _line.indexOf('Acum.');
+      const _thisMatch = labelRe.exec(_line);
+      const _isFirst = _thisMatch && (_thisMatch.index === _firstAcumIdx);
+      const _scanBack = () => {
+        for (let _j = _i - 1; _j >= Math.max(0, _i - 4); _j--) {
+          if (_RN_ACM_RE.test(lns[_j])) return n(lns[_j]);
+          if (lns[_j] && /Acum\./i.test(lns[_j])) break;
+        }
+        return null;
+      };
+      if (_nAcum <= 1) {
+        if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        const _back = _scanBack();
+        if (_back !== null) return _back;
+      } else {
+        if (_isFirst) {
+          const _back = _scanBack();
+          if (_back !== null) return _back;
+        } else {
+          if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        }
+      }
+    }
+    return null;
+  }
+  const _lns_acm = lines;
+  result.acumulados.base_irpf = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
+  result.acumulados.irpf = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
+  result.acumulados.cotiz_ss = _findAcum(_lns_acm, /Acum\.?\s*Cotiz/i);
+  result.acumulados.base_esp_rep = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
+  result.acumulados.irpf_esp_rep = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
+  result.acumulados.base_esp_norep = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
+  result.acumulados.irpf_esp_norep = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
+
+  if (result.acumulados.base_irpf) confidence.acumulados = 0.8;
+
+  // ── 8. CALENDARIO MENSUAL (tira días del V1) ──────────────────────────────
+  const _CODIGOS_DIAS = {
+    EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
+    VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia'
+  };
+  const _tiraLine = lines.find(l => (l.match(/\d\.\d/g) || []).length >= 10) || '';
+  let _tiraSep = _tiraLine;
+  for (let _k = 0; _k < 5; _k++) _tiraSep = _tiraSep.replace(/(\d\.\d)(\d)/g, '$1 $2');
+  const _tiraVals = (_tiraSep.match(/\b\d{1,3}\.\d\b/g) || []).map(Number);
+  const _diasConInc = [];
+  const _codigosRes = {};
+  let _diasTrabajados = 0;
+  _tiraVals.forEach((v, i) => {
+    if (v === 100) {
+      _diasTrabajados++;
+    } else if (v > 0 && v < 100) {
+      _diasConInc.push({ dia: i + 1, cod: 'IT', nombre: 'Baja/Incidencia', pct: v });
+      _codigosRes['IT'] = (_codigosRes['IT'] || 0) + 1;
+    }
+  });
+  (_tiraLine.split(/\s+/) || []).forEach((tok, i) => {
+    const cod = tok.toUpperCase();
+    if (_CODIGOS_DIAS[cod]) {
+      _diasConInc.push({ dia: i + 1, cod, nombre: _CODIGOS_DIAS[cod] });
+      _codigosRes[cod] = (_codigosRes[cod] || 0) + 1;
+      if (_tiraVals[i] === 100) _diasTrabajados--;
+    }
+  });
+  result.calendarioMensual.diasInfo = {
+    diasTrabajados: _tiraVals.length > 0 ? _diasTrabajados : null,
+    totalDias: _tiraVals.length,
+    totalConIncidencia: _diasConInc.length,
+    diasConCodigo: _diasConInc,
+    codigosResumen: _codigosRes,
+  };
+  result.calendarioMensual.bajaInfo = _diasConInc.length > 0
+    ? { detectada: true, resumen: Object.entries(_codigosRes).map(([c,n])=>`${c}:${n}`).join(', ') }
+    : { detectada: false };
+
+  if (_tiraVals.length > 0) confidence.calendarioMensual = 0.85;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 9. CALCULAR CONFIDENCE GLOBAL
+  // ══════════════════════════════════════════════════════════════════════════
+  const confValues = Object.values(confidence).filter(v => typeof v === 'number');
+  const confMedia = confValues.length > 0 ? confValues.reduce((a,b) => a+b, 0) / confValues.length : 0;
+
+  // Ajustar por cobertura
+  const camposCriticos = ['trabajador_nombre', 'trabajador_nif', 'periodo', 'liquido', 'bases_totales_pie'];
+  const criticosOK = camposCriticos.filter(k => confidence[k] && confidence[k] >= 0.7).length;
+  const factorCobertura = criticosOK / camposCriticos.length;
+
+  confidence.global = confMedia * factorCobertura;
+
+  // ── Warnings finales ───────────────────────────────────────────────────────
+  if (result.tablaConceptos.length === 0) {
+    warnings.push('No se detectaron líneas de conceptos en tablaConceptos[]');
+  }
+  if (debugInfo.linesUnclassified.length > result.tablaConceptos.length * 0.5) {
+    warnings.push('Más del 50% de líneas con números quedaron sin clasificar');
+  }
+  if (!result.trabajador.nombre) warnings.push('Nombre trabajador no detectado');
+  if (!result.trabajador.nif) warnings.push('NIF trabajador no detectado');
+  if (!result.periodo.mes) warnings.push('Periodo no detectado');
+
+  // ── Metadata final ─────────────────────────────────────────────────────────
   result.raw.parsingTimeMs = performance.now() - startTime;
-  warnings.push('parseBinterNominaV2: skeleton implementation — extracción pendiente');
-  confidence.global = 0;  // Forzar fallback a V1
+  result.warnings = warnings;
+  result.confidence = confidence;
+  result._debug = debugInfo;
+
+  // ── MANTENER confidence.global = 0 HASTA REVISIÓN ──────────────────────────
+  confidence.global = 0;  // TODO: quitar cuando validemos resultados
+  warnings.push('[DEBUG] confidence.global forzado a 0 — V2 en modo prueba');
 
   return result;
 }
