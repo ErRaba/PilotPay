@@ -11744,8 +11744,8 @@ function parseBinterNominaV2(text) {
   // Estrategia: extraer TODAS las líneas que parezcan filas de conceptos
   // Formato típico Binter: UNIDADES  PRECIO/PCT  BASE  CONCEPTO  DEVENGO  RETENCION
 
-  const _NUM_RE = /[\d]{1,3}(?:\.[\d]{3})*,[\d]{2}/;
-  const _PCT_RE = /\d{1,2},\d{2}%/;
+  const _NUM_RE = /[\d]{1,}(?:\.[\d]{3})*,[\d]{2}/;  // FIX: 1+ dígitos (no limitar a 3)
+  const _PCT_RE = /\d{1,2},\d{2}\s*%/;  // FIX: aceptar espacios antes de %
   const _DEBUG_PARSE = localStorage.getItem('pilotpay_parser_debug') === '1';
 
   for (let i = 0; i < lines.length; i++) {
@@ -11806,9 +11806,9 @@ function parseBinterNominaV2(text) {
       else if (/coste\s+ss\s+empresa/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'total'; confLinea = 0.95; }
       else if (/cot.*ss.*empresa.*cc/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'cc'; confLinea = 0.95; }
       else if (/cot.*ss.*empresa.*mei/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'mei'; confLinea = 0.95; }
-      else if (/cot.*ss.*empresa.*solid.*tr.*1/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr1'; confLinea = 0.9; }
-      else if (/cot.*ss.*empresa.*solid.*tr.*2/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr2'; confLinea = 0.9; }
-      else if (/cot.*ss.*empresa.*solid.*tr.*3/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr3'; confLinea = 0.9; }
+      else if (/cot.*ss.*empresa.*adic.*solid.*tr\s*1/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr1'; confLinea = 0.9; }
+      else if (/cot.*ss.*empresa.*adic.*solid.*tr\s*2/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr2'; confLinea = 0.9; }
+      else if (/cot.*ss.*empresa.*adic.*solid.*tr\s*3/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'solidaridad_tr3'; confLinea = 0.9; }
       else if (/cot.*ss.*empresa.*it[\/\s]?ims/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'it_ims'; confLinea = 0.9; }
       else if (/cot.*ss.*empresa.*desempleo/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'desempleo'; confLinea = 0.9; }
       else if (/cot.*ss.*empresa.*fp\b/i.test(line)) { tipo = 'coste_empresa'; subtipo = 'fp'; confLinea = 0.9; }
