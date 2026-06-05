@@ -8246,7 +8246,7 @@ function closeDayModal(e) {
 function editarUsuario(code) {
   if (!isAdmin()) return;
   const u = USERS[code] || {};
-  const isAdmin = code === ADMIN_CODE;
+  const isAdminUser = code === ADMIN_CODE;
 
   document.getElementById('day-modal-content').innerHTML = `
     <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">
@@ -8300,13 +8300,13 @@ function editarUsuario(code) {
         <option value="MAD" ${getBaseCode(u.base||'GC')==='MAD'?'selected':''}>Madrid</option>
       </select>
     </div>
-    ${!isAdmin ? `<div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
+    ${!isAdminUser ? `<div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
       background:var(--amber-dim);border:1px solid var(--amber);border-radius:6px;
       padding:8px 10px;margin-bottom:12px;line-height:1.5">
       Cambiar cargo, base o nivel reseteará los permisos operativos adicionales.
     </div>` : ''}
     <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">Guardar cambios</button>
-    ${!isAdmin ? `
+    ${!isAdminUser ? `
     <button onclick="confirmarEliminarUsuario('${code}')"
       style="width:100%;padding:10px;background:var(--red-dim);border:1px solid var(--red);
       color:var(--red);border-radius:var(--r);font-family:var(--mono);font-size:12px;
