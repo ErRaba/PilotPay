@@ -19,7 +19,13 @@
       "Bash(git ls-tree *)",
       "Bash(node -e ' *)",
       "Bash(git mv *)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
+      "Bash(git checkout *)",
+      "Bash(npm run *)",
+      "Bash(node validate-parser-v2.js)",
+      "Bash(npm install *)",
+      "Bash(tee parser-v2-validation-output.txt)",
+      "Bash(grep -n \"^function.*{$\" frontend/index.html)"
     ]
   }
 }

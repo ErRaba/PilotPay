@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parser Diagnostic — PilotPay</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg2: #1e1e2e;
+  --bg3: #11111b;
+  --border: #313244;
+  --text: #e0e0e0;
+  --text2: #a6adc8;
+  --text3: #6c7086;
+  --blue: #89b4fa;
+  --green: #a6e3a1;
+  --amber: #f9e2af;
+  --red: #f38ba8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 20px;
+}
+.container { max-width: 1600px; margin: 0 auto; }
+h1 {
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: var(--blue);
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--text3);
+  margin-bottom: 30px;
+}
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 30px;
+  transition: all 0.2s;
+}
+.upload-zone:hover {
+  border-color: var(--blue);
+  background: var(--bg3);
+}
+.btn {
+  background: var(--blue);
+  color: var(--bg);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn:hover { opacity: 0.9; }
+.section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.field-group {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.field-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 140px;
+}
+.field-value {
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Consolas', monospace;
+}
+.field-value.highlight {
+  color: var(--green);
+  font-weight: 600;
+}
+.field-value.missing {
+  color: var(--red);
+  font-style: italic;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--bg3);
+  color: var(--text3);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+tr:hover { background: var(--bg3); }
+.tipo-devengo { color: var(--green); }
+.tipo-deduccion { color: var(--red); }
+.tipo-desconocido { color: var(--text3); }
+.conf-high { color: var(--green); }
+.conf-medium { color: var(--amber); }
+.conf-low { color: var(--red); }
+.warning {
+  background: rgba(249, 226, 175, 0.1);
+  border-left: 3px solid var(--amber);
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--amber);
+}
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--bg3);
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+.stat-value.green { color: var(--green); }
+.stat-value.amber { color: var(--amber); }
+.stat-value.red { color: var(--red); }
+.unknown-item {
+  background: var(--bg3);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-family: 'Consolas', monospace;
+  border-left: 3px solid var(--amber);
+}
+#loading {
+  display: none;
+  text-align: center;
+  padding: 60px;
+  font-size: 18px;
+  color: var(--text3);
+}
+#results { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔬 Parser Diagnostic Tool</h1>
+  <div class="subtitle">Herramienta temporal de inspección Parser V1 vs V2</div>
+
+  <div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+    <input type="file" id="pdf-input" accept="application/pdf" style="display:none" onchange="processPDF(this.files[0])">
+    <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+    <div style="font-size: 16px; font-weight: 600; margin-bottom: 5px;">Cargar nómina PDF</div>
+    <div style="font-size: 12px; color: var(--text3);">Click para seleccionar archivo</div>
+  </div>
+
+  <div id="loading">
+    <div style="font-size: 48px;">⏳</div>
+    <div style="margin-top: 10px;">Procesando PDF...</div>
+  </div>
+
+  <div id="results">
+    <!-- STATS -->
+    <div class="section">
+      <div class="section-title">📊 Estadísticas</div>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-label">Archivo</div>
+          <div class="stat-value" style="font-size:14px" id="stat-filename">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Parser usado</div>
+          <div class="stat-value" style="font-size:18px" id="stat-parser">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Confidence V2</div>
+          <div class="stat-value green" id="stat-confidence">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">tablaConceptos</div>
+          <div class="stat-value green" id="stat-conceptos">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Clasificadas</div>
+          <div class="stat-value green" id="stat-clasificadas">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Desconocidas</div>
+          <div class="stat-value amber" id="stat-desconocidas">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">% Clasificación</div>
+          <div class="stat-value" id="stat-pct">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Parsing time</div>
+          <div class="stat-value" style="font-size:18px" id="stat-time">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNINGS -->
+    <div class="section" id="warnings-section" style="display:none">
+      <div class="section-title">⚠️ Warnings</div>
+      <div id="warnings-list"></div>
+    </div>
+
+    <!-- V1 VS V2 COMPARISON -->
+    <div class="section">
+      <div class="section-title">🔄 Comparativa V1 vs V2</div>
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:14px; margin-bottom:15px; color:var(--text2)">📌 V1 (Parser actual)</h3>
+          <div id="v1-data"></div>
+        </div>
+        <div>
+          <h3 style="font-size:14px; margin-bottom:15px; color:var(--blue)">✨ V2 (Parser nuevo)</h3>
+          <div id="v2-data"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA CONCEPTOS -->
+    <div class="section">
+      <div class="section-title">📋 Tabla de Conceptos (V2)</div>
+      <div style="overflow-x:auto">
+        <table id="tabla-conceptos">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tipo</th>
+              <th>Subtipo</th>
+              <th>Concepto</th>
+              <th>Unidades</th>
+              <th>%</th>
+              <th>Base</th>
+              <th>Importe</th>
+              <th>Conf</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LÍNEAS DESCONOCIDAS -->
+    <div class="section" id="desconocidas-section" style="display:none">
+      <div class="section-title">❓ Conceptos Desconocidos</div>
+      <div id="desconocidas-list"></div>
+    </div>
+
+    <!-- CONFIDENCE -->
+    <div class="section">
+      <div class="section-title">🎯 Confidence por Campo (V2)</div>
+      <div style="overflow-x:auto">
+        <table id="tabla-confidence">
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Confidence</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="index.html"></script>
+<script>
+// Cargar funciones del parser desde index.html
+// Como están en el HTML principal, las copiamos inline aquí
+
+async function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function extractPdfText(file) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  const buf = await readFileAsArrayBuffer(file);
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let fullText = '';
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const content = await page.getTextContent();
+    const rows = {};
+    for (const item of content.items) {
+      if (!item.str.trim()) continue;
+      const y = Math.round(item.transform[5]);
+      const x = item.transform[4];
+      if (!rows[y]) rows[y] = [];
+      rows[y].push({ x, str: item.str });
+    }
+    const sortedYs = Object.keys(rows).map(Number).sort((a, b) => b - a);
+    for (const y of sortedYs) {
+      const rowItems = rows[y].sort((a, b) => a.x - b.x);
+      fullText += rowItems.map(i => i.str).join('  ') + '\n';
+    }
+    fullText += '\n';
+  }
+  return fullText;
+}
+
+async function processPDF(file) {
+  if (!file) return;
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const text = await extractPdfText(file);
+
+    // Llamar parsers (asumiendo que están cargados desde index.html vía iframe o fetch)
+    // Por ahora, mostrar mensaje para integrar con index.html
+
+    alert('Próximo paso:\n\n' +
+          'Integrar parseBinterNomina() y parseBinterNominaV2() desde index.html.\n\n' +
+          'Por ahora, abre esta herramienta desde el contexto de PilotPay donde las funciones estén disponibles.');
+
+    document.getElementById('loading').style.display = 'none';
+
+  } catch (e) {
+    alert('Error: ' + e.message);
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function renderResults(filename, v1, v2) {
+  document.getElementById('results').style.display = 'block';
+
+  // Stats
+  document.getElementById('stat-filename').textContent = filename.substring(0, 20);
+  document.getElementById('stat-parser').textContent = 'V1 (fallback)';
+  document.getElementById('stat-confidence').textContent = v2.confidence.global.toFixed(3);
+  document.getElementById('stat-conceptos').textContent = v2.tablaConceptos.length;
+
+  const clasificadas = v2.tablaConceptos.filter(c => c.tipo !== 'desconocido').length;
+  const desconocidas = v2.tablaConceptos.filter(c => c.tipo === 'desconocido').length;
+  const pct = v2.tablaConceptos.length > 0 ? (clasificadas / v2.tablaConceptos.length * 100).toFixed(1) : 0;
+
+  document.getElementById('stat-clasificadas').textContent = clasificadas;
+  document.getElementById('stat-desconocidas').textContent = desconocidas;
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('stat-time').textContent = v2.raw.parsingTimeMs.toFixed(0) + 'ms';
+
+  // Warnings
+  if (v2.warnings.length > 0) {
+    document.getElementById('warnings-section').style.display = 'block';
+    document.getElementById('warnings-list').innerHTML = v2.warnings.map(w =>
+      `<div class="warning">${w}</div>`
+    ).join('');
+  }
+
+  // V1 vs V2
+  renderComparison(v1, v2);
+
+  // Tabla Conceptos
+  renderTablaConceptos(v2.tablaConceptos);
+
+  // Desconocidas
+  if (desconocidas > 0) {
+    document.getElementById('desconocidas-section').style.display = 'block';
+    document.getElementById('desconocidas-list').innerHTML = v2.tablaConceptos
+      .filter(c => c.tipo === 'desconocido')
+      .map(c => `<div class="unknown-item"><strong>${c.concepto || '(sin concepto)'}</strong><br>${c.rawLine}</div>`)
+      .join('');
+  }
+
+  // Confidence
+  renderConfidence(v2.confidence, v2);
+}
+
+function renderComparison(v1, v2) {
+  const fmt = v => v !== null && v !== undefined ? v : '<span class="field-value missing">NO DETECTADO</span>';
+  const fmtEur = v => v !== null ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €' : '<span class="field-value missing">NO DETECTADO</span>';
+
+  const v1Html = `
+    <div class="field-group"><div class="field-label">Nombre</div><div class="field-value">${fmt(v1.trabajador.nombre)}</div></div>
+    <div class="field-group"><div class="field-label">NIF</div><div class="field-value">${fmt(v1.trabajador.nif)}</div></div>
+    <div class="field-group"><div class="field-label">NSS</div><div class="field-value">${fmt(v1.trabajador.nss)}</div></div>
+    <div class="field-group"><div class="field-label">Función</div><div class="field-value">${fmt(v1.trabajador.funcion)}</div></div>
+    <div class="field-group"><div class="field-label">Nivel</div><div class="field-value">${fmt(v1.trabajador.nivel)}</div></div>
+    <div class="field-group"><div class="field-label">Periodo</div><div class="field-value">${fmt(v1.periodo.mes)} ${fmt(v1.periodo.anio)}</div></div>
+    <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+    <div class="field-group"><div class="field-label">Base SS</div><div class="field-value highlight">${fmtEur(v1.totales.base_ss)}</div></div>
+    <div class="field-group"><div class="field-label">Base IRPF</div><div class="field-value highlight">${fmtEur(v1.totales.base_irpf)}</div></div>
+    <div class="field-group"><div class="field-label">Total Devengado</div><div class="field-value highlight">${fmtEur(v1.totales.total_devengado)}</div></div>
+    <div class="field-group"><div class="field-label">Líquido</div><div class="field-value highlight">${fmtEur(v1.totales.liquido)}</div></div>
+    <div class="field-group"><div class="field-label">IRPF %</div><div class="field-value">${fmt(v1.irpf_pct)}%</div></div>
+  `;
+
+  const v2Html = `
+    <div class="field-group"><div class="field-label">Empresa NIF</div><div class="field-value ${v2.empresa.nif ? 'highlight' : 'missing'}">${fmt(v2.empresa.nif)}</div></div>
+    <div class="field-group"><div class="field-label">Empresa Nombre</div><div class="field-value ${v2.empresa.nombre ? 'highlight' : 'missing'}">${fmt(v2.empresa.nombre)}</div></div>
+    <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+    <div class="field-group"><div class="field-label">Nombre</div><div class="field-value">${fmt(v2.trabajador.nombre)}</div></div>
+    <div class="field-group"><div class="field-label">NIF</div><div class="field-value">${fmt(v2.trabajador.nif)}</div></div>
+    <div class="field-group"><div class="field-label">NSS</div><div class="field-value">${fmt(v2.trabajador.nss)}</div></div>
+    <div class="field-group"><div class="field-label">Puesto</div><div class="field-value ${v2.trabajador.puesto ? 'highlight' : 'missing'}">${fmt(v2.trabajador.puesto)}</div></div>
+    <div class="field-group"><div class="field-label">Función</div><div class="field-value">${fmt(v2.trabajador.funcion)}</div></div>
+    <div class="field-group"><div class="field-label">Nivel</div><div class="field-value">${fmt(v2.trabajador.nivel)}</div></div>
+    <div class="field-group"><div class="field-label">Centro</div><div class="field-value ${v2.trabajador.centro_trabajo ? 'highlight' : 'missing'}">${fmt(v2.trabajador.centro_trabajo)}</div></div>
+    <div class="field-group"><div class="field-label">Periodo</div><div class="field-value">${fmt(v2.periodo.mes)} ${fmt(v2.periodo.anio)}</div></div>
+    <div class="field-group"><div class="field-label">Fechas</div><div class="field-value ${v2.periodo.fecha_inicio ? 'highlight' : 'missing'}">${fmt(v2.periodo.fecha_inicio)} — ${fmt(v2.periodo.fecha_fin)}</div></div>
+    <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+    <div class="field-group"><div class="field-label">Base SS</div><div class="field-value highlight">${fmtEur(v2.bases.base_ss)}</div></div>
+    <div class="field-group"><div class="field-label">Base IRPF</div><div class="field-value highlight">${fmtEur(v2.bases.base_irpf)}</div></div>
+    <div class="field-group"><div class="field-label">Total Devengado</div><div class="field-value highlight">${fmtEur(v2.totales.total_devengado)}</div></div>
+    <div class="field-group"><div class="field-label">Total Deducciones</div><div class="field-value ${v2.totales.total_deducciones ? 'highlight' : 'missing'}">${fmtEur(v2.totales.total_deducciones)}</div></div>
+    <div class="field-group"><div class="field-label">Líquido</div><div class="field-value highlight">${fmtEur(v2.totales.liquido)}</div></div>
+    <div class="field-group"><div class="field-label">IRPF %</div><div class="field-value">${fmt(v2.deducciones.irpf_pct)}%</div></div>
+    <div class="field-group"><div class="field-label">SS CC %</div><div class="field-value ${v2.deducciones.ss_cc_pct ? 'highlight' : 'missing'}">${fmt(v2.deducciones.ss_cc_pct)}%</div></div>
+  `;
+
+  document.getElementById('v1-data').innerHTML = v1Html;
+  document.getElementById('v2-data').innerHTML = v2Html;
+}
+
+function renderTablaConceptos(tabla) {
+  const tbody = document.getElementById('tabla-conceptos').querySelector('tbody');
+  const fmt = v => v !== null && v !== undefined ? v : '—';
+  const fmtEur = v => v !== null ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+
+  tbody.innerHTML = tabla.map((c, i) => {
+    const tipoClass = c.tipo === 'devengo' ? 'tipo-devengo' : (c.tipo === 'deduccion' ? 'tipo-deduccion' : 'tipo-desconocido');
+    const confClass = c.confidence >= 0.8 ? 'conf-high' : (c.confidence >= 0.5 ? 'conf-medium' : 'conf-low');
+    const imp = c.devengo || c.retencion;
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td class="${tipoClass}">${c.tipo}</td>
+        <td>${fmt(c.subtipo)}</td>
+        <td>${fmt(c.concepto)}</td>
+        <td>${fmt(c.unidades)}</td>
+        <td>${c.porcentaje ? c.porcentaje.toFixed(2) + '%' : '—'}</td>
+        <td>${fmtEur(c.base)}</td>
+        <td><strong>${fmtEur(imp)}</strong></td>
+        <td class="${confClass}">${c.confidence.toFixed(2)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderConfidence(conf, v2) {
+  const tbody = document.getElementById('tabla-confidence').querySelector('tbody');
+  const entries = Object.entries(conf).filter(([k,v]) => k !== 'global' && typeof v === 'number');
+
+  tbody.innerHTML = entries.map(([campo, val]) => {
+    const confClass = val >= 0.8 ? 'conf-high' : (val >= 0.5 ? 'conf-medium' : 'conf-low');
+    const path = campo.split('_');
+    let valorActual = v2;
+    for (const p of path) {
+      valorActual = valorActual?.[p];
+    }
+    const fmt = v => v !== null && v !== undefined ? String(v) : '—';
+    return `
+      <tr>
+        <td>${campo}</td>
+        <td class="${confClass}">${val.toFixed(3)}</td>
+        <td style="font-family:Consolas,monospace; font-size:11px">${fmt(valorActual)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+</script>
+</body>
+</html>
