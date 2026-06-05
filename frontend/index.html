@@ -9248,6 +9248,701 @@ async function deleteAuditRecord(auditId) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEST HELPER — Fase 1
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Función automatizada para validar purgeUser() en consola.
+// Uso: await runTest1_PurgeUser('TEST')
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * TEST 1 — purgeUser full cycle
+ * Valida que purgeUser() elimina completamente un usuario y que al recrearlo
+ * no arrastra información anterior.
+ *
+ * @param {string} userId - Usuario de prueba (default: 'TEST')
+ * @returns {Promise<Object>} Informe estructurado del test
+ */
+window.runTest1_PurgeUser = async function(userId = 'TEST') {
+  const testName = 'TEST 1 — purgeUser full cycle';
+  const startedAt = new Date().toISOString();
+  const steps = [];
+  let passed = false;
+  let conclusion = '';
+
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`  ${testName}`);
+  console.log(`  Usuario: ${userId}`);
+  console.log(`  Iniciado: ${startedAt}`);
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('');
+
+  // ── PASO 0: Validaciones de seguridad ──────────────────────────────────────
+
+  try {
+    // Verificar admin
+    if (!isAdmin()) {
+      throw new Error('Debes ser admin para ejecutar este test');
+    }
+
+    // Verificar userId
+    if (!userId || typeof userId !== 'string') {
+      throw new Error('userId inválido');
+    }
+
+    // Proteger contra borrado accidental
+    if (userId === ADMIN_CODE) {
+      throw new Error('No se puede usar ADMIN_CODE como usuario de prueba');
+    }
+
+    if (userId === currentUser) {
+      throw new Error('No se puede usar el usuario actual como prueba (logout accidental)');
+    }
+
+    // Confirmación adicional si NO es 'TEST'
+    if (userId !== 'TEST') {
+      const confirmMsg = `⚠️ ADVERTENCIA\n\nEstás a punto de BORRAR el usuario: ${userId}\n\n¿Confirmar que es un usuario de prueba?`;
+      if (!confirm(confirmMsg)) {
+        throw new Error('Test cancelado por usuario');
+      }
+    }
+
+    steps.push({
+      step: 0,
+      name: 'Validaciones de seguridad',
+      ok: true,
+      detail: `Usuario: ${userId}, Admin: ${currentUser}`
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 0,
+      name: 'Validaciones de seguridad',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    return {
+      testName,
+      userId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      steps,
+      passed: false,
+      conclusion: `ABORTADO: ${err.message}`
+    };
+  }
+
+  // ── PASO 1: Crear usuario de prueba ────────────────────────────────────────
+
+  console.log('[TEST] Paso 1: Creando usuario de prueba...');
+
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Crear usuario en Firebase
+    const testUser = {
+      name: 'Usuario',
+      apellidos: 'Prueba',
+      alias: userId,
+      pass: 'test123',
+      funcion: 'CMD',
+      nivel: 1,
+      base: 'TFN',
+      irpf: 15,
+      admin: false,
+      bloqueado: false,
+      theme: 'navy'
+    };
+
+    await fetch(`${FB_URL}/pilotpay/usuarios/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testUser)
+    });
+
+    // Crear perfil en Firebase
+    const testProfile = {
+      theme: 'navy',
+      irpf: 15,
+      estadoCivil: 'soltero',
+      hijos: '0',
+      ccaa: 'can',
+      pagaExtra: 'prorr'
+    };
+
+    await fetch(`${FB_URL}/pilotpay/perfiles/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testProfile)
+    });
+
+    // Crear permisos en Firebase
+    const testPerms = {
+      funciones: ['CMD'],
+      bases: ['TFN']
+    };
+
+    await fetch(`${FB_URL}/pilotpay/permisos/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testPerms)
+    });
+
+    // Actualizar memoria local
+    USERS[userId] = testUser;
+    if (window.perms) window.perms[userId] = testPerms;
+
+    steps.push({
+      step: 1,
+      name: 'Crear usuario de prueba',
+      ok: true,
+      detail: `Usuario ${userId} creado en Firebase`
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 1,
+      name: 'Crear usuario de prueba',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    return {
+      testName,
+      userId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      steps,
+      passed: false,
+      conclusion: `FALLO en paso 1: ${err.message}`
+    };
+  }
+
+  // ── PASO 2: Crear datos de prueba en todas las capas ───────────────────────
+
+  console.log('[TEST] Paso 2: Creando datos de prueba en todas las capas...');
+
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Firebase: MonthRecord
+    const testMonthRecord = {
+      id: `${userId}:2026:6`,
+      userId: userId,
+      year: 2026,
+      month: 6,
+      estado: 'con_datos',
+      variables: { hv_total: 50 },
+      calcResult: { liquidoReal: 3500 },
+      _updatedAt: new Date().toISOString()
+    };
+
+    await fetch(`${FB_URL}/pilotpay/historicos/${userId}/monthly/2026_6.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testMonthRecord)
+    });
+
+    // Firebase: AuditRecord
+    const testAuditRecord = {
+      id: Date.now() + '_test',
+      userId: userId,
+      fechaAuditoria: new Date().toISOString(),
+      mes: 'Junio',
+      anyo: 2026,
+      nombre: 'Usuario Prueba',
+      cargo: 'CMD',
+      nivel: 1,
+      liqTeorico: 3500,
+      liqReal: 3500,
+      diff: 0,
+      estado: 'ok',
+      nDiscrepancias: 0,
+      discrepancias: []
+    };
+
+    await fetch(`${FB_URL}/pilotpay/historicos/${userId}/auditorias/${testAuditRecord.id}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(testAuditRecord)
+    });
+
+    // localStorage: monthly_v1
+    const monthlyKey = `pilotpay:${userId}:monthly_v1`;
+    localStorage.setItem(monthlyKey, JSON.stringify({ '2026:6': testMonthRecord }));
+
+    // localStorage: audit_history_v1
+    const auditKey = `pilotpay:${userId}:audit_history_v1`;
+    localStorage.setItem(auditKey, JSON.stringify([testAuditRecord]));
+
+    // localStorage: p4_queue
+    const p4QueueKey = `pilotpay:${userId}:p4_queue`;
+    localStorage.setItem(p4QueueKey, JSON.stringify({ 'test_path': { data: 'test' } }));
+
+    // localStorage: offline_queue
+    const offlineQueueKey = `pilotpay:${userId}:offline_queue`;
+    localStorage.setItem(offlineQueueKey, JSON.stringify({ 'test_path': { data: 'test' } }));
+
+    // localStorage: profile cache
+    localStorage.setItem(`pilotpay_v2_${userId}`, JSON.stringify(testProfile));
+
+    // localStorage: theme
+    localStorage.setItem(`pilotpay_theme_${userId}`, 'navy');
+
+    // IndexedDB: monthlyRecords
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      try {
+        await PilotPayLocalDB.putMonthlyRecord(testMonthRecord);
+      } catch (e) {
+        console.warn('[TEST] IDB monthlyRecords (best-effort):', e.message);
+      }
+
+      // IndexedDB: auditHistory
+      try {
+        await PilotPayLocalDB.putAuditRecord(testAuditRecord);
+      } catch (e) {
+        console.warn('[TEST] IDB auditHistory (best-effort):', e.message);
+      }
+    }
+
+    steps.push({
+      step: 2,
+      name: 'Crear datos de prueba',
+      ok: true,
+      detail: 'Datos creados en Firebase, localStorage, IndexedDB'
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 2,
+      name: 'Crear datos de prueba',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    return {
+      testName,
+      userId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      steps,
+      passed: false,
+      conclusion: `FALLO en paso 2: ${err.message}`
+    };
+  }
+
+  // ── PASO 3: Snapshot ANTES del borrado ─────────────────────────────────────
+
+  console.log('[TEST] Paso 3: Capturando estado antes del borrado...');
+
+  const beforePurge = {
+    firebase: {},
+    localStorage: {},
+    indexedDB: {}
+  };
+
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Firebase
+    const resUser = await fetch(`${FB_URL}/pilotpay/usuarios/${userId}.json${q}`);
+    beforePurge.firebase.usuarios = resUser.ok ? (await resUser.json() !== null) : false;
+
+    const resProfile = await fetch(`${FB_URL}/pilotpay/perfiles/${userId}.json${q}`);
+    beforePurge.firebase.perfiles = resProfile.ok ? (await resProfile.json() !== null) : false;
+
+    const resHist = await fetch(`${FB_URL}/pilotpay/historicos/${userId}.json${q}`);
+    beforePurge.firebase.historicos = resHist.ok ? (await resHist.json() !== null) : false;
+
+    // localStorage
+    beforePurge.localStorage.monthly_v1 = !!localStorage.getItem(`pilotpay:${userId}:monthly_v1`);
+    beforePurge.localStorage.audit_history_v1 = !!localStorage.getItem(`pilotpay:${userId}:audit_history_v1`);
+    beforePurge.localStorage.p4_queue = !!localStorage.getItem(`pilotpay:${userId}:p4_queue`);
+    beforePurge.localStorage.offline_queue = !!localStorage.getItem(`pilotpay:${userId}:offline_queue`);
+    beforePurge.localStorage.profile_cache = !!localStorage.getItem(`pilotpay_v2_${userId}`);
+    beforePurge.localStorage.theme = !!localStorage.getItem(`pilotpay_theme_${userId}`);
+
+    // IndexedDB
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      try {
+        const dbName = 'PilotPayLocalDB';
+        const openRequest = indexedDB.open(dbName);
+        const db = await new Promise((resolve, reject) => {
+          openRequest.onsuccess = () => resolve(openRequest.result);
+          openRequest.onerror = () => reject(openRequest.error);
+        });
+
+        if (db.objectStoreNames.contains('monthlyRecords')) {
+          const tx = db.transaction('monthlyRecords', 'readonly');
+          const store = tx.objectStore('monthlyRecords');
+          const allRecords = await new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+          });
+          beforePurge.indexedDB.monthlyRecords = allRecords.filter(r => r.userId === userId).length;
+        }
+
+        if (db.objectStoreNames.contains('auditHistory')) {
+          const tx = db.transaction('auditHistory', 'readonly');
+          const store = tx.objectStore('auditHistory');
+          const allRecords = await new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+          });
+          beforePurge.indexedDB.auditHistory = allRecords.filter(r => r.userId === userId).length;
+        }
+
+        db.close();
+      } catch (e) {
+        beforePurge.indexedDB.error = e.message;
+      }
+    }
+
+    steps.push({
+      step: 3,
+      name: 'Snapshot antes del borrado',
+      ok: true,
+      detail: JSON.stringify(beforePurge, null, 2)
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 3,
+      name: 'Snapshot antes del borrado',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+  }
+
+  // ── PASO 4: Ejecutar purgeUser() ────────────────────────────────────────────
+
+  console.log('[TEST] Paso 4: Ejecutando purgeUser()...');
+
+  let purgeResult = null;
+
+  try {
+    // Interceptar confirm para automatizar
+    const originalConfirm = window.confirm;
+    window.confirm = () => true;
+
+    purgeResult = await purgeUser(userId);
+
+    window.confirm = originalConfirm;
+
+    steps.push({
+      step: 4,
+      name: 'Ejecutar purgeUser()',
+      ok: purgeResult && purgeResult.ok,
+      detail: JSON.stringify(purgeResult, null, 2)
+    });
+
+    if (!purgeResult || !purgeResult.ok) {
+      throw new Error('purgeUser() devolvió ok: false');
+    }
+
+  } catch (err) {
+    steps.push({
+      step: 4,
+      name: 'Ejecutar purgeUser()',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    return {
+      testName,
+      userId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      steps,
+      beforePurge,
+      purgeResult,
+      passed: false,
+      conclusion: `FALLO en paso 4: ${err.message}`
+    };
+  }
+
+  // ── PASO 5: Ejecutar verifyUserPurged() ────────────────────────────────────
+
+  console.log('[TEST] Paso 5: Ejecutando verifyUserPurged()...');
+
+  let verificationResult = null;
+
+  try {
+    verificationResult = await verifyUserPurged(userId);
+
+    steps.push({
+      step: 5,
+      name: 'Ejecutar verifyUserPurged()',
+      ok: verificationResult && verificationResult.ok,
+      detail: JSON.stringify(verificationResult, null, 2)
+    });
+
+    if (!verificationResult || !verificationResult.ok) {
+      console.warn('[TEST] verifyUserPurged() detectó residuos:', verificationResult.residues);
+    }
+
+  } catch (err) {
+    steps.push({
+      step: 5,
+      name: 'Ejecutar verifyUserPurged()',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    verificationResult = { ok: false, error: err.message };
+  }
+
+  // ── PASO 6: Recrear usuario ────────────────────────────────────────────────
+
+  console.log('[TEST] Paso 6: Recreando usuario...');
+
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    const recreatedUser = {
+      name: 'Usuario',
+      apellidos: 'Recreado',
+      alias: userId,
+      pass: 'test456',
+      funcion: 'COP',
+      nivel: 2,
+      base: 'GC',
+      irpf: 18,
+      admin: false,
+      bloqueado: false,
+      theme: 'sky'
+    };
+
+    await fetch(`${FB_URL}/pilotpay/usuarios/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(recreatedUser)
+    });
+
+    USERS[userId] = recreatedUser;
+
+    steps.push({
+      step: 6,
+      name: 'Recrear usuario',
+      ok: true,
+      detail: `Usuario ${userId} recreado con datos NUEVOS (COP, NVL2, GC)`
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 6,
+      name: 'Recrear usuario',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+
+    return {
+      testName,
+      userId,
+      startedAt,
+      finishedAt: new Date().toISOString(),
+      steps,
+      beforePurge,
+      purgeResult,
+      verificationResult,
+      passed: false,
+      conclusion: `FALLO en paso 6: ${err.message}`
+    };
+  }
+
+  // ── PASO 7: Snapshot DESPUÉS de recrear ────────────────────────────────────
+
+  console.log('[TEST] Paso 7: Capturando estado después de recrear...');
+
+  const afterRecreate = {
+    firebase: {},
+    localStorage: {},
+    indexedDB: {}
+  };
+
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Firebase: verificar que NO reaparecen datos antiguos
+    const resHist = await fetch(`${FB_URL}/pilotpay/historicos/${userId}.json${q}`);
+    const histData = resHist.ok ? await resHist.json() : null;
+    afterRecreate.firebase.historicos_exists = !!histData;
+    afterRecreate.firebase.historicos_monthly_count = histData && histData.monthly ? Object.keys(histData.monthly).length : 0;
+    afterRecreate.firebase.historicos_auditorias_count = histData && histData.auditorias ? Object.keys(histData.auditorias).length : 0;
+
+    // localStorage: verificar que NO reaparecen claves antiguas
+    afterRecreate.localStorage.monthly_v1 = !!localStorage.getItem(`pilotpay:${userId}:monthly_v1`);
+    afterRecreate.localStorage.audit_history_v1 = !!localStorage.getItem(`pilotpay:${userId}:audit_history_v1`);
+    afterRecreate.localStorage.p4_queue = !!localStorage.getItem(`pilotpay:${userId}:p4_queue`);
+    afterRecreate.localStorage.offline_queue = !!localStorage.getItem(`pilotpay:${userId}:offline_queue`);
+    afterRecreate.localStorage.profile_cache = !!localStorage.getItem(`pilotpay_v2_${userId}`);
+    afterRecreate.localStorage.theme = !!localStorage.getItem(`pilotpay_theme_${userId}`);
+
+    // IndexedDB: verificar que NO reaparecen registros antiguos
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      try {
+        const dbName = 'PilotPayLocalDB';
+        const openRequest = indexedDB.open(dbName);
+        const db = await new Promise((resolve, reject) => {
+          openRequest.onsuccess = () => resolve(openRequest.result);
+          openRequest.onerror = () => reject(openRequest.error);
+        });
+
+        if (db.objectStoreNames.contains('monthlyRecords')) {
+          const tx = db.transaction('monthlyRecords', 'readonly');
+          const store = tx.objectStore('monthlyRecords');
+          const allRecords = await new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+          });
+          afterRecreate.indexedDB.monthlyRecords = allRecords.filter(r => r.userId === userId).length;
+        }
+
+        if (db.objectStoreNames.contains('auditHistory')) {
+          const tx = db.transaction('auditHistory', 'readonly');
+          const store = tx.objectStore('auditHistory');
+          const allRecords = await new Promise((resolve, reject) => {
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => reject(req.error);
+          });
+          afterRecreate.indexedDB.auditHistory = allRecords.filter(r => r.userId === userId).length;
+        }
+
+        db.close();
+      } catch (e) {
+        afterRecreate.indexedDB.error = e.message;
+      }
+    }
+
+    steps.push({
+      step: 7,
+      name: 'Snapshot después de recrear',
+      ok: true,
+      detail: JSON.stringify(afterRecreate, null, 2)
+    });
+
+  } catch (err) {
+    steps.push({
+      step: 7,
+      name: 'Snapshot después de recrear',
+      ok: false,
+      detail: err.message,
+      errors: [err.message]
+    });
+  }
+
+  // ── PASO 8: Análisis final ─────────────────────────────────────────────────
+
+  console.log('[TEST] Paso 8: Análisis final...');
+
+  const residuesDetected = [];
+
+  // Firebase
+  if (afterRecreate.firebase.historicos_monthly_count > 0) {
+    residuesDetected.push(`Firebase: ${afterRecreate.firebase.historicos_monthly_count} MonthRecords resucitados`);
+  }
+  if (afterRecreate.firebase.historicos_auditorias_count > 0) {
+    residuesDetected.push(`Firebase: ${afterRecreate.firebase.historicos_auditorias_count} AuditRecords resucitados`);
+  }
+
+  // localStorage
+  if (afterRecreate.localStorage.monthly_v1) {
+    residuesDetected.push('localStorage: monthly_v1 resucitado');
+  }
+  if (afterRecreate.localStorage.audit_history_v1) {
+    residuesDetected.push('localStorage: audit_history_v1 resucitado');
+  }
+  if (afterRecreate.localStorage.p4_queue) {
+    residuesDetected.push('localStorage: p4_queue resucitado');
+  }
+  if (afterRecreate.localStorage.offline_queue) {
+    residuesDetected.push('localStorage: offline_queue resucitado');
+  }
+
+  // IndexedDB
+  if (afterRecreate.indexedDB.monthlyRecords > 0) {
+    residuesDetected.push(`IndexedDB: ${afterRecreate.indexedDB.monthlyRecords} monthlyRecords resucitados`);
+  }
+  if (afterRecreate.indexedDB.auditHistory > 0) {
+    residuesDetected.push(`IndexedDB: ${afterRecreate.indexedDB.auditHistory} auditHistory resucitados`);
+  }
+
+  // Verificación también debe pasar
+  const verificationPassed = verificationResult && verificationResult.ok;
+
+  // Test pasa si:
+  // 1. purgeUser() OK
+  // 2. verifyUserPurged() OK
+  // 3. NO hay residuos detectados después de recrear
+  passed = purgeResult.ok && verificationPassed && residuesDetected.length === 0;
+
+  if (passed) {
+    conclusion = '✅ PASA — Usuario purgado completamente sin residuos';
+  } else {
+    if (!purgeResult.ok) {
+      conclusion = '❌ FALLA — purgeUser() devolvió error';
+    } else if (!verificationPassed) {
+      conclusion = `❌ FALLA — verifyUserPurged() detectó ${verificationResult.residues.length} residuos`;
+    } else {
+      conclusion = `❌ FALLA — Detectados ${residuesDetected.length} residuos tras recrear usuario`;
+    }
+  }
+
+  steps.push({
+    step: 8,
+    name: 'Análisis final',
+    ok: passed,
+    detail: conclusion,
+    residuesDetected
+  });
+
+  const finishedAt = new Date().toISOString();
+
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════');
+  console.log(`  ${conclusion}`);
+  console.log(`  Finalizado: ${finishedAt}`);
+  console.log('═══════════════════════════════════════════════════════');
+  console.log('');
+
+  return {
+    testName,
+    userId,
+    startedAt,
+    finishedAt,
+    steps,
+    beforePurge,
+    purgeResult,
+    verificationResult,
+    afterRecreate,
+    residuesDetected,
+    passed,
+    conclusion
+  };
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// END TEST HELPER — Fase 1
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // END FASE 1 — SISTEMA DE BORRADO ROBUSTO
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
