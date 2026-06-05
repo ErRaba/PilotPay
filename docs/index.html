@@ -8360,26 +8360,910 @@ async function toggleBloqueoUsuario(code, bloquear) {
   }
 }
 
-async function eliminarUsuario(code) {
-  if (!isAdmin()) return;
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FASE 1 — SISTEMA DE BORRADO ROBUSTO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Implementa purga total de usuarios y auditorías para evitar resurrecciones
+// al recrear usuarios. Borrado = purga completa en todas las capas.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * Crea tombstone mínima de usuario eliminado en path separado.
+ * Fase 1: sin anti-resurrección automática, solo registro.
+ * @param {string} userId - Código del usuario
+ * @param {string} deletedBy - Admin que eliminó (o 'self')
+ * @returns {Promise<boolean>} true si éxito
+ */
+async function createDeletedUserTombstone(userId) {
   try {
-    // Borrar absolutamente todo rastro en Firebase
-    const _tkDel = await getAuthToken();
-    const _qDel = _tkDel ? '?auth=' + _tkDel : '';
-    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json${_qDel}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json${_qDel}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/perfiles/${code}.json${_qDel}`,  { method: 'DELETE' });
-    // Borrar también cualquier caché local
-    try { localStorage.removeItem(`pilotpay_v2_${code}`); } catch(e) {}
-    // Borrar de la caché en memoria
-    delete USERS[code];
-    delete perms[code];
-    savePermsToFirebase();
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+    const deviceId = localStorage.getItem('pilotpay_device_id') || 'unknown';
+    const deletedBy = currentUser || 'admin';
+
+    const tombstone = {
+      userId: userId,
+      deletedAt: Date.now(),
+      deletedBy: deletedBy,
+      deletedByDevice: deviceId,
+      schemaVersion: 1
+    };
+
+    const res = await fetch(`${FB_URL}/pilotpay/deletedUsers/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tombstone)
+    });
+
+    if (!res.ok) {
+      console.error('[createDeletedUserTombstone] Failed:', res.status, res.statusText);
+      return false;
+    }
+
+    console.log('[createDeletedUserTombstone] Tombstone creada:', userId);
+    return true;
+  } catch (err) {
+    console.error('[createDeletedUserTombstone] Error:', err);
+    return false;
+  }
+}
+
+/**
+ * Purga todos los nodos Firebase del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{ok: boolean, errors: Array}>}
+ */
+async function purgeFirebaseForUser(userId) {
+  const errors = [];
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Nodos a eliminar
+    const paths = [
+      `/pilotpay/usuarios/${userId}`,
+      `/pilotpay/perfiles/${userId}`,
+      `/pilotpay/permisos/${userId}`,
+      `/pilotpay/historicos/${userId}`
+    ];
+
+    for (const path of paths) {
+      try {
+        const res = await fetch(`${FB_URL}${path}.json${q}`, { method: 'DELETE' });
+        if (!res.ok) {
+          errors.push(`${path}: ${res.status} ${res.statusText}`);
+        } else {
+          console.log('[purgeFirebaseForUser] Eliminado:', path);
+        }
+      } catch (err) {
+        errors.push(`${path}: ${err.message}`);
+      }
+    }
+
+    // Buscar solicitudes del usuario (si existen)
+    try {
+      const resSol = await fetch(`${FB_URL}/pilotpay/solicitudes.json${q}`);
+      if (resSol.ok) {
+        const solicitudes = await resSol.json();
+        if (solicitudes) {
+          const updates = {};
+          Object.keys(solicitudes).forEach(key => {
+            if (solicitudes[key].userId === userId) {
+              updates[`/pilotpay/solicitudes/${key}`] = null;
+            }
+          });
+          if (Object.keys(updates).length > 0) {
+            await fetch(`${FB_URL}/.json${q}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updates)
+            });
+            console.log('[purgeFirebaseForUser] Solicitudes eliminadas:', Object.keys(updates).length);
+          }
+        }
+      }
+    } catch (err) {
+      errors.push(`solicitudes: ${err.message}`);
+    }
+
+    return { ok: errors.length === 0, errors };
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+    return { ok: false, errors };
+  }
+}
+
+/**
+ * Purga todas las claves localStorage del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {{deleted: number, errors: Array}}
+ */
+function purgeLocalStorageForUser(userId) {
+  const deleted = [];
+  const errors = [];
+
+  try {
+    const keysToDelete = [];
+
+    // Iterar todas las claves
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Patrón 1: pilotpay:{userId}:*
+      if (key.startsWith(`pilotpay:${userId}:`)) {
+        keysToDelete.push(key);
+      }
+
+      // Patrón 2: pilotpay_*_{userId}
+      if (key.startsWith('pilotpay_') && key.endsWith(`_${userId}`)) {
+        keysToDelete.push(key);
+      }
+    }
+
+    // Eliminar todas las claves identificadas
+    keysToDelete.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        deleted.push(key);
+        console.log('[purgeLocalStorageForUser] Eliminado:', key);
+      } catch (err) {
+        errors.push(`${key}: ${err.message}`);
+      }
+    });
+
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+  }
+
+  return { deleted: deleted.length, errors };
+}
+
+/**
+ * Purga todos los registros IndexedDB del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{deleted: Object, errors: Array}>}
+ */
+async function purgeIndexedDBForUser(userId) {
+  const deleted = { monthlyRecords: 0, auditHistory: 0, syncState: 0, pendingSyncQueue: 0 };
+  const errors = [];
+
+  if (typeof PilotPayLocalDB === 'undefined') {
+    console.warn('[purgeIndexedDBForUser] PilotPayLocalDB no disponible');
+    return { deleted, errors };
+  }
+
+  try {
+    // Abrir DB directamente para iterar stores
+    const dbName = 'PilotPayLocalDB';
+    const openRequest = indexedDB.open(dbName);
+
+    await new Promise((resolve, reject) => {
+      openRequest.onsuccess = () => resolve(openRequest.result);
+      openRequest.onerror = () => reject(openRequest.error);
+    });
+
+    const db = openRequest.result;
+
+    // Store: monthlyRecords
+    if (db.objectStoreNames.contains('monthlyRecords')) {
+      try {
+        const tx = db.transaction('monthlyRecords', 'readwrite');
+        const store = tx.objectStore('monthlyRecords');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.monthlyRecords++;
+          }
+        }
+        console.log('[purgeIndexedDBForUser] monthlyRecords eliminados:', deleted.monthlyRecords);
+      } catch (err) {
+        errors.push(`monthlyRecords: ${err.message}`);
+      }
+    }
+
+    // Store: auditHistory
+    if (db.objectStoreNames.contains('auditHistory')) {
+      try {
+        const tx = db.transaction('auditHistory', 'readwrite');
+        const store = tx.objectStore('auditHistory');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.auditHistory++;
+          }
+        }
+        console.log('[purgeIndexedDBForUser] auditHistory eliminados:', deleted.auditHistory);
+      } catch (err) {
+        errors.push(`auditHistory: ${err.message}`);
+      }
+    }
+
+    // Store: syncState (si existe)
+    if (db.objectStoreNames.contains('syncState')) {
+      try {
+        const tx = db.transaction('syncState', 'readwrite');
+        const store = tx.objectStore('syncState');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.syncState++;
+          }
+        }
+      } catch (err) {
+        errors.push(`syncState: ${err.message}`);
+      }
+    }
+
+    // Store: pendingSyncQueue (si existe)
+    if (db.objectStoreNames.contains('pendingSyncQueue')) {
+      try {
+        const tx = db.transaction('pendingSyncQueue', 'readwrite');
+        const store = tx.objectStore('pendingSyncQueue');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.pendingSyncQueue++;
+          }
+        }
+      } catch (err) {
+        errors.push(`pendingSyncQueue: ${err.message}`);
+      }
+    }
+
+    db.close();
+
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+  }
+
+  return { deleted, errors };
+}
+
+/**
+ * Purga colas de sincronización del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {{deleted: number, errors: Array}}
+ */
+function purgeQueuesForUser(userId) {
+  const deleted = [];
+  const errors = [];
+
+  try {
+    // Cola P4
+    const p4QueueKey = `pilotpay:${userId}:p4_queue`;
+    if (localStorage.getItem(p4QueueKey)) {
+      localStorage.removeItem(p4QueueKey);
+      deleted.push(p4QueueKey);
+      console.log('[purgeQueuesForUser] Cola P4 eliminada');
+    }
+
+    // Cola offline
+    const offlineQueueKey = `pilotpay:${userId}:offline_queue`;
+    if (localStorage.getItem(offlineQueueKey)) {
+      localStorage.removeItem(offlineQueueKey);
+      deleted.push(offlineQueueKey);
+      console.log('[purgeQueuesForUser] Cola offline eliminada');
+    }
+  } catch (err) {
+    errors.push(`colas: ${err.message}`);
+  }
+
+  return { deleted: deleted.length, errors };
+}
+
+/**
+ * Purga memoria runtime del usuario.
+ * @param {string} userId - Código del usuario
+ */
+function purgeMemoryForUser(userId) {
+  const purged = [];
+
+  // USERS
+  if (USERS && USERS[userId]) {
+    delete USERS[userId];
+    purged.push('USERS');
+  }
+
+  // perms
+  if (window.perms && window.perms[userId]) {
+    delete window.perms[userId];
+    purged.push('perms');
+  }
+
+  // profileData si corresponde
+  if (window.profileData && (window.profileData.code === userId || window.profileData.userId === userId)) {
+    window.profileData = {};
+    purged.push('profileData');
+  }
+
+  // calcResult si corresponde
+  if (window.calcResult && window.calcResult.userId === userId) {
+    window.calcResult = null;
+    purged.push('calcResult');
+  }
+
+  // nomDataCached si corresponde
+  if (window.nomDataCached && window.nomDataCached.userId === userId) {
+    window.nomDataCached = null;
+    purged.push('nomDataCached');
+  }
+
+  // currentUser si corresponde
+  if (window.currentUser === userId) {
+    window.currentUser = null;
+    window.currentNivel = null;
+    purged.push('currentUser');
+  }
+
+  // simHistoricoData si corresponde
+  if (window.simHistoricoData) {
+    window.simHistoricoData = null;
+    purged.push('simHistoricoData');
+  }
+
+  console.log('[purgeMemoryForUser] Memoria purgada:', purged.join(', '));
+  return purged;
+}
+
+/**
+ * Verifica que un usuario fue purgado completamente.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{ok: boolean, residues: Array}>}
+ */
+async function verifyUserPurged(userId) {
+  const residues = [];
+
+  console.log('[verifyUserPurged] Verificando purga de:', userId);
+
+  // ── Firebase ──
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Verificar deletedUsers existe
+    const resDeleted = await fetch(`${FB_URL}/pilotpay/deletedUsers/${userId}.json${q}`);
+    if (resDeleted.ok) {
+      const data = await resDeleted.json();
+      if (!data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/deletedUsers/${userId}`,
+          severity: 'critical',
+          detail: 'Tombstone no existe'
+        });
+      }
+    }
+
+    // Verificar usuarios no existe
+    const resUser = await fetch(`${FB_URL}/pilotpay/usuarios/${userId}.json${q}`);
+    if (resUser.ok) {
+      const data = await resUser.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/usuarios/${userId}`,
+          severity: 'critical',
+          detail: 'Usuario vivo todavía existe'
+        });
+      }
+    }
+
+    // Verificar perfiles no existe
+    const resProfile = await fetch(`${FB_URL}/pilotpay/perfiles/${userId}.json${q}`);
+    if (resProfile.ok) {
+      const data = await resProfile.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/perfiles/${userId}`,
+          severity: 'critical',
+          detail: 'Perfil todavía existe'
+        });
+      }
+    }
+
+    // Verificar historicos no existe
+    const resHist = await fetch(`${FB_URL}/pilotpay/historicos/${userId}.json${q}`);
+    if (resHist.ok) {
+      const data = await resHist.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/historicos/${userId}`,
+          severity: 'critical',
+          detail: 'Históricos todavía existen'
+        });
+      }
+    }
+  } catch (err) {
+    residues.push({
+      layer: 'Firebase',
+      keyOrPath: 'verification',
+      severity: 'error',
+      detail: err.message
+    });
+  }
+
+  // ── localStorage ──
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      if (key.startsWith(`pilotpay:${userId}:`) ||
+          (key.startsWith('pilotpay_') && key.endsWith(`_${userId}`))) {
+        residues.push({
+          layer: 'localStorage',
+          keyOrPath: key,
+          severity: 'high',
+          detail: 'Clave todavía existe'
+        });
+      }
+    }
+  } catch (err) {
+    residues.push({
+      layer: 'localStorage',
+      keyOrPath: 'verification',
+      severity: 'error',
+      detail: err.message
+    });
+  }
+
+  // ── IndexedDB ──
+  if (typeof PilotPayLocalDB !== 'undefined') {
+    try {
+      const dbName = 'PilotPayLocalDB';
+      const openRequest = indexedDB.open(dbName);
+
+      await new Promise((resolve, reject) => {
+        openRequest.onsuccess = () => resolve(openRequest.result);
+        openRequest.onerror = () => reject(openRequest.error);
+      });
+
+      const db = openRequest.result;
+
+      // Verificar monthlyRecords
+      if (db.objectStoreNames.contains('monthlyRecords')) {
+        const tx = db.transaction('monthlyRecords', 'readonly');
+        const store = tx.objectStore('monthlyRecords');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+        const monthlyCount = allRecords.filter(r => r.userId === userId).length;
+        if (monthlyCount > 0) {
+          residues.push({
+            layer: 'IndexedDB',
+            keyOrPath: 'monthlyRecords',
+            severity: 'high',
+            detail: `${monthlyCount} registros todavía existen`
+          });
+        }
+      }
+
+      // Verificar auditHistory
+      if (db.objectStoreNames.contains('auditHistory')) {
+        const tx = db.transaction('auditHistory', 'readonly');
+        const store = tx.objectStore('auditHistory');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+        const auditsCount = allRecords.filter(r => r.userId === userId).length;
+        if (auditsCount > 0) {
+          residues.push({
+            layer: 'IndexedDB',
+            keyOrPath: 'auditHistory',
+            severity: 'high',
+            detail: `${auditsCount} registros todavía existen`
+          });
+        }
+      }
+
+      db.close();
+    } catch (err) {
+      residues.push({
+        layer: 'IndexedDB',
+        keyOrPath: 'verification',
+        severity: 'error',
+        detail: err.message
+      });
+    }
+  }
+
+  // ── Memoria ──
+  if (USERS && USERS[userId]) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'USERS',
+      severity: 'medium',
+      detail: 'Usuario todavía en USERS'
+    });
+  }
+
+  if (window.perms && window.perms[userId]) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'perms',
+      severity: 'medium',
+      detail: 'Permisos todavía en memoria'
+    });
+  }
+
+  if (window.currentUser === userId) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'currentUser',
+      severity: 'critical',
+      detail: 'Usuario eliminado es el usuario actual'
+    });
+  }
+
+  const ok = residues.length === 0;
+  console.log('[verifyUserPurged] Verificación completa:', ok ? 'OK' : `${residues.length} residuos`);
+
+  return { ok, residues };
+}
+
+/**
+ * Purga completa de usuario (Fase 1).
+ * Elimina todos los datos del usuario de todas las capas.
+ * @param {string} userId - Código del usuario a purgar
+ * @returns {Promise<{ok: boolean, verification: Object}>}
+ */
+async function purgeUser(userId) {
+  if (!isAdmin()) {
+    console.error('[purgeUser] Acceso denegado');
+    return { ok: false, error: 'Acceso denegado' };
+  }
+
+  if (!userId || userId === ADMIN_CODE) {
+    console.error('[purgeUser] No se puede borrar admin o userId vacío');
+    return { ok: false, error: 'Usuario inválido' };
+  }
+
+  // Confirmación irreversible
+  const confirmMsg = `⚠️ ELIMINAR USUARIO ${userId}
+
+Esta acción es IRREVERSIBLE.
+
+Se eliminarán:
+• Perfil completo
+• Todos los expedientes mensuales
+• Todas las auditorías
+• Configuración fiscal
+• Histórico completo
+• Datos en Firebase, localStorage e IndexedDB
+
+¿Confirmar eliminación definitiva?`;
+
+  if (!confirm(confirmMsg)) {
+    console.log('[purgeUser] Cancelado por usuario');
+    return { ok: false, error: 'Cancelado' };
+  }
+
+  console.log('[purgeUser] Iniciando purga de:', userId);
+  const startTime = Date.now();
+
+  try {
+    // Paso 1: Crear tombstone (crítico - si falla, abortar)
+    console.log('[purgeUser] Paso 1/10: Creando tombstone...');
+    const tombstoneOk = await createDeletedUserTombstone(userId);
+    if (!tombstoneOk) {
+      alert('Error crítico: No se pudo crear tombstone.\n\nPurga abortada.');
+      return { ok: false, error: 'Tombstone creation failed' };
+    }
+
+    // Paso 2: Marcar en progreso (Fase 1: placeholder, no se usa todavía)
+    console.log('[purgeUser] Paso 2/10: Marcando en progreso...');
+    if (!window.userDeletionInProgress) window.userDeletionInProgress = {};
+    window.userDeletionInProgress[userId] = true;
+
+    // Paso 3: Detener sincronización (Fase 1: placeholder, sin P4 activo)
+    console.log('[purgeUser] Paso 3/10: Deteniendo sincronización...');
+    // TODO Fase 2: detener P4 activamente
+
+    // Paso 4: Purgar colas
+    console.log('[purgeUser] Paso 4/10: Purgando colas...');
+    const queuesResult = purgeQueuesForUser(userId);
+    console.log('[purgeUser] Colas purgadas:', queuesResult);
+
+    // Paso 5: Purgar Firebase
+    console.log('[purgeUser] Paso 5/10: Purgando Firebase...');
+    const fbResult = await purgeFirebaseForUser(userId);
+    console.log('[purgeUser] Firebase purgado:', fbResult);
+    if (!fbResult.ok && fbResult.errors.length > 0) {
+      console.warn('[purgeUser] Errores en Firebase (continuando):', fbResult.errors);
+    }
+
+    // Paso 6: Purgar localStorage
+    console.log('[purgeUser] Paso 6/10: Purgando localStorage...');
+    const lsResult = purgeLocalStorageForUser(userId);
+    console.log('[purgeUser] localStorage purgado:', lsResult);
+
+    // Paso 7: Purgar IndexedDB
+    console.log('[purgeUser] Paso 7/10: Purgando IndexedDB...');
+    const idbResult = await purgeIndexedDBForUser(userId);
+    console.log('[purgeUser] IndexedDB purgado:', idbResult);
+
+    // Paso 8: Purgar memoria
+    console.log('[purgeUser] Paso 8/10: Purgando memoria...');
+    const memoryPurged = purgeMemoryForUser(userId);
+    console.log('[purgeUser] Memoria purgada:', memoryPurged);
+
+    // Paso 9: Si es usuario actual, logout
+    if (currentUser === userId) {
+      console.log('[purgeUser] Paso 9/10: Usuario actual eliminado, forzando logout...');
+      alert(`Usuario ${userId} eliminado correctamente.\n\nSerás redirigido al login.`);
+      logout();
+      return { ok: true, selfDelete: true };
+    }
+
+    // Paso 10: Verificar purga
+    console.log('[purgeUser] Paso 10/10: Verificando purga...');
+    const verification = await verifyUserPurged(userId);
+
+    const elapsed = Date.now() - startTime;
+    console.log(`[purgeUser] Purga completada en ${elapsed}ms`);
+
+    // Limpiar flag
+    if (window.userDeletionInProgress) {
+      delete window.userDeletionInProgress[userId];
+    }
+
+    // Mostrar resultado
+    if (verification.ok) {
+      alert(`✓ Usuario ${userId} eliminado correctamente.\n\nVerificación: Sin residuos.`);
+    } else {
+      const criticalCount = verification.residues.filter(r => r.severity === 'critical').length;
+      const highCount = verification.residues.filter(r => r.severity === 'high').length;
+
+      let msg = `⚠️ Usuario ${userId} eliminado con advertencias.\n\n`;
+      msg += `Residuos detectados:\n`;
+      msg += `• Críticos: ${criticalCount}\n`;
+      msg += `• Altos: ${highCount}\n`;
+      msg += `• Total: ${verification.residues.length}\n\n`;
+      msg += `Ver consola para detalles.`;
+
+      console.warn('[purgeUser] Residuos detectados:', verification.residues);
+      alert(msg);
+    }
+
+    return { ok: true, verification };
+
+  } catch (err) {
+    console.error('[purgeUser] Error crítico:', err);
+
+    // Limpiar flag
+    if (window.userDeletionInProgress) {
+      delete window.userDeletionInProgress[userId];
+    }
+
+    alert(`Error al eliminar usuario ${userId}:\n\n${err.message}\n\nVer consola para detalles.`);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Borra una auditoría individual de forma completa.
+ * Fase 1: borrado físico. Fase 2 añadirá tombstone individual.
+ * @param {string} auditId - ID de la auditoría a borrar
+ * @returns {Promise<{ok: boolean, error?: string}>}
+ */
+async function deleteAuditRecord(auditId) {
+  if (!auditId) {
+    console.error('[deleteAuditRecord] auditId requerido');
+    return { ok: false, error: 'auditId requerido' };
+  }
+
+  console.log('[deleteAuditRecord] Borrando auditoría:', auditId);
+
+  try {
+    // Paso 1: Localizar auditoría en localStorage
+    const list = hstLoad();
+    const audit = list.find(r => r.id === auditId);
+
+    if (!audit) {
+      console.warn('[deleteAuditRecord] Auditoría no encontrada en localStorage');
+      // Continuar para limpiar otras capas por si existe en IDB/Firebase
+    }
+
+    const userId = audit ? audit.userId : null;
+    const mes = audit ? audit.mes : null;
+    const anyo = audit ? audit.anyo : null;
+
+    // Paso 2: Borrar de localStorage
+    const filteredList = list.filter(r => r.id !== auditId);
+    hstSave(filteredList);
+    console.log('[deleteAuditRecord] Eliminada de localStorage');
+
+    // Paso 3: Borrar de IndexedDB (best-effort)
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      try {
+        await PilotPayLocalDB.deleteAuditRecord(auditId);
+        console.log('[deleteAuditRecord] Eliminada de IndexedDB');
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error eliminando de IndexedDB (continuando):', err);
+      }
+    }
+
+    // Paso 4: Borrar de Firebase (Fase 1: borrado físico, sin tombstone)
+    if (userId) {
+      try {
+        const token = await getAuthToken();
+        const q = token ? `?auth=${token}` : '';
+        const res = await fetch(`${FB_URL}/pilotpay/historicos/${userId}/auditorias/${auditId}.json${q}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          console.log('[deleteAuditRecord] Eliminada de Firebase');
+        } else {
+          console.warn('[deleteAuditRecord] Error eliminando de Firebase:', res.status);
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error eliminando de Firebase:', err);
+      }
+    }
+
+    // Paso 5: Limpiar colas P4/offline
+    if (userId) {
+      try {
+        // Cola P4
+        const p4QueueKey = `pilotpay:${userId}:p4_queue`;
+        const p4Queue = localStorage.getItem(p4QueueKey);
+        if (p4Queue) {
+          const queue = JSON.parse(p4Queue);
+          const filteredQueue = queue.filter(item => {
+            return !(item.path && item.path.includes(auditId));
+          });
+          if (filteredQueue.length < queue.length) {
+            localStorage.setItem(p4QueueKey, JSON.stringify(filteredQueue));
+            console.log('[deleteAuditRecord] Items eliminados de cola P4');
+          }
+        }
+
+        // Cola offline
+        const offlineQueueKey = `pilotpay:${userId}:offline_queue`;
+        const offlineQueue = localStorage.getItem(offlineQueueKey);
+        if (offlineQueue) {
+          const queue = JSON.parse(offlineQueue);
+          const filteredQueue = queue.filter(item => {
+            return !(item.path && item.path.includes(auditId));
+          });
+          if (filteredQueue.length < queue.length) {
+            localStorage.setItem(offlineQueueKey, JSON.stringify(filteredQueue));
+            console.log('[deleteAuditRecord] Items eliminados de cola offline');
+          }
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error limpiando colas:', err);
+      }
+    }
+
+    // Paso 6: Limpiar referencia en MonthRecord si era auditoría activa
+    if (userId && mes && anyo && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      try {
+        const monthRecord = await PilotPayStore.monthly.getMonthRecord(userId, anyo, mes);
+        if (monthRecord && monthRecord.auditoria && monthRecord.auditoria.id === auditId) {
+          console.log('[deleteAuditRecord] Auditoría era la activa en MonthRecord, limpiando...');
+
+          // Limpiar auditoría
+          monthRecord.auditoria = null;
+
+          // Recalcular estado
+          if (monthRecord.calcResult || monthRecord.variables) {
+            monthRecord.estado = 'con_datos';
+          } else {
+            monthRecord.estado = 'pendiente';
+          }
+
+          // Guardar MonthRecord actualizado
+          await PilotPayStore.monthly.saveMonthRecord(monthRecord);
+          console.log('[deleteAuditRecord] MonthRecord actualizado:', monthRecord.estado);
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error actualizando MonthRecord:', err);
+      }
+    }
+
+    // Paso 7: Limpiar memoria
+    if (window.calcResult && window.calcResult.auditId === auditId) {
+      window.calcResult = null;
+      console.log('[deleteAuditRecord] calcResult limpiado');
+    }
+
+    if (window.nomDataCached && window.nomDataCached.auditId === auditId) {
+      window.nomDataCached = null;
+      console.log('[deleteAuditRecord] nomDataCached limpiado');
+    }
+
+    // Paso 8: Re-renderizar vistas
+    if (typeof hstRefreshCount === 'function') {
+      hstRefreshCount();
+    }
+
+    // Si estamos en historial o dashboard, reload
+    const currentTab = document.querySelector('.tab-btn.active')?.textContent?.toLowerCase();
+    if (currentTab === 'historial') {
+      if (typeof renderHistorial === 'function') {
+        renderHistorial();
+      }
+    } else if (currentTab === 'dashboard') {
+      if (typeof renderDashboard === 'function') {
+        renderDashboard();
+      }
+    }
+
+    console.log('[deleteAuditRecord] Auditoría eliminada completamente');
+    return { ok: true };
+
+  } catch (err) {
+    console.error('[deleteAuditRecord] Error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// END FASE 1 — SISTEMA DE BORRADO ROBUSTO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function eliminarUsuario(code) {
+  // Reemplazado por purgeUser() — Fase 1 sistema de borrado robusto
+  if (!isAdmin()) return;
+
+  const result = await purgeUser(code);
+
+  if (result.ok && !result.selfDelete) {
+    // Usuario eliminado exitosamente (no era el actual)
+    savePermsToFirebase(); // Actualizar permisos en Firebase sin el usuario borrado
     closeDayModal();
     renderAdmin();
-  } catch(e) {
-    alert('Error al eliminar: ' + e.message);
   }
+  // Si selfDelete = true, ya se hizo logout automáticamente
+  // Si !ok, ya se mostró error en purgeUser()
 }
 
 async function guardarEdicionUsuario(code) {
