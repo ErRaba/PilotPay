@@ -1,8 +1,9 @@
-# PilotPay — Firebase RTDB Schema (P4)
+# PilotPay — Firebase RTDB Schema (P4.7)
 
-**Versión:** 1.0  
-**Estado:** Diseño aprobado, pendiente de implementación  
-**Fecha:** 2026-05-24  
+**Versión:** 1.1  
+**Estado:** Implementado y validado  
+**Fecha:** 2026-06-05  
+**Última actualización:** P4.7 — Sistema de borrado robusto completado  
 
 ---
 
@@ -28,6 +29,11 @@ pilotpay/
         {auditId}/                ← Un nodo por AuditRecord.
       monthly/
         {year}_{month}/           ← Un nodo por MonthRecord. Ej: "2026_5".
+      deletedAuditorias/
+        {auditId}/                ← Tombstones de auditorías eliminadas (P4 sync).
+
+  deletedUsers/                   ← NUEVO en P4.7.
+    {userId}/                     ← Tombstone de usuario eliminado.
 ```
 
 **Regla de naming de `{userId}`:** código de usuario en mayúsculas (ej. `ESH`, `BZP`).  
@@ -232,6 +238,56 @@ Las reglas actuales (`auth != null` en raíz) ya cubren `historicos/`. No requie
 - Firebase `historicos/` es **adicional** — las claves localStorage no desaparecen.
 - Si un usuario migra datos via `migrate.html` antes de P4: los datos llegarán a localStorage. Al primer write real (nueva auditoría), el sink los subirá a Firebase.
 - Si un usuario ya tiene datos en Firebase `historicos/` (de una sesión anterior con P4): no se sobreescriben por el import de migrate.html (migrate.html solo toca localStorage, no Firebase historicos).
+
+---
+
+## 7. Nodo: deletedUsers (P4.7 — Sistema de borrado robusto)
+
+### Ubicación: `pilotpay/deletedUsers/{userId}`
+
+Tombstone de usuario eliminado. Registro permanente para trazabilidad y prevención de resurrecciones.
+
+```jsonc
+{
+  // ── Identificación ──
+  "userId":           "TEST",                      // string, código del usuario eliminado
+
+  // ── Metadatos de borrado ──
+  "deletedAt":        1717594800000,               // number, timestamp ms (Date.now())
+  "deletedBy":        "ESH",                       // string, admin que eliminó (o 'self')
+  "deletedByDevice":  "abc123xyz",                 // string, device ID (pilotpay_device_id)
+  "schemaVersion":    1                            // number, versión del schema tombstone
+}
+```
+
+### Características
+
+**Inmutabilidad:** Una vez creada, la tombstone NO se modifica ni elimina (salvo GC futuro Fase 2).
+
+**Creación:** `purgeUser()` crea tombstone ANTES de borrar datos del usuario.
+
+**Uso:**
+- Trazabilidad: registro permanente de usuarios eliminados
+- Anti-resurrección (Fase 2): prevenir que sync recree usuario borrado
+- Auditoría: histórico de borrados
+
+**Flujo de borrado (Fase 1):**
+
+1. ✅ `createDeletedUserTombstone(userId)` → crea en `/deletedUsers/{userId}`
+2. ✅ Si tombstone falla → **ABORTAR purga completa**
+3. ✅ `purgeFirebaseForUser(userId)` → borra `/usuarios`, `/perfiles`, `/permisos`, `/historicos`
+4. ✅ `purgeLocalStorageForUser(userId)` → borra todas las claves `pilotpay:{userId}:*`
+5. ✅ `purgeIndexedDBForUser(userId)` → borra registros con `userId` en IDB
+6. ✅ `purgeQueuesForUser(userId)` → borra colas P4 y offline
+7. ✅ `purgeMemoryForUser(userId)` → limpia variables globales
+8. ✅ `verifyUserPurged(userId)` → verifica ausencia de residuos
+
+**Validación Firebase Rules:**
+```json
+".validate": "!newData.exists() || (newData.hasChildren(['userId', 'deletedAt', 'deletedBy']) && newData.child('userId').isString() && newData.child('deletedAt').isNumber() && newData.child('deletedBy').isString())"
+```
+
+**GC futuro (Fase 2):** Tombstones > 180 días pueden limpiarse (no implementado).
 
 ---
 
