@@ -9038,7 +9038,7 @@ Se eliminarán:
     if (currentUser === userId) {
       console.log('[purgeUser] Paso 9/10: Usuario actual eliminado, forzando logout...');
       alert(`Usuario ${userId} eliminado correctamente.\n\nSerás redirigido al login.`);
-      logout();
+      doLogout();
       return { ok: true, selfDelete: true };
     }
 
@@ -9183,10 +9183,11 @@ async function deleteAuditRecord(auditId) {
       }
     }
 
-    // Paso 6: Limpiar referencia en MonthRecord si era auditoría activa
+    // Paso 6: Limpieza best-effort de MonthRecord si era auditoría activa
     if (userId && mes && anyo && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
       try {
-        const monthRecord = await PilotPayStore.monthly.getMonthRecord(userId, anyo, mes);
+        const monthRecord = PilotPayStore.monthly.get(anyo, mes);
+
         if (monthRecord && monthRecord.auditoria && monthRecord.auditoria.id === auditId) {
           console.log('[deleteAuditRecord] Auditoría era la activa en MonthRecord, limpiando...');
 
@@ -9200,12 +9201,12 @@ async function deleteAuditRecord(auditId) {
             monthRecord.estado = 'pendiente';
           }
 
-          // Guardar MonthRecord actualizado
-          await PilotPayStore.monthly.saveMonthRecord(monthRecord);
+          // Guardar MonthRecord actualizado (API correcta: set, no saveMonthRecord)
+          PilotPayStore.monthly.set(anyo, mes, monthRecord);
           console.log('[deleteAuditRecord] MonthRecord actualizado:', monthRecord.estado);
         }
       } catch (err) {
-        console.warn('[deleteAuditRecord] Error actualizando MonthRecord:', err);
+        console.warn('[deleteAuditRecord] Error actualizando MonthRecord (best-effort):', err);
       }
     }
 
