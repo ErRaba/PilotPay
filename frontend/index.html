@@ -1469,6 +1469,126 @@ input, select, textarea {
   #summary-bar .sum-val  { font-size: 17px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ADMIN 2.0 — Estilos del nuevo panel de administración
+   ══════════════════════════════════════════════════════════════ */
+
+/* Navegación principal */
+.adm-nav-btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+  color: var(--text3);
+  white-space: nowrap;
+}
+.adm-nav-btn:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+.adm-nav-active {
+  background: var(--blue) !important;
+  color: #fff !important;
+}
+
+/* Metric cards */
+.adm-metric-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 16px;
+  transition: border-color .2s, transform .2s;
+}
+.adm-metric-card:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+}
+.adm-metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.adm-metric-label {
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.adm-metric-trend {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+/* Acciones rápidas */
+.adm-quick-action {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.adm-quick-action:hover {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+  transform: translateY(-2px);
+}
+.adm-quick-icon {
+  font-size: 28px;
+}
+.adm-quick-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Alertas dashboard */
+.adm-alert {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber);
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.adm-alert-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.adm-alert-content {
+  flex: 1;
+}
+.adm-alert-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.adm-alert-msg {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+.adm-alert-action {
+  align-self: center;
+}
+
 /* Desktop ≥900px: workspace 3 columnas + UX-4 scroll aislado */
 @media (min-width: 900px) {
   /* UX-4: bloquear scroll de página cuando el workspace está activo */
@@ -3875,109 +3995,130 @@ Complemento de Base MAD: 1500"></textarea>
 
     </div><!-- /page-config -->
 
-    <!-- ── TAB: ADMIN ── -->
+    <!-- ── TAB: ADMIN 2.0 ── -->
     <div class="page" id="page-admin">
 
-      <!-- Header -->
-      <div class="card" style="border-color:var(--amber);background:var(--amber-dim);margin-bottom:8px;padding-top:10px;padding-bottom:10px">
-        <div class="card-title" style="margin-bottom:0"><div class="section-dot amber"></div>Panel de Administrador</div>
+      <!-- Header con navegación -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">Panel Admin</div>
+          <div style="font-size:13px;color:var(--text3);font-family:var(--mono)">
+            <span id="adm-current-user"></span> · <span id="adm-current-time"></span>
+          </div>
+        </div>
+        <button class="btn-secondary" onclick="renderAdminDashboard()" style="font-size:12px;padding:8px 14px">
+          🔄 Actualizar
+        </button>
       </div>
 
-      <!-- Sub-tabs -->
-      <div style="display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:12px">
-        <button id="adm-tab-alta"     onclick="adminTab('alta')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:var(--blue);color:#fff">
-          Alta
+      <!-- Navegación principal -->
+      <div style="display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px">
+        <button id="adm-tab-dashboard" onclick="adminTab('dashboard')" class="adm-nav-btn adm-nav-active">
+          Dashboard
         </button>
-        <button id="adm-tab-usuarios" onclick="adminTab('usuarios')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+        <button id="adm-tab-usuarios" onclick="adminTab('usuarios')" class="adm-nav-btn">
           Usuarios
         </button>
-        <button id="adm-tab-avatares" onclick="adminTab('avatares')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
+        <button id="adm-tab-avatares" onclick="adminTab('avatares')" class="adm-nav-btn">
           Avatares
         </button>
-        <button id="adm-tab-monitor" onclick="adminTab('monitor')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          Monitor
+        <button id="adm-tab-monitor" onclick="adminTab('monitor')" class="adm-nav-btn">
+          Diagnóstico
         </button>
       </div>
 
-      <!-- ── SUB-TAB: ALTA ── -->
-      <div id="adm-panel-alta">
-        <div class="card">
-          <div class="card-title"><div class="section-dot"></div>Alta nuevo usuario</div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Nombre</span>
-              <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre">
+      <!-- ── PANEL: DASHBOARD ── -->
+      <div id="adm-panel-dashboard">
+
+        <!-- Alertas críticas -->
+        <div id="adm-alerts-container" style="margin-bottom:20px"></div>
+
+        <!-- Métricas principales -->
+        <div style="margin-bottom:24px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Usuarios</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+
+            <!-- Card: Total Activos -->
+            <div class="adm-metric-card">
+              <div class="adm-metric-value" id="adm-metric-active">0</div>
+              <div class="adm-metric-label">Activos</div>
+              <div class="adm-metric-trend" id="adm-trend-active"></div>
             </div>
-            <div class="field">
-              <span class="field-label">Apellidos</span>
-              <input class="field-input" id="adm-apellidos" type="text" placeholder="Apellidos">
+
+            <!-- Card: Bloqueados -->
+            <div class="adm-metric-card">
+              <div class="adm-metric-value" id="adm-metric-blocked">0</div>
+              <div class="adm-metric-label">Bloqueados</div>
+              <div class="adm-metric-trend" id="adm-trend-blocked"></div>
             </div>
+
+            <!-- Card: Administradores -->
+            <div class="adm-metric-card">
+              <div class="adm-metric-value" id="adm-metric-admin">0</div>
+              <div class="adm-metric-label">Administradores</div>
+              <div class="adm-metric-trend" id="adm-trend-admin"></div>
+            </div>
+
           </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Código</span>
-              <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
-                oninput="this.value=this.value.toUpperCase()">
-            </div>
-            <div class="field">
-              <span class="field-label">Alias (saludo)</span>
-              <input class="field-input" id="adm-alias-new" type="text" placeholder="Opcional">
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Contraseña</span>
-              <input class="field-input" id="adm-pass" type="text" placeholder="1234">
-            </div>
-            <div class="field">
-              <span class="field-label">Función</span>
-              <select class="field-input" id="adm-funcion" onchange="onAdmFuncionChange()">
-                <option value="CMD">Comandante</option>
-                <option value="COP">Copiloto</option>
-                <option value="SCC">SCC — Sobrecargo</option>
-                <option value="CC">CC — Tripulante de Cabina</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Base</span>
-              <select class="field-input" id="adm-base">
-                <option value="GC" selected>Gran Canaria</option>
-                <option value="TFN">Tenerife</option>
-                <option value="MAD">Madrid</option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="field-label">Nivel</span>
-              <select class="field-input" id="adm-nivel">
-                <option value="1">1</option><option value="2">2</option>
-                <option value="3" selected>3</option><option value="4">4</option>
-                <option value="5">5</option><option value="6">6</option>
-              </select>
-            </div>
-          </div>
-          <div class="row" style="margin-top:4px;align-items:flex-end">
-            <div class="field">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding-top:6px">
-                <input type="checkbox" id="adm-temporal" onchange="onAdmTemporalChange()"
-                  style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer">
-                <span class="field-label" style="margin:0">Acceso temporal</span>
-              </label>
-            </div>
-            <div class="field" id="adm-expires-wrap" style="display:none">
-              <span class="field-label">Fecha límite acceso</span>
-              <input class="field-input" id="adm-expires" type="date">
-            </div>
-          </div>
-          <button class="btn-secondary" onclick="generarAltaUsuario()">Generar plantilla</button>
-          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">Crear usuario</button>
         </div>
-      </div>
+
+        <!-- Accesos rápidos -->
+        <div style="margin-bottom:24px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Acciones rápidas</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+
+            <button onclick="showCreateUserModal()" class="adm-quick-action">
+              <div class="adm-quick-icon">👤</div>
+              <div class="adm-quick-label">Crear usuario</div>
+            </button>
+
+            <button onclick="adminTab('usuarios')" class="adm-quick-action">
+              <div class="adm-quick-icon">📋</div>
+              <div class="adm-quick-label">Gestionar usuarios</div>
+            </button>
+
+            <button onclick="adminTab('avatares')" class="adm-quick-action">
+              <div class="adm-quick-icon">🖼️</div>
+              <div class="adm-quick-label">Avatares</div>
+            </button>
+
+            <button onclick="adminTab('monitor')" class="adm-quick-action">
+              <div class="adm-quick-icon">🔍</div>
+              <div class="adm-quick-label">Diagnóstico</div>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Estado del sistema -->
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Estado del sistema</div>
+          <div class="card" style="padding:16px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+
+              <div>
+                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">VERSIÓN</div>
+                <div style="font-size:13px;color:var(--text);font-weight:600">PilotPay 3.2.0</div>
+                <div style="font-size:11px;color:var(--text3)">Beta</div>
+              </div>
+
+              <div>
+                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">FIREBASE</div>
+                <div style="font-size:13px;color:var(--green);font-weight:600" id="adm-firebase-status">✓ Conectado</div>
+                <div style="font-size:11px;color:var(--text3)">airside-mad</div>
+              </div>
+
+              <div>
+                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">AVATARES</div>
+                <div style="font-size:13px;color:var(--text);font-weight:600" id="adm-avatars-count">0 activos</div>
+                <div style="font-size:11px;color:var(--text3)">Total disponibles</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /adm-panel-dashboard -->
 
       <!-- ── SUB-TAB: USUARIOS ── -->
       <div id="adm-panel-usuarios" style="display:none">
@@ -7618,17 +7759,126 @@ function getUserPerms(userCode) {
 // ── ADMIN SUB-TABS ──
 function adminTab(tab) {
   if (!isAdmin()) return;
-  ['alta','usuarios','avatares','monitor'].forEach(t => {
+
+  // Cambiar paneles
+  ['dashboard','usuarios','avatares','monitor'].forEach(t => {
     const panel = document.getElementById(`adm-panel-${t}`);
     const btn   = document.getElementById(`adm-tab-${t}`);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
     if (btn) {
-      btn.style.background = t === tab ? 'var(--blue)' : 'transparent';
-      btn.style.color      = t === tab ? '#fff'        : 'var(--text3)';
+      if (t === tab) {
+        btn.classList.add('adm-nav-active');
+      } else {
+        btn.classList.remove('adm-nav-active');
+      }
     }
   });
+
+  // Acciones específicas por tab
+  if (tab === 'dashboard') renderAdminDashboard();
+  if (tab === 'usuarios') renderAdmin();
   if (tab === 'avatares') renderAdminAvatarGrid('all');
   if (tab === 'monitor')  _initSyncMonitor();
+}
+
+// ── RENDERIZAR DASHBOARD ADMIN ──
+function renderAdminDashboard() {
+  if (!isAdmin()) return;
+
+  // Actualizar timestamp
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const el = document.getElementById('adm-current-time');
+  if (el) el.textContent = timeStr;
+
+  const userEl = document.getElementById('adm-current-user');
+  if (userEl) userEl.textContent = currentUser;
+
+  // Calcular métricas
+  const allUsers = Object.values(USERS || {});
+  const totalActive = allUsers.filter(u => !u.bloqueado).length;
+  const totalBlocked = allUsers.filter(u => u.bloqueado).length;
+  const totalAdmin = allUsers.filter(u => u.admin).length;
+
+  // Actualizar cards de métricas
+  const activeEl = document.getElementById('adm-metric-active');
+  const blockedEl = document.getElementById('adm-metric-blocked');
+  const adminEl = document.getElementById('adm-metric-admin');
+
+  if (activeEl) activeEl.textContent = totalActive;
+  if (blockedEl) blockedEl.textContent = totalBlocked;
+  if (adminEl) adminEl.textContent = totalAdmin;
+
+  // Actualizar avatares count
+  const avatarsEl = document.getElementById('adm-avatars-count');
+  if (avatarsEl && typeof AvatarManager !== 'undefined') {
+    const activeAvatars = AvatarManager.getByRole('all').filter(av => av.active !== false);
+    avatarsEl.textContent = `${activeAvatars.length} activos`;
+  }
+
+  // Renderizar alertas
+  renderAdminAlerts(allUsers);
+
+  // Firebase status (simple check)
+  const fbStatusEl = document.getElementById('adm-firebase-status');
+  if (fbStatusEl) {
+    // Intentar detectar si Firebase está disponible
+    if (typeof FB_URL !== 'undefined' && FB_URL) {
+      fbStatusEl.innerHTML = '<span style="color:var(--green)">✓</span> Conectado';
+    } else {
+      fbStatusEl.innerHTML = '<span style="color:var(--red)">✗</span> No disponible';
+    }
+  }
+}
+
+// ── RENDERIZAR ALERTAS ADMIN ──
+function renderAdminAlerts(users) {
+  const container = document.getElementById('adm-alerts-container');
+  if (!container) return;
+
+  const alerts = [];
+
+  // Usuarios bloqueados
+  const blocked = users.filter(u => u.bloqueado);
+  if (blocked.length > 0) {
+    alerts.push({
+      icon: '🔒',
+      title: `${blocked.length} usuario${blocked.length > 1 ? 's' : ''} bloqueado${blocked.length > 1 ? 's' : ''}`,
+      msg: blocked.map(u => u.name || u.code).join(', '),
+      action: '<button class="btn-secondary" onclick="adminTab(\'usuarios\')" style="font-size:11px;padding:6px 12px">Ver usuarios</button>'
+    });
+  }
+
+  // Si no hay alertas
+  if (alerts.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Renderizar
+  let html = '';
+  alerts.forEach(alert => {
+    html += `
+      <div class="adm-alert">
+        <div class="adm-alert-icon">${alert.icon}</div>
+        <div class="adm-alert-content">
+          <div class="adm-alert-title">${alert.title}</div>
+          <div class="adm-alert-msg">${alert.msg}</div>
+        </div>
+        ${alert.action ? `<div class="adm-alert-action">${alert.action}</div>` : ''}
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── MODAL CREAR USUARIO ──
+function showCreateUserModal() {
+  // Por ahora, ir a la pestaña de usuarios donde está el formulario legacy
+  // TODO: crear modal dedicado en futuro
+  adminTab('usuarios');
+  alert('Para crear un usuario, usa el formulario de la pestaña "Usuarios".\n\nEn una próxima versión habrá un modal dedicado aquí.');
 }
 
 // ── MONITOR DE SINCRONIZACIÓN ────────────────────────────────────────────
@@ -9455,7 +9705,7 @@ function showTab(name) {
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar')  checkApiKeyCard();
   if (name === 'config')    renderConfig();
-  if (name === 'admin')     { adminTab('alta'); renderAdmin(); }
+  if (name === 'admin')     { adminTab('dashboard'); }
   if (name === 'variables') varsActualizarMesEsperado();
   if (name === 'historial') renderHistorial();
   if (name === 'dashboard') renderDashboard();
