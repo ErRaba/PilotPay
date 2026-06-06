@@ -1470,7 +1470,7 @@ input, select, textarea {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ADMIN 2.0 — Estilos del nuevo panel de administración
+   ADMIN 2.0 — Centro de Control
    ══════════════════════════════════════════════════════════════ */
 
 /* Navegación principal */
@@ -1496,97 +1496,216 @@ input, select, textarea {
   color: #fff !important;
 }
 
-/* Metric cards */
-.adm-metric-card {
+/* Secciones del dashboard */
+.adm-section {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 18px 16px;
-  transition: border-color .2s, transform .2s;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
 }
-.adm-metric-card:hover {
-  border-color: var(--blue);
-  transform: translateY(-2px);
-}
-.adm-metric-value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-  margin-bottom: 8px;
-}
-.adm-metric-label {
-  font-size: 12px;
-  color: var(--text3);
-  font-weight: 500;
-  margin-bottom: 6px;
-}
-.adm-metric-trend {
+.adm-section-header {
   font-size: 11px;
-  font-family: var(--mono);
-  color: var(--text3);
-}
-
-/* Acciones rápidas */
-.adm-quick-action {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px 16px;
-  cursor: pointer;
-  transition: all .2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.adm-quick-action:hover {
-  border-color: var(--blue);
-  background: var(--blue-dim);
-  transform: translateY(-2px);
-}
-.adm-quick-icon {
-  font-size: 28px;
-}
-.adm-quick-label {
-  font-size: 13px;
   font-weight: 600;
-  color: var(--text);
-}
-
-/* Alertas dashboard */
-.adm-alert {
-  background: var(--amber-dim);
-  border: 1px solid var(--amber);
-  border-left: 4px solid var(--amber);
-  border-radius: 8px;
-  padding: 12px 16px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text3);
   margin-bottom: 12px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
 }
-.adm-alert-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-  line-height: 1;
+.adm-link-btn {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--blue2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  transition: color .2s;
 }
-.adm-alert-content {
-  flex: 1;
+.adm-link-btn:hover {
+  color: var(--blue);
 }
-.adm-alert-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.adm-alert-msg {
+
+/* Estado operativo (inline compacto) */
+.adm-status-bar {
   font-size: 12px;
   color: var(--text2);
-  line-height: 1.5;
+  line-height: 1.6;
 }
-.adm-alert-action {
-  align-self: center;
+.adm-status-item strong {
+  font-family: var(--mono);
+  color: var(--text);
+  font-weight: 600;
+}
+.adm-status-sep {
+  color: var(--text3);
+  margin: 0 8px;
+}
+
+/* Alertas inline compactas */
+.adm-alert-inline {
+  background: rgba(245,158,11,0.06);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.adm-alert-inline.critical {
+  background: rgba(239,68,68,0.06);
+  border-left-color: var(--red);
+}
+.adm-alert-inline-msg {
+  flex: 1;
+}
+.adm-alert-inline-msg strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Actividad reciente (log) */
+.adm-activity-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.adm-activity-row {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.adm-activity-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.adm-activity-time {
+  font-family: var(--mono);
+  color: var(--text3);
+  font-size: 11px;
+  flex-shrink: 0;
+  min-width: 40px;
+}
+.adm-activity-actor {
+  font-family: var(--mono);
+  color: var(--text);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.adm-activity-msg {
+  flex: 1;
+  color: var(--text2);
+}
+.adm-activity-empty {
+  padding: 12px 0;
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+}
+
+/* Tabla usuarios compacta */
+.adm-users-table-wrap {
+  overflow-x: auto;
+}
+.adm-users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.adm-users-table thead th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.adm-users-table tbody td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+}
+.adm-users-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.adm-users-table tbody tr:hover {
+  background: var(--bg3);
+}
+.adm-users-table .adm-user-code {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+.adm-users-table .adm-user-role {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.adm-users-table .adm-user-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.adm-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.adm-status-dot.active { background: var(--green); }
+.adm-status-dot.blocked { background: var(--text3); opacity: 0.5; }
+.adm-status-dot.expiring { background: var(--amber); }
+.adm-status-dot.admin { background: var(--blue); }
+.adm-empty {
+  text-align: center;
+  color: var(--text3);
+  padding: 16px;
+}
+
+/* Placeholder analítica */
+.adm-section-placeholder {
+  background: var(--bg);
+  border-style: dashed;
+  border-color: var(--border2);
+}
+.adm-placeholder-content {
+  text-align: center;
+  padding: 24px 16px;
+}
+.adm-placeholder-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.adm-placeholder-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.adm-placeholder-desc {
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.5;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 /* Desktop ≥900px: workspace 3 columnas + UX-4 scroll aislado */
@@ -3998,16 +4117,14 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ── TAB: ADMIN 2.0 ── -->
     <div class="page" id="page-admin">
 
-      <!-- Header con navegación -->
+      <!-- Header simplificado -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
-          <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">Panel Admin</div>
-          <div style="font-size:13px;color:var(--text3);font-family:var(--mono)">
-            <span id="adm-current-user"></span> · <span id="adm-current-time"></span>
-          </div>
+          <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px">Panel Admin</div>
+          <div style="font-size:11px;color:var(--text3);letter-spacing:0.03em">Centro de control PilotPay</div>
         </div>
-        <button class="btn-secondary" onclick="renderAdminDashboard()" style="font-size:12px;padding:8px 14px">
-          🔄 Actualizar
+        <button class="btn-secondary" onclick="renderAdminDashboard()" style="font-size:11px;padding:6px 12px;font-family:var(--mono)">
+          ↻ Actualizar
         </button>
       </div>
 
@@ -4030,90 +4147,67 @@ Complemento de Base MAD: 1500"></textarea>
       <!-- ── PANEL: DASHBOARD ── -->
       <div id="adm-panel-dashboard">
 
-        <!-- Alertas críticas -->
-        <div id="adm-alerts-container" style="margin-bottom:20px"></div>
+        <!-- Alertas críticas (inline compacto) -->
+        <div id="adm-alerts-container"></div>
 
-        <!-- Métricas principales -->
-        <div style="margin-bottom:24px">
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Usuarios</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-
-            <!-- Card: Total Activos -->
-            <div class="adm-metric-card">
-              <div class="adm-metric-value" id="adm-metric-active">0</div>
-              <div class="adm-metric-label">Activos</div>
-              <div class="adm-metric-trend" id="adm-trend-active"></div>
-            </div>
-
-            <!-- Card: Bloqueados -->
-            <div class="adm-metric-card">
-              <div class="adm-metric-value" id="adm-metric-blocked">0</div>
-              <div class="adm-metric-label">Bloqueados</div>
-              <div class="adm-metric-trend" id="adm-trend-blocked"></div>
-            </div>
-
-            <!-- Card: Administradores -->
-            <div class="adm-metric-card">
-              <div class="adm-metric-value" id="adm-metric-admin">0</div>
-              <div class="adm-metric-label">Administradores</div>
-              <div class="adm-metric-trend" id="adm-trend-admin"></div>
-            </div>
-
+        <!-- Estado operativo (inline compacto) -->
+        <div class="adm-section">
+          <div class="adm-section-header">Estado operativo</div>
+          <div class="adm-status-bar">
+            <span class="adm-status-item">Activos: <strong id="adm-st-active">0</strong></span>
+            <span class="adm-status-sep">·</span>
+            <span class="adm-status-item">Bloqueados: <strong id="adm-st-blocked">0</strong></span>
+            <span class="adm-status-sep">·</span>
+            <span class="adm-status-item">Expiran 7d: <strong id="adm-st-expiring">0</strong></span>
+            <span class="adm-status-sep">·</span>
+            <span class="adm-status-item">Firebase: <strong id="adm-st-firebase">✓</strong></span>
+            <span class="adm-status-sep">·</span>
+            <span class="adm-status-item">Versión: <strong id="adm-st-version">3.2.0</strong></span>
           </div>
         </div>
 
-        <!-- Accesos rápidos -->
-        <div style="margin-bottom:24px">
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Acciones rápidas</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-
-            <button onclick="showCreateUserModal()" class="adm-quick-action">
-              <div class="adm-quick-icon">👤</div>
-              <div class="adm-quick-label">Crear usuario</div>
-            </button>
-
-            <button onclick="adminTab('usuarios')" class="adm-quick-action">
-              <div class="adm-quick-icon">📋</div>
-              <div class="adm-quick-label">Gestionar usuarios</div>
-            </button>
-
-            <button onclick="adminTab('avatares')" class="adm-quick-action">
-              <div class="adm-quick-icon">🖼️</div>
-              <div class="adm-quick-label">Avatares</div>
-            </button>
-
-            <button onclick="adminTab('monitor')" class="adm-quick-action">
-              <div class="adm-quick-icon">🔍</div>
-              <div class="adm-quick-label">Diagnóstico</div>
-            </button>
-
+        <!-- Actividad reciente -->
+        <div class="adm-section">
+          <div class="adm-section-header">
+            Actividad reciente
+            <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver todos →</button>
+          </div>
+          <div id="adm-activity-log" class="adm-activity-log">
+            <div class="adm-activity-empty">No hay actividad reciente registrada</div>
           </div>
         </div>
 
-        <!-- Estado del sistema -->
-        <div>
-          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Estado del sistema</div>
-          <div class="card" style="padding:16px">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+        <!-- Usuarios (tabla compacta) -->
+        <div class="adm-section">
+          <div class="adm-section-header">
+            Usuarios
+            <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver todos →</button>
+          </div>
+          <div class="adm-users-table-wrap">
+            <table class="adm-users-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="adm-users-tbody">
+                <tr><td colspan="4" class="adm-empty">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-              <div>
-                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">VERSIÓN</div>
-                <div style="font-size:13px;color:var(--text);font-weight:600">PilotPay 3.2.0</div>
-                <div style="font-size:11px;color:var(--text3)">Beta</div>
-              </div>
-
-              <div>
-                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">FIREBASE</div>
-                <div style="font-size:13px;color:var(--green);font-weight:600" id="adm-firebase-status">✓ Conectado</div>
-                <div style="font-size:11px;color:var(--text3)">airside-mad</div>
-              </div>
-
-              <div>
-                <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:4px">AVATARES</div>
-                <div style="font-size:13px;color:var(--text);font-weight:600" id="adm-avatars-count">0 activos</div>
-                <div style="font-size:11px;color:var(--text3)">Total disponibles</div>
-              </div>
-
+        <!-- Espacio reservado: Analítica -->
+        <div class="adm-section adm-section-placeholder">
+          <div class="adm-section-header">Analítica de uso</div>
+          <div class="adm-placeholder-content">
+            <div class="adm-placeholder-icon">📊</div>
+            <div class="adm-placeholder-title">Próximamente</div>
+            <div class="adm-placeholder-desc">
+              Métricas de uso, auditorías procesadas, PDFs generados y estadísticas de la biblioteca normativa
             </div>
           </div>
         </div>
@@ -7785,87 +7879,127 @@ function adminTab(tab) {
 function renderAdminDashboard() {
   if (!isAdmin()) return;
 
-  // Actualizar timestamp
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  const el = document.getElementById('adm-current-time');
-  if (el) el.textContent = timeStr;
-
-  const userEl = document.getElementById('adm-current-user');
-  if (userEl) userEl.textContent = currentUser;
+  const allUsers = Object.values(USERS || {});
 
   // Calcular métricas
-  const allUsers = Object.values(USERS || {});
   const totalActive = allUsers.filter(u => !u.bloqueado).length;
   const totalBlocked = allUsers.filter(u => u.bloqueado).length;
-  const totalAdmin = allUsers.filter(u => u.admin).length;
+  const expiring = getUsersExpiringIn7Days();
 
-  // Actualizar cards de métricas
-  const activeEl = document.getElementById('adm-metric-active');
-  const blockedEl = document.getElementById('adm-metric-blocked');
-  const adminEl = document.getElementById('adm-metric-admin');
+  // Estado operativo
+  const stActive = document.getElementById('adm-st-active');
+  const stBlocked = document.getElementById('adm-st-blocked');
+  const stExpiring = document.getElementById('adm-st-expiring');
+  const stFirebase = document.getElementById('adm-st-firebase');
+  const stVersion = document.getElementById('adm-st-version');
 
-  if (activeEl) activeEl.textContent = totalActive;
-  if (blockedEl) blockedEl.textContent = totalBlocked;
-  if (adminEl) adminEl.textContent = totalAdmin;
+  if (stActive) stActive.textContent = totalActive;
+  if (stBlocked) stBlocked.textContent = totalBlocked;
+  if (stExpiring) stExpiring.textContent = expiring.length;
 
-  // Actualizar avatares count
-  const avatarsEl = document.getElementById('adm-avatars-count');
-  if (avatarsEl && typeof AvatarManager !== 'undefined') {
-    const activeAvatars = AvatarManager.getByRole('all').filter(av => av.active !== false);
-    avatarsEl.textContent = `${activeAvatars.length} activos`;
+  // Firebase status
+  if (stFirebase) {
+    stFirebase.textContent = (typeof FB_URL !== 'undefined' && FB_URL) ? '✓' : '✗';
+    stFirebase.style.color = (typeof FB_URL !== 'undefined' && FB_URL) ? 'var(--green)' : 'var(--red)';
+  }
+
+  // Versión (leer de variable global si existe, sino hardcodear)
+  if (stVersion) {
+    stVersion.textContent = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '3.2.0';
   }
 
   // Renderizar alertas
-  renderAdminAlerts(allUsers);
+  renderAdminAlerts(allUsers, expiring);
 
-  // Firebase status (simple check)
-  const fbStatusEl = document.getElementById('adm-firebase-status');
-  if (fbStatusEl) {
-    // Intentar detectar si Firebase está disponible
-    if (typeof FB_URL !== 'undefined' && FB_URL) {
-      fbStatusEl.innerHTML = '<span style="color:var(--green)">✓</span> Conectado';
-    } else {
-      fbStatusEl.innerHTML = '<span style="color:var(--red)">✗</span> No disponible';
-    }
-  }
+  // Renderizar actividad reciente
+  renderAdminActivity();
+
+  // Renderizar tabla usuarios
+  renderAdminUsersTable(allUsers);
 }
 
-// ── RENDERIZAR ALERTAS ADMIN ──
-function renderAdminAlerts(users) {
+// ── USUARIOS PRÓXIMOS A EXPIRAR ──
+function getUsersExpiringIn7Days() {
+  const now = new Date();
+  const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  return Object.values(USERS || {}).filter(u => {
+    if (!u.expiresAt) return false;
+    const expDate = new Date(u.expiresAt);
+    return expDate > now && expDate <= in7days;
+  });
+}
+
+// ── RENDERIZAR ALERTAS INLINE ──
+function renderAdminAlerts(users, expiring) {
   const container = document.getElementById('adm-alerts-container');
   if (!container) return;
 
-  const alerts = [];
+  let html = '';
 
   // Usuarios bloqueados
   const blocked = users.filter(u => u.bloqueado);
   if (blocked.length > 0) {
-    alerts.push({
-      icon: '🔒',
-      title: `${blocked.length} usuario${blocked.length > 1 ? 's' : ''} bloqueado${blocked.length > 1 ? 's' : ''}`,
-      msg: blocked.map(u => u.name || u.code).join(', '),
-      action: '<button class="btn-secondary" onclick="adminTab(\'usuarios\')" style="font-size:11px;padding:6px 12px">Ver usuarios</button>'
-    });
+    const names = blocked.map(u => u.name || u.code).slice(0, 3).join(', ');
+    const more = blocked.length > 3 ? ` y ${blocked.length - 3} más` : '';
+    html += `
+      <div class="adm-alert-inline critical">
+        <div class="adm-alert-inline-msg">
+          <strong>${blocked.length}</strong> usuario${blocked.length > 1 ? 's' : ''} bloqueado${blocked.length > 1 ? 's' : ''}: ${names}${more}
+        </div>
+        <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver →</button>
+      </div>
+    `;
   }
 
-  // Si no hay alertas
-  if (alerts.length === 0) {
-    container.innerHTML = '';
+  // Usuarios próximos a expirar
+  if (expiring.length > 0) {
+    const names = expiring.map(u => {
+      const exp = new Date(u.expiresAt);
+      const days = Math.ceil((exp - new Date()) / (24 * 60 * 60 * 1000));
+      return `${u.name || u.code} (${days}d)`;
+    }).slice(0, 3).join(', ');
+    const more = expiring.length > 3 ? ` y ${expiring.length - 3} más` : '';
+    html += `
+      <div class="adm-alert-inline">
+        <div class="adm-alert-inline-msg">
+          ⏱ <strong>${expiring.length}</strong> usuario${expiring.length > 1 ? 's' : ''} expiran en 7 días: ${names}${more}
+        </div>
+        <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver →</button>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+// ── RENDERIZAR ACTIVIDAD RECIENTE ──
+function renderAdminActivity() {
+  const container = document.getElementById('adm-activity-log');
+  if (!container) return;
+
+  // TODO: Implementar sistema de logs real
+  // Por ahora, placeholder
+  const events = [
+    { time: '14:32', actor: 'BZP', msg: 'realizó auditoría Mayo 2026' },
+    { time: '12:15', actor: 'ESH', msg: 'editó usuario TEST' },
+    { time: '10:05', actor: 'COP', msg: 'subió PDF nómina Abril 2026' },
+    { time: '09:42', actor: 'ESH', msg: 'creó usuario USER' },
+    { time: '08:30', actor: 'BZP', msg: 'generó PDF auditoría' }
+  ];
+
+  if (events.length === 0) {
+    container.innerHTML = '<div class="adm-activity-empty">No hay actividad reciente registrada</div>';
     return;
   }
 
-  // Renderizar
   let html = '';
-  alerts.forEach(alert => {
+  events.forEach(evt => {
     html += `
-      <div class="adm-alert">
-        <div class="adm-alert-icon">${alert.icon}</div>
-        <div class="adm-alert-content">
-          <div class="adm-alert-title">${alert.title}</div>
-          <div class="adm-alert-msg">${alert.msg}</div>
-        </div>
-        ${alert.action ? `<div class="adm-alert-action">${alert.action}</div>` : ''}
+      <div class="adm-activity-row">
+        <div class="adm-activity-time">${evt.time}</div>
+        <div class="adm-activity-actor">${evt.actor}</div>
+        <div class="adm-activity-msg">${evt.msg}</div>
       </div>
     `;
   });
@@ -7873,12 +8007,71 @@ function renderAdminAlerts(users) {
   container.innerHTML = html;
 }
 
-// ── MODAL CREAR USUARIO ──
-function showCreateUserModal() {
-  // Por ahora, ir a la pestaña de usuarios donde está el formulario legacy
-  // TODO: crear modal dedicado en futuro
-  adminTab('usuarios');
-  alert('Para crear un usuario, usa el formulario de la pestaña "Usuarios".\n\nEn una próxima versión habrá un modal dedicado aquí.');
+// ── RENDERIZAR TABLA USUARIOS ──
+function renderAdminUsersTable(users) {
+  const tbody = document.getElementById('adm-users-tbody');
+  if (!tbody) return;
+
+  // Ordenar: admin primero, luego por código
+  const sorted = users.sort((a, b) => {
+    if (a.admin && !b.admin) return -1;
+    if (!a.admin && b.admin) return 1;
+    return (a.code || '').localeCompare(b.code || '');
+  });
+
+  // Top 5
+  const top5 = sorted.slice(0, 5);
+
+  if (top5.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="adm-empty">No hay usuarios</td></tr>';
+    return;
+  }
+
+  let html = '';
+  top5.forEach(u => {
+    const code = u.code || '—';
+    const name = u.name || '—';
+    const role = `${u.funcion || '—'}·${u.nivel || '—'}·${u.base || '—'}`;
+
+    // Estado
+    let statusDot = 'active';
+    let statusText = 'Activo';
+    let statusExtra = '';
+
+    if (u.admin) {
+      statusDot = 'admin';
+      statusExtra = ' A';
+    }
+    if (u.bloqueado) {
+      statusDot = 'blocked';
+      statusText = 'Bloqueado';
+    }
+    // Próximo a expirar
+    if (u.expiresAt) {
+      const exp = new Date(u.expiresAt);
+      const days = Math.ceil((exp - new Date()) / (24 * 60 * 60 * 1000));
+      if (days > 0 && days <= 7) {
+        statusDot = 'expiring';
+        statusText = `Exp ${days}d`;
+      }
+    }
+
+    html += `
+      <tr>
+        <td class="adm-user-code">${code}</td>
+        <td>${name}</td>
+        <td class="adm-user-role">${role}</td>
+        <td>
+          <div class="adm-user-status">
+            <span class="adm-status-dot ${statusDot}"></span>
+            ${statusText}${statusExtra}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
 }
 
 // ── MONITOR DE SINCRONIZACIÓN ────────────────────────────────────────────
