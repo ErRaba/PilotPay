@@ -8527,9 +8527,9 @@ function renderUsersTableSimple() {
     let acciones = `<a class="adm-user-action" onclick="editarUsuario('${code}')">Editar</a>`;
     if (!isAdminUser) {
       if (u.bloqueado) {
-        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', false); renderUsersTableSimple()">Reactivar</a>`;
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', false)">Reactivar</a>`;
       } else {
-        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', true); renderUsersTableSimple()">Bloquear</a>`;
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', true)">Bloquear</a>`;
       }
       if (u.temporal && u.accessExpiresAt) {
         acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="extendUserAccess('${code}')">Extender</a>`;
