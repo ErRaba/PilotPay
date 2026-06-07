@@ -1470,289 +1470,235 @@ input, select, textarea {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   ADMIN 2.0 — Centro de Control
+   ADMIN 2.0 — Centro de Control (wireframe final refinado)
    ══════════════════════════════════════════════════════════════ */
 
-/* Navegación principal */
-.adm-nav-btn {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
+/* ZONA 1: Identidad administrativa */
+.adm-identity {
+  padding: 32px 0 24px;
+}
+
+.adm-identity-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.adm-identity-context {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+
+.adm-identity-user {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.adm-identity-exit {
+  font-size: 12px;
+  font-family: var(--sans);
+  color: var(--text3);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-identity-exit:hover {
+  color: var(--text);
+}
+
+/* ZONA 2: Separador visual */
+.adm-separator {
+  height: 1px;
+  background: var(--border);
+  opacity: 0.5;
+  margin: 0;
+}
+
+/* ZONA 3: Estado operativo (información de negocio) */
+.adm-status {
+  padding: 16px 0;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--text2);
+  font-weight: 500;
+}
+
+.adm-status-sep {
+  margin: 0 8px;
+  color: var(--text3);
+}
+
+/* ZONA 4: Alertas operativas */
+.adm-alerts {
+  margin: 32px 0;
+}
+
+.adm-alert {
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--text2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.adm-alert-msg {
+  flex: 1;
+}
+
+.adm-alert-action {
+  font-size: 12px;
+  color: var(--blue2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-alert-action:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+/* ZONA 5: Gestión de usuarios */
+.adm-users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 48px 0 24px;
+}
+
+.adm-search {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.adm-search:focus {
+  border-color: var(--blue);
+}
+
+.adm-search::placeholder {
+  color: var(--text3);
+}
+
+.adm-btn-primary {
+  padding: 10px 16px;
   font-size: 13px;
   font-weight: 600;
   font-family: var(--sans);
-  cursor: pointer;
-  transition: all .2s;
-  background: transparent;
-  color: var(--text3);
-  white-space: nowrap;
-}
-.adm-nav-btn:hover {
-  background: var(--bg3);
   color: var(--text);
-}
-.adm-nav-active {
-  background: var(--blue) !important;
-  color: #fff !important;
-}
-
-/* Secciones del dashboard */
-.adm-section {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-.adm-section-header {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text3);
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.adm-link-btn {
-  font-size: 11px;
-  font-family: var(--mono);
-  color: var(--blue2);
-  background: none;
-  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  padding: 0;
-  text-transform: none;
-  letter-spacing: normal;
-  font-weight: 500;
-  transition: color .2s;
+  transition: all .2s;
+  white-space: nowrap;
 }
-.adm-link-btn:hover {
+
+.adm-btn-primary:hover {
+  background: var(--bg3);
+  border-color: var(--blue);
   color: var(--blue);
 }
 
-/* Estado operativo (inline compacto) */
-.adm-status-bar {
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.6;
-}
-.adm-status-item strong {
-  font-family: var(--mono);
-  color: var(--text);
-  font-weight: 600;
-}
-.adm-status-sep {
-  color: var(--text3);
-  margin: 0 8px;
+/* Lista de usuarios (GitHub-style) */
+.adm-users-list {
+  margin: 0;
 }
 
-/* Alertas inline compactas */
-.adm-alert-inline {
-  background: rgba(245,158,11,0.06);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--amber);
-  border-radius: 8px;
-  padding: 10px 16px;
-  margin-bottom: 16px;
-  font-size: 12px;
-  color: var(--text2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.adm-alert-inline.critical {
-  background: rgba(239,68,68,0.06);
-  border-left-color: var(--red);
-}
-.adm-alert-inline-msg {
-  flex: 1;
-}
-.adm-alert-inline-msg strong {
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* Actividad reciente (log) */
-.adm-activity-log {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.adm-activity-row {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--text2);
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.adm-activity-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-.adm-activity-time {
-  font-family: var(--mono);
-  color: var(--text3);
-  font-size: 11px;
-  flex-shrink: 0;
-  min-width: 40px;
-}
-.adm-activity-actor {
-  font-family: var(--mono);
-  color: var(--text);
-  font-weight: 600;
-  flex-shrink: 0;
-}
-.adm-activity-msg {
-  flex: 1;
-  color: var(--text2);
-}
-.adm-activity-empty {
+.adm-user-item {
   padding: 12px 0;
-  font-size: 12px;
-  color: var(--text3);
-  text-align: center;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 16px;
+  align-items: baseline;
+  cursor: pointer;
+  transition: background .15s;
+  position: relative;
 }
 
-/* Tabla usuarios compacta */
-.adm-users-table-wrap {
-  overflow-x: auto;
+.adm-user-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: 0;
+  bottom: 0;
+  background: var(--bg2);
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+  border-radius: 6px;
 }
-.adm-users-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+
+.adm-user-item:hover::before {
+  opacity: 1;
 }
-.adm-users-table thead th {
-  text-align: left;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text3);
-  padding: 8px 12px 8px 0;
-  border-bottom: 1px solid var(--border);
-}
-.adm-users-table tbody td {
-  padding: 10px 12px 10px 0;
-  border-bottom: 1px solid var(--border);
-  color: var(--text2);
-}
-.adm-users-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.adm-users-table tbody tr:hover {
-  background: var(--bg3);
-}
-.adm-users-table .adm-user-code {
-  font-family: var(--mono);
-  font-weight: 600;
+
+.adm-user-name {
+  font-size: 15px;
+  font-weight: 500;
   color: var(--text);
-}
-.adm-users-table .adm-user-role {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text3);
-}
-.adm-users-table .adm-user-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-}
-.adm-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.adm-status-dot.active { background: var(--green); }
-.adm-status-dot.blocked { background: var(--text3); opacity: 0.5; }
-.adm-status-dot.expiring { background: var(--amber); }
-.adm-status-dot.admin { background: var(--blue); }
-.adm-empty {
-  text-align: center;
-  color: var(--text3);
-  padding: 16px;
+  letter-spacing: -0.01em;
 }
 
-/* Placeholder analítica */
-.adm-section-placeholder {
-  background: var(--bg);
-  border-style: dashed;
-  border-color: var(--border2);
-}
-.adm-placeholder-content {
-  text-align: center;
-  padding: 24px 16px;
-}
-.adm-placeholder-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  opacity: 0.5;
-}
-.adm-placeholder-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text2);
-  margin-bottom: 6px;
-}
-.adm-placeholder-desc {
-  font-size: 11px;
-  color: var(--text3);
-  line-height: 1.5;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-/* ══════════════════════════════════════════════════════════════
-   USUARIOS 2.0 — Tabla simplificada
-   ══════════════════════════════════════════════════════════════ */
-
-.adm-users-table-simple {
-  width: 100%;
-  border-collapse: collapse;
+.adm-user-meta {
   font-size: 12px;
-}
-
-.adm-users-table-simple thead th {
-  text-align: left;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   color: var(--text3);
-  padding: 10px 12px;
-  border-bottom: 2px solid var(--border);
-  white-space: nowrap;
 }
 
-.adm-users-table-simple tbody td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
+.adm-user-meta-code {
+  font-family: var(--mono);
+  font-weight: 600;
   color: var(--text2);
-  vertical-align: middle;
 }
 
-.adm-users-table-simple tbody tr:last-child td {
-  border-bottom: none;
+.adm-user-status {
+  font-size: 11px;
+  text-align: right;
 }
 
-.adm-users-table-simple tbody tr:hover {
-  background: var(--bg3);
+.adm-user-expira {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-align: right;
 }
 
-/* Acciones inline */
+.adm-user-actions {
+  grid-column: 1;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.adm-user-item:hover .adm-user-actions {
+  opacity: 1;
+}
+
 .adm-user-action {
-  display: inline-block;
+  display: inline;
   padding: 0;
   background: none;
   border: none;
   color: var(--text2);
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   text-decoration: none;
   transition: color .2s;
@@ -1763,33 +1709,135 @@ input, select, textarea {
   text-decoration: underline;
 }
 
-.adm-user-action.danger {
-  color: var(--text3);
-}
-
 .adm-user-action.danger:hover {
   color: var(--red);
 }
 
 .adm-user-action-sep {
-  color: var(--border);
+  color: var(--text3);
   margin: 0 6px;
   user-select: none;
 }
 
+/* Estados de usuario */
+.adm-status-badge {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.adm-status-badge.admin { color: var(--amber2); }
+.adm-status-badge.activo { color: var(--green); }
+.adm-status-badge.bloqueado { color: var(--red); }
+.adm-status-badge.temporal { color: var(--amber); }
+
+/* Contador de usuarios */
+.adm-users-counter {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+/* ZONA 6: Funciones secundarias */
+.adm-secondary {
+  margin: 64px 0 16px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.adm-secondary-link {
+  color: var(--text3);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-secondary-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.adm-secondary-sep {
+  margin: 0 8px;
+  color: var(--text3);
+}
+
+/* ZONA 7: Información técnica */
+.adm-technical {
+  padding: 16px 0 32px;
+  text-align: center;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+.adm-technical strong {
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.adm-tech-sep {
+  margin: 0 8px;
+}
+
 /* Responsive móvil */
 @media (max-width: 640px) {
-  .adm-users-table-simple {
-    font-size: 11px;
+  .adm-identity {
+    padding: 24px 0 16px;
   }
 
-  .adm-users-table-simple th,
-  .adm-users-table-simple td {
-    padding: 8px 6px;
+  .adm-identity-title {
+    font-size: 24px;
   }
 
-  .adm-user-action {
-    font-size: 10px;
+  .adm-identity-context {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .adm-status {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .adm-users-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 32px 0 24px;
+  }
+
+  .adm-search {
+    max-width: none;
+  }
+
+  .adm-btn-primary {
+    width: 100%;
+  }
+
+  .adm-user-item {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 4px;
+  }
+
+  .adm-user-status {
+    text-align: left;
+  }
+
+  .adm-user-expira {
+    text-align: left;
+    display: inline;
+    margin-left: 8px;
+  }
+
+  .adm-user-actions {
+    opacity: 1;
+    margin-top: 4px;
+  }
+
+  .adm-secondary {
+    margin: 48px 0 12px;
   }
 }
 
@@ -4202,219 +4250,146 @@ Complemento de Base MAD: 1500"></textarea>
     <!-- ── TAB: ADMIN 2.0 ── -->
     <div class="page" id="page-admin">
 
-      <!-- Header simplificado -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div>
-          <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px">Panel Admin</div>
-          <div style="font-size:11px;color:var(--text3);letter-spacing:0.03em">Centro de control PilotPay</div>
+      <!-- ZONA 1: Identidad administrativa -->
+      <div class="adm-identity">
+        <div class="adm-identity-title">ADMINISTRACIÓN</div>
+        <div class="adm-identity-context">
+          <span>Admin · <span class="adm-identity-user">ESH</span></span>
+          <a href="#" onclick="navTo('dashboard'); return false;" class="adm-identity-exit">← PilotPay</a>
         </div>
-        <button class="btn-secondary" onclick="renderAdminDashboard()" style="font-size:11px;padding:6px 12px;font-family:var(--mono)">
-          ↻ Actualizar
-        </button>
       </div>
 
-      <!-- Navegación principal -->
-      <div style="display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px">
-        <button id="adm-tab-dashboard" onclick="adminTab('dashboard')" class="adm-nav-btn adm-nav-active">
-          Dashboard
-        </button>
-        <button id="adm-tab-usuarios" onclick="adminTab('usuarios')" class="adm-nav-btn">
-          Usuarios
-        </button>
-        <button id="adm-tab-avatares" onclick="adminTab('avatares')" class="adm-nav-btn">
-          Avatares
-        </button>
-        <button id="adm-tab-monitor" onclick="adminTab('monitor')" class="adm-nav-btn">
-          Diagnóstico
-        </button>
+      <!-- ZONA 2: Estado operativo (información de negocio) -->
+      <div class="adm-separator"></div>
+      <div class="adm-status">
+        <span id="adm-status-users">0 usuarios</span>
+        <span class="adm-status-sep">·</span>
+        <span id="adm-status-active">0 activos</span>
+        <span class="adm-status-sep">·</span>
+        <span id="adm-status-blocked">0 bloqueados</span>
+      </div>
+      <div class="adm-separator"></div>
+
+      <!-- ZONA 3: Alertas operativas (condicional) -->
+      <div id="adm-alerts-container" class="adm-alerts"></div>
+
+      <!-- ZONA 4: Gestión de usuarios -->
+      <div class="adm-users-header">
+        <input class="adm-search" id="adm-search" type="text"
+          placeholder="🔍  Buscar por nombre o código..."
+          oninput="renderAdminUsersList()">
+        <button class="adm-btn-primary" onclick="crearUsuarioLocal()">+ Dar acceso</button>
       </div>
 
-      <!-- ── PANEL: DASHBOARD ── -->
-      <div id="adm-panel-dashboard">
+      <div id="adm-users-list" class="adm-users-list">
+        <!-- Renderizado por renderAdminUsersList() -->
+      </div>
 
-        <!-- Alertas críticas (inline compacto) -->
-        <div id="adm-alerts-container"></div>
+      <div class="adm-users-counter" id="adm-users-counter">0 usuarios</div>
 
-        <!-- Estado operativo (inline compacto) -->
-        <div class="adm-section">
-          <div class="adm-section-header">Estado operativo</div>
-          <div class="adm-status-bar">
-            <span class="adm-status-item">Activos: <strong id="adm-st-active">0</strong></span>
-            <span class="adm-status-sep">·</span>
-            <span class="adm-status-item">Bloqueados: <strong id="adm-st-blocked">0</strong></span>
-            <span class="adm-status-sep">·</span>
-            <span class="adm-status-item">Expiran 7d: <strong id="adm-st-expiring">0</strong></span>
-            <span class="adm-status-sep">·</span>
-            <span class="adm-status-item">Firebase: <strong id="adm-st-firebase">✓</strong></span>
-            <span class="adm-status-sep">·</span>
-            <span class="adm-status-item">Versión: <strong id="adm-st-version">3.2.0</strong></span>
+      <!-- ZONA 5: Funciones secundarias + Información técnica -->
+      <div class="adm-secondary">
+        <a href="#" onclick="showDiagnostico(); return false;" class="adm-secondary-link">Diagnóstico</a>
+        <span class="adm-secondary-sep">·</span>
+        <a href="#" onclick="showConfiguracion(); return false;" class="adm-secondary-link">Configuración</a>
+      </div>
+
+      <div class="adm-separator"></div>
+
+      <div class="adm-technical">
+        <span>Firebase: <strong id="adm-tech-firebase">OK</strong></span>
+        <span class="adm-tech-sep">·</span>
+        <span>v<span id="adm-tech-version">3.2.0</span></span>
+        <span class="adm-tech-sep">·</span>
+        <span>Sync: <span id="adm-tech-sync">—</span></span>
+      </div>
+
+      <!-- PANELES SECUNDARIOS (ocultos por defecto, se muestran con modales) -->
+
+      <!-- Panel Diagnóstico (reusa monitor existente) -->
+      <div id="adm-panel-diagnostico" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 20px">
+        <div style="max-width:1200px;margin:0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+            <div style="font-size:24px;font-weight:700;color:var(--text)">Diagnóstico</div>
+            <button onclick="closeDiagnostico()" style="font-size:13px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">Cerrar</button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <label style="font-size:12px;color:var(--text3);font-family:var(--mono)">Usuario:</label>
+            <select id="adm-monitor-user-sel"
+              onchange="renderSyncMonitor(this.value)"
+              style="font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text1)">
+            </select>
+            <button onclick="renderSyncMonitor(document.getElementById('adm-monitor-user-sel').value)"
+              style="font-size:11px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer">
+              ↻ Actualizar
+            </button>
+          </div>
+
+          <div id="adm-monitor-body" style="font-family:var(--mono);font-size:11px;color:var(--text2)">
+            <span style="color:var(--text3)">Selecciona un usuario para ver su estado de sincronización.</span>
           </div>
         </div>
+      </div>
 
-        <!-- Actividad reciente -->
-        <div class="adm-section">
-          <div class="adm-section-header">
-            Actividad reciente
-            <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver todos →</button>
+      <!-- Panel Configuración (avatares) -->
+      <div id="adm-panel-configuracion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 20px">
+        <div style="max-width:1200px;margin:0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+            <div style="font-size:24px;font-weight:700;color:var(--text)">Configuración de sistema</div>
+            <button onclick="closeConfiguracion()" style="font-size:13px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">Cerrar</button>
           </div>
-          <div id="adm-activity-log" class="adm-activity-log">
-            <div class="adm-activity-empty">No hay actividad reciente registrada</div>
-          </div>
-        </div>
 
-        <!-- Usuarios (tabla compacta) -->
-        <div class="adm-section">
-          <div class="adm-section-header">
-            Usuarios
-            <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver todos →</button>
-          </div>
-          <div class="adm-users-table-wrap">
-            <table class="adm-users-table">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="adm-users-tbody">
-                <tr><td colspan="4" class="adm-empty">Cargando...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:16px">Avatares</div>
 
-        <!-- Espacio reservado: Analítica -->
-        <div class="adm-section adm-section-placeholder">
-          <div class="adm-section-header">Analítica de uso</div>
-          <div class="adm-placeholder-content">
-            <div class="adm-placeholder-icon">📊</div>
-            <div class="adm-placeholder-title">Próximamente</div>
-            <div class="adm-placeholder-desc">
-              Métricas de uso, auditorías procesadas, PDFs generados y estadísticas de la biblioteca normativa
+          <!-- Añadir avatar -->
+          <div class="card">
+            <div class="card-title"><div class="section-dot green"></div>Añadir avatar</div>
+            <div class="row">
+              <div class="field">
+                <span class="field-label">Nombre</span>
+                <input class="field-input" id="av-new-name" type="text" placeholder="Comandante 11">
+              </div>
+              <div class="field">
+                <span class="field-label">Rol</span>
+                <select class="field-input" id="av-new-role">
+                  <option value="cmd">CMD — Comandante</option>
+                  <option value="cop">COP — Copiloto</option>
+                  <option value="tcp">TCP — Tripulante</option>
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
-
-      </div><!-- /adm-panel-dashboard -->
-
-      <!-- ── SUB-TAB: USUARIOS ── -->
-      <div id="adm-panel-usuarios" style="display:none">
-
-        <!-- Barra superior: Búsqueda + Crear -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-          <input class="field-input" id="adm-buscar" type="text"
-            placeholder="🔍 Buscar por nombre o código..."
-            oninput="renderUsersTableSimple()"
-            style="flex:1;max-width:400px">
-          <button class="btn-secondary" onclick="crearUsuarioLocal()"
-            style="font-size:11px;padding:8px 14px;font-family:var(--mono)">
-            + Dar acceso
-          </button>
-        </div>
-
-        <!-- Tabla simple -->
-        <div class="adm-section">
-          <table class="adm-users-table-simple">
-            <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Rol</th>
-                <th>Base</th>
-                <th>Estado</th>
-                <th>Expira</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="adm-users-tbody-simple">
-              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">Cargando usuarios...</td></tr>
-            </tbody>
-          </table>
-
-          <!-- Contador -->
-          <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--text3)">
-            <span id="adm-users-count">0 usuarios</span>
-          </div>
-        </div>
-
-      </div><!-- /adm-panel-usuarios -->
-
-
-
-
-      <!-- ── SUB-TAB: AVATARES ── -->
-      <div id="adm-panel-avatares" style="display:none">
-
-        <!-- Añadir avatar -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot green"></div>Añadir avatar</div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Nombre</span>
-              <input class="field-input" id="av-new-name" type="text" placeholder="Comandante 11">
+            <div class="row">
+              <div class="field">
+                <span class="field-label">Género</span>
+                <select class="field-input" id="av-new-gender">
+                  <option value="male">Masculino</option>
+                  <option value="female">Femenino</option>
+                </select>
+              </div>
+              <div class="field">
+                <span class="field-label">Ruta imagen (src)</span>
+                <input class="field-input" id="av-new-src" type="text" placeholder="assets/avatars/cmd/male/avatar_26.webp">
+              </div>
             </div>
-            <div class="field">
-              <span class="field-label">Rol</span>
-              <select class="field-input" id="av-new-role">
-                <option value="cmd">CMD — Comandante</option>
-                <option value="cop">COP — Copiloto</option>
-                <option value="tcp">TCP — Tripulante</option>
-              </select>
-            </div>
+            <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
+              onclick="adminAddAvatar()">Añadir avatar</button>
+            <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
           </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Género</span>
-              <select class="field-input" id="av-new-gender">
-                <option value="male">Masculino</option>
-                <option value="female">Femenino</option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="field-label">Ruta imagen (src)</span>
-              <input class="field-input" id="av-new-src" type="text" placeholder="assets/avatars/cmd/male/avatar_26.webp">
-            </div>
+
+          <!-- Filtros -->
+          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">CMD</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">COP</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">TCP</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">Inactivos</button>
           </div>
-          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
-            onclick="adminAddAvatar()">Añadir avatar</button>
-          <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
+
+          <!-- Grid de avatares -->
+          <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
         </div>
-
-        <!-- Filtros -->
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-          <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">CMD</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">COP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">TCP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">Inactivos</button>
-        </div>
-
-        <!-- Grid de avatares -->
-        <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
-
-      </div><!-- /adm-panel-avatares -->
-
-      <!-- ── SUB-TAB: MONITOR DE SINCRONIZACIÓN ── -->
-      <div id="adm-panel-monitor" style="display:none">
-
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <label style="font-size:12px;color:var(--text3);font-family:var(--mono)">Usuario:</label>
-          <select id="adm-monitor-user-sel"
-            onchange="renderSyncMonitor(this.value)"
-            style="font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text1)">
-          </select>
-          <button onclick="renderSyncMonitor(document.getElementById('adm-monitor-user-sel').value)"
-            style="font-size:11px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer">
-            ↻ Actualizar
-          </button>
-        </div>
-
-        <div id="adm-monitor-body" style="font-family:var(--mono);font-size:11px;color:var(--text2)">
-          <span style="color:var(--text3)">Selecciona un usuario para ver su estado de sincronización.</span>
-        </div>
-
-      </div><!-- /adm-panel-monitor -->
+      </div>
 
     </div><!-- /page-admin -->
 
@@ -8575,7 +8550,269 @@ function extendUserAccess(code) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// FIN USUARIOS 2.0
+// ADMIN 2.0 — Wireframe final refinado
+// ══════════════════════════════════════════════════════════════
+
+function initAdmin() {
+  if (!isAdmin()) return;
+
+  // Actualizar identidad
+  updateAdminIdentity();
+
+  // Renderizar estado operativo
+  renderAdminStatus();
+
+  // Renderizar alertas
+  renderAdminAlerts();
+
+  // Renderizar lista de usuarios
+  renderAdminUsersList();
+
+  // Actualizar información técnica
+  updateAdminTechnical();
+}
+
+function updateAdminIdentity() {
+  const userSpan = document.querySelector('.adm-identity-user');
+  if (userSpan && currentUser) {
+    userSpan.textContent = currentUser;
+  }
+}
+
+function renderAdminStatus() {
+  const allUsers = Object.values(USERS || {});
+  const total = allUsers.length;
+  const active = allUsers.filter(u => !u.bloqueado).length;
+  const blocked = allUsers.filter(u => u.bloqueado).length;
+
+  const statusUsers = document.getElementById('adm-status-users');
+  const statusActive = document.getElementById('adm-status-active');
+  const statusBlocked = document.getElementById('adm-status-blocked');
+
+  if (statusUsers) statusUsers.textContent = `${total} usuario${total !== 1 ? 's' : ''}`;
+  if (statusActive) statusActive.textContent = `${active} activo${active !== 1 ? 's' : ''}`;
+  if (statusBlocked) statusBlocked.textContent = `${blocked} bloqueado${blocked !== 1 ? 's' : ''}`;
+}
+
+function renderAdminAlerts() {
+  const container = document.getElementById('adm-alerts-container');
+  if (!container) return;
+
+  const allUsers = Object.values(USERS || {});
+  const expiring = getUsersExpiringIn7Days();
+
+  let html = '';
+
+  // Usuarios próximos a expirar
+  if (expiring.length > 0) {
+    const codes = expiring.map(u => u.code).slice(0, 3).join(', ');
+    const more = expiring.length > 3 ? `, ... y ${expiring.length - 3} más` : '';
+    html += `
+      <div class="adm-alert">
+        <div class="adm-alert-msg">⚠  ${expiring.length} usuario${expiring.length > 1 ? 's' : ''} expiran en 5 días: ${codes}${more}</div>
+        <a href="#" onclick="scrollToUsersList(); return false;" class="adm-alert-action">Revisar →</a>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+  container.style.display = html ? 'block' : 'none';
+}
+
+function renderAdminUsersList() {
+  if (!isAdmin()) return;
+
+  const container = document.getElementById('adm-users-list');
+  const counter = document.getElementById('adm-users-counter');
+  if (!container) return;
+
+  const searchInput = document.getElementById('adm-search');
+  const buscar = (searchInput?.value || '').toLowerCase().trim();
+
+  // Filtrar usuarios
+  const all = Object.entries(USERS || {});
+  const filtered = all.filter(([code, u]) => {
+    if (!buscar) return true;
+    return code.toLowerCase().includes(buscar)
+      || (u.name || '').toLowerCase().includes(buscar)
+      || (u.apellidos || '').toLowerCase().includes(buscar);
+  });
+
+  // Ordenar: ESH primero, resto por fecha ingreso
+  const esh = filtered.find(([c]) => c === ADMIN_CODE);
+  const rest = filtered
+    .filter(([c]) => c !== ADMIN_CODE)
+    .sort(([,a],[,b]) => {
+      const ingresoA = a.ingreso || a.fechaIngresoEmpresa || '';
+      const ingresoB = b.ingreso || b.fechaIngresoEmpresa || '';
+      if (ingresoA && ingresoB) return ingresoA.localeCompare(ingresoB);
+      return ingresoA ? -1 : ingresoB ? 1 : 0;
+    });
+
+  const sorted = esh ? [esh, ...rest] : rest;
+
+  // Renderizar
+  if (sorted.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--text3)">
+        ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios'}
+      </div>
+    `;
+    if (counter) counter.textContent = '0 usuarios';
+    return;
+  }
+
+  container.innerHTML = sorted.map(([code, u]) => {
+    const isAdminUser = code === ADMIN_CODE;
+
+    // Nombre completo
+    const nombre = u.name || '';
+    const apellido = (u.apellidos || '').split(' ')[0] || '';
+    const nombreCompleto = `${nombre} ${apellido}`.trim() || code;
+
+    // Rol
+    const funcion = u.funcion || 'SCC';
+    const nivel = u.nivel || u.nivelActual || 'N/A';
+    const base = u.base || '—';
+    const rolText = `${funcion} N${nivel}`;
+
+    // Estado
+    let estadoText = '';
+    let estadoClass = '';
+    if (isAdminUser) {
+      estadoText = 'Admin';
+      estadoClass = 'admin';
+    } else if (u.bloqueado) {
+      estadoText = 'Bloqueado';
+      estadoClass = 'bloqueado';
+    } else if (u.temporal || u.accessExpiresAt) {
+      estadoText = 'Temporal';
+      estadoClass = 'temporal';
+    } else {
+      estadoText = 'Activo';
+      estadoClass = 'activo';
+    }
+
+    // Expira
+    const expira = u.accessExpiresAt || '';
+
+    // Acciones
+    let acciones = `<a href="#" onclick="editarUsuario('${code}'); return false;" class="adm-user-action">Editar</a>`;
+    if (!isAdminUser) {
+      if (u.bloqueado) {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="toggleBloqueoUsuario('${code}', false); return false;" class="adm-user-action">Reactivar</a>`;
+      } else {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="toggleBloqueoUsuario('${code}', true); return false;" class="adm-user-action">Bloquear</a>`;
+      }
+      if (u.temporal || u.accessExpiresAt) {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="extendUserAccess('${code}'); return false;" class="adm-user-action">Extender</a>`;
+      }
+      acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="confirmarEliminarUsuario('${code}'); return false;" class="adm-user-action danger">Eliminar</a>`;
+    }
+
+    return `
+      <div class="adm-user-item">
+        <div class="adm-user-name">${nombreCompleto}</div>
+        <div class="adm-user-status">
+          <span class="adm-status-badge ${estadoClass}">${estadoText}</span>
+        </div>
+        <div class="adm-user-meta">
+          <span class="adm-user-meta-code">${code}</span> · ${rolText} · ${base}
+        </div>
+        ${expira ? `<div class="adm-user-expira">${expira}</div>` : '<div class="adm-user-expira"></div>'}
+        <div class="adm-user-actions">${acciones}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Actualizar contador
+  const total = all.length;
+  const shown = filtered.length;
+  if (counter) {
+    counter.textContent = shown === total
+      ? `${total} usuario${total !== 1 ? 's' : ''}`
+      : `${shown} de ${total} usuario${total !== 1 ? 's' : ''}`;
+  }
+}
+
+function updateAdminTechnical() {
+  const fbStatus = document.getElementById('adm-tech-firebase');
+  const version = document.getElementById('adm-tech-version');
+  const sync = document.getElementById('adm-tech-sync');
+
+  if (fbStatus) {
+    const isOk = typeof FB_URL !== 'undefined' && FB_URL;
+    fbStatus.textContent = isOk ? 'OK' : 'Error';
+    fbStatus.style.color = isOk ? 'var(--green)' : 'var(--red)';
+  }
+
+  if (version) {
+    version.textContent = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '3.2.0';
+  }
+
+  if (sync) {
+    const lastSync = localStorage.getItem(`pilotpay:${currentUser}:last_sync_at`);
+    if (lastSync) {
+      const date = new Date(parseInt(lastSync));
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      sync.textContent = `${hours}:${minutes}`;
+    } else {
+      sync.textContent = '—';
+    }
+  }
+}
+
+function scrollToUsersList() {
+  const searchInput = document.getElementById('adm-search');
+  if (searchInput) {
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => searchInput.focus(), 300);
+  }
+}
+
+function showDiagnostico() {
+  const panel = document.getElementById('adm-panel-diagnostico');
+  if (panel) {
+    panel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    // Inicializar monitor
+    if (typeof _initSyncMonitor === 'function') {
+      _initSyncMonitor();
+    }
+  }
+}
+
+function closeDiagnostico() {
+  const panel = document.getElementById('adm-panel-diagnostico');
+  if (panel) {
+    panel.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function showConfiguracion() {
+  const panel = document.getElementById('adm-panel-configuracion');
+  if (panel) {
+    panel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    // Renderizar avatares
+    if (typeof renderAdminAvatarGrid === 'function') {
+      renderAdminAvatarGrid('all');
+    }
+  }
+}
+
+function closeConfiguracion() {
+  const panel = document.getElementById('adm-panel-configuracion');
+  if (panel) {
+    panel.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// FIN ADMIN 2.0
 // ══════════════════════════════════════════════════════════════
 
 async function togglePerm(userCode, type, val, checked) {
@@ -8696,7 +8933,7 @@ async function crearUsuarioLocal() {
     const admTemp = document.getElementById('adm-temporal');
     if (admTemp) { admTemp.checked = false; onAdmTemporalChange(); }
 
-    renderAdmin();
+    renderAdminUsersList();
     alert(`✓ Usuario ${codigo} creado correctamente.\nTema asignado: ${defaultTheme}\nPrimer acceso: pestaña Perfil`);
   } catch(e) {
     alert(`Error al crear usuario: ${e.message}`);
@@ -8931,7 +9168,7 @@ async function toggleBloqueoUsuario(code, bloquear) {
   try {
     USERS[code].bloqueado = bloquear;
     await fbUpdate(`pilotpay/usuarios/${code}`, { bloqueado: bloquear });
-    renderAdmin();
+    renderAdminUsersList();
   } catch(e) {
     alert('Error al cambiar estado: ' + e.message);
   }
@@ -9838,7 +10075,7 @@ async function eliminarUsuario(code) {
     // Usuario eliminado exitosamente (no era el actual)
     savePermsToFirebase(); // Actualizar permisos en Firebase sin el usuario borrado
     closeDayModal();
-    renderAdmin();
+    renderAdminUsersList();
   }
   // Si selfDelete = true, ya se hizo logout automáticamente
   // Si !ok, ya se mostró error en purgeUser()
@@ -10031,7 +10268,7 @@ function showTab(name) {
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar')  checkApiKeyCard();
   if (name === 'config')    renderConfig();
-  if (name === 'admin')     { adminTab('dashboard'); }
+  if (name === 'admin')     { initAdmin(); }
   if (name === 'variables') varsActualizarMesEsperado();
   if (name === 'historial') renderHistorial();
   if (name === 'dashboard') renderDashboard();
