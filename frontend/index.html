@@ -21955,44 +21955,90 @@ window.PILOTPAY_BACKEND_READY = true;
 // ANALYTICS — Error tracking
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-window.addEventListener('error', function(event) {
-  if (typeof PilotPayAnalytics === 'undefined') return;
+// FIX 1: Guard contra error loop infinito
+// FIX 2: Rate limit de errores (max 10/minuto)
+(function() {
+  let isTrackingError = false;
+  let errorCount = 0;
+  let errorWindowStart = Date.now();
+  const MAX_ERRORS_PER_MINUTE = 10;
+  const ERROR_WINDOW_MS = 60000;
 
-  // Sanitizar mensaje de error (eliminar datos sensibles)
-  let errorMessage = event.message || 'Unknown error';
-  errorMessage = errorMessage.substring(0, 200); // Limitar longitud
+  window.addEventListener('error', function(event) {
+    if (typeof PilotPayAnalytics === 'undefined') return;
 
-  // Detectar módulo desde stack trace o filename
-  let module = 'unknown';
-  if (event.filename) {
-    if (event.filename.includes('parser')) module = 'parser';
-    else if (event.filename.includes('audit')) module = 'audit';
-    else if (event.filename.includes('calc')) module = 'calc';
-    else if (event.filename.includes('sync') || event.filename.includes('Store')) module = 'sync';
-  }
+    // FIX 1: Prevenir loop infinito
+    if (isTrackingError) return;
 
-  PilotPayAnalytics.track('error_occurred', {
-    module: module,
-    errorType: event.error?.name || 'Error',
-    errorMessage: errorMessage,
-    fatal: false,
-    line: event.lineno,
-    column: event.colno
+    // FIX 2: Rate limit
+    const now = Date.now();
+    if (now - errorWindowStart > ERROR_WINDOW_MS) {
+      errorCount = 0;
+      errorWindowStart = now;
+    }
+    if (errorCount >= MAX_ERRORS_PER_MINUTE) return;
+
+    isTrackingError = true;
+    try {
+      errorCount++;
+
+      // Sanitizar mensaje de error (eliminar datos sensibles)
+      let errorMessage = event.message || 'Unknown error';
+      errorMessage = errorMessage.substring(0, 200);
+
+      // Detectar módulo desde stack trace o filename
+      let module = 'unknown';
+      if (event.filename) {
+        if (event.filename.includes('parser')) module = 'parser';
+        else if (event.filename.includes('audit')) module = 'audit';
+        else if (event.filename.includes('calc')) module = 'calc';
+        else if (event.filename.includes('sync') || event.filename.includes('Store')) module = 'sync';
+      }
+
+      PilotPayAnalytics.track('error_occurred', {
+        module: module,
+        errorType: event.error?.name || 'Error',
+        errorMessage: errorMessage,
+        fatal: false,
+        line: event.lineno,
+        column: event.colno
+      });
+    } finally {
+      isTrackingError = false;
+    }
   });
-});
 
-window.addEventListener('unhandledrejection', function(event) {
-  if (typeof PilotPayAnalytics === 'undefined') return;
+  window.addEventListener('unhandledrejection', function(event) {
+    if (typeof PilotPayAnalytics === 'undefined') return;
 
-  let errorMessage = String(event.reason).substring(0, 200);
+    // FIX 1: Prevenir loop infinito
+    if (isTrackingError) return;
 
-  PilotPayAnalytics.track('error_occurred', {
-    module: 'promise',
-    errorType: 'UnhandledPromiseRejection',
-    errorMessage: errorMessage,
-    fatal: false
+    // FIX 2: Rate limit
+    const now = Date.now();
+    if (now - errorWindowStart > ERROR_WINDOW_MS) {
+      errorCount = 0;
+      errorWindowStart = now;
+    }
+    if (errorCount >= MAX_ERRORS_PER_MINUTE) return;
+
+    isTrackingError = true;
+    try {
+      errorCount++;
+
+      let errorMessage = String(event.reason).substring(0, 200);
+
+      PilotPayAnalytics.track('error_occurred', {
+        module: 'promise',
+        errorType: 'UnhandledPromiseRejection',
+        errorMessage: errorMessage,
+        fatal: false
+      });
+    } finally {
+      isTrackingError = false;
+    }
   });
-});
+})();
 
 </script>
 

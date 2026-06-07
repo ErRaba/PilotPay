@@ -35,6 +35,26 @@
   }
 
   /**
+   * FIX 5: Obtener o generar deviceId único
+   */
+  function getDeviceId() {
+    const DEVICE_ID_KEY = 'pilotpay_device_id';
+    let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+
+    if (!deviceId) {
+      // Generar deviceId único: timestamp + random
+      deviceId = 'device_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+      try {
+        localStorage.setItem(DEVICE_ID_KEY, deviceId);
+      } catch (e) {
+        console.warn('[Analytics] Cannot save deviceId to localStorage:', e);
+      }
+    }
+
+    return deviceId;
+  }
+
+  /**
    * Obtener clave localStorage para usuario actual
    */
   function getStorageKey() {
@@ -86,7 +106,7 @@
     const event = {
       eventId: generateEventId(),
       userId: window.currentUser,
-      deviceId: localStorage.getItem('pilotpay_device_id') || 'unknown',
+      deviceId: getDeviceId(),  // FIX 5: Usar getDeviceId() en lugar de lectura directa
       action: action,
       timestamp: Date.now(),
       date: new Date().toISOString().split('T')[0],
@@ -232,12 +252,20 @@
 
   /**
    * Verificar si hay auditoría en progreso al cambiar de módulo
+   *
+   * FIX 3: No disparar abandono en navegación a Historial/Dashboard
+   * (flujo normal: ver auditorías previas durante workflow)
    */
   function checkAbandonOnModuleChange(newModule) {
     // Módulos del workspace de auditoría
     const auditModules = ['variables', 'calcular', 'nomina', 'comparar'];
 
-    if (currentAuditSession && !auditModules.includes(newModule)) {
+    // FIX 3: Módulos permitidos que NO disparan abandono
+    const allowedModules = ['historial', 'dashboard'];
+
+    if (currentAuditSession &&
+        !auditModules.includes(newModule) &&
+        !allowedModules.includes(newModule)) {
       abandonAudit('module_change');
     }
   }
@@ -267,12 +295,10 @@
     }
   };
 
-  // Flush eventos al cerrar ventana/tab
+  // FIX 4: Eliminar abandono en beforeunload (causa falsos positivos en F5/refresh)
+  // La auditoría puede continuar tras reload desde MonthRecord.
+  // Solo flush eventos pendientes (aunque también puede fallar por timeout).
   window.addEventListener('beforeunload', function() {
-    // Si hay auditoría en progreso, marcar como abandonada
-    if (currentAuditSession) {
-      abandonAudit('window_close');
-    }
     flush();
   });
 
