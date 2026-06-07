@@ -1709,238 +1709,87 @@ input, select, textarea {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   USUARIOS 2.0 — Tabla compacta profesional
+   USUARIOS 2.0 — Tabla simplificada
    ══════════════════════════════════════════════════════════════ */
 
-/* Toolbar superior */
-.adm-users-toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.adm-users-search {
-  flex: 1;
-}
-.adm-users-filters {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.adm-filter-pill {
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: transparent;
-  color: var(--text3);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .2s;
-  white-space: nowrap;
-}
-.adm-filter-pill:hover {
-  border-color: var(--blue);
-  color: var(--text);
-}
-.adm-filter-pill.active {
-  background: var(--blue-dim);
-  border-color: var(--blue);
-  color: var(--blue2);
-  font-weight: 600;
-}
-
-/* Tabla usuarios completa */
-.adm-users-table-full {
+.adm-users-table-simple {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
 }
-.adm-users-table-full thead th {
+
+.adm-users-table-simple thead th {
   text-align: left;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text3);
-  padding: 10px 12px 10px 0;
-  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
-.adm-users-table-full tbody td {
-  padding: 12px 12px 12px 0;
+
+.adm-users-table-simple tbody td {
+  padding: 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text2);
   vertical-align: middle;
 }
-.adm-users-table-full tbody tr:last-child td {
+
+.adm-users-table-simple tbody tr:last-child td {
   border-bottom: none;
 }
-.adm-users-table-full tbody tr:hover {
+
+.adm-users-table-simple tbody tr:hover {
   background: var(--bg3);
 }
-.adm-users-table-full tbody tr.clickable {
-  cursor: pointer;
-}
 
-/* Columnas específicas */
-.adm-user-code-cell {
-  font-family: var(--mono);
-  font-weight: 600;
-  color: var(--text);
-  font-size: 12px;
-}
-.adm-user-name-cell {
-  color: var(--text);
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.adm-user-role-cell {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text3);
-  white-space: nowrap;
-}
-.adm-user-base-cell {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text3);
-}
-.adm-user-status-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-.adm-user-status-badge {
-  font-size: 9px;
-  font-family: var(--mono);
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 3px;
-  letter-spacing: 0.03em;
-}
-.adm-user-status-badge.admin {
-  background: var(--blue-dim);
-  color: var(--blue2);
-  border: 1px solid var(--blue);
-}
-.adm-user-type-cell {
-  font-size: 11px;
-  color: var(--text3);
-}
-.adm-user-expires-cell {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text3);
-}
-.adm-user-expires-cell.warning {
-  color: var(--amber2);
-  font-weight: 600;
-}
-
-/* Menú contextual */
-.adm-user-menu-btn {
+/* Acciones inline */
+.adm-user-action {
+  display: inline-block;
+  padding: 0;
   background: none;
   border: none;
-  color: var(--text3);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all .2s;
-}
-.adm-user-menu-btn:hover {
-  background: var(--bg3);
-  color: var(--text);
-}
-.adm-user-context-menu {
-  position: absolute;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  min-width: 180px;
-  z-index: 1000;
-  display: none;
-}
-.adm-user-context-menu.open {
-  display: block;
-}
-.adm-context-menu-item {
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--text);
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  transition: background .2s;
-}
-.adm-context-menu-item:last-child {
-  border-bottom: none;
-}
-.adm-context-menu-item:hover {
-  background: var(--bg3);
-}
-.adm-context-menu-item.danger {
-  color: var(--red);
-}
-.adm-context-menu-item.danger:hover {
-  background: var(--red-dim);
-}
-.adm-context-menu-separator {
-  height: 1px;
-  background: var(--border);
-  margin: 4px 0;
-}
-
-/* Paginación */
-.adm-users-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  font-size: 11px;
-  color: var(--text3);
-  font-family: var(--mono);
-}
-.adm-page-btn {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: transparent;
   color: var(--text2);
   font-size: 11px;
-  font-family: var(--mono);
   cursor: pointer;
-  transition: all .2s;
-}
-.adm-page-btn:hover:not(:disabled) {
-  border-color: var(--blue);
-  color: var(--blue2);
-}
-.adm-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.adm-page-btn.active {
-  background: var(--blue);
-  border-color: var(--blue);
-  color: #fff;
-  font-weight: 600;
+  text-decoration: none;
+  transition: color .2s;
 }
 
-/* Responsive */
-@media (min-width: 900px) {
-  .adm-users-toolbar {
-    flex-direction: row;
-    align-items: center;
+.adm-user-action:hover {
+  color: var(--blue2);
+  text-decoration: underline;
+}
+
+.adm-user-action.danger {
+  color: var(--text3);
+}
+
+.adm-user-action.danger:hover {
+  color: var(--red);
+}
+
+.adm-user-action-sep {
+  color: var(--border);
+  margin: 0 6px;
+  user-select: none;
+}
+
+/* Responsive móvil */
+@media (max-width: 640px) {
+  .adm-users-table-simple {
+    font-size: 11px;
   }
-  .adm-users-search {
-    max-width: 300px;
+
+  .adm-users-table-simple th,
+  .adm-users-table-simple td {
+    padding: 8px 6px;
+  }
+
+  .adm-user-action {
+    font-size: 10px;
   }
 }
 
@@ -4450,54 +4299,43 @@ Complemento de Base MAD: 1500"></textarea>
 
       </div><!-- /adm-panel-dashboard -->
 
-      <!-- ── SUB-TAB: USUARIOS 2.0 ── -->
+      <!-- ── SUB-TAB: USUARIOS ── -->
       <div id="adm-panel-usuarios" style="display:none">
 
-        <!-- Barra superior: Búsqueda + Filtros + Crear -->
-        <div class="adm-users-toolbar">
-          <div class="adm-users-search">
-            <input class="field-input" id="adm-buscar" type="text" placeholder="🔍 Buscar por nombre o código..."
-              oninput="renderUsersTable()" style="padding-left:14px">
-          </div>
-
-          <div class="adm-users-filters">
-            <!-- Pills filtro rápido -->
-            <button class="adm-filter-pill active" onclick="setUserFilter('all')" data-filter="all">Todos</button>
-            <button class="adm-filter-pill" onclick="setUserFilter('active')" data-filter="active">Activos</button>
-            <button class="adm-filter-pill" onclick="setUserFilter('blocked')" data-filter="blocked">Bloqueados</button>
-            <button class="adm-filter-pill" onclick="setUserFilter('expiring7')" data-filter="expiring7">Expiran 7d</button>
-            <button class="adm-filter-pill" onclick="setUserFilter('beta')" data-filter="beta">Beta</button>
-          </div>
-
-          <button class="btn-secondary" onclick="showCreateUserModal()" style="font-size:11px;padding:8px 14px;font-family:var(--mono)">
-            + Crear usuario
+        <!-- Barra superior: Búsqueda + Crear -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <input class="field-input" id="adm-buscar" type="text"
+            placeholder="🔍 Buscar por nombre o código..."
+            oninput="renderUsersTableSimple()"
+            style="flex:1;max-width:400px">
+          <button class="btn-secondary" onclick="crearUsuarioLocal()"
+            style="font-size:11px;padding:8px 14px;font-family:var(--mono)">
+            + Dar acceso
           </button>
         </div>
 
-        <!-- Tabla usuarios -->
+        <!-- Tabla simple -->
         <div class="adm-section">
-          <div class="adm-users-table-wrap">
-            <table class="adm-users-table-full">
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Rol</th>
-                  <th>Base</th>
-                  <th>Estado</th>
-                  <th>Tipo</th>
-                  <th>Expira</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="adm-users-tbody-full">
-                <tr><td colspan="8" class="adm-empty">Cargando usuarios...</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <table class="adm-users-table-simple">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Rol</th>
+                <th>Base</th>
+                <th>Estado</th>
+                <th>Expira</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="adm-users-tbody-simple">
+              <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">Cargando usuarios...</td></tr>
+            </tbody>
+          </table>
 
-          <!-- Paginación -->
-          <div id="adm-users-pagination" class="adm-users-pagination"></div>
+          <!-- Contador -->
+          <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--text3)">
+            <span id="adm-users-count">0 usuarios</span>
+          </div>
         </div>
 
       </div><!-- /adm-panel-usuarios -->
@@ -8146,7 +7984,7 @@ function adminTab(tab) {
 
   // Acciones específicas por tab
   if (tab === 'dashboard') renderAdminDashboard();
-  if (tab === 'usuarios') renderUsersTable();
+  if (tab === 'usuarios') renderUsersTableSimple();
   if (tab === 'avatares') renderAdminAvatarGrid('all');
   if (tab === 'monitor')  _initSyncMonitor();
 }
@@ -8606,176 +8444,32 @@ function adminAddAvatar() {
   setTimeout(() => { st.textContent = ''; }, 3000);
 }
 
+// ── LEGACY: renderAdmin redirect ──
 function renderAdmin() {
-  if (!isAdmin()) return;
-  const el = document.getElementById('admin-users-list');
-  if (!el) return;
-
-  // Banner de estado degradado: USERS proviene de fallback temporal
-  const _warnId = 'adm-fallback-warning';
-  let _warnEl = document.getElementById(_warnId);
-  if (_USERS_FROM_FALLBACK) {
-    if (!_warnEl) {
-      _warnEl = document.createElement('div');
-      _warnEl.id = _warnId;
-      _warnEl.style.cssText = 'color:var(--red,#e05);background:rgba(220,0,60,.08);border:1px solid var(--red,#e05);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-family:var(--mono,monospace);line-height:1.5';
-      el.parentNode.insertBefore(_warnEl, el);
-    }
-    _warnEl.style.display = 'block';
-    _warnEl.textContent = 'Lista de usuarios no disponible desde Firebase (fallback temporal). Mostrando solo datos locales. Creación y edición de usuarios desactivadas hasta restaurar conexión.';
-  } else if (_warnEl) {
-    _warnEl.style.display = 'none';
+  // Redirigir a nueva tabla simplificada
+  if (typeof renderUsersTableSimple === 'function') {
+    renderUsersTableSimple();
   }
-
-  const buscar = (document.getElementById('adm-buscar')?.value || '').toLowerCase().trim();
-
-  // ESH siempre primero, resto ordenado por fecha de ingreso
-  const all = Object.entries(USERS);
-  const esh  = all.find(([c]) => c === ADMIN_CODE);
-  const rest = all
-    .filter(([c]) => c !== ADMIN_CODE)
-    .filter(([code, u]) => {
-      if (!buscar) return true;
-      return code.toLowerCase().includes(buscar)
-        || (u.name||'').toLowerCase().includes(buscar)
-        || (u.apellidos||'').toLowerCase().includes(buscar);
-    })
-    .sort(([,a],[,b]) => {
-      if (a.ingreso && b.ingreso) return a.ingreso.localeCompare(b.ingreso);
-      return a.ingreso ? -1 : b.ingreso ? 1 : 0;
-    });
-
-  const sorted = esh ? [esh, ...rest] : rest;
-
-  if (!sorted.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">
-      ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios registrados'}</div>`;
-    return;
-  }
-
-  el.innerHTML = sorted.map(([code, u]) => {
-    const isAdmin = code === ADMIN_CODE;
-    const userPerms = isAdmin
-      ? { funciones: ['CMD','COP','SCC','CC'], bases: ['GC','TFN','MAD'] }
-      : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
-
-    // Permisos extra — capacidades adicionales más allá de la identidad real
-    const idBase    = getBaseCode(u.base);
-    const extraFn   = isAdmin ? [] : userPerms.funciones.filter(f => f !== u.funcion);
-    const extraBase = isAdmin ? [] : userPerms.bases.filter(b => b !== idBase);
-    const extraItems = [...extraFn, ...extraBase].map(x =>
-      `<span style="font-size:10px;font-family:var(--mono);color:var(--blue2);
-        background:var(--blue-dim);padding:1px 6px;border-radius:3px;margin-right:3px">+${x}</span>`
-    ).join('');
-
-    const fnIcon     = u.funcion;
-    const ingresoStr = u.ingreso ? ` · Alta: ${u.ingreso}` : '';
-    const bloqBadge  = u.bloqueado
-      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">BLOQ.</span>`
-      : '';
-    const tempBadge  = (!u.bloqueado && u.temporal && u.accessExpiresAt)
-      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);background:var(--amber-dim);padding:2px 6px;border-radius:4px">⏰ Temporal hasta ${u.accessExpiresAt}</span>`
-      : '';
-
-    return `
-    <div class="card" style="margin-bottom:10px;${u.bloqueado?'opacity:0.7':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name||''} ${u.apellidos||''}</div>
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px">
-            <span style="color:var(--blue2)">${code}</span> · ${fnIcon} · N${u.nivel}${ingresoStr}
-          </div>
-          ${(bloqBadge || tempBadge) ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">${bloqBadge}${tempBadge}</div>` : ''}
-          ${(!isAdmin && extraItems) ? `<div style="margin-top:5px;font-size:10px;font-family:var(--mono);color:var(--text3)">Permisos extra: ${extraItems}</div>` : ''}
-        </div>
-        ${isAdmin
-          ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);flex-shrink:0">ADMIN</span>`
-          : `<button onclick="confirmarEliminarUsuario('${code}')"
-              style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
-              font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono);flex-shrink:0;margin-left:8px">×</button>`}
-      </div>
-      ${isAdmin ? `
-        <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-          <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
-            background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer">Editar perfil</button>
-        </div>` : `
-        <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap">
-          <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer;white-space:nowrap">Identidad</button>
-          <button onclick="gestionarPermisos('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:var(--bg3);border:1px solid var(--border);
-            color:var(--text2);border-radius:5px;cursor:pointer;white-space:nowrap">Permisos</button>
-          <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
-            border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            border-radius:5px;cursor:pointer;white-space:nowrap">${u.bloqueado ? 'Desbloquear' : 'Bloquear'}</button>
-        </div>`}
-    </div>`;
-  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
-// USUARIOS 2.0 — Tabla compacta + Filtros + Menú contextual
+// USUARIOS 2.0 — Tabla simplificada
 // ══════════════════════════════════════════════════════════════
 
-// ── Estado de filtros y paginación ──
-let _usersFilter = 'all';
-let _usersPage = 1;
-const _usersPerPage = 10;
-
-// ── SET USER FILTER ──
-function setUserFilter(filter) {
-  _usersFilter = filter;
-  _usersPage = 1; // Reset a página 1
-
-  // Actualizar pills
-  document.querySelectorAll('.adm-filter-pill').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.filter === filter);
-  });
-
-  renderUsersTable();
-}
-
-// ── RENDER USERS TABLE ──
-function renderUsersTable() {
+function renderUsersTableSimple() {
   if (!isAdmin()) return;
-  const tbody = document.getElementById('adm-users-tbody-full');
+  const tbody = document.getElementById('adm-users-tbody-simple');
   if (!tbody) return;
 
   const buscar = (document.getElementById('adm-buscar')?.value || '').toLowerCase().trim();
 
   // Filtrar usuarios
   const all = Object.entries(USERS);
-
-  let filtered = all.filter(([code, u]) => {
-    // Búsqueda
-    if (buscar) {
-      const match = code.toLowerCase().includes(buscar)
-        || (u.name||'').toLowerCase().includes(buscar)
-        || (u.apellidos||'').toLowerCase().includes(buscar);
-      if (!match) return false;
-    }
-
-    // Filtros
-    if (_usersFilter === 'active') return !u.bloqueado;
-    if (_usersFilter === 'blocked') return u.bloqueado;
-    if (_usersFilter === 'beta') return u.temporal && u.accessExpiresAt;
-    if (_usersFilter === 'expiring7') {
-      if (!u.accessExpiresAt) return false;
-      const exp = new Date(u.accessExpiresAt);
-      const now = new Date();
-      const days = Math.ceil((exp - now) / (24 * 60 * 60 * 1000));
-      return days > 0 && days <= 7;
-    }
-
-    return true; // 'all'
+  const filtered = all.filter(([code, u]) => {
+    if (!buscar) return true;
+    return code.toLowerCase().includes(buscar)
+      || (u.name || '').toLowerCase().includes(buscar)
+      || (u.apellidos || '').toLowerCase().includes(buscar);
   });
 
   // Ordenar: ESH primero, resto por fecha ingreso
@@ -8789,197 +8483,95 @@ function renderUsersTable() {
 
   const sorted = esh ? [esh, ...rest] : rest;
 
-  // Paginación
-  const totalPages = Math.ceil(sorted.length / _usersPerPage);
-  const start = (_usersPage - 1) * _usersPerPage;
-  const end = start + _usersPerPage;
-  const paginated = sorted.slice(start, end);
-
   // Renderizar tabla
-  if (paginated.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="adm-empty">
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">
       ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios'}
     </td></tr>`;
-    document.getElementById('adm-users-pagination').innerHTML = '';
+    document.getElementById('adm-users-count').textContent = '0 usuarios';
     return;
   }
 
-  tbody.innerHTML = paginated.map(([code, u]) => {
+  tbody.innerHTML = sorted.map(([code, u]) => {
     const isAdminUser = code === ADMIN_CODE;
 
-    // Nombre abreviado
+    // Usuario: código · nombre
     const nombre = u.name || '';
-    const apellido = (u.apellidos || '').split(' ')[0] || ''; // Solo primer apellido
+    const apellido = (u.apellidos || '').split(' ')[0] || '';
     const nombreCompleto = `${nombre} ${apellido}`.trim();
-    const nombreCorto = nombreCompleto.length > 20 ? nombreCompleto.substring(0, 18) + '...' : nombreCompleto;
+    const nombreCorto = nombreCompleto.length > 25 ? nombreCompleto.substring(0, 23) + '...' : nombreCompleto;
+    const usuario = `<span style="font-family:var(--mono);font-weight:600;color:var(--text)">${code}</span> · ${nombreCorto}`;
 
-    // Rol
-    const rol = `${u.funcion}·${u.nivel}`;
+    // Rol: función · Nivel
+    const rol = `${u.funcion} · N${u.nivel}`;
+
+    // Base
+    const base = u.base || '—';
 
     // Estado
-    let statusDot = 'active';
-    let statusText = 'Activo';
-    let statusBadge = '';
-
-    if (u.bloqueado) {
-      statusDot = 'blocked';
-      statusText = 'Bloqueado';
-    } else if (u.accessExpiresAt) {
-      const exp = new Date(u.accessExpiresAt);
-      const days = Math.ceil((exp - new Date()) / (24 * 60 * 60 * 1000));
-      if (days > 0 && days <= 7) {
-        statusDot = 'expiring';
-        statusText = `Expira ${days}d`;
-      }
-    }
-
+    let estado = '';
     if (isAdminUser) {
-      statusBadge = '<span class="adm-user-status-badge admin">A</span>';
+      estado = '<span style="color:var(--amber2)">Admin</span>';
+    } else if (u.bloqueado) {
+      estado = '<span style="color:var(--red)">Bloqueado</span>';
+    } else if (u.temporal && u.accessExpiresAt) {
+      estado = '<span style="color:var(--amber2)">Temporal</span>';
+    } else {
+      estado = '<span style="color:var(--green)">Activo</span>';
     }
-
-    // Tipo
-    const tipo = isAdminUser ? 'Admin' : (u.temporal ? 'Beta' : 'Permanente');
 
     // Expira
     const expira = u.accessExpiresAt || '—';
 
+    // Acciones
+    let acciones = `<a class="adm-user-action" onclick="editarUsuario('${code}')">Editar</a>`;
+    if (!isAdminUser) {
+      if (u.bloqueado) {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', false); renderUsersTableSimple()">Reactivar</a>`;
+      } else {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', true); renderUsersTableSimple()">Bloquear</a>`;
+      }
+      if (u.temporal && u.accessExpiresAt) {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="extendUserAccess('${code}')">Extender</a>`;
+      }
+      acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action danger" onclick="confirmarEliminarUsuario('${code}')">Eliminar</a>`;
+    }
+
     return `
-      <tr class="clickable" onclick="showUserModal('${code}')">
-        <td class="adm-user-code-cell">${code}</td>
-        <td class="adm-user-name-cell" title="${nombreCompleto}">${nombreCorto}</td>
-        <td class="adm-user-role-cell">${rol}</td>
-        <td class="adm-user-base-cell">${u.base || '—'}</td>
-        <td>
-          <div class="adm-user-status-cell">
-            <span class="adm-status-dot ${statusDot}"></span>
-            ${statusText}
-            ${statusBadge}
-          </div>
-        </td>
-        <td class="adm-user-type-cell">${tipo}</td>
-        <td class="adm-user-expires-cell ${statusDot === 'expiring' ? 'warning' : ''}">${expira}</td>
-        <td onclick="event.stopPropagation()">
-          <button class="adm-user-menu-btn" onclick="showUserContextMenu(event, '${code}')">
-            ⋮
-          </button>
-        </td>
+      <tr>
+        <td>${usuario}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${rol}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${base}</td>
+        <td>${estado}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${expira}</td>
+        <td>${acciones}</td>
       </tr>
     `;
   }).join('');
 
-  // Renderizar paginación
-  renderUsersPagination(totalPages, sorted.length);
+  // Actualizar contador
+  const total = all.length;
+  const shown = filtered.length;
+  document.getElementById('adm-users-count').textContent =
+    shown === total ? `${total} usuarios` : `${shown} de ${total} usuarios`;
 }
 
-// ── RENDER USERS PAGINATION ──
-function renderUsersPagination(totalPages, totalUsers) {
-  const container = document.getElementById('adm-users-pagination');
-  if (!container || totalPages <= 1) {
-    container.innerHTML = '';
-    return;
-  }
-
-  let html = '';
-
-  // Botón anterior
-  html += `<button class="adm-page-btn" ${_usersPage === 1 ? 'disabled' : ''} onclick="goToUserPage(${_usersPage - 1})">←</button>`;
-
-  // Páginas
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || Math.abs(i - _usersPage) <= 1) {
-      html += `<button class="adm-page-btn ${i === _usersPage ? 'active' : ''}" onclick="goToUserPage(${i})">${i}</button>`;
-    } else if (Math.abs(i - _usersPage) === 2) {
-      html += `<span>...</span>`;
-    }
-  }
-
-  // Botón siguiente
-  html += `<button class="adm-page-btn" ${_usersPage === totalPages ? 'disabled' : ''} onclick="goToUserPage(${_usersPage + 1})">→</button>`;
-
-  // Info
-  html += `<span style="margin-left:12px">Mostrando ${(_usersPage - 1) * _usersPerPage + 1}-${Math.min(_usersPage * _usersPerPage, totalUsers)} de ${totalUsers}</span>`;
-
-  container.innerHTML = html;
-}
-
-// ── GO TO USER PAGE ──
-function goToUserPage(page) {
-  _usersPage = page;
-  renderUsersTable();
-}
-
-// ── SHOW USER CONTEXT MENU ──
-function showUserContextMenu(event, code) {
-  event.stopPropagation();
-
-  // Cerrar menú anterior si existe
-  const existing = document.querySelector('.adm-user-context-menu');
-  if (existing) existing.remove();
-
+// ── EXTEND USER ACCESS ──
+function extendUserAccess(code) {
   const u = USERS[code];
-  const isAdminUser = code === ADMIN_CODE;
+  if (!u) return;
 
-  // Crear menú
-  const menu = document.createElement('div');
-  menu.className = 'adm-user-context-menu open';
+  const currentExp = u.accessExpiresAt || new Date().toISOString().split('T')[0];
+  const newDate = prompt(
+    `Extender acceso de ${code}\nActual: ${currentExp}\n\nNueva fecha (YYYY-MM-DD):`,
+    currentExp
+  );
 
-  let html = '';
-  html += `<div class="adm-context-menu-item" onclick="showUserModal('${code}')">Ver ficha</div>`;
-  html += `<div class="adm-context-menu-item" onclick="editarUsuario('${code}'); closeContextMenu()">Editar</div>`;
-  html += `<div class="adm-context-menu-separator"></div>`;
+  if (!newDate) return;
 
-  if (!isAdminUser) {
-    if (u.bloqueado) {
-      html += `<div class="adm-context-menu-item" onclick="toggleBloqueoUsuario('${code}', false); closeContextMenu()">Reactivar</div>`;
-    } else {
-      html += `<div class="adm-context-menu-item" onclick="toggleBloqueoUsuario('${code}', true); closeContextMenu()">Bloquear</div>`;
-    }
-
-    if (u.temporal && u.accessExpiresAt) {
-      html += `<div class="adm-context-menu-item" onclick="extendBetaUser('${code}'); closeContextMenu()">Extender beta</div>`;
-    }
-  }
-
-  html += `<div class="adm-context-menu-separator"></div>`;
-  html += `<div class="adm-context-menu-item" onclick="gestionarPermisos('${code}'); closeContextMenu()">Ver permisos</div>`;
-
-  if (!isAdminUser) {
-    html += `<div class="adm-context-menu-separator"></div>`;
-    html += `<div class="adm-context-menu-item danger" onclick="confirmarEliminarUsuario('${code}'); closeContextMenu()">Eliminar...</div>`;
-  }
-
-  menu.innerHTML = html;
-
-  // Posicionar menú
-  document.body.appendChild(menu);
-  const rect = event.target.getBoundingClientRect();
-  menu.style.position = 'fixed';
-  menu.style.top = `${rect.bottom + 4}px`;
-  menu.style.left = `${rect.left - menu.offsetWidth + rect.width}px`;
-
-  // Cerrar al hacer click fuera
-  setTimeout(() => {
-    document.addEventListener('click', closeContextMenu);
-  }, 0);
-}
-
-// ── CLOSE CONTEXT MENU ──
-function closeContextMenu() {
-  const menu = document.querySelector('.adm-user-context-menu');
-  if (menu) menu.remove();
-  document.removeEventListener('click', closeContextMenu);
-}
-
-// ── EXTEND BETA USER (placeholder) ──
-function extendBetaUser(code) {
-  // TODO: Implementar en Fase 3
-  alert(`Extender beta de ${code} — Pendiente implementar`);
-}
-
-// ── SHOW USER MODAL (placeholder Fase 2) ──
-function showUserModal(code) {
-  // TODO: Implementar ficha consolidada en Fase 2
-  alert(`Ficha de usuario ${code} — Pendiente implementar en Fase 2`);
+  USERS[code].accessExpiresAt = newDate;
+  fbUpdate(`pilotpay/usuarios/${code}`, { accessExpiresAt: newDate });
+  renderUsersTableSimple();
 }
 
 // ══════════════════════════════════════════════════════════════
