@@ -6287,6 +6287,7 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
 <script src="js/fiscalHistory.js"></script>
 <script src="js/pilotPayLocalDB.js"></script>
 <script src="js/pilotPayDebug.js"></script>
+<script src="js/pilotPayAnalytics.js"></script>
 <script src="js/normativa/meta/norm_layers.js"></script>
 <script src="js/normativa/meta/norm_docs.js"></script>
 <script src="js/normativa/meta/norm_ambiguedades.js"></script>
@@ -6403,6 +6404,18 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
       // No-op si flag apagado. Append-only: path único por record.id.
       if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
         PilotPayStore.notifyAuditRecord(record);
+      }
+
+      // Analytics: auditoría completada
+      if (typeof PilotPayAnalytics !== 'undefined') {
+        PilotPayAnalytics.completeAudit({
+          mes: record.mes,
+          anio: record.anio,
+          hasDiferencias: record.nDiscrepancias > 0,
+          numDiferencias: record.nDiscrepancias,
+          parser: nomData?.metadata?.parserVersion || 'v1',
+          parserSuccess: nomData?.metadata?.parserSuccess !== false
+        });
       }
 
       /* Actualizar badge de count si la pestaña existe */
@@ -10247,6 +10260,12 @@ function showTab(name) {
     console.warn('[PilotPay] showTab("admin"): acceso denegado');
     return;
   }
+
+  // Analytics: detectar abandono de auditoría si sale del workspace
+  if (typeof PilotPayAnalytics !== 'undefined') {
+    PilotPayAnalytics.checkAbandonOnModuleChange(name);
+  }
+
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   // Seleccionar por atributo onclick en lugar de por índice — inmune a reordenaciones.
@@ -10263,6 +10282,11 @@ function showTab(name) {
     if (_wc) _wc.scrollTop = 0;
   }
   _syncLeftPanel();
+
+  // Analytics: track module view
+  if (typeof PilotPayAnalytics !== 'undefined') {
+    PilotPayAnalytics.track('module_view', { module: name });
+  }
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
@@ -16356,6 +16380,14 @@ function varsConfirmarPeriodo(confirmado) {
     varsPeriodoConfirmado = true;
     varsMostrarResultado();
     _varsNotifyStore();
+
+    // Analytics: iniciar sesión de auditoría
+    if (typeof PilotPayAnalytics !== 'undefined' && varsData._periodoFin) {
+      const nomMes = varsGetNominaMes(varsData._periodoFin);
+      const anio = varsData._periodoFin.getFullYear();
+      PilotPayAnalytics.startAuditSession(nomMes, anio);
+      PilotPayAnalytics.updateAuditPhase('variables', true);
+    }
   } else {
     document.getElementById('vars-periodo-edit').style.display = 'block';
     // Pre-rellenar con fechas detectadas si existen
@@ -21918,6 +21950,50 @@ window.PILOTPAY_BACKEND_READY = true;
     }).join('');
   }
 })();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ANALYTICS — Error tracking
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+window.addEventListener('error', function(event) {
+  if (typeof PilotPayAnalytics === 'undefined') return;
+
+  // Sanitizar mensaje de error (eliminar datos sensibles)
+  let errorMessage = event.message || 'Unknown error';
+  errorMessage = errorMessage.substring(0, 200); // Limitar longitud
+
+  // Detectar módulo desde stack trace o filename
+  let module = 'unknown';
+  if (event.filename) {
+    if (event.filename.includes('parser')) module = 'parser';
+    else if (event.filename.includes('audit')) module = 'audit';
+    else if (event.filename.includes('calc')) module = 'calc';
+    else if (event.filename.includes('sync') || event.filename.includes('Store')) module = 'sync';
+  }
+
+  PilotPayAnalytics.track('error_occurred', {
+    module: module,
+    errorType: event.error?.name || 'Error',
+    errorMessage: errorMessage,
+    fatal: false,
+    line: event.lineno,
+    column: event.colno
+  });
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+  if (typeof PilotPayAnalytics === 'undefined') return;
+
+  let errorMessage = String(event.reason).substring(0, 200);
+
+  PilotPayAnalytics.track('error_occurred', {
+    module: 'promise',
+    errorType: 'UnhandledPromiseRejection',
+    errorMessage: errorMessage,
+    fatal: false
+  });
+});
+
 </script>
 
 </body>
