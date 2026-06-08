@@ -312,6 +312,24 @@
     // ── nominaV2: estructura completa serializada ──────────────────────────────
     var nominaV2 = nomData._nominaV2 ? _serializeNominaV2(nomData._nominaV2) : null;
 
+    // ── irpfMetadata: metadata de recálculo IRPF (Fase 1 MVP) ──────────────────
+    var irpfMetadata = null;
+
+    if (nomData._nominaV2 && nomData._nominaV2.deducciones && nomData._nominaV2.deducciones.irpf_pct != null) {
+      var irpfDetectado = nomData._nominaV2.deducciones.irpf_pct;
+      var irpfInput = (typeof document !== 'undefined') ? document.getElementById('irpf') : null;
+      var irpfUsado = irpfInput ? (parseFloat(irpfInput.value) || 0) : 0;
+      var diferencia = Math.abs(irpfDetectado - irpfUsado);
+      var coincideConDetectado = diferencia < 0.01;  // IRPF_MATCH_TOLERANCE
+
+      irpfMetadata = {
+        irpfDetectado: irpfDetectado,
+        irpfUsado: irpfUsado,
+        diferencia: diferencia,
+        coincideConDetectado: coincideConDetectado
+      };
+    }
+
     return {
       id             : Date.now() + '_' + Math.random().toString(36).slice(2, 7),
       fechaAuditoria : new Date().toISOString(),
@@ -328,7 +346,8 @@
       nDiscrepancias : discrepancias.length,
       discrepancias  : discrepancias,
       datosExtraidos : datosExtraidos,
-      nominaV2       : nominaV2
+      nominaV2       : nominaV2,
+      irpfMetadata   : irpfMetadata
     };
   }
 

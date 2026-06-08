@@ -6058,6 +6058,11 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
       const record = auditEngine.buildAuditRecord(nomData, diffs, totalDelta, errores, avisos, ctx);
       console.log('[auditEngine] buildAuditRecord →', record.estado, '/', record.nDiscrepancias, 'discrepancias');
 
+      // [IRPF AUTO-DETECT] Log metadata si existe
+      if (record.irpfMetadata) {
+        console.log('[IRPF AUTO-DETECT] Metadata guardado:', record.irpfMetadata);
+      }
+
       const list = hstLoad();
       list.unshift(record);               // más reciente primero
       if (list.length > MAX_RECORDS) list.splice(MAX_RECORDS);
@@ -12541,6 +12546,152 @@ function resetComparativa() {
 const _MESES_IDX = { Enero:1, Febrero:2, Marzo:3, Abril:4, Mayo:5, Junio:6,
   Julio:7, Agosto:8, Septiembre:9, Octubre:10, Noviembre:11, Diciembre:12 };
 
+// ══════════════════════════════════════════════════════════════════════════
+// IRPF AUTO-DETECT — Constantes de configuración
+// ══════════════════════════════════════════════════════════════════════════
+
+const IRPF_DETECTION_THRESHOLD = 0.5;
+// Diferencia mínima (puntos porcentuales) para mostrar aviso al usuario
+
+const IRPF_MATCH_TOLERANCE = 0.01;
+// Tolerancia para considerar que IRPF actual coincide con detectado
+
+const IRPF_MIN_VALID = 10;
+// IRPF mínimo válido (validación parsing)
+
+const IRPF_MAX_VALID = 50;
+// IRPF máximo válido (validación parsing)
+
+// ══════════════════════════════════════════════════════════════════════════
+// IRPF AUTO-DETECT — Funciones
+// ══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Detecta diferencia entre IRPF calculadora vs IRPF detectado
+ * Versión simplificada: comparación directa sin estado
+ *
+ * @param {object} nomData - Datos nómina con _nominaV2
+ * @returns {object|null} - Metadata IRPF o null si no aplica
+ */
+function detectIRPFDifference(nomData) {
+  // Validar nominaV2 y campo irpf_pct
+  if (!nomData._nominaV2 || !nomData._nominaV2.deducciones) {
+    return null;
+  }
+
+  const irpfDetectado = nomData._nominaV2.deducciones.irpf_pct;
+
+  // Validar que existe y es número
+  if (irpfDetectado == null || typeof irpfDetectado !== 'number') {
+    return null;
+  }
+
+  // Validar rango (10% - 50%)
+  if (irpfDetectado < IRPF_MIN_VALID || irpfDetectado > IRPF_MAX_VALID) {
+    console.warn('[IRPF AUTO-DETECT] IRPF fuera de rango:', irpfDetectado);
+    return null;
+  }
+
+  // Leer IRPF actual de input
+  const irpfInput = document.getElementById('irpf');
+  if (!irpfInput) {
+    return null;
+  }
+
+  const irpfActual = parseFloat(irpfInput.value) || 0;
+  const diferencia = Math.abs(irpfDetectado - irpfActual);
+
+  // Si diferencia < tolerancia, consideramos que ya coinciden
+  if (diferencia < IRPF_MATCH_TOLERANCE) {
+    return null;  // No mostrar aviso
+  }
+
+  // Solo retornar metadata si diferencia >= umbral
+  if (diferencia < IRPF_DETECTION_THRESHOLD) {
+    return null;  // Diferencia insignificante, no mostrar aviso
+  }
+
+  return {
+    irpfActual: irpfActual,
+    irpfDetectado: irpfDetectado,
+    diferencia: diferencia
+  };
+}
+
+/**
+ * Renderiza aviso de diferencia IRPF
+ * @param {object} metadata - De detectIRPFDifference()
+ * @returns {string} - HTML del aviso
+ */
+function renderIRPFWarning(metadata) {
+  const { irpfActual, irpfDetectado, diferencia } = metadata;
+
+  return `
+    <div id="irpf-warning" class="alert" style="background:var(--blue-dim);border-color:var(--blue);margin-bottom:24px">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-content">
+        <div class="alert-title" style="color:var(--blue)">IRPF diferente detectado</div>
+        <div class="alert-text" style="margin-top:8px;line-height:1.5">
+          PilotPay ha detectado que la empresa aplicó un IRPF distinto al usado en tu simulación.
+          <br><br>
+          <strong>IRPF simulación:</strong> ${irpfActual.toFixed(2)} %<br>
+          <strong>IRPF nómina:</strong> ${irpfDetectado.toFixed(2)} %<br>
+          <strong>Diferencia:</strong> ${diferencia.toFixed(2)} puntos
+          <br><br>
+          Esto puede generar diferencias artificiales en la retención IRPF y en el líquido neto.
+        </div>
+        <div style="margin-top:16px">
+          <button
+            onclick="recalcWithDetectedIRPF()"
+            class="btn-primary"
+            style="background:var(--blue);border-color:var(--blue)"
+          >
+            Recalcular con IRPF real (${irpfDetectado.toFixed(2)} %)
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Recalcula simulación con IRPF detectado
+ * Versión simplificada: sin flags, solo actualiza y re-renderiza
+ */
+window.recalcWithDetectedIRPF = function() {
+  if (!nomDataCached || !nomDataCached._nominaV2) {
+    alert('Error: No hay nómina cargada');
+    return;
+  }
+
+  const irpfDetectado = nomDataCached._nominaV2.deducciones.irpf_pct;
+
+  if (irpfDetectado == null) {
+    alert('Error: IRPF no detectado en nómina');
+    return;
+  }
+
+  // Actualizar input #irpf
+  const irpfInput = document.getElementById('irpf');
+  if (!irpfInput) {
+    alert('Error: Input IRPF no encontrado');
+    return;
+  }
+
+  irpfInput.value = irpfDetectado.toFixed(2);
+
+  // Recalcular nómina
+  recalc();
+
+  // Re-renderizar comparativa
+  // Como ahora #irpf == irpfDetectado, detectIRPFDifference() retornará null
+  // → No se mostrará aviso de nuevo
+  renderComparativa(nomDataCached);
+
+  // Scroll suave a comparativa
+  document.getElementById('comparativa-result').scrollIntoView({ behavior: 'smooth' });
+};
+
 function renderComparativa(nomData) {
   const r = calcResult;
   if (!r) {
@@ -12580,6 +12731,12 @@ function renderComparativa(nomData) {
   const totalDelta = auditEngine.computeTotalDelta(_classified);
   const _totalFmt  = totalDelta !== null ? fmtD(totalDelta) : 'No disponible';
   console.log('[auditEngine] classifyDiffs → errores:', errores.length, '/ avisos:', avisos.length, '/ totalDelta:', totalDelta);
+
+  // ── IRPF AUTO-DETECT ───────────────────────────────────────────────────────
+  const irpfMetadata = detectIRPFDifference(nomData);
+  if (irpfMetadata) {
+    console.log('[IRPF AUTO-DETECT] Diferencia detectada:', irpfMetadata);
+  }
 
   // ── BLOQUE EXPLICATIVO INTELIGENTE ────────────────────────────────────────
   // Construye una explicación causa→consecuencia en vez de listar todo igual.
@@ -12855,6 +13012,7 @@ function renderComparativa(nomData) {
   `;
 
   document.getElementById('comp-output').innerHTML = `
+    ${irpfMetadata ? renderIRPFWarning(irpfMetadata) : ''}
     ${alertHTML}
     ${trabajadorHTML}
     <div class="card">
