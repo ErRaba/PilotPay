@@ -264,7 +264,12 @@
 
     var ac = nomData.acumulados || {};
     var di = nomData.diasInfo   || {};
+    var ded = nomData.deducciones || {};
+
+    // ── datosExtraidos: campos legacy + campos V2 críticos ────────────────────
     var datosExtraidos = {};
+
+    // Campos legacy (10)
     if (tra.nif)           datosExtraidos.nif             = tra.nif;
     if (tra.nss)           datosExtraidos.nss             = tra.nss;
     if (tra.fecha_ingreso) datosExtraidos.fecha_ingreso   = tra.fecha_ingreso;
@@ -275,6 +280,37 @@
     if (ac.base_irpf)      datosExtraidos.acum_base_irpf  = ac.base_irpf;
     if (ac.irpf)           datosExtraidos.acum_irpf       = ac.irpf;
     if (di.diasTrabajados) datosExtraidos.dias_trabajados = di.diasTrabajados;
+
+    // Campos V2 críticos (+25)
+    if (ded.ss_cc_pct != null)    datosExtraidos.ss_cc_pct    = ded.ss_cc_pct;
+    if (ded.ss_mei_pct != null)   datosExtraidos.ss_mei_pct   = ded.ss_mei_pct;
+    if (ded.ss_dfp_pct != null)   datosExtraidos.ss_dfp_pct   = ded.ss_dfp_pct;
+    if (ded.ss_cc_base != null)   datosExtraidos.ss_cc_base   = ded.ss_cc_base;
+    if (ded.ss_mei_base != null)  datosExtraidos.ss_mei_base  = ded.ss_mei_base;
+    if (ded.ss_dfp_base != null)  datosExtraidos.ss_dfp_base  = ded.ss_dfp_base;
+    if (ded.irpf_base != null)    datosExtraidos.irpf_base    = ded.irpf_base;
+    if (ded.irpf_especie_pct != null) datosExtraidos.irpf_especie_pct = ded.irpf_especie_pct;
+    if (ded.irpf_especie_base != null) datosExtraidos.irpf_especie_base = ded.irpf_especie_base;
+    if (ac.cotiz_ss != null)      datosExtraidos.acum_cotiz_ss      = ac.cotiz_ss;
+    if (ac.base_esp_rep != null)  datosExtraidos.acum_base_esp_rep  = ac.base_esp_rep;
+    if (ac.irpf_esp_rep != null)  datosExtraidos.acum_irpf_esp_rep  = ac.irpf_esp_rep;
+    if (t.total_deducciones != null) datosExtraidos.total_deducciones = t.total_deducciones;
+
+    // Metadata V2
+    if (nomData._parserVersion) datosExtraidos.parser_version = nomData._parserVersion;
+    if (nomData._nominaV2 && nomData._nominaV2.confidence && nomData._nominaV2.confidence.global != null) {
+      datosExtraidos.confidence_global = nomData._nominaV2.confidence.global;
+    }
+    if (nomData._nominaV2 && nomData._nominaV2.raw && nomData._nominaV2.raw.parsingTimeMs != null) {
+      datosExtraidos.parsing_time_ms = nomData._nominaV2.raw.parsingTimeMs;
+    }
+    if (nomData._nominaV2 && nomData._nominaV2.tablaConceptos) {
+      datosExtraidos.n_conceptos = nomData._nominaV2.tablaConceptos.length;
+      datosExtraidos.n_desconocidos = nomData._nominaV2.tablaConceptos.filter(function(c) { return c.tipo === 'desconocido'; }).length;
+    }
+
+    // ── nominaV2: estructura completa serializada ──────────────────────────────
+    var nominaV2 = nomData._nominaV2 ? _serializeNominaV2(nomData._nominaV2) : null;
 
     return {
       id             : Date.now() + '_' + Math.random().toString(36).slice(2, 7),
@@ -291,7 +327,65 @@
       estado         : estado,
       nDiscrepancias : discrepancias.length,
       discrepancias  : discrepancias,
-      datosExtraidos : datosExtraidos
+      datosExtraidos : datosExtraidos,
+      nominaV2       : nominaV2
+    };
+  }
+
+
+  // ── SECCIÓN 6: SERIALIZACIÓN NÓMINA V2 ────────────────────────────────────
+  // Serializa la estructura completa V2 eliminando campos privados/grandes
+
+  /**
+   * Serializa nominaV2 completa sin campos de privacidad/tamaño.
+   * Elimina: raw.text, raw.lines, tablaConceptos[].rawLine, _debug con líneas.
+   *
+   * @param {object} v2 - estructura nominaV2 del parser
+   * @returns {object} - estructura serializada para persistencia
+   */
+  function _serializeNominaV2(v2) {
+    if (!v2) return null;
+
+    return {
+      empresa: v2.empresa || {},
+      trabajador: v2.trabajador || {},
+      periodo: v2.periodo || {},
+
+      tablaConceptos: (v2.tablaConceptos || []).map(function(c) {
+        return {
+          tipo: c.tipo,
+          subtipo: c.subtipo,
+          concepto: c.concepto,
+          unidades: c.unidades,
+          porcentaje: c.porcentaje,
+          base: c.base,
+          devengo: c.devengo,
+          retencion: c.retencion,
+          importe: c.importe,
+          especieInfo: c.especieInfo,
+          confidence: c.confidence
+          // NO incluir rawLine (privacidad)
+        };
+      }),
+
+      devengos: v2.devengos || {},
+      deducciones: v2.deducciones || {},
+      bases: v2.bases || {},
+      totales: v2.totales || {},
+      costeEmpresa: v2.costeEmpresa || {},
+      acumulados: v2.acumulados || {},
+      calendarioMensual: v2.calendarioMensual || {},
+      observaciones: v2.observaciones || {},
+
+      confidence: v2.confidence || {},
+      warnings: v2.warnings || [],
+
+      metadata: {
+        parsingTimeMs: (v2.raw && v2.raw.parsingTimeMs) || 0,
+        linesClassified: (v2._debug && v2._debug.linesClassified) || 0,
+        linesUnclassified: (v2._debug && v2._debug.linesUnclassified && v2._debug.linesUnclassified.length) || 0
+        // NO incluir las líneas completas de _debug (privacidad)
+      }
     };
   }
 
