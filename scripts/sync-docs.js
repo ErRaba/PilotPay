@@ -22,7 +22,6 @@ const DST  = path.join(ROOT, 'docs');
 // Archivos individuales a sincronizar (rutas relativas a SRC/DST)
 const FILES = [
   'index.html',
-  'migrate.html',
   'api-client.js',
 ];
 
