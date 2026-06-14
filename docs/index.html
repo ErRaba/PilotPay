@@ -1469,6 +1469,378 @@ input, select, textarea {
   #summary-bar .sum-val  { font-size: 17px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ADMIN 2.0 — Centro de Control (wireframe final refinado)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ZONA 1: Identidad administrativa */
+.adm-identity {
+  padding: 32px 0 24px;
+}
+
+.adm-identity-title {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.adm-identity-context {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+
+.adm-identity-user {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.adm-identity-exit {
+  font-size: 12px;
+  font-family: var(--sans);
+  color: var(--text3);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-identity-exit:hover {
+  color: var(--text);
+}
+
+/* ZONA 2: Separador visual */
+.adm-separator {
+  height: 1px;
+  background: var(--border);
+  opacity: 0.5;
+  margin: 0;
+}
+
+/* ZONA 3: Estado operativo (información de negocio) */
+.adm-status {
+  padding: 16px 0;
+  font-size: 13px;
+  font-family: var(--mono);
+  color: var(--text2);
+  font-weight: 500;
+}
+
+.adm-status-sep {
+  margin: 0 8px;
+  color: var(--text3);
+}
+
+/* ZONA 4: Alertas operativas */
+.adm-alerts {
+  margin: 32px 0;
+}
+
+.adm-alert {
+  padding: 12px 0;
+  font-size: 13px;
+  color: var(--text2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.adm-alert-msg {
+  flex: 1;
+}
+
+.adm-alert-action {
+  font-size: 12px;
+  color: var(--blue2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-alert-action:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+/* ZONA 5: Gestión de usuarios */
+.adm-users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 48px 0 24px;
+}
+
+.adm-search {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.adm-search:focus {
+  border-color: var(--blue);
+}
+
+.adm-search::placeholder {
+  color: var(--text3);
+}
+
+.adm-btn-primary {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.adm-btn-primary:hover {
+  background: var(--bg3);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Lista de usuarios (GitHub-style) */
+.adm-users-list {
+  margin: 0;
+}
+
+.adm-user-item {
+  padding: 12px 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 6px 16px;
+  align-items: baseline;
+  cursor: pointer;
+  transition: background .15s;
+  position: relative;
+}
+
+.adm-user-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  right: -20px;
+  top: 0;
+  bottom: 0;
+  background: var(--bg2);
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+.adm-user-item:hover::before {
+  opacity: 1;
+}
+
+.adm-user-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.adm-user-meta {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.adm-user-meta-code {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.adm-user-status {
+  font-size: 11px;
+  text-align: right;
+}
+
+.adm-user-expira {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+  text-align: right;
+}
+
+.adm-user-actions {
+  grid-column: 1;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.adm-user-item:hover .adm-user-actions {
+  opacity: 1;
+}
+
+.adm-user-action {
+  display: inline;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-user-action:hover {
+  color: var(--blue2);
+  text-decoration: underline;
+}
+
+.adm-user-action.danger:hover {
+  color: var(--red);
+}
+
+.adm-user-action-sep {
+  color: var(--text3);
+  margin: 0 6px;
+  user-select: none;
+}
+
+/* Estados de usuario */
+.adm-status-badge {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.adm-status-badge.admin { color: var(--amber2); }
+.adm-status-badge.activo { color: var(--green); }
+.adm-status-badge.bloqueado { color: var(--red); }
+.adm-status-badge.temporal { color: var(--amber); }
+
+/* Contador de usuarios */
+.adm-users-counter {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+/* ZONA 6: Funciones secundarias */
+.adm-secondary {
+  margin: 64px 0 16px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.adm-secondary-link {
+  color: var(--text3);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.adm-secondary-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.adm-secondary-sep {
+  margin: 0 8px;
+  color: var(--text3);
+}
+
+/* ZONA 7: Información técnica */
+.adm-technical {
+  padding: 16px 0 32px;
+  text-align: center;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+}
+
+.adm-technical strong {
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.adm-tech-sep {
+  margin: 0 8px;
+}
+
+/* Responsive móvil */
+@media (max-width: 640px) {
+  .adm-identity {
+    padding: 24px 0 16px;
+  }
+
+  .adm-identity-title {
+    font-size: 24px;
+  }
+
+  .adm-identity-context {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .adm-status {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .adm-users-header {
+    flex-direction: column;
+    align-items: stretch;
+    margin: 32px 0 24px;
+  }
+
+  .adm-search {
+    max-width: none;
+  }
+
+  .adm-btn-primary {
+    width: 100%;
+  }
+
+  .adm-user-item {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 4px;
+  }
+
+  .adm-user-status {
+    text-align: left;
+  }
+
+  .adm-user-expira {
+    text-align: left;
+    display: inline;
+    margin-left: 8px;
+  }
+
+  .adm-user-actions {
+    opacity: 1;
+    margin-top: 4px;
+  }
+
+  .adm-secondary {
+    margin: 48px 0 12px;
+  }
+}
+
 /* Desktop ≥900px: workspace 3 columnas + UX-4 scroll aislado */
 @media (min-width: 900px) {
   /* UX-4: bloquear scroll de página cuando el workspace está activo */
@@ -1815,6 +2187,24 @@ input[type=number] { -moz-appearance: textfield; }
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+
+<!-- SECURITY MODE BADGE -->
+<div id="security-mode-badge" style="
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #ff6b00;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--mono);
+  z-index: 9999;
+  display: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+">
+  🛡️ Security Mode
+</div>
 
 <!-- ══════════ LOGIN ══════════ -->
 <div id="login-screen" data-theme="">
@@ -3875,197 +4265,149 @@ Complemento de Base MAD: 1500"></textarea>
 
     </div><!-- /page-config -->
 
-    <!-- ── TAB: ADMIN ── -->
+    <!-- ── TAB: ADMIN 2.0 ── -->
     <div class="page" id="page-admin">
 
-      <!-- Header -->
-      <div class="card" style="border-color:var(--amber);background:var(--amber-dim);margin-bottom:8px;padding-top:10px;padding-bottom:10px">
-        <div class="card-title" style="margin-bottom:0"><div class="section-dot amber"></div>Panel de Administrador</div>
-      </div>
-
-      <!-- Sub-tabs -->
-      <div style="display:flex;gap:2px;background:var(--bg3);border-radius:10px;padding:3px;margin-bottom:12px">
-        <button id="adm-tab-alta"     onclick="adminTab('alta')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:var(--blue);color:#fff">
-          Alta
-        </button>
-        <button id="adm-tab-usuarios" onclick="adminTab('usuarios')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          Usuarios
-        </button>
-        <button id="adm-tab-avatares" onclick="adminTab('avatares')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          Avatares
-        </button>
-        <button id="adm-tab-monitor" onclick="adminTab('monitor')"
-          style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-size:12px;font-family:var(--mono);cursor:pointer;transition:all .2s;background:transparent;color:var(--text3)">
-          Monitor
-        </button>
-      </div>
-
-      <!-- ── SUB-TAB: ALTA ── -->
-      <div id="adm-panel-alta">
-        <div class="card">
-          <div class="card-title"><div class="section-dot"></div>Alta nuevo usuario</div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Nombre</span>
-              <input class="field-input" id="adm-nombre" type="text" placeholder="Nombre">
-            </div>
-            <div class="field">
-              <span class="field-label">Apellidos</span>
-              <input class="field-input" id="adm-apellidos" type="text" placeholder="Apellidos">
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Código</span>
-              <input class="field-input" id="adm-codigo" type="text" placeholder="XYZ" maxlength="5"
-                oninput="this.value=this.value.toUpperCase()">
-            </div>
-            <div class="field">
-              <span class="field-label">Alias (saludo)</span>
-              <input class="field-input" id="adm-alias-new" type="text" placeholder="Opcional">
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Contraseña</span>
-              <input class="field-input" id="adm-pass" type="text" placeholder="1234">
-            </div>
-            <div class="field">
-              <span class="field-label">Función</span>
-              <select class="field-input" id="adm-funcion" onchange="onAdmFuncionChange()">
-                <option value="CMD">Comandante</option>
-                <option value="COP">Copiloto</option>
-                <option value="SCC">SCC — Sobrecargo</option>
-                <option value="CC">CC — Tripulante de Cabina</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Base</span>
-              <select class="field-input" id="adm-base">
-                <option value="GC" selected>Gran Canaria</option>
-                <option value="TFN">Tenerife</option>
-                <option value="MAD">Madrid</option>
-              </select>
-            </div>
-            <div class="field">
-              <span class="field-label">Nivel</span>
-              <select class="field-input" id="adm-nivel">
-                <option value="1">1</option><option value="2">2</option>
-                <option value="3" selected>3</option><option value="4">4</option>
-                <option value="5">5</option><option value="6">6</option>
-              </select>
-            </div>
-          </div>
-          <div class="row" style="margin-top:4px;align-items:flex-end">
-            <div class="field">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding-top:6px">
-                <input type="checkbox" id="adm-temporal" onchange="onAdmTemporalChange()"
-                  style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer">
-                <span class="field-label" style="margin:0">Acceso temporal</span>
-              </label>
-            </div>
-            <div class="field" id="adm-expires-wrap" style="display:none">
-              <span class="field-label">Fecha límite acceso</span>
-              <input class="field-input" id="adm-expires" type="date">
-            </div>
-          </div>
-          <button class="btn-secondary" onclick="generarAltaUsuario()">Generar plantilla</button>
-          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)" onclick="crearUsuarioLocal()">Crear usuario</button>
+      <!-- ZONA 1: Identidad administrativa -->
+      <div class="adm-identity">
+        <div class="adm-identity-title">ADMINISTRACIÓN</div>
+        <div class="adm-identity-context">
+          <span>Admin · <span class="adm-identity-user">ESH</span></span>
+          <a href="#" onclick="navTo('dashboard'); return false;" class="adm-identity-exit">← PilotPay</a>
         </div>
       </div>
 
-      <!-- ── SUB-TAB: USUARIOS ── -->
-      <div id="adm-panel-usuarios" style="display:none">
-        <!-- Buscador -->
-        <div style="position:relative;margin-bottom:10px">
-          <input class="field-input" id="adm-buscar" type="text" placeholder="Buscar por nombre o código..."
-            oninput="renderAdmin()" style="padding-left:14px">
-        </div>
-        <div id="admin-users-list">
-          <div class="loading-block"><div class="spinner"></div></div>
+      <!-- ZONA 2: Estado operativo (información de negocio) -->
+      <div class="adm-separator"></div>
+      <div class="adm-status">
+        <span id="adm-status-users">0 usuarios</span>
+        <span class="adm-status-sep">·</span>
+        <span id="adm-status-active">0 activos</span>
+        <span class="adm-status-sep">·</span>
+        <span id="adm-status-blocked">0 bloqueados</span>
+      </div>
+      <div class="adm-separator"></div>
+
+      <!-- ZONA 3: Alertas operativas (condicional) -->
+      <div id="adm-alerts-container" class="adm-alerts"></div>
+
+      <!-- ZONA 4: Gestión de usuarios -->
+      <div class="adm-users-header">
+        <input class="adm-search" id="adm-search" type="text"
+          placeholder="🔍  Buscar por nombre o código..."
+          oninput="renderAdminUsersList()">
+        <button class="adm-btn-primary" onclick="crearUsuarioLocal()">+ Dar acceso</button>
+      </div>
+
+      <div id="adm-users-list" class="adm-users-list">
+        <!-- Renderizado por renderAdminUsersList() -->
+      </div>
+
+      <div class="adm-users-counter" id="adm-users-counter">0 usuarios</div>
+
+      <!-- ZONA 5: Funciones secundarias + Información técnica -->
+      <div class="adm-secondary">
+        <a href="#" onclick="showDiagnostico(); return false;" class="adm-secondary-link">Diagnóstico</a>
+        <span class="adm-secondary-sep">·</span>
+        <a href="#" onclick="showConfiguracion(); return false;" class="adm-secondary-link">Configuración</a>
+      </div>
+
+      <div class="adm-separator"></div>
+
+      <div class="adm-technical">
+        <span>Firebase: <strong id="adm-tech-firebase">OK</strong></span>
+        <span class="adm-tech-sep">·</span>
+        <span>v<span id="adm-tech-version">3.2.0</span></span>
+        <span class="adm-tech-sep">·</span>
+        <span>Sync: <span id="adm-tech-sync">—</span></span>
+      </div>
+
+      <!-- PANELES SECUNDARIOS (ocultos por defecto, se muestran con modales) -->
+
+      <!-- Panel Diagnóstico (reusa monitor existente) -->
+      <div id="adm-panel-diagnostico" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 20px">
+        <div style="max-width:1200px;margin:0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+            <div style="font-size:24px;font-weight:700;color:var(--text)">Diagnóstico</div>
+            <button onclick="closeDiagnostico()" style="font-size:13px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">Cerrar</button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <label style="font-size:12px;color:var(--text3);font-family:var(--mono)">Usuario:</label>
+            <select id="adm-monitor-user-sel"
+              onchange="renderSyncMonitor(this.value)"
+              style="font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text1)">
+            </select>
+            <button onclick="renderSyncMonitor(document.getElementById('adm-monitor-user-sel').value)"
+              style="font-size:11px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer">
+              ↻ Actualizar
+            </button>
+          </div>
+
+          <div id="adm-monitor-body" style="font-family:var(--mono);font-size:11px;color:var(--text2)">
+            <span style="color:var(--text3)">Selecciona un usuario para ver su estado de sincronización.</span>
+          </div>
         </div>
       </div>
 
-
-
-
-      <!-- ── SUB-TAB: AVATARES ── -->
-      <div id="adm-panel-avatares" style="display:none">
-
-        <!-- Añadir avatar -->
-        <div class="card">
-          <div class="card-title"><div class="section-dot green"></div>Añadir avatar</div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Nombre</span>
-              <input class="field-input" id="av-new-name" type="text" placeholder="Comandante 11">
-            </div>
-            <div class="field">
-              <span class="field-label">Rol</span>
-              <select class="field-input" id="av-new-role">
-                <option value="cmd">CMD — Comandante</option>
-                <option value="cop">COP — Copiloto</option>
-                <option value="tcp">TCP — Tripulante</option>
-              </select>
-            </div>
+      <!-- Panel Configuración (avatares) -->
+      <div id="adm-panel-configuracion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;overflow-y:auto;padding:40px 20px">
+        <div style="max-width:1200px;margin:0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+            <div style="font-size:24px;font-weight:700;color:var(--text)">Configuración de sistema</div>
+            <button onclick="closeConfiguracion()" style="font-size:13px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text);cursor:pointer">Cerrar</button>
           </div>
-          <div class="row">
-            <div class="field">
-              <span class="field-label">Género</span>
-              <select class="field-input" id="av-new-gender">
-                <option value="male">Masculino</option>
-                <option value="female">Femenino</option>
-              </select>
+
+          <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:16px">Avatares</div>
+
+          <!-- Añadir avatar -->
+          <div class="card">
+            <div class="card-title"><div class="section-dot green"></div>Añadir avatar</div>
+            <div class="row">
+              <div class="field">
+                <span class="field-label">Nombre</span>
+                <input class="field-input" id="av-new-name" type="text" placeholder="Comandante 11">
+              </div>
+              <div class="field">
+                <span class="field-label">Rol</span>
+                <select class="field-input" id="av-new-role">
+                  <option value="cmd">CMD — Comandante</option>
+                  <option value="cop">COP — Copiloto</option>
+                  <option value="tcp">TCP — Tripulante</option>
+                </select>
+              </div>
             </div>
-            <div class="field">
-              <span class="field-label">Ruta imagen (src)</span>
-              <input class="field-input" id="av-new-src" type="text" placeholder="assets/avatars/cmd/male/avatar_26.webp">
+            <div class="row">
+              <div class="field">
+                <span class="field-label">Género</span>
+                <select class="field-input" id="av-new-gender">
+                  <option value="male">Masculino</option>
+                  <option value="female">Femenino</option>
+                </select>
+              </div>
+              <div class="field">
+                <span class="field-label">Ruta imagen (src)</span>
+                <input class="field-input" id="av-new-src" type="text" placeholder="assets/avatars/cmd/male/avatar_26.webp">
+              </div>
             </div>
+            <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
+              onclick="adminAddAvatar()">Añadir avatar</button>
+            <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
           </div>
-          <button class="btn-secondary" style="border-color:var(--green);color:var(--green)"
-            onclick="adminAddAvatar()">Añadir avatar</button>
-          <div id="av-add-status" style="font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;min-height:16px"></div>
+
+          <!-- Filtros -->
+          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">CMD</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">COP</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">TCP</button>
+            <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">Inactivos</button>
+          </div>
+
+          <!-- Grid de avatares -->
+          <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
         </div>
-
-        <!-- Filtros -->
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-          <button class="av-filter-btn av-filter-active" onclick="adminAvatarFilter('all',this)">Todos</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cmd',this)">CMD</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('cop',this)">COP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('tcp',this)">TCP</button>
-          <button class="av-filter-btn" onclick="adminAvatarFilter('inactive',this)">Inactivos</button>
-        </div>
-
-        <!-- Grid de avatares -->
-        <div id="adm-avatar-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px"></div>
-
-      </div><!-- /adm-panel-avatares -->
-
-      <!-- ── SUB-TAB: MONITOR DE SINCRONIZACIÓN ── -->
-      <div id="adm-panel-monitor" style="display:none">
-
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <label style="font-size:12px;color:var(--text3);font-family:var(--mono)">Usuario:</label>
-          <select id="adm-monitor-user-sel"
-            onchange="renderSyncMonitor(this.value)"
-            style="font-family:var(--mono);font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text1)">
-          </select>
-          <button onclick="renderSyncMonitor(document.getElementById('adm-monitor-user-sel').value)"
-            style="font-size:11px;font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer">
-            ↻ Actualizar
-          </button>
-        </div>
-
-        <div id="adm-monitor-body" style="font-family:var(--mono);font-size:11px;color:var(--text2)">
-          <span style="color:var(--text3)">Selecciona un usuario para ver su estado de sincronización.</span>
-        </div>
-
-      </div><!-- /adm-panel-monitor -->
+      </div>
 
     </div><!-- /page-admin -->
 
@@ -5957,12 +6299,14 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
 ══════════════════════════════════════════ -->
 <script src="js/auditEngine.js?v=3.0.1"></script>
 <script src="js/pilotPayStore.js?v=3.0.1"></script>
+<script src="js/pilotPayAuth.js?v=3.0.1"></script>
 <script src="js/userProfile.js?v=3.0.1"></script>
 <script src="js/userAdmin.js?v=3.0.1"></script>
 <script src="js/financialProfile.js?v=3.0.1"></script>
 <script src="js/fiscalHistory.js?v=3.0.1"></script>
 <script src="js/pilotPayLocalDB.js?v=3.0.1"></script>
 <script src="js/pilotPayDebug.js"></script>
+<script src="js/pilotPayAnalytics.js"></script>
 <script src="js/normativa/meta/norm_layers.js"></script>
 <script src="js/normativa/meta/norm_docs.js"></script>
 <script src="js/normativa/meta/norm_ambiguedades.js"></script>
@@ -6046,6 +6390,15 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
       console.warn('[PilotPay] saveAuditRecord: bloqueado en modo simulación');
       return;
     }
+
+    // SECURITY MODE: Bloquear guardado de auditorías (contienen nominaV2, NIF, NSS, nóminas completas)
+    if (typeof SECURITY_MODE !== 'undefined' && SECURITY_MODE) {
+      console.warn('[SECURITY MODE] saveAuditRecord() bloqueado — auditoría NO persistida');
+      console.warn('[SECURITY MODE] Datos sensibles NO guardados en localStorage/IndexedDB/Firebase');
+      console.warn('[SECURITY MODE] Auditoría visible solo en sesión actual');
+      return false;
+    }
+
     try {
       // ── Construir registro vía auditEngine (lógica pura, sin DOM) ──
       const ctx = {
@@ -6084,6 +6437,18 @@ letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
       // No-op si flag apagado. Append-only: path único por record.id.
       if (typeof PilotPayStore !== 'undefined' && PilotPayStore.isP4Enabled()) {
         PilotPayStore.notifyAuditRecord(record);
+      }
+
+      // Analytics: auditoría completada
+      if (typeof PilotPayAnalytics !== 'undefined') {
+        PilotPayAnalytics.completeAudit({
+          mes: record.mes,
+          anio: record.anio,
+          hasDiferencias: record.nDiscrepancias > 0,
+          numDiferencias: record.nDiscrepancias,
+          parser: nomData?.metadata?.parserVersion || 'v1',
+          parserSuccess: nomData?.metadata?.parserSuccess !== false
+        });
       }
 
       /* Actualizar badge de count si la pestaña existe */
@@ -6734,6 +7099,20 @@ function calcSolidaridadTrabajador2026(baseCotizableSinTope) {
 const FB_URL = 'https://airside-mad-default-rtdb.europe-west1.firebasedatabase.app';
 const FB_KEY = 'AIzaSyAPgJfxBoqv_bKuVDDjvU927nQe-b0cCbQ';
 
+// ── SECURITY MODE (PHASE 0) ──
+// Bloquea persistencia de datos sensibles (auditorías, perfiles, nóminas).
+// Activar: localStorage.setItem('pilotpay_security_mode', '1'); location.reload();
+// Desactivar: localStorage.removeItem('pilotpay_security_mode'); location.reload();
+const SECURITY_MODE = localStorage.getItem('pilotpay_security_mode') === '1';
+
+if (SECURITY_MODE) {
+  console.warn('%c🛡️ PilotPay 4.0 Security Mode ACTIVE', 'color: orange; font-size: 14px; font-weight: bold');
+  console.warn('Sensitive data persistence DISABLED');
+  console.warn('Existing data remains readable');
+  console.warn('New audits/profiles/monthly will NOT be saved');
+  console.warn('Deactivate: localStorage.removeItem("pilotpay_security_mode"); location.reload();');
+}
+
 // ── FIREBASE ANONYMOUS AUTH (REST) ──
 // Obtiene un ID token JWT anónimo válido para ?auth= en Firebase RTDB REST API.
 // No requiere SDK. Token dura 1 hora; se renueva automáticamente con refreshToken.
@@ -6792,6 +7171,16 @@ async function fbSignIn() {
 }
 
 async function getAuthToken() {
+  // Embudo de token (Fase 1.25 / E1): usar el token Auth SOLO si hay sesión Auth
+  // cuyo `code` coincide con el usuario activo de la app. Evita que una sesión Auth
+  // residual (p.ej. sembrada por el harness o de un usuario borrado) secuestre el
+  // token PRE-login o de otro usuario, lo que degradaría el login legacy (hallazgo A-1).
+  if (typeof PilotPayAuth !== 'undefined'
+      && PilotPayAuth.isAvailable()
+      && currentUser
+      && (PilotPayAuth.getSession() || {}).code === currentUser) {
+    return await PilotPayAuth.getToken(); // token Auth (o null sin red → encolar; no se mezcla con anónimo)
+  }
   await fbSignIn();
   return _fbToken; // null si sin red o auth no habilitada
 }
@@ -6843,6 +7232,26 @@ const DEFAULT_USERS = {
 // En todos esos casos: cargar DEFAULT_USERS en memoria y salir sin escritura.
 // Para inicializar una base Firebase genuinamente vacía: llamar initializeFirebaseUsersOnce() de forma explícita.
 async function loadUsersFromFirebase() {
+  // SECURITY MODE: Bloquear descarga masiva de usuarios
+  if (SECURITY_MODE) {
+    console.warn('[SECURITY MODE] loadUsersFromFirebase() bloqueado — NO se descarga lista completa');
+    console.warn('[SECURITY MODE] Usando usuario actual mock en memoria');
+    if (currentUser) {
+      USERS = {
+        [currentUser]: {
+          name: 'USUARIO DEMO (Security Mode)',
+          funcion: 'CMD',
+          nivel: 'B',
+          base: 'MAD',
+          admin: false
+        }
+      };
+    } else {
+      USERS = {};
+    }
+    return;
+  }
+
   const fbUsers = await fbGet('pilotpay/usuarios');
   // fbGet ya captura cualquier error de red/auth y devuelve null — no se necesita try/catch adicional.
   if (!fbUsers) {
@@ -6933,6 +7342,13 @@ async function flushOfflineQueue() {
 // ── GUARDAR: Firebase + localStorage como respaldo ──
 async function saveUserData(user) {
   if (!user || !profileData) return;
+
+  // SECURITY MODE: Bloquear guardado de perfil (contiene NIF, IRPF, historicoFiscal)
+  if (SECURITY_MODE) {
+    console.warn('[SECURITY MODE] saveUserData() bloqueado — perfil NO persistido');
+    console.warn('[SECURITY MODE] Cambios solo en memoria (se perderán al recargar)');
+    return;
+  }
 
   // Snapshot filtrado: REAL_FIELDS + historicoFiscal — excluye sim_* y deprecated
   const data = { ...profileData };
@@ -7048,15 +7464,30 @@ async function loadUserData(user) {
 async function loadPermsFromFirebase() {
   if (_online) {
     try {
-      const fbPerms = await fbGet('pilotpay/permisos');
-      if (fbPerms) {
-        perms = fbPerms;
-        try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
-        return;
+      // E3a: lectura role-aware.
+      //  - Admin: nodo entero (necesita los permisos de todos para el panel admin).
+      //  - User : solo permisos/{currentUser} (escopado; alinea con reglas por claim de 1.3).
+      if (isAdmin()) {
+        const fbPerms = await fbGet('pilotpay/permisos');
+        if (fbPerms) {
+          perms = fbPerms;
+          try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
+          return;
+        }
+      } else if (currentUser) {
+        const mine = await fbGet('pilotpay/permisos/' + currentUser);
+        if (mine) {
+          perms = { [currentUser]: mine };
+          try { localStorage.setItem('pilotpay_perms_cache', JSON.stringify(perms)); } catch(e) {}
+          return;
+        }
+        // mine ausente/error → NO sobrescribir la caché con {}; resetear in-memory para no
+        // arrastrar perms de otro usuario, y caer al fallback local (aprovecha caché previa).
+        perms = {};
       }
     } catch(e) {}
   }
-  // Fallback local
+  // Fallback local (sin cambios)
   try {
     const local = localStorage.getItem('pilotpay_perms_cache')
                || localStorage.getItem('pilotpay_admin_perms');
@@ -7192,65 +7623,94 @@ async function doLogin() {
   btn.textContent = 'Entrar';
   btn.disabled = false;
 
-  if (USERS[u] && USERS[u].pass === p) {
-    // Comprobar bloqueo antes de entrar
-    if (USERS[u].bloqueado) {
-      errEl.textContent = 'Usuario bloqueado por el administrador';
-      errEl.style.display = 'block';
-      card.classList.add('login-shake');
-      setTimeout(() => card.classList.remove('login-shake'), 400);
-      document.getElementById('login-pass').value = '';
-      return;
-    }
-    // Comprobar caducidad de acceso temporal
-    // Comparación por fecha local (YYYY-MM-DD) para evitar desfase UTC
-    if (USERS[u].temporal && USERS[u].accessExpiresAt) {
-      const now   = new Date();
-      const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-      if (today > USERS[u].accessExpiresAt) {
-        // Persistir bloqueo en Firebase (best-effort — no impide la denegación si falla)
-        try { await fbUpdate(`pilotpay/usuarios/${u}`, { bloqueado: true }); USERS[u].bloqueado = true; } catch(e) {}
-        errEl.textContent = '⏰ Acceso temporal caducado. Contacta con el administrador.';
-        errEl.style.display = 'block';
-        card.classList.add('login-shake');
-        setTimeout(() => card.classList.remove('login-shake'), 400);
-        document.getElementById('login-pass').value = '';
-        return;
-      }
-    }
-    currentUser = u;
-    profileData = { ...USERS[u] };
-    btn.textContent = 'Cargando perfil...';
-    btn.disabled = true;
-    await loadUserData(u);
-    // Normalizar profileData: aliases canónicos (nivelActual, fechaIngresoEmpresa, role),
-    // normalización de base ('1.2' → 'MAD'), garantizar fechaOCC existe.
-    if (typeof UserProfile        !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
-    if (typeof FinancialProfile   !== 'undefined') FinancialProfile.normalize(profileData);
-    if (typeof FiscalHistory !== 'undefined') {
-      const _hadSim = !!(profileData.simHistorico);
-      FiscalHistory.migrateFromLegacy(profileData);
-      // Persistir inmediatamente si la migración aportó datos, para que el GC
-      // elimine simHistorico de Firebase en el mismo write y no quede en limbo.
-      if (_hadSim && currentUser) saveUserData(currentUser);
-    }
-    await loadPermsFromFirebase();
-    // Replicar cola offline si hay conexión (puede haber entradas de sesiones previas)
-    if (_online) await flushOfflineQueue();
-    btn.textContent = 'Entrar';
-    btn.disabled = false;
-    showWelcome();
-  } else {
-    errEl.textContent = 'Credenciales incorrectas';
+  // Helper de error: muestra mensaje, anima y re-habilita el botón (C2).
+  const fail = (msg) => {
+    errEl.textContent = msg;
     errEl.style.display = 'block';
     card.classList.add('login-shake');
     setTimeout(() => card.classList.remove('login-shake'), 400);
     document.getElementById('login-pass').value = '';
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
+  };
+
+  // ── E2: doble login — Auth primario + legacy fallback ──
+  // 1) Intento Auth (primario). signIn usa su propio fetch (independiente de getAuthToken).
+  let authedVia = null;
+  if (typeof PilotPayAuth !== 'undefined') {
+    try {
+      const session = await PilotPayAuth.signIn(u, p);
+      if (session && session.code === u) authedVia = 'auth';            // D-3
+      else PilotPayAuth.signOut();                                       // D-3: mismatch defensivo
+    } catch (e) { authedVia = null; }                                    // Auth no aplica → legacy
   }
+
+  // 2) Fallback legacy (idéntico a hoy: validación contra USERS por pass en texto plano)
+  if (!authedVia && USERS[u] && USERS[u].pass === p) {
+    if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();     // D-1: modo anónimo puro
+    authedVia = 'legacy';
+  }
+
+  // 3) Sin autenticación válida
+  if (!authedVia) { fail('Credenciales incorrectas'); return; }
+
+  // 3b) D-5: perfil/welcome dependen de USERS[u]. Si Auth autenticó un code sin entrada en
+  //     USERS (p.ej. USERS de fallback DEFAULT_USERS), no entrar — evita crash en showWelcome().
+  if (!USERS[u]) {
+    if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();
+    fail('No se pudo cargar tu perfil. Reintenta con conexión.');
+    return;
+  }
+
+  // 4) Controles admin legacy — aplicados en AMBAS rutas (D-2)
+  if (USERS[u].bloqueado) {
+    if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();
+    fail('Usuario bloqueado por el administrador');
+    return;
+  }
+  // Caducidad de acceso temporal — comparación por fecha local (YYYY-MM-DD) para evitar desfase UTC
+  if (USERS[u].temporal && USERS[u].accessExpiresAt) {
+    const now   = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    if (today > USERS[u].accessExpiresAt) {
+      // Persistir bloqueo en Firebase (best-effort — no impide la denegación si falla)
+      try { await fbUpdate(`pilotpay/usuarios/${u}`, { bloqueado: true }); USERS[u].bloqueado = true; } catch(e) {}
+      if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();
+      fail('⏰ Acceso temporal caducado. Contacta con el administrador.');
+      return;
+    }
+  }
+
+  // 5) Establecer sesión (idéntico a hoy)
+  currentUser = u;
+  profileData = { ...USERS[u] };
+  btn.textContent = 'Cargando perfil...';
+  btn.disabled = true;
+  await loadUserData(u);
+  // Normalizar profileData: aliases canónicos (nivelActual, fechaIngresoEmpresa, role),
+  // normalización de base ('1.2' → 'MAD'), garantizar fechaOCC existe.
+  if (typeof UserProfile        !== 'undefined') profileData = UserProfile.normalizeProfile(profileData);
+  if (typeof FinancialProfile   !== 'undefined') FinancialProfile.normalize(profileData);
+  if (typeof FiscalHistory !== 'undefined') {
+    const _hadSim = !!(profileData.simHistorico);
+    FiscalHistory.migrateFromLegacy(profileData);
+    // Persistir inmediatamente si la migración aportó datos, para que el GC
+    // elimine simHistorico de Firebase en el mismo write y no quede en limbo.
+    if (_hadSim && currentUser) saveUserData(currentUser);
+  }
+  await loadPermsFromFirebase();
+  // Replicar cola offline si hay conexión (puede haber entradas de sesiones previas)
+  if (_online) await flushOfflineQueue();
+  btn.textContent = 'Entrar';
+  btn.disabled = false;
+  showWelcome();
 }
 
 // Pre-fill API key if saved
 window.addEventListener('DOMContentLoaded', async () => {
+  // Fase 1.25 / E1: restaurar sesión Auth persistida (sin red) ANTES de cualquier I/O,
+  // para que getAuthToken() use el token Auth desde el arranque si la había.
+  if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.restoreSession();
   // Autenticar anónimamente contra Firebase antes de cualquier lectura.
   await fbSignIn();
   // Pre-load users in background for faster login
@@ -7325,6 +7785,13 @@ let totalHVManual = false;
 function enterApp() {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
+
+  // SECURITY MODE: Mostrar badge visual
+  if (SECURITY_MODE) {
+    const badge = document.getElementById('security-mode-badge');
+    if (badge) badge.style.display = 'block';
+  }
+
   initApp();
   if (typeof hstRefreshCount === 'function') hstRefreshCount();
 
@@ -7403,6 +7870,11 @@ function doLogout() {
     if (nominaOut) nominaOut.innerHTML = '';
 
     // 3) Identidad
+    if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();  // E2: limpiar sesión Auth
+    // E3a / P3: limpiar cachés de permisos para evitar contaminación cruzada entre usuarios
+    // (un user deja caché escopada → admin offline leería un panel incompleto).
+    try { localStorage.removeItem('pilotpay_perms_cache'); } catch(e) {}
+    try { localStorage.removeItem('pilotpay_admin_perms'); } catch(e) {}
     currentUser = null;
     profileData = {};
 
@@ -7623,17 +8095,225 @@ function getUserPerms(userCode) {
 // ── ADMIN SUB-TABS ──
 function adminTab(tab) {
   if (!isAdmin()) return;
-  ['alta','usuarios','avatares','monitor'].forEach(t => {
+
+  // Cambiar paneles
+  ['dashboard','usuarios','avatares','monitor'].forEach(t => {
     const panel = document.getElementById(`adm-panel-${t}`);
     const btn   = document.getElementById(`adm-tab-${t}`);
     if (panel) panel.style.display = t === tab ? 'block' : 'none';
     if (btn) {
-      btn.style.background = t === tab ? 'var(--blue)' : 'transparent';
-      btn.style.color      = t === tab ? '#fff'        : 'var(--text3)';
+      if (t === tab) {
+        btn.classList.add('adm-nav-active');
+      } else {
+        btn.classList.remove('adm-nav-active');
+      }
     }
   });
+
+  // Acciones específicas por tab
+  if (tab === 'dashboard') renderAdminDashboard();
+  if (tab === 'usuarios') renderUsersTableSimple();
   if (tab === 'avatares') renderAdminAvatarGrid('all');
   if (tab === 'monitor')  _initSyncMonitor();
+}
+
+// ── RENDERIZAR DASHBOARD ADMIN ──
+function renderAdminDashboard() {
+  if (!isAdmin()) return;
+
+  const allUsers = Object.values(USERS || {});
+
+  // Calcular métricas
+  const totalActive = allUsers.filter(u => !u.bloqueado).length;
+  const totalBlocked = allUsers.filter(u => u.bloqueado).length;
+  const expiring = getUsersExpiringIn7Days();
+
+  // Estado operativo
+  const stActive = document.getElementById('adm-st-active');
+  const stBlocked = document.getElementById('adm-st-blocked');
+  const stExpiring = document.getElementById('adm-st-expiring');
+  const stFirebase = document.getElementById('adm-st-firebase');
+  const stVersion = document.getElementById('adm-st-version');
+
+  if (stActive) stActive.textContent = totalActive;
+  if (stBlocked) stBlocked.textContent = totalBlocked;
+  if (stExpiring) stExpiring.textContent = expiring.length;
+
+  // Firebase status
+  if (stFirebase) {
+    stFirebase.textContent = (typeof FB_URL !== 'undefined' && FB_URL) ? '✓' : '✗';
+    stFirebase.style.color = (typeof FB_URL !== 'undefined' && FB_URL) ? 'var(--green)' : 'var(--red)';
+  }
+
+  // Versión (leer de variable global si existe, sino hardcodear)
+  if (stVersion) {
+    stVersion.textContent = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '3.2.0';
+  }
+
+  // Renderizar alertas
+  renderAdminAlerts(allUsers, expiring);
+
+  // Renderizar actividad reciente
+  renderAdminActivity();
+
+  // Renderizar tabla usuarios
+  renderAdminUsersTable(allUsers);
+}
+
+// ── USUARIOS PRÓXIMOS A EXPIRAR ──
+function getUsersExpiringIn7Days() {
+  const now = new Date();
+  const in7days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  return Object.values(USERS || {}).filter(u => {
+    if (!u.expiresAt) return false;
+    const expDate = new Date(u.expiresAt);
+    return expDate > now && expDate <= in7days;
+  });
+}
+
+// ── RENDERIZAR ALERTAS INLINE ──
+function renderAdminAlerts(users, expiring) {
+  const container = document.getElementById('adm-alerts-container');
+  if (!container) return;
+
+  let html = '';
+
+  // Usuarios bloqueados
+  const blocked = users.filter(u => u.bloqueado);
+  if (blocked.length > 0) {
+    const names = blocked.map(u => u.name || u.code).slice(0, 3).join(', ');
+    const more = blocked.length > 3 ? ` y ${blocked.length - 3} más` : '';
+    html += `
+      <div class="adm-alert-inline critical">
+        <div class="adm-alert-inline-msg">
+          <strong>${blocked.length}</strong> usuario${blocked.length > 1 ? 's' : ''} bloqueado${blocked.length > 1 ? 's' : ''}: ${names}${more}
+        </div>
+        <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver →</button>
+      </div>
+    `;
+  }
+
+  // Usuarios próximos a expirar
+  if (expiring.length > 0) {
+    const names = expiring.map(u => {
+      const exp = new Date(u.expiresAt);
+      const days = Math.ceil((exp - new Date()) / (24 * 60 * 60 * 1000));
+      return `${u.name || u.code} (${days}d)`;
+    }).slice(0, 3).join(', ');
+    const more = expiring.length > 3 ? ` y ${expiring.length - 3} más` : '';
+    html += `
+      <div class="adm-alert-inline">
+        <div class="adm-alert-inline-msg">
+          ⏱ <strong>${expiring.length}</strong> usuario${expiring.length > 1 ? 's' : ''} expiran en 7 días: ${names}${more}
+        </div>
+        <button onclick="adminTab('usuarios')" class="adm-link-btn">Ver →</button>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+// ── RENDERIZAR ACTIVIDAD RECIENTE ──
+function renderAdminActivity() {
+  const container = document.getElementById('adm-activity-log');
+  if (!container) return;
+
+  // TODO: Implementar sistema de logs real
+  // Por ahora, placeholder
+  const events = [
+    { time: '14:32', actor: 'BZP', msg: 'realizó auditoría Mayo 2026' },
+    { time: '12:15', actor: 'ESH', msg: 'editó usuario TEST' },
+    { time: '10:05', actor: 'COP', msg: 'subió PDF nómina Abril 2026' },
+    { time: '09:42', actor: 'ESH', msg: 'creó usuario USER' },
+    { time: '08:30', actor: 'BZP', msg: 'generó PDF auditoría' }
+  ];
+
+  if (events.length === 0) {
+    container.innerHTML = '<div class="adm-activity-empty">No hay actividad reciente registrada</div>';
+    return;
+  }
+
+  let html = '';
+  events.forEach(evt => {
+    html += `
+      <div class="adm-activity-row">
+        <div class="adm-activity-time">${evt.time}</div>
+        <div class="adm-activity-actor">${evt.actor}</div>
+        <div class="adm-activity-msg">${evt.msg}</div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// ── RENDERIZAR TABLA USUARIOS ──
+function renderAdminUsersTable(users) {
+  const tbody = document.getElementById('adm-users-tbody');
+  if (!tbody) return;
+
+  // Ordenar: admin primero, luego por código
+  const sorted = users.sort((a, b) => {
+    if (a.admin && !b.admin) return -1;
+    if (!a.admin && b.admin) return 1;
+    return (a.code || '').localeCompare(b.code || '');
+  });
+
+  // Top 5
+  const top5 = sorted.slice(0, 5);
+
+  if (top5.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="adm-empty">No hay usuarios</td></tr>';
+    return;
+  }
+
+  let html = '';
+  top5.forEach(u => {
+    const code = u.code || '—';
+    const name = u.name || '—';
+    const role = `${u.funcion || '—'}·${u.nivel || '—'}·${u.base || '—'}`;
+
+    // Estado
+    let statusDot = 'active';
+    let statusText = 'Activo';
+    let statusExtra = '';
+
+    if (u.admin) {
+      statusDot = 'admin';
+      statusExtra = ' A';
+    }
+    if (u.bloqueado) {
+      statusDot = 'blocked';
+      statusText = 'Bloqueado';
+    }
+    // Próximo a expirar
+    if (u.expiresAt) {
+      const exp = new Date(u.expiresAt);
+      const days = Math.ceil((exp - new Date()) / (24 * 60 * 60 * 1000));
+      if (days > 0 && days <= 7) {
+        statusDot = 'expiring';
+        statusText = `Exp ${days}d`;
+      }
+    }
+
+    html += `
+      <tr>
+        <td class="adm-user-code">${code}</td>
+        <td>${name}</td>
+        <td class="adm-user-role">${role}</td>
+        <td>
+          <div class="adm-user-status">
+            <span class="adm-status-dot ${statusDot}"></span>
+            ${statusText}${statusExtra}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
 }
 
 // ── MONITOR DE SINCRONIZACIÓN ────────────────────────────────────────────
@@ -7892,40 +8572,38 @@ function adminAddAvatar() {
   setTimeout(() => { st.textContent = ''; }, 3000);
 }
 
+// ── LEGACY: renderAdmin redirect ──
 function renderAdmin() {
-  if (!isAdmin()) return;
-  const el = document.getElementById('admin-users-list');
-  if (!el) return;
-
-  // Banner de estado degradado: USERS proviene de fallback temporal
-  const _warnId = 'adm-fallback-warning';
-  let _warnEl = document.getElementById(_warnId);
-  if (_USERS_FROM_FALLBACK) {
-    if (!_warnEl) {
-      _warnEl = document.createElement('div');
-      _warnEl.id = _warnId;
-      _warnEl.style.cssText = 'color:var(--red,#e05);background:rgba(220,0,60,.08);border:1px solid var(--red,#e05);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-family:var(--mono,monospace);line-height:1.5';
-      el.parentNode.insertBefore(_warnEl, el);
-    }
-    _warnEl.style.display = 'block';
-    _warnEl.textContent = 'Lista de usuarios no disponible desde Firebase (fallback temporal). Mostrando solo datos locales. Creación y edición de usuarios desactivadas hasta restaurar conexión.';
-  } else if (_warnEl) {
-    _warnEl.style.display = 'none';
+  // Redirigir a nueva tabla simplificada
+  if (typeof renderUsersTableSimple === 'function') {
+    renderUsersTableSimple();
   }
+}
+
+// ══════════════════════════════════════════════════════════════
+// USUARIOS 2.0 — Tabla simplificada
+// ══════════════════════════════════════════════════════════════
+
+function renderUsersTableSimple() {
+  if (!isAdmin()) return;
+  const tbody = document.getElementById('adm-users-tbody-simple');
+  if (!tbody) return;
 
   const buscar = (document.getElementById('adm-buscar')?.value || '').toLowerCase().trim();
 
-  // ESH siempre primero, resto ordenado por fecha de ingreso
+  // Filtrar usuarios
   const all = Object.entries(USERS);
-  const esh  = all.find(([c]) => c === ADMIN_CODE);
-  const rest = all
+  const filtered = all.filter(([code, u]) => {
+    if (!buscar) return true;
+    return code.toLowerCase().includes(buscar)
+      || (u.name || '').toLowerCase().includes(buscar)
+      || (u.apellidos || '').toLowerCase().includes(buscar);
+  });
+
+  // Ordenar: ESH primero, resto por fecha ingreso
+  const esh = filtered.find(([c]) => c === ADMIN_CODE);
+  const rest = filtered
     .filter(([c]) => c !== ADMIN_CODE)
-    .filter(([code, u]) => {
-      if (!buscar) return true;
-      return code.toLowerCase().includes(buscar)
-        || (u.name||'').toLowerCase().includes(buscar)
-        || (u.apellidos||'').toLowerCase().includes(buscar);
-    })
     .sort(([,a],[,b]) => {
       if (a.ingreso && b.ingreso) return a.ingreso.localeCompare(b.ingreso);
       return a.ingreso ? -1 : b.ingreso ? 1 : 0;
@@ -7933,79 +8611,362 @@ function renderAdmin() {
 
   const sorted = esh ? [esh, ...rest] : rest;
 
-  if (!sorted.length) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:12px;text-align:center;padding:16px">
-      ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios registrados'}</div>`;
+  // Renderizar tabla
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">
+      ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios'}
+    </td></tr>`;
+    document.getElementById('adm-users-count').textContent = '0 usuarios';
     return;
   }
 
-  el.innerHTML = sorted.map(([code, u]) => {
-    const isAdmin = code === ADMIN_CODE;
-    const userPerms = isAdmin
-      ? { funciones: ['CMD','COP','SCC','CC'], bases: ['GC','TFN','MAD'] }
-      : (perms[code] || { funciones: [u.funcion], bases: [getBaseCode(u.base)] });
+  tbody.innerHTML = sorted.map(([code, u]) => {
+    const isAdminUser = code === ADMIN_CODE;
 
-    // Permisos extra — capacidades adicionales más allá de la identidad real
-    const idBase    = getBaseCode(u.base);
-    const extraFn   = isAdmin ? [] : userPerms.funciones.filter(f => f !== u.funcion);
-    const extraBase = isAdmin ? [] : userPerms.bases.filter(b => b !== idBase);
-    const extraItems = [...extraFn, ...extraBase].map(x =>
-      `<span style="font-size:10px;font-family:var(--mono);color:var(--blue2);
-        background:var(--blue-dim);padding:1px 6px;border-radius:3px;margin-right:3px">+${x}</span>`
-    ).join('');
+    // Usuario: código · nombre
+    const nombre = u.name || '';
+    const apellido = (u.apellidos || '').split(' ')[0] || '';
+    const nombreCompleto = `${nombre} ${apellido}`.trim();
+    const nombreCorto = nombreCompleto.length > 25 ? nombreCompleto.substring(0, 23) + '...' : nombreCompleto;
+    const usuario = `<span style="font-family:var(--mono);font-weight:600;color:var(--text)">${code}</span> · ${nombreCorto}`;
 
-    const fnIcon     = u.funcion;
-    const ingresoStr = u.ingreso ? ` · Alta: ${u.ingreso}` : '';
-    const bloqBadge  = u.bloqueado
-      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--red);background:var(--red-dim);padding:2px 6px;border-radius:4px">BLOQ.</span>`
-      : '';
-    const tempBadge  = (!u.bloqueado && u.temporal && u.accessExpiresAt)
-      ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);background:var(--amber-dim);padding:2px 6px;border-radius:4px">⏰ Temporal hasta ${u.accessExpiresAt}</span>`
-      : '';
+    // Rol: función · Nivel
+    const rol = `${u.funcion} · N${u.nivel}`;
+
+    // Base
+    const base = u.base || '—';
+
+    // Estado
+    let estado = '';
+    if (isAdminUser) {
+      estado = '<span style="color:var(--amber2)">Admin</span>';
+    } else if (u.bloqueado) {
+      estado = '<span style="color:var(--red)">Bloqueado</span>';
+    } else if (u.temporal && u.accessExpiresAt) {
+      estado = '<span style="color:var(--amber2)">Temporal</span>';
+    } else {
+      estado = '<span style="color:var(--green)">Activo</span>';
+    }
+
+    // Expira
+    const expira = u.accessExpiresAt || '—';
+
+    // Acciones
+    let acciones = `<a class="adm-user-action" onclick="editarUsuario('${code}')">Editar</a>`;
+    if (!isAdminUser) {
+      if (u.bloqueado) {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', false)">Reactivar</a>`;
+      } else {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="toggleBloqueoUsuario('${code}', true)">Bloquear</a>`;
+      }
+      if (u.temporal && u.accessExpiresAt) {
+        acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action" onclick="extendUserAccess('${code}')">Extender</a>`;
+      }
+      acciones += `<span class="adm-user-action-sep">·</span><a class="adm-user-action danger" onclick="confirmarEliminarUsuario('${code}')">Eliminar</a>`;
+    }
 
     return `
-    <div class="card" style="margin-bottom:10px;${u.bloqueado?'opacity:0.7':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${u.name||''} ${u.apellidos||''}</div>
-          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px">
-            <span style="color:var(--blue2)">${code}</span> · ${fnIcon} · N${u.nivel}${ingresoStr}
-          </div>
-          ${(bloqBadge || tempBadge) ? `<div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap">${bloqBadge}${tempBadge}</div>` : ''}
-          ${(!isAdmin && extraItems) ? `<div style="margin-top:5px;font-size:10px;font-family:var(--mono);color:var(--text3)">Permisos extra: ${extraItems}</div>` : ''}
-        </div>
-        ${isAdmin
-          ? `<span style="font-size:10px;font-family:var(--mono);color:var(--amber2);flex-shrink:0">ADMIN</span>`
-          : `<button onclick="confirmarEliminarUsuario('${code}')"
-              style="background:none;border:1px solid var(--red);border-radius:6px;color:var(--red);
-              font-size:10px;padding:4px 8px;cursor:pointer;font-family:var(--mono);flex-shrink:0;margin-left:8px">×</button>`}
-      </div>
-      ${isAdmin ? `
-        <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
-          <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;
-            background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer">Editar perfil</button>
-        </div>` : `
-        <div style="display:flex;gap:6px;border-top:1px solid var(--border);padding-top:8px;flex-wrap:wrap">
-          <button onclick="editarUsuario('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:var(--blue-dim);border:1px solid var(--blue);
-            color:var(--blue2);border-radius:5px;cursor:pointer;white-space:nowrap">Identidad</button>
-          <button onclick="gestionarPermisos('${code}')"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:var(--bg3);border:1px solid var(--border);
-            color:var(--text2);border-radius:5px;cursor:pointer;white-space:nowrap">Permisos</button>
-          <button onclick="toggleBloqueoUsuario('${code}', ${!u.bloqueado})"
-            style="font-family:var(--mono);font-size:10px;padding:4px 10px;flex:1;min-width:0;
-            background:${u.bloqueado ? 'var(--green-dim,#052e14)' : 'var(--red-dim,#2d1010)'};
-            border:1px solid ${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            color:${u.bloqueado ? 'var(--green)' : 'var(--red)'};
-            border-radius:5px;cursor:pointer;white-space:nowrap">${u.bloqueado ? 'Desbloquear' : 'Bloquear'}</button>
-        </div>`}
-    </div>`;
+      <tr>
+        <td>${usuario}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${rol}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${base}</td>
+        <td>${estado}</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--text3)">${expira}</td>
+        <td>${acciones}</td>
+      </tr>
+    `;
   }).join('');
+
+  // Actualizar contador
+  const total = all.length;
+  const shown = filtered.length;
+  document.getElementById('adm-users-count').textContent =
+    shown === total ? `${total} usuarios` : `${shown} de ${total} usuarios`;
 }
+
+// ── EXTEND USER ACCESS ──
+function extendUserAccess(code) {
+  const u = USERS[code];
+  if (!u) return;
+
+  const currentExp = u.accessExpiresAt || new Date().toISOString().split('T')[0];
+  const newDate = prompt(
+    `Extender acceso de ${code}\nActual: ${currentExp}\n\nNueva fecha (YYYY-MM-DD):`,
+    currentExp
+  );
+
+  if (!newDate) return;
+
+  USERS[code].accessExpiresAt = newDate;
+  fbUpdate(`pilotpay/usuarios/${code}`, { accessExpiresAt: newDate });
+  renderUsersTableSimple();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN 2.0 — Wireframe final refinado
+// ══════════════════════════════════════════════════════════════
+
+function initAdmin() {
+  if (!isAdmin()) return;
+
+  // Actualizar identidad
+  updateAdminIdentity();
+
+  // Renderizar estado operativo
+  renderAdminStatus();
+
+  // Renderizar alertas
+  renderAdminAlerts();
+
+  // Renderizar lista de usuarios
+  renderAdminUsersList();
+
+  // Actualizar información técnica
+  updateAdminTechnical();
+}
+
+function updateAdminIdentity() {
+  const userSpan = document.querySelector('.adm-identity-user');
+  if (userSpan && currentUser) {
+    userSpan.textContent = currentUser;
+  }
+}
+
+function renderAdminStatus() {
+  const allUsers = Object.values(USERS || {});
+  const total = allUsers.length;
+  const active = allUsers.filter(u => !u.bloqueado).length;
+  const blocked = allUsers.filter(u => u.bloqueado).length;
+
+  const statusUsers = document.getElementById('adm-status-users');
+  const statusActive = document.getElementById('adm-status-active');
+  const statusBlocked = document.getElementById('adm-status-blocked');
+
+  if (statusUsers) statusUsers.textContent = `${total} usuario${total !== 1 ? 's' : ''}`;
+  if (statusActive) statusActive.textContent = `${active} activo${active !== 1 ? 's' : ''}`;
+  if (statusBlocked) statusBlocked.textContent = `${blocked} bloqueado${blocked !== 1 ? 's' : ''}`;
+}
+
+function renderAdminAlerts() {
+  const container = document.getElementById('adm-alerts-container');
+  if (!container) return;
+
+  const allUsers = Object.values(USERS || {});
+  const expiring = getUsersExpiringIn7Days();
+
+  let html = '';
+
+  // Usuarios próximos a expirar
+  if (expiring.length > 0) {
+    const codes = expiring.map(u => u.code).slice(0, 3).join(', ');
+    const more = expiring.length > 3 ? `, ... y ${expiring.length - 3} más` : '';
+    html += `
+      <div class="adm-alert">
+        <div class="adm-alert-msg">⚠  ${expiring.length} usuario${expiring.length > 1 ? 's' : ''} expiran en 5 días: ${codes}${more}</div>
+        <a href="#" onclick="scrollToUsersList(); return false;" class="adm-alert-action">Revisar →</a>
+      </div>
+    `;
+  }
+
+  container.innerHTML = html;
+  container.style.display = html ? 'block' : 'none';
+}
+
+function renderAdminUsersList() {
+  if (!isAdmin()) return;
+
+  const container = document.getElementById('adm-users-list');
+  const counter = document.getElementById('adm-users-counter');
+  if (!container) return;
+
+  const searchInput = document.getElementById('adm-search');
+  const buscar = (searchInput?.value || '').toLowerCase().trim();
+
+  // Filtrar usuarios
+  const all = Object.entries(USERS || {});
+  const filtered = all.filter(([code, u]) => {
+    if (!buscar) return true;
+    return code.toLowerCase().includes(buscar)
+      || (u.name || '').toLowerCase().includes(buscar)
+      || (u.apellidos || '').toLowerCase().includes(buscar);
+  });
+
+  // Ordenar: ESH primero, resto por fecha ingreso
+  const esh = filtered.find(([c]) => c === ADMIN_CODE);
+  const rest = filtered
+    .filter(([c]) => c !== ADMIN_CODE)
+    .sort(([,a],[,b]) => {
+      const ingresoA = a.ingreso || a.fechaIngresoEmpresa || '';
+      const ingresoB = b.ingreso || b.fechaIngresoEmpresa || '';
+      if (ingresoA && ingresoB) return ingresoA.localeCompare(ingresoB);
+      return ingresoA ? -1 : ingresoB ? 1 : 0;
+    });
+
+  const sorted = esh ? [esh, ...rest] : rest;
+
+  // Renderizar
+  if (sorted.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--text3)">
+        ${buscar ? `Sin resultados para "${buscar}"` : 'Sin usuarios'}
+      </div>
+    `;
+    if (counter) counter.textContent = '0 usuarios';
+    return;
+  }
+
+  container.innerHTML = sorted.map(([code, u]) => {
+    const isAdminUser = code === ADMIN_CODE;
+
+    // Nombre completo
+    const nombre = u.name || '';
+    const apellido = (u.apellidos || '').split(' ')[0] || '';
+    const nombreCompleto = `${nombre} ${apellido}`.trim() || code;
+
+    // Rol
+    const funcion = u.funcion || 'SCC';
+    const nivel = u.nivel || u.nivelActual || 'N/A';
+    const base = u.base || '—';
+    const rolText = `${funcion} N${nivel}`;
+
+    // Estado
+    let estadoText = '';
+    let estadoClass = '';
+    if (isAdminUser) {
+      estadoText = 'Admin';
+      estadoClass = 'admin';
+    } else if (u.bloqueado) {
+      estadoText = 'Bloqueado';
+      estadoClass = 'bloqueado';
+    } else if (u.temporal || u.accessExpiresAt) {
+      estadoText = 'Temporal';
+      estadoClass = 'temporal';
+    } else {
+      estadoText = 'Activo';
+      estadoClass = 'activo';
+    }
+
+    // Expira
+    const expira = u.accessExpiresAt || '';
+
+    // Acciones
+    let acciones = `<a href="#" onclick="editarUsuario('${code}'); return false;" class="adm-user-action">Editar</a>`;
+    if (!isAdminUser) {
+      if (u.bloqueado) {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="toggleBloqueoUsuario('${code}', false); return false;" class="adm-user-action">Reactivar</a>`;
+      } else {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="toggleBloqueoUsuario('${code}', true); return false;" class="adm-user-action">Bloquear</a>`;
+      }
+      if (u.temporal || u.accessExpiresAt) {
+        acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="extendUserAccess('${code}'); return false;" class="adm-user-action">Extender</a>`;
+      }
+      acciones += `<span class="adm-user-action-sep">·</span><a href="#" onclick="confirmarEliminarUsuario('${code}'); return false;" class="adm-user-action danger">Eliminar</a>`;
+    }
+
+    return `
+      <div class="adm-user-item">
+        <div class="adm-user-name">${nombreCompleto}</div>
+        <div class="adm-user-status">
+          <span class="adm-status-badge ${estadoClass}">${estadoText}</span>
+        </div>
+        <div class="adm-user-meta">
+          <span class="adm-user-meta-code">${code}</span> · ${rolText} · ${base}
+        </div>
+        ${expira ? `<div class="adm-user-expira">${expira}</div>` : '<div class="adm-user-expira"></div>'}
+        <div class="adm-user-actions">${acciones}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Actualizar contador
+  const total = all.length;
+  const shown = filtered.length;
+  if (counter) {
+    counter.textContent = shown === total
+      ? `${total} usuario${total !== 1 ? 's' : ''}`
+      : `${shown} de ${total} usuario${total !== 1 ? 's' : ''}`;
+  }
+}
+
+function updateAdminTechnical() {
+  const fbStatus = document.getElementById('adm-tech-firebase');
+  const version = document.getElementById('adm-tech-version');
+  const sync = document.getElementById('adm-tech-sync');
+
+  if (fbStatus) {
+    const isOk = typeof FB_URL !== 'undefined' && FB_URL;
+    fbStatus.textContent = isOk ? 'OK' : 'Error';
+    fbStatus.style.color = isOk ? 'var(--green)' : 'var(--red)';
+  }
+
+  if (version) {
+    version.textContent = typeof APP_VERSION !== 'undefined' ? APP_VERSION : '3.2.0';
+  }
+
+  if (sync) {
+    const lastSync = localStorage.getItem(`pilotpay:${currentUser}:last_sync_at`);
+    if (lastSync) {
+      const date = new Date(parseInt(lastSync));
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      sync.textContent = `${hours}:${minutes}`;
+    } else {
+      sync.textContent = '—';
+    }
+  }
+}
+
+function scrollToUsersList() {
+  const searchInput = document.getElementById('adm-search');
+  if (searchInput) {
+    searchInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => searchInput.focus(), 300);
+  }
+}
+
+function showDiagnostico() {
+  const panel = document.getElementById('adm-panel-diagnostico');
+  if (panel) {
+    panel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    // Inicializar monitor
+    if (typeof _initSyncMonitor === 'function') {
+      _initSyncMonitor();
+    }
+  }
+}
+
+function closeDiagnostico() {
+  const panel = document.getElementById('adm-panel-diagnostico');
+  if (panel) {
+    panel.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+function showConfiguracion() {
+  const panel = document.getElementById('adm-panel-configuracion');
+  if (panel) {
+    panel.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    // Renderizar avatares
+    if (typeof renderAdminAvatarGrid === 'function') {
+      renderAdminAvatarGrid('all');
+    }
+  }
+}
+
+function closeConfiguracion() {
+  const panel = document.getElementById('adm-panel-configuracion');
+  if (panel) {
+    panel.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// FIN ADMIN 2.0
+// ══════════════════════════════════════════════════════════════
 
 async function togglePerm(userCode, type, val, checked) {
   if (!isAdmin()) return;
@@ -8125,7 +9086,7 @@ async function crearUsuarioLocal() {
     const admTemp = document.getElementById('adm-temporal');
     if (admTemp) { admTemp.checked = false; onAdmTemporalChange(); }
 
-    renderAdmin();
+    renderAdminUsersList();
     alert(`✓ Usuario ${codigo} creado correctamente.\nTema asignado: ${defaultTheme}\nPrimer acceso: pestaña Perfil`);
   } catch(e) {
     alert(`Error al crear usuario: ${e.message}`);
@@ -8251,7 +9212,7 @@ function closeDayModal(e) {
 function editarUsuario(code) {
   if (!isAdmin()) return;
   const u = USERS[code] || {};
-  const isAdmin = code === ADMIN_CODE;
+  const isAdminUser = code === ADMIN_CODE;
 
   document.getElementById('day-modal-content').innerHTML = `
     <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)">
@@ -8305,13 +9266,13 @@ function editarUsuario(code) {
         <option value="MAD" ${getBaseCode(u.base||'GC')==='MAD'?'selected':''}>Madrid</option>
       </select>
     </div>
-    ${!isAdmin ? `<div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
+    ${!isAdminUser ? `<div style="font-size:11px;font-family:var(--mono);color:var(--amber2);
       background:var(--amber-dim);border:1px solid var(--amber);border-radius:6px;
       padding:8px 10px;margin-bottom:12px;line-height:1.5">
       Cambiar cargo, base o nivel reseteará los permisos operativos adicionales.
     </div>` : ''}
     <button class="btn-primary" style="margin-bottom:8px" onclick="guardarEdicionUsuario('${code}')">Guardar cambios</button>
-    ${!isAdmin ? `
+    ${!isAdminUser ? `
     <button onclick="confirmarEliminarUsuario('${code}')"
       style="width:100%;padding:10px;background:var(--red-dim);border:1px solid var(--red);
       color:var(--red);border-radius:var(--r);font-family:var(--mono);font-size:12px;
@@ -8350,6 +9311,7 @@ async function confirmarEliminarUsuario(code) {
       </button>
     </div>
   `;
+  document.getElementById('day-modal').classList.add('open');
 }
 
 async function toggleBloqueoUsuario(code, bloquear) {
@@ -8359,32 +9321,917 @@ async function toggleBloqueoUsuario(code, bloquear) {
   try {
     USERS[code].bloqueado = bloquear;
     await fbUpdate(`pilotpay/usuarios/${code}`, { bloqueado: bloquear });
-    renderAdmin();
+    renderAdminUsersList();
   } catch(e) {
     alert('Error al cambiar estado: ' + e.message);
   }
 }
 
-async function eliminarUsuario(code) {
-  if (!isAdmin()) return;
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FASE 1 — SISTEMA DE BORRADO ROBUSTO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Implementa purga total de usuarios y auditorías para evitar resurrecciones
+// al recrear usuarios. Borrado = purga completa en todas las capas.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/**
+ * Crea tombstone mínima de usuario eliminado en path separado.
+ * Fase 1: sin anti-resurrección automática, solo registro.
+ * @param {string} userId - Código del usuario
+ * @param {string} deletedBy - Admin que eliminó (o 'self')
+ * @returns {Promise<boolean>} true si éxito
+ */
+async function createDeletedUserTombstone(userId) {
   try {
-    // Borrar absolutamente todo rastro en Firebase
-    const _tkDel = await getAuthToken();
-    const _qDel = _tkDel ? '?auth=' + _tkDel : '';
-    await fetch(`${FB_URL}/pilotpay/usuarios/${code}.json${_qDel}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/permisos/${code}.json${_qDel}`,  { method: 'DELETE' });
-    await fetch(`${FB_URL}/pilotpay/perfiles/${code}.json${_qDel}`,  { method: 'DELETE' });
-    // Borrar también cualquier caché local
-    try { localStorage.removeItem(`pilotpay_v2_${code}`); } catch(e) {}
-    // Borrar de la caché en memoria
-    delete USERS[code];
-    delete perms[code];
-    savePermsToFirebase();
-    closeDayModal();
-    renderAdmin();
-  } catch(e) {
-    alert('Error al eliminar: ' + e.message);
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+    const deviceId = localStorage.getItem('pilotpay_device_id') || 'unknown';
+    const deletedBy = currentUser || 'admin';
+
+    const tombstone = {
+      userId: userId,
+      deletedAt: Date.now(),
+      deletedBy: deletedBy,
+      deletedByDevice: deviceId,
+      schemaVersion: 1
+    };
+
+    const res = await fetch(`${FB_URL}/pilotpay/deletedUsers/${userId}.json${q}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tombstone)
+    });
+
+    if (!res.ok) {
+      console.error('[createDeletedUserTombstone] Failed:', res.status, res.statusText);
+      return false;
+    }
+
+    console.log('[createDeletedUserTombstone] Tombstone creada:', userId);
+    return true;
+  } catch (err) {
+    console.error('[createDeletedUserTombstone] Error:', err);
+    return false;
   }
+}
+
+/**
+ * Purga todos los nodos Firebase del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{ok: boolean, errors: Array}>}
+ */
+async function purgeFirebaseForUser(userId) {
+  const errors = [];
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Nodos a eliminar
+    const paths = [
+      `/pilotpay/usuarios/${userId}`,
+      `/pilotpay/perfiles/${userId}`,
+      `/pilotpay/permisos/${userId}`,
+      `/pilotpay/historicos/${userId}`
+    ];
+
+    for (const path of paths) {
+      try {
+        const res = await fetch(`${FB_URL}${path}.json${q}`, { method: 'DELETE' });
+        if (!res.ok) {
+          errors.push(`${path}: ${res.status} ${res.statusText}`);
+        } else {
+          console.log('[purgeFirebaseForUser] Eliminado:', path);
+        }
+      } catch (err) {
+        errors.push(`${path}: ${err.message}`);
+      }
+    }
+
+    // Buscar solicitudes del usuario (si existen)
+    try {
+      const resSol = await fetch(`${FB_URL}/pilotpay/solicitudes.json${q}`);
+      if (resSol.ok) {
+        const solicitudes = await resSol.json();
+        if (solicitudes) {
+          const updates = {};
+          Object.keys(solicitudes).forEach(key => {
+            if (solicitudes[key].userId === userId) {
+              updates[`/pilotpay/solicitudes/${key}`] = null;
+            }
+          });
+          if (Object.keys(updates).length > 0) {
+            await fetch(`${FB_URL}/.json${q}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updates)
+            });
+            console.log('[purgeFirebaseForUser] Solicitudes eliminadas:', Object.keys(updates).length);
+          }
+        }
+      }
+    } catch (err) {
+      errors.push(`solicitudes: ${err.message}`);
+    }
+
+    return { ok: errors.length === 0, errors };
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+    return { ok: false, errors };
+  }
+}
+
+/**
+ * Purga todas las claves localStorage del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {{deleted: number, errors: Array}}
+ */
+function purgeLocalStorageForUser(userId) {
+  const deleted = [];
+  const errors = [];
+
+  try {
+    const keysToDelete = [];
+
+    // Iterar todas las claves
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Patrón 1: pilotpay:{userId}:*
+      if (key.startsWith(`pilotpay:${userId}:`)) {
+        keysToDelete.push(key);
+      }
+
+      // Patrón 2: pilotpay_*_{userId}
+      if (key.startsWith('pilotpay_') && key.endsWith(`_${userId}`)) {
+        keysToDelete.push(key);
+      }
+    }
+
+    // Eliminar todas las claves identificadas
+    keysToDelete.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        deleted.push(key);
+        console.log('[purgeLocalStorageForUser] Eliminado:', key);
+      } catch (err) {
+        errors.push(`${key}: ${err.message}`);
+      }
+    });
+
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+  }
+
+  return { deleted: deleted.length, errors };
+}
+
+/**
+ * Purga todos los registros IndexedDB del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{deleted: Object, errors: Array}>}
+ */
+async function purgeIndexedDBForUser(userId) {
+  const deleted = { monthlyRecords: 0, auditHistory: 0, syncState: 0, pendingSyncQueue: 0 };
+  const errors = [];
+
+  if (typeof PilotPayLocalDB === 'undefined') {
+    console.warn('[purgeIndexedDBForUser] PilotPayLocalDB no disponible');
+    return { deleted, errors };
+  }
+
+  try {
+    // Abrir DB directamente para iterar stores
+    const dbName = 'PilotPayLocalDB';
+    const openRequest = indexedDB.open(dbName);
+
+    await new Promise((resolve, reject) => {
+      openRequest.onsuccess = () => resolve(openRequest.result);
+      openRequest.onerror = () => reject(openRequest.error);
+    });
+
+    const db = openRequest.result;
+
+    // Store: monthlyRecords
+    if (db.objectStoreNames.contains('monthlyRecords')) {
+      try {
+        const tx = db.transaction('monthlyRecords', 'readwrite');
+        const store = tx.objectStore('monthlyRecords');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.monthlyRecords++;
+          }
+        }
+        console.log('[purgeIndexedDBForUser] monthlyRecords eliminados:', deleted.monthlyRecords);
+      } catch (err) {
+        errors.push(`monthlyRecords: ${err.message}`);
+      }
+    }
+
+    // Store: auditHistory
+    if (db.objectStoreNames.contains('auditHistory')) {
+      try {
+        const tx = db.transaction('auditHistory', 'readwrite');
+        const store = tx.objectStore('auditHistory');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.auditHistory++;
+          }
+        }
+        console.log('[purgeIndexedDBForUser] auditHistory eliminados:', deleted.auditHistory);
+      } catch (err) {
+        errors.push(`auditHistory: ${err.message}`);
+      }
+    }
+
+    // Store: syncState (si existe)
+    if (db.objectStoreNames.contains('syncState')) {
+      try {
+        const tx = db.transaction('syncState', 'readwrite');
+        const store = tx.objectStore('syncState');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.syncState++;
+          }
+        }
+      } catch (err) {
+        errors.push(`syncState: ${err.message}`);
+      }
+    }
+
+    // Store: pendingSyncQueue (si existe)
+    if (db.objectStoreNames.contains('pendingSyncQueue')) {
+      try {
+        const tx = db.transaction('pendingSyncQueue', 'readwrite');
+        const store = tx.objectStore('pendingSyncQueue');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+
+        for (const record of allRecords) {
+          if (record.userId === userId) {
+            await new Promise((resolve, reject) => {
+              const delReq = store.delete(record.id);
+              delReq.onsuccess = () => resolve();
+              delReq.onerror = () => reject(delReq.error);
+            });
+            deleted.pendingSyncQueue++;
+          }
+        }
+      } catch (err) {
+        errors.push(`pendingSyncQueue: ${err.message}`);
+      }
+    }
+
+    db.close();
+
+  } catch (err) {
+    errors.push(`general: ${err.message}`);
+  }
+
+  return { deleted, errors };
+}
+
+/**
+ * Purga colas de sincronización del usuario.
+ * @param {string} userId - Código del usuario
+ * @returns {{deleted: number, errors: Array}}
+ */
+function purgeQueuesForUser(userId) {
+  const deleted = [];
+  const errors = [];
+
+  try {
+    // Cola P4
+    const p4QueueKey = `pilotpay:${userId}:p4_queue`;
+    if (localStorage.getItem(p4QueueKey)) {
+      localStorage.removeItem(p4QueueKey);
+      deleted.push(p4QueueKey);
+      console.log('[purgeQueuesForUser] Cola P4 eliminada');
+    }
+
+    // Cola offline
+    const offlineQueueKey = `pilotpay:${userId}:offline_queue`;
+    if (localStorage.getItem(offlineQueueKey)) {
+      localStorage.removeItem(offlineQueueKey);
+      deleted.push(offlineQueueKey);
+      console.log('[purgeQueuesForUser] Cola offline eliminada');
+    }
+  } catch (err) {
+    errors.push(`colas: ${err.message}`);
+  }
+
+  return { deleted: deleted.length, errors };
+}
+
+/**
+ * Purga memoria runtime del usuario.
+ * @param {string} userId - Código del usuario
+ */
+function purgeMemoryForUser(userId) {
+  const purged = [];
+
+  // USERS
+  if (USERS && USERS[userId]) {
+    delete USERS[userId];
+    purged.push('USERS');
+  }
+
+  // perms
+  if (window.perms && window.perms[userId]) {
+    delete window.perms[userId];
+    purged.push('perms');
+  }
+
+  // profileData si corresponde
+  if (window.profileData && (window.profileData.code === userId || window.profileData.userId === userId)) {
+    window.profileData = {};
+    purged.push('profileData');
+  }
+
+  // calcResult si corresponde
+  if (window.calcResult && window.calcResult.userId === userId) {
+    window.calcResult = null;
+    purged.push('calcResult');
+  }
+
+  // nomDataCached si corresponde
+  if (window.nomDataCached && window.nomDataCached.userId === userId) {
+    window.nomDataCached = null;
+    purged.push('nomDataCached');
+  }
+
+  // currentUser si corresponde
+  if (window.currentUser === userId) {
+    window.currentUser = null;
+    window.currentNivel = null;
+    purged.push('currentUser');
+  }
+
+  // simHistoricoData si corresponde
+  if (window.simHistoricoData) {
+    window.simHistoricoData = null;
+    purged.push('simHistoricoData');
+  }
+
+  console.log('[purgeMemoryForUser] Memoria purgada:', purged.join(', '));
+  return purged;
+}
+
+/**
+ * Verifica que un usuario fue purgado completamente.
+ * @param {string} userId - Código del usuario
+ * @returns {Promise<{ok: boolean, residues: Array}>}
+ */
+async function verifyUserPurged(userId) {
+  const residues = [];
+
+  console.log('[verifyUserPurged] Verificando purga de:', userId);
+
+  // ── Firebase ──
+  try {
+    const token = await getAuthToken();
+    const q = token ? `?auth=${token}` : '';
+
+    // Verificar deletedUsers existe
+    const resDeleted = await fetch(`${FB_URL}/pilotpay/deletedUsers/${userId}.json${q}`);
+    if (resDeleted.ok) {
+      const data = await resDeleted.json();
+      if (!data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/deletedUsers/${userId}`,
+          severity: 'critical',
+          detail: 'Tombstone no existe'
+        });
+      }
+    }
+
+    // Verificar usuarios no existe
+    const resUser = await fetch(`${FB_URL}/pilotpay/usuarios/${userId}.json${q}`);
+    if (resUser.ok) {
+      const data = await resUser.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/usuarios/${userId}`,
+          severity: 'critical',
+          detail: 'Usuario vivo todavía existe'
+        });
+      }
+    }
+
+    // Verificar perfiles no existe
+    const resProfile = await fetch(`${FB_URL}/pilotpay/perfiles/${userId}.json${q}`);
+    if (resProfile.ok) {
+      const data = await resProfile.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/perfiles/${userId}`,
+          severity: 'critical',
+          detail: 'Perfil todavía existe'
+        });
+      }
+    }
+
+    // Verificar historicos no existe
+    const resHist = await fetch(`${FB_URL}/pilotpay/historicos/${userId}.json${q}`);
+    if (resHist.ok) {
+      const data = await resHist.json();
+      if (data) {
+        residues.push({
+          layer: 'Firebase',
+          keyOrPath: `/historicos/${userId}`,
+          severity: 'critical',
+          detail: 'Históricos todavía existen'
+        });
+      }
+    }
+  } catch (err) {
+    residues.push({
+      layer: 'Firebase',
+      keyOrPath: 'verification',
+      severity: 'error',
+      detail: err.message
+    });
+  }
+
+  // ── localStorage ──
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      if (key.startsWith(`pilotpay:${userId}:`) ||
+          (key.startsWith('pilotpay_') && key.endsWith(`_${userId}`))) {
+        residues.push({
+          layer: 'localStorage',
+          keyOrPath: key,
+          severity: 'high',
+          detail: 'Clave todavía existe'
+        });
+      }
+    }
+  } catch (err) {
+    residues.push({
+      layer: 'localStorage',
+      keyOrPath: 'verification',
+      severity: 'error',
+      detail: err.message
+    });
+  }
+
+  // ── IndexedDB ──
+  if (typeof PilotPayLocalDB !== 'undefined') {
+    try {
+      const dbName = 'PilotPayLocalDB';
+      const openRequest = indexedDB.open(dbName);
+
+      await new Promise((resolve, reject) => {
+        openRequest.onsuccess = () => resolve(openRequest.result);
+        openRequest.onerror = () => reject(openRequest.error);
+      });
+
+      const db = openRequest.result;
+
+      // Verificar monthlyRecords
+      if (db.objectStoreNames.contains('monthlyRecords')) {
+        const tx = db.transaction('monthlyRecords', 'readonly');
+        const store = tx.objectStore('monthlyRecords');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+        const monthlyCount = allRecords.filter(r => r.userId === userId).length;
+        if (monthlyCount > 0) {
+          residues.push({
+            layer: 'IndexedDB',
+            keyOrPath: 'monthlyRecords',
+            severity: 'high',
+            detail: `${monthlyCount} registros todavía existen`
+          });
+        }
+      }
+
+      // Verificar auditHistory
+      if (db.objectStoreNames.contains('auditHistory')) {
+        const tx = db.transaction('auditHistory', 'readonly');
+        const store = tx.objectStore('auditHistory');
+        const allRecords = await new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+        const auditsCount = allRecords.filter(r => r.userId === userId).length;
+        if (auditsCount > 0) {
+          residues.push({
+            layer: 'IndexedDB',
+            keyOrPath: 'auditHistory',
+            severity: 'high',
+            detail: `${auditsCount} registros todavía existen`
+          });
+        }
+      }
+
+      db.close();
+    } catch (err) {
+      residues.push({
+        layer: 'IndexedDB',
+        keyOrPath: 'verification',
+        severity: 'error',
+        detail: err.message
+      });
+    }
+  }
+
+  // ── Memoria ──
+  if (USERS && USERS[userId]) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'USERS',
+      severity: 'medium',
+      detail: 'Usuario todavía en USERS'
+    });
+  }
+
+  if (window.perms && window.perms[userId]) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'perms',
+      severity: 'medium',
+      detail: 'Permisos todavía en memoria'
+    });
+  }
+
+  if (window.currentUser === userId) {
+    residues.push({
+      layer: 'Memoria',
+      keyOrPath: 'currentUser',
+      severity: 'critical',
+      detail: 'Usuario eliminado es el usuario actual'
+    });
+  }
+
+  const ok = residues.length === 0;
+  console.log('[verifyUserPurged] Verificación completa:', ok ? 'OK' : `${residues.length} residuos`);
+
+  return { ok, residues };
+}
+
+/**
+ * Purga completa de usuario (Fase 1).
+ * Elimina todos los datos del usuario de todas las capas.
+ * @param {string} userId - Código del usuario a purgar
+ * @returns {Promise<{ok: boolean, verification: Object}>}
+ */
+async function purgeUser(userId) {
+  if (!isAdmin()) {
+    console.error('[purgeUser] Acceso denegado');
+    return { ok: false, error: 'Acceso denegado' };
+  }
+
+  if (!userId || userId === ADMIN_CODE) {
+    console.error('[purgeUser] No se puede borrar admin o userId vacío');
+    return { ok: false, error: 'Usuario inválido' };
+  }
+
+  // Confirmación irreversible
+  const confirmMsg = `⚠️ ELIMINAR USUARIO ${userId}
+
+Esta acción es IRREVERSIBLE.
+
+Se eliminarán:
+• Perfil completo
+• Todos los expedientes mensuales
+• Todas las auditorías
+• Configuración fiscal
+• Histórico completo
+• Datos en Firebase, localStorage e IndexedDB
+
+¿Confirmar eliminación definitiva?`;
+
+  if (!confirm(confirmMsg)) {
+    console.log('[purgeUser] Cancelado por usuario');
+    return { ok: false, error: 'Cancelado' };
+  }
+
+  console.log('[purgeUser] Iniciando purga de:', userId);
+  const startTime = Date.now();
+
+  try {
+    // Paso 1: Crear tombstone (crítico - si falla, abortar)
+    console.log('[purgeUser] Paso 1/10: Creando tombstone...');
+    const tombstoneOk = await createDeletedUserTombstone(userId);
+    if (!tombstoneOk) {
+      alert('Error crítico: No se pudo crear tombstone.\n\nPurga abortada.');
+      return { ok: false, error: 'Tombstone creation failed' };
+    }
+
+    // Paso 2: Marcar en progreso (Fase 1: placeholder, no se usa todavía)
+    console.log('[purgeUser] Paso 2/10: Marcando en progreso...');
+    if (!window.userDeletionInProgress) window.userDeletionInProgress = {};
+    window.userDeletionInProgress[userId] = true;
+
+    // Paso 3: Detener sincronización (Fase 1: placeholder, sin P4 activo)
+    console.log('[purgeUser] Paso 3/10: Deteniendo sincronización...');
+    // TODO Fase 2: detener P4 activamente
+
+    // Paso 4: Purgar colas
+    console.log('[purgeUser] Paso 4/10: Purgando colas...');
+    const queuesResult = purgeQueuesForUser(userId);
+    console.log('[purgeUser] Colas purgadas:', queuesResult);
+
+    // Paso 5: Purgar Firebase
+    console.log('[purgeUser] Paso 5/10: Purgando Firebase...');
+    const fbResult = await purgeFirebaseForUser(userId);
+    console.log('[purgeUser] Firebase purgado:', fbResult);
+    if (!fbResult.ok && fbResult.errors.length > 0) {
+      console.warn('[purgeUser] Errores en Firebase (continuando):', fbResult.errors);
+    }
+
+    // Paso 6: Purgar localStorage
+    console.log('[purgeUser] Paso 6/10: Purgando localStorage...');
+    const lsResult = purgeLocalStorageForUser(userId);
+    console.log('[purgeUser] localStorage purgado:', lsResult);
+
+    // Paso 7: Purgar IndexedDB
+    console.log('[purgeUser] Paso 7/10: Purgando IndexedDB...');
+    const idbResult = await purgeIndexedDBForUser(userId);
+    console.log('[purgeUser] IndexedDB purgado:', idbResult);
+
+    // Paso 8: Purgar memoria
+    console.log('[purgeUser] Paso 8/10: Purgando memoria...');
+    const memoryPurged = purgeMemoryForUser(userId);
+    console.log('[purgeUser] Memoria purgada:', memoryPurged);
+
+    // Paso 9: Si es usuario actual, logout
+    if (currentUser === userId) {
+      console.log('[purgeUser] Paso 9/10: Usuario actual eliminado, forzando logout...');
+      alert(`Usuario ${userId} eliminado correctamente.\n\nSerás redirigido al login.`);
+      doLogout();
+      return { ok: true, selfDelete: true };
+    }
+
+    // Paso 10: Verificar purga
+    console.log('[purgeUser] Paso 10/10: Verificando purga...');
+    const verification = await verifyUserPurged(userId);
+
+    const elapsed = Date.now() - startTime;
+    console.log(`[purgeUser] Purga completada en ${elapsed}ms`);
+
+    // Limpiar flag
+    if (window.userDeletionInProgress) {
+      delete window.userDeletionInProgress[userId];
+    }
+
+    // Mostrar resultado
+    if (verification.ok) {
+      alert(`✓ Usuario ${userId} eliminado correctamente.\n\nVerificación: Sin residuos.`);
+    } else {
+      const criticalCount = verification.residues.filter(r => r.severity === 'critical').length;
+      const highCount = verification.residues.filter(r => r.severity === 'high').length;
+
+      let msg = `⚠️ Usuario ${userId} eliminado con advertencias.\n\n`;
+      msg += `Residuos detectados:\n`;
+      msg += `• Críticos: ${criticalCount}\n`;
+      msg += `• Altos: ${highCount}\n`;
+      msg += `• Total: ${verification.residues.length}\n\n`;
+      msg += `Ver consola para detalles.`;
+
+      console.warn('[purgeUser] Residuos detectados:', verification.residues);
+      alert(msg);
+    }
+
+    return { ok: true, verification };
+
+  } catch (err) {
+    console.error('[purgeUser] Error crítico:', err);
+
+    // Limpiar flag
+    if (window.userDeletionInProgress) {
+      delete window.userDeletionInProgress[userId];
+    }
+
+    alert(`Error al eliminar usuario ${userId}:\n\n${err.message}\n\nVer consola para detalles.`);
+    return { ok: false, error: err.message };
+  }
+}
+
+/**
+ * Borra una auditoría individual de forma completa.
+ * Fase 1: borrado físico. Fase 2 añadirá tombstone individual.
+ * @param {string} auditId - ID de la auditoría a borrar
+ * @returns {Promise<{ok: boolean, error?: string}>}
+ */
+async function deleteAuditRecord(auditId) {
+  if (!auditId) {
+    console.error('[deleteAuditRecord] auditId requerido');
+    return { ok: false, error: 'auditId requerido' };
+  }
+
+  console.log('[deleteAuditRecord] Borrando auditoría:', auditId);
+
+  try {
+    // Paso 1: Localizar auditoría en localStorage
+    const list = hstLoad();
+    const audit = list.find(r => r.id === auditId);
+
+    if (!audit) {
+      console.warn('[deleteAuditRecord] Auditoría no encontrada en localStorage');
+      // Continuar para limpiar otras capas por si existe en IDB/Firebase
+    }
+
+    const userId = audit ? audit.userId : null;
+    const mes = audit ? audit.mes : null;
+    const anyo = audit ? audit.anyo : null;
+
+    // Paso 2: Borrar de localStorage
+    const filteredList = list.filter(r => r.id !== auditId);
+    hstSave(filteredList);
+    console.log('[deleteAuditRecord] Eliminada de localStorage');
+
+    // Paso 3: Borrar de IndexedDB (best-effort)
+    if (typeof PilotPayLocalDB !== 'undefined') {
+      try {
+        await PilotPayLocalDB.deleteAuditRecord(auditId);
+        console.log('[deleteAuditRecord] Eliminada de IndexedDB');
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error eliminando de IndexedDB (continuando):', err);
+      }
+    }
+
+    // Paso 4: Borrar de Firebase (Fase 1: borrado físico, sin tombstone)
+    if (userId) {
+      try {
+        const token = await getAuthToken();
+        const q = token ? `?auth=${token}` : '';
+        const res = await fetch(`${FB_URL}/pilotpay/historicos/${userId}/auditorias/${auditId}.json${q}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          console.log('[deleteAuditRecord] Eliminada de Firebase');
+        } else {
+          console.warn('[deleteAuditRecord] Error eliminando de Firebase:', res.status);
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error eliminando de Firebase:', err);
+      }
+    }
+
+    // Paso 5: Limpiar colas P4/offline
+    if (userId) {
+      try {
+        // Cola P4
+        const p4QueueKey = `pilotpay:${userId}:p4_queue`;
+        const p4Queue = localStorage.getItem(p4QueueKey);
+        if (p4Queue) {
+          const queue = JSON.parse(p4Queue);
+          const filteredQueue = queue.filter(item => {
+            return !(item.path && item.path.includes(auditId));
+          });
+          if (filteredQueue.length < queue.length) {
+            localStorage.setItem(p4QueueKey, JSON.stringify(filteredQueue));
+            console.log('[deleteAuditRecord] Items eliminados de cola P4');
+          }
+        }
+
+        // Cola offline
+        const offlineQueueKey = `pilotpay:${userId}:offline_queue`;
+        const offlineQueue = localStorage.getItem(offlineQueueKey);
+        if (offlineQueue) {
+          const queue = JSON.parse(offlineQueue);
+          const filteredQueue = queue.filter(item => {
+            return !(item.path && item.path.includes(auditId));
+          });
+          if (filteredQueue.length < queue.length) {
+            localStorage.setItem(offlineQueueKey, JSON.stringify(filteredQueue));
+            console.log('[deleteAuditRecord] Items eliminados de cola offline');
+          }
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error limpiando colas:', err);
+      }
+    }
+
+    // Paso 6: Limpieza best-effort de MonthRecord si era auditoría activa
+    if (userId && mes && anyo && typeof PilotPayStore !== 'undefined' && PilotPayStore.ready()) {
+      try {
+        const monthRecord = PilotPayStore.monthly.get(anyo, mes);
+
+        if (monthRecord && monthRecord.auditoria && monthRecord.auditoria.id === auditId) {
+          console.log('[deleteAuditRecord] Auditoría era la activa en MonthRecord, limpiando...');
+
+          // Limpiar auditoría
+          monthRecord.auditoria = null;
+
+          // Recalcular estado
+          if (monthRecord.calcResult || monthRecord.variables) {
+            monthRecord.estado = 'con_datos';
+          } else {
+            monthRecord.estado = 'pendiente';
+          }
+
+          // Guardar MonthRecord actualizado (API correcta: set, no saveMonthRecord)
+          PilotPayStore.monthly.set(anyo, mes, monthRecord);
+          console.log('[deleteAuditRecord] MonthRecord actualizado:', monthRecord.estado);
+        }
+      } catch (err) {
+        console.warn('[deleteAuditRecord] Error actualizando MonthRecord (best-effort):', err);
+      }
+    }
+
+    // Paso 7: Limpiar memoria
+    if (window.calcResult && window.calcResult.auditId === auditId) {
+      window.calcResult = null;
+      console.log('[deleteAuditRecord] calcResult limpiado');
+    }
+
+    if (window.nomDataCached && window.nomDataCached.auditId === auditId) {
+      window.nomDataCached = null;
+      console.log('[deleteAuditRecord] nomDataCached limpiado');
+    }
+
+    // Paso 8: Re-renderizar vistas
+    if (typeof hstRefreshCount === 'function') {
+      hstRefreshCount();
+    }
+
+    // Si estamos en historial o dashboard, reload
+    const currentTab = document.querySelector('.tab-btn.active')?.textContent?.toLowerCase();
+    if (currentTab === 'historial') {
+      if (typeof renderHistorial === 'function') {
+        renderHistorial();
+      }
+    } else if (currentTab === 'dashboard') {
+      if (typeof renderDashboard === 'function') {
+        renderDashboard();
+      }
+    }
+
+    console.log('[deleteAuditRecord] Auditoría eliminada completamente');
+    return { ok: true };
+
+  } catch (err) {
+    console.error('[deleteAuditRecord] Error:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// END FASE 1 — SISTEMA DE BORRADO ROBUSTO
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async function eliminarUsuario(code) {
+  // Reemplazado por purgeUser() — Fase 1 sistema de borrado robusto
+  if (!isAdmin()) return;
+
+  const result = await purgeUser(code);
+
+  if (result.ok && !result.selfDelete) {
+    // Usuario eliminado exitosamente (no era el actual)
+    savePermsToFirebase(); // Actualizar permisos en Firebase sin el usuario borrado
+    closeDayModal();
+    renderAdminUsersList();
+  }
+  // Si selfDelete = true, ya se hizo logout automáticamente
+  // Si !ok, ya se mostró error en purgeUser()
 }
 
 async function guardarEdicionUsuario(code) {
@@ -8553,6 +10400,12 @@ function showTab(name) {
     console.warn('[PilotPay] showTab("admin"): acceso denegado');
     return;
   }
+
+  // Analytics: detectar abandono de auditoría si sale del workspace
+  if (typeof PilotPayAnalytics !== 'undefined') {
+    PilotPayAnalytics.checkAbandonOnModuleChange(name);
+  }
+
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   // Seleccionar por atributo onclick en lugar de por índice — inmune a reordenaciones.
@@ -8569,12 +10422,17 @@ function showTab(name) {
     if (_wc) _wc.scrollTop = 0;
   }
   _syncLeftPanel();
+
+  // Analytics: track module view
+  if (typeof PilotPayAnalytics !== 'undefined') {
+    PilotPayAnalytics.track('module_view', { module: name });
+  }
   if (name === 'nomina')    renderNomina();
   if (name === 'perfil')    renderPerfil();
   if (name === 'simulador') { loadSimulatorData(); simRecalc(); }
   if (name === 'comparar')  checkApiKeyCard();
   if (name === 'config')    renderConfig();
-  if (name === 'admin')     { adminTab('alta'); renderAdmin(); }
+  if (name === 'admin')     { initAdmin(); }
   if (name === 'variables') varsActualizarMesEsperado();
   if (name === 'historial') renderHistorial();
   if (name === 'dashboard') renderDashboard();
@@ -11105,10 +12963,393 @@ async function extractPdfText(file) {
 }
 
 // ── BINTER NÓMINA PARSER ──
+function parseBinterNomina(text) {
+  const n = s => {
+    // Parse Spanish number format: "4.314,56" → 4314.56
+    if (!s) return null;
+    const cleaned = s.replace(/\./g, '').replace(',', '.');
+    const val = parseFloat(cleaned);
+    return isNaN(val) ? null : val;
+  };
+
+  // Helper: find number after a keyword
+  const findNum = (pattern) => {
+    const m = text.match(pattern);
+    return m ? n(m[1]) : null;
+  };
+
+  // Helper: find text after keyword
+  const findTxt = (pattern) => {
+    const m = text.match(pattern);
+    return m ? m[1].trim() : null;
+  };
+
+  // ── TRABAJADOR ──
+  const nombre = findTxt(/TRABAJADOR\s+([\w\s]+?)\s+(?:N\.?I\.?F|NIF)/i)
+    || findTxt(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/)
+    || findTxt(/Estimado\/a\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúña-z\s]+?)(?:\n|Se adelantan)/i);
+
+  // NIF trabajador: solo formato persona física (8 dígitos + 1 letra).
+  // No buscar por etiqueta "N.I.F." — la empresa aparece primero en el doc.
+  // Anclar al Nº SS para distinguir trabajador de empresa cuando hay varios.
+  const _NIF_RE = /\b(\d{8}[A-Z])\b/g;
+  const _nssAnchorM = text.match(/\b\d{11,12}\b/) || text.match(/\d{2}[\/-]\d{8}[\/-]\d{2}/);
+  const _nssAnchorPos = _nssAnchorM ? text.indexOf(_nssAnchorM[0]) : -1;
+  const _nifCands = [];
+  let _nifTmp;
+  while ((_nifTmp = _NIF_RE.exec(text)) !== null) {
+    _nifCands.push({ nif: _nifTmp[1], pos: _nifTmp.index });
+  }
+  let nif = null;
+  if (_nifCands.length === 1) {
+    nif = _nifCands[0].nif;
+  } else if (_nifCands.length > 1 && _nssAnchorPos >= 0) {
+    const _antes = _nifCands.filter(c => c.pos < _nssAnchorPos);
+    if (_antes.length > 0) {
+      const _cercano = _antes.reduce((a, b) => b.pos > a.pos ? b : a);
+      if (_nssAnchorPos - _cercano.pos < 600) nif = _cercano.nif;
+    }
+    if (!nif) {
+      const _despues = _nifCands.filter(c => c.pos > _nssAnchorPos && c.pos - _nssAnchorPos < 200);
+      if (_despues.length > 0) nif = _despues[0].nif;
+    }
+  }
+
+  const nss = findTxt(/N[ºo°]?\s*(?:AFILIACI[ÓO]N|INS\.?\s*SEG\.?\s*SOC\.?|SS)\.?\s*(\d{11,12})/i)
+    || findTxt(/(\d{11,12})\s+(?:\d{8}[A-Z]|[A-Z]\d{7})/);
+
+  const fecha_ingreso = findTxt(/ANTIG[ÜU]EDAD\s+EMP\.?\s*(\d{2}\/\d{2}\/\d{4})/i)
+    || findTxt(/(\d{2}\/\d{2}\/\d{4})\s+PILOTO/i);
+
+  // Periodo
+  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let mes = null, anio = null;
+  const periodoM = text.match(/(\d{2})\/(\d{2})\/(\d{4})\s*[-–]?\s*\d{2}\/\d{2}\/(\d{4})/);
+  if (periodoM) {
+    mes = MESES[parseInt(periodoM[2]) - 1];
+    anio = parseInt(periodoM[4]);
+  }
+
+  // Función — extraída del campo PUESTO de la nómina
+  // Binter usa: "Comandante", "Copiloto", "SCC — Sobrecargo", "CC — Tripulante de Cabina"
+  const puestoLine = text.match(/(?:PUESTO|Puesto)[:\s]+([^\n]+)/i);
+  const puestoTxt  = puestoLine ? puestoLine[1].trim() : '';
+  let funcion = 'CMD';
+  if (/comandante/i.test(puestoTxt))   funcion = 'CMD';
+  else if (/copiloto/i.test(puestoTxt)) funcion = 'COP';
+  else if (/SCC|sobrecargo/i.test(puestoTxt)) funcion = 'SCC';
+  else if (/CC|tripulante.*cabina/i.test(puestoTxt)) funcion = 'CC';
+  else if (/CMDT|COMANDANTE|CMD/i.test(text)) funcion = 'CMD';
+  else if (/COP|COPILOTO/i.test(text)) funcion = 'COP';
+
+  const nivelM = text.match(/(?:CMDT|COP)\.?\s*(\d)/i);
+  const nivel = nivelM ? parseInt(nivelM[1]) : null;
+
+  // Base — extraída del CENTRO DE TRABAJO
+  // "Aeropuerto MAD" → Madrid, "Aeropuerto TFN" → Tenerife, "Aeropuerto LPA" → Gran Canaria
+  const centroLine = text.match(/CENTRO\s+DE\s+TRABAJO[:\s]+([^\n]+)/i)
+    || text.match(/Aeropuerto\s+([A-Z]{3})/i);
+  let base = 'CANARIAS';
+  if (centroLine) {
+    const ct = centroLine[1].trim();
+    if (/MAD|MADRID/i.test(ct)) base = 'MADRID';
+    else if (/TFN|TENERIFE/i.test(ct)) base = 'TENERIFE';
+    else if (/LPA|PALMAS|CANARIA/i.test(ct)) base = 'GRAN_CANARIA';
+  } else if (/MAD|MADRID/i.test(text)) base = 'MADRID';
+
+  // IRPF % — en la nómina Binter aparece como "34,15% 8.173,70 Retención A Cuenta Del Irpf"
+  // Hay que extraer el primer número (el porcentaje) de esa línea específica
+  const irpfLine = text.split('\n').find(l =>
+    /Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i.test(l) && !/[Ee]specie/i.test(l)
+  );
+  let irpf_pct = null;
+  if (irpfLine) {
+    const mPct = irpfLine.match(/^([\d]+[,.][\d]+)%/);
+    if (mPct) irpf_pct = parseFloat(mPct[1].replace(',','.'));
+  }
+  if (!irpf_pct) {
+    // Fallback: buscar patrón XX,XX% seguido de base IRPF grande
+    const mFb = text.match(/(3[0-9][,.][\d]{2})%\s+[\d.,]+\s+Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i);
+    if (mFb) irpf_pct = parseFloat(mFb[1].replace(',','.'));
+  }
+
+  // ── DEVENGOS ──
+  const salario_base = findNum(/Salario\s+Base\s+([\d.,]+)/i);
+  const plus_transporte = findNum(/Plus\s+De\s+Transporte\s+([\d.,]+)/i);
+
+  // HV tramos
+  const hv_t1_imp = findNum(/Hora\s+Vuelo\s+T1\s+([\d.,]+)/i);
+  const hv_t2_imp = findNum(/Hora\s+Vuelo\s+T2\s+([\d.,]+)/i);
+  const hv_t3_imp = findNum(/Hora\s+Vuelo\s+T3\s+([\d.,]+)/i);
+  const hv_t4_imp = findNum(/Hora\s+Vuelo\s+T4\s+([\d.,]+)/i);
+  const horas_vuelo = (hv_t1_imp||0) + (hv_t2_imp||0) + (hv_t3_imp||0) + (hv_t4_imp||0);
+
+  // HV unidades
+  const hv_t1_uds = findNum(/(\d{1,2}[,.]\d{4})\s+[\d.,]+\s+Hora\s+Vuelo\s+T1/i);
+  const hv_t2_uds = findNum(/(\d{1,2}[,.]\d{4})\s+[\d.,]+\s+Hora\s+Vuelo\s+T2/i);
+
+  const dpo = findNum(/Otros\s+Conceptos\s+([\d.,]+)/i);
+  const complemento_mad = findNum(/Complemento\s+de\s+base\s+([\d.,]+)/i);
+
+  // Dietas exentas/sujetas
+  const dieta_mant_ex  = findNum(/Dieta\s+Manutenci[oó]n\s+Exenta\s+([\d.,]+)/i);
+  const dieta_mant_suj = findNum(/Dieta\s+Manutenci[oó]n\s+Sujeta\s+([\d.,]+)/i);
+  const dieta_nac_cp_ex= findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Pernocta\s+Exenta\s+([\d.,]+)/i);
+  const dieta_nac_sp_ex= findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Exenta\s+([\d.,]+)/i);
+  const dieta_nac_sp_suj=findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Sujeta\s+([\d.,]+)/i);
+  const dieta_int_cp_ex= findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Pernocta\s+Exenta\s+([\d.,]+)/i);
+  const dieta_int_sp_ex= findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Exenta\s+([\d.,]+)/i);
+  const dieta_int_sp_suj=findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Sujeta\s+([\d.,]+)/i);
+
+  const dietas_exentas = (dieta_mant_ex||0)+(dieta_nac_cp_ex||0)+(dieta_nac_sp_ex||0)
+                        +(dieta_int_cp_ex||0)+(dieta_int_sp_ex||0);
+  const dietas_sujetas = (dieta_mant_suj||0)+(dieta_nac_sp_suj||0)+(dieta_int_sp_suj||0);
+
+  // ── DEDUCCIONES ──
+  const ss_cc  = findNum(/(\d{1,2}[,.]\d{2})%\s+[\d.,]+\s+Cotizaci[oó]n\s+Cont\.\s+Comunes/i)
+    ? findNum(/[\d.,]+\s+Cotizaci[oó]n\s+Cont\.\s+Comunes\s+([\d.,]+)/i) : null;
+  const ss_cc2 = findNum(/Cotizaci[oó]n\s+Cont\.\s+Comunes\s+([\d.,]+)/i);
+  const ss_mei = findNum(/Cotizaci[oó]n\s+MEI\s+([\d.,]+)/i);
+  const ss_dfp = findNum(/Cotizaci[oó]n\s+D\+Fp\s+([\d.,]+)/i);
+  const ss_sol_t1 = findNum(/Solid\w*.*?Primer\s+[Tt]ramo\s+([\d.,]+)/i);
+  const ss_sol_t2 = findNum(/Solid\w*.*?Segundo\s+[Tt]ramo\s+([\d.,]+)/i);
+  const ss_sol_t3 = findNum(/Solid\w*.*?Tercer\s+[Tt]ramo\s+([\d.,]+)/i);
+
+  const irpf_especie = findNum(/Retenci[oó]n\s+A\s+Cuenta\s+Irpf\s+Especie\s+([\d.,]+)/i);
+  const irpf_retencion= findNum(/Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf\s+([\d.,]+)/i);
+  const seguro_medico = findNum(/Seguro\s+M[eé]dico\s+No\s+Repercutido\s+([\d.,]+)/i);
+
+  // ── TOTALES (pie de nómina) ──
+  // Línea con 8 valores: [0]REM [1]PRORRATA [2]OTRAS [3]BASE_SS [4]BASE_DES [5]BASE_IRPF [6]TOT_DEV [7]TOT_DED
+  // Verificado con nómina real Binter marzo 2026 (1 y 2 páginas)
+  let total_devengado = null, base_irpf = null, base_ss = null, liquido = null;
+
+  // Buscar la línea que contiene exactamente 8 importes monetarios grandes (>100€)
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const nums = (line.match(/([\d.]+,\d+)/g) || []).map(s => n(s)).filter(v => v !== null);
+    if (nums.length >= 8 && nums[0] > 1000 && nums[3] > 1000) {
+      // Matches the pie row: REM_TOTAL > 1000, BASE_COT > 1000
+      base_ss         = nums[3];  // BASE_COT = 5101.20
+      base_irpf       = nums[5];  // BASE_IRPF = 8173.70
+      total_devengado = nums[6];  // TOTAL_DEV = 8709.30
+      break;
+    }
+  }
+
+  // Líquido: número antes de € en la línea que contiene "Acum. Base IRPF"
+  // o en línea con patrón: NUMERO € (aislado)
+  for (const line of lines) {
+    const liqM = line.match(/([\d.]+,\d+)\s*€/);
+    if (liqM && !line.includes('Acum.')) {
+      liquido = n(liqM[1]);
+      break;
+    }
+    if (liqM && line.includes('Acum. Base IRPF')) {
+      // The liquido is the last number before € on this line
+      const allNums = line.match(/([\d.]+,\d+)/g);
+      if (allNums && allNums.length >= 2) {
+        liquido = n(allNums[allNums.length - 1]);
+      }
+      break;
+    }
+  }
+
+  // Fallbacks
+  if (!total_devengado) total_devengado = findNum(/TOTAL\s+DEVENGADO\s+([\d.,]+)/i);
+  if (!base_irpf)       base_irpf       = findNum(/BASE\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
+  if (!base_ss)         base_ss         = findNum(/BASE\s+COTIZACI[OÓ]N\s+([\d.,]+)/i);
+  if (!liquido)         liquido         = findNum(/L[IÍ]QUIDO\s+TOTAL\s+A\s+PERCIBIR\s+([\d.,]+)/i);
+
+  // ── ACUMULADOS ──
+  // Layout real nómina Binter (analizado con pdfplumber, Marzo 2026):
+  // PDF.js agrupa por coord. Y → los valores aparecen en líneas anteriores a su etiqueta.
+  // Puede haber texto intercalado ("FIRMA Y SELLO...") entre valor y etiqueta.
+  // Hay líneas con 2 etiquetas Acum. (la 1ª toma valor anterior, la 2ª toma inline).
+  //
+  // Estructura observada:
+  // [15] "Acum.  Base  Esp.  Rep  129,99"                             ← inline
+  // [17] "30.501,12"                                                  ← valor de Base IRPF
+  // [18] "Acum.  Base  IRPF"                                         ← etiqueta sola
+  // [19] "Acum.  IRPF  Esp.  Rep  44,57"                             ← inline
+  // [20] "10.456,83"                                                  ← valor de IRPF retenido
+  // [21] "Acum.  IRPF"                                               ← etiqueta sola
+  // [22] "Acum.  Base  Esp.  No  Rep  0,00"                          ← inline
+  // [23] "FIRMA  Y  SELLO  DE  LA  EMPRESA"                          ← texto intercalado
+  // [24] "1.034,26"                                                  ← valor de Cotiz. S.S.
+  // [25] "Acum.  Cotiz.  S.S.  Acum.  IRPF  Esp.  No  Rep  0,00"   ← línea compuesta
+
+  const _RN_ACM    = '[\\d]{1,3}(?:\\.\\d{3})*,\\d{2}';
+  const _RN_ACM_RE = new RegExp('^' + _RN_ACM + '$');
+
+  function _findAcum(lns, labelRe) {
+    for (let _i = 0; _i < lns.length; _i++) {
+      const _line = lns[_i];
+      if (!labelRe.test(_line)) continue;
+
+      const _nAcum      = (_line.match(/Acum\./g) || []).length;
+      const _inlineNums = _line.match(new RegExp(_RN_ACM, 'g')) || [];
+      const _firstAcumIdx = _line.indexOf('Acum.');
+      const _thisMatch    = labelRe.exec(_line);
+      const _isFirst      = _thisMatch && (_thisMatch.index === _firstAcumIdx);
+
+      // Función: buscar número hacia atrás (hasta 4 líneas, sin cruzar otra etiqueta Acum.)
+      const _scanBack = () => {
+        for (let _j = _i - 1; _j >= Math.max(0, _i - 4); _j--) {
+          if (_RN_ACM_RE.test(lns[_j])) return n(lns[_j]);
+          if (lns[_j] && /Acum\./i.test(lns[_j])) break;
+        }
+        return null;
+      };
+
+      if (_nAcum <= 1) {
+        // Etiqueta única: inline > buscar atrás
+        if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        const _back = _scanBack();
+        if (_back !== null) return _back;
+      } else {
+        // Línea compuesta: 1ª etiqueta ← atrás; 2ª ← inline
+        if (_isFirst) {
+          const _back = _scanBack();
+          if (_back !== null) return _back;
+        } else {
+          if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
+        }
+      }
+    }
+    return null;
+  }
+
+  const _lns_acm = text.split('\n').map(l => l.trim());
+
+  const acum_base_irpf     = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
+  const acum_irpf          = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
+  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.?\s*Cotiz/i);
+  const acum_base_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
+  const acum_irpf_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
+  const acum_base_esp_norep= _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
+  const acum_irpf_esp_norep= _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
+
+  // ── TIRA DE DÍAS (pie de nómina) ──
+  // Formato real Binter (verificado con pdfplumber en Feb/Mar/Abr 2026):
+  //   Y=778: "100.0100.0100.0100.0100.0100.0100.0100.0  100.0100.0100.0100.0  ..."
+  //   Los porcentajes están CONCATENADOS sin espacio dentro de cada grupo.
+  //   Los grupos se separan con doble espacio (artefacto de columnas PDF).
+  //   NO hay una fila separada con números 1-31.
+  //
+  // Estrategia: buscar la línea que contiene ≥10 ocurrencias de \d{1,3}\.\d
+  // y extraer todos los valores con regex independientemente de los espacios.
+
+  const _CODIGOS_DIAS = {
+    EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
+    VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia'
+  };
+
+  // Buscar la línea de la tira de días.
+  // Los valores están concatenados: "100.0100.0100.0..." sin espacios.
+  // Hay que separarlos insertando espacios en las uniones: /(\d\.\d)(\d)/ → '$1 $2'
+  // Se aplica 4 veces para cubrir cadenas largas de cualquier longitud.
+  const _tiraLine = text.split('\n').find(l => {
+    // Detectar línea con ≥10 ocurrencias de dígito.dígito (puede estar concatenada)
+    return (l.match(/\d\.\d/g) || []).length >= 10;
+  }) || '';
+
+  // Separar valores concatenados (ej: "100.0100.0" → "100.0 100.0")
+  let _tiraSep = _tiraLine;
+  for (let _k = 0; _k < 5; _k++) _tiraSep = _tiraSep.replace(/(\d\.\d)(\d)/g, '$1 $2');
+
+  // Extraer valores ya separados: formato N.D (un solo decimal en Binter)
+  const _tiraVals = (_tiraSep.match(/\b\d{1,3}\.\d\b/g) || []).map(Number);
+
+  // Construir diasInfo
+  const _diasConInc = [];
+  const _codigosRes = {};
+  let _diasTrabajados = 0;
+
+  _tiraVals.forEach((v, i) => {
+    if (v === 100) {
+      _diasTrabajados++;
+    } else if (v > 0 && v < 100) {
+      // Porcentaje parcial — contar como incidencia sin código específico
+      _diasConInc.push({ dia: i + 1, cod: 'IT', nombre: 'Baja/Incidencia', pct: v });
+      _codigosRes['IT'] = (_codigosRes['IT'] || 0) + 1;
+    }
+  });
+
+  // Detectar también códigos en la línea de porcentajes (si los hay mezclados)
+  // Los códigos (EN, VA, etc.) aparecerían como tokens en esa misma línea
+  (_tiraLine.split(/\s+/) || []).forEach((tok, i) => {
+    const cod = tok.toUpperCase();
+    if (_CODIGOS_DIAS[cod]) {
+      _diasConInc.push({ dia: i + 1, cod, nombre: _CODIGOS_DIAS[cod] });
+      _codigosRes[cod] = (_codigosRes[cod] || 0) + 1;
+      if (_tiraVals[i] === 100) _diasTrabajados--; // corregir si se contó como trabajado
+    }
+  });
+
+  const diasInfo = {
+    diasTrabajados:     _tiraVals.length > 0 ? _diasTrabajados : null,
+    totalDias:          _tiraVals.length,
+    totalConIncidencia: _diasConInc.length,
+    diasConCodigo:      _diasConInc,
+    codigosResumen:     _codigosRes,
+  };
+
+  // Compatibilidad con código anterior que usa bajaInfo
+  const bajaInfo = diasInfo.totalConIncidencia > 0
+    ? { detectada: true, resumen: Object.entries(_codigosRes).map(([c,n])=>`${c}:${n}`).join(', ') }
+    : { detectada: false };
+
+  return {
+    trabajador: { nombre, nif, nss, fecha_ingreso, funcion, nivel, base },
+    periodo: { mes, anio },
+    irpf_pct,
+    hv: { t1_uds: hv_t1_uds, t2_uds: hv_t2_uds, t1_imp: hv_t1_imp, t2_imp: hv_t2_imp },
+    devengos: {
+      salario_base, plus_transporte, horas_vuelo,
+      dpo, complemento_mad, dietas_exentas, dietas_sujetas
+    },
+    deducciones: {
+      ss_cc: ss_cc || ss_cc2, ss_mei, ss_dfp,
+      ss_solidaridad: (ss_sol_t1||0)+(ss_sol_t2||0)+(ss_sol_t3||0),
+      irpf_especie, irpf_retencion, seguro_medico
+    },
+    totales: { total_devengado, base_irpf, base_ss, liquido },
+    acumulados: {
+      base_irpf:       acum_base_irpf,
+      irpf:            acum_irpf,
+      cotiz_ss:        acum_cotiz_ss,
+      base_esp_rep:    acum_base_esp_rep,
+      irpf_esp_rep:    acum_irpf_esp_rep,
+      base_esp_norep:  acum_base_esp_norep,
+      irpf_esp_norep:  acum_irpf_esp_norep,
+    },
+    bajaInfo,
+    diasInfo,
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PARSER NÓMINA BINTER V2 — Extracción completa con tabla de conceptos
 // ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * parseBinterNominaV2 — Parser V2 con extracción exhaustiva
+ *
+ * Mejoras vs V1:
+ * - Extrae TODAS las líneas de tabla de conceptos (incluidas desconocidas)
+ * - Detecta empresa (NIF/nombre)
+ * - Extrae SS porcentajes
+ * - Extrae Total Deducciones
+ * - Calendario mensual completo
+ * - Sistema de confianza por campo
+ * - Warnings detallados
+ * - Logging/debug estructurado
+ *
+ * @param {string} text — texto extraído del PDF
+ * @returns {object} — estructura completa V2 con metadata
+ */
 function parseBinterNominaV2(text) {
   const startTime = performance.now();
   const warnings = [];
@@ -11889,373 +14130,6 @@ function parseBinterNominaSeguro(text) {
   }
 
   return legacy;
-}
-
-function parseBinterNomina(text) {
-  const n = s => {
-    // Parse Spanish number format: "4.314,56" → 4314.56
-    if (!s) return null;
-    const cleaned = s.replace(/\./g, '').replace(',', '.');
-    const val = parseFloat(cleaned);
-    return isNaN(val) ? null : val;
-  };
-
-  // Helper: find number after a keyword
-  const findNum = (pattern) => {
-    const m = text.match(pattern);
-    return m ? n(m[1]) : null;
-  };
-
-  // Helper: find text after keyword
-  const findTxt = (pattern) => {
-    const m = text.match(pattern);
-    return m ? m[1].trim() : null;
-  };
-
-  // ── TRABAJADOR ──
-  const nombre = findTxt(/TRABAJADOR\s+([\w\s]+?)\s+(?:N\.?I\.?F|NIF)/i)
-    || findTxt(/([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,40})\s+\d{2}\/\d{2}\/\d{4}/)
-    || findTxt(/Estimado\/a\s+([A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúña-z\s]+?)(?:\n|Se adelantan)/i);
-
-  // NIF trabajador: solo formato persona física (8 dígitos + 1 letra).
-  // No buscar por etiqueta "N.I.F." — la empresa aparece primero en el doc.
-  // Anclar al Nº SS para distinguir trabajador de empresa cuando hay varios.
-  const _NIF_RE = /\b(\d{8}[A-Z])\b/g;
-  const _nssAnchorM = text.match(/\b\d{11,12}\b/) || text.match(/\d{2}[\/-]\d{8}[\/-]\d{2}/);
-  const _nssAnchorPos = _nssAnchorM ? text.indexOf(_nssAnchorM[0]) : -1;
-  const _nifCands = [];
-  let _nifTmp;
-  while ((_nifTmp = _NIF_RE.exec(text)) !== null) {
-    _nifCands.push({ nif: _nifTmp[1], pos: _nifTmp.index });
-  }
-  let nif = null;
-  if (_nifCands.length === 1) {
-    nif = _nifCands[0].nif;
-  } else if (_nifCands.length > 1 && _nssAnchorPos >= 0) {
-    const _antes = _nifCands.filter(c => c.pos < _nssAnchorPos);
-    if (_antes.length > 0) {
-      const _cercano = _antes.reduce((a, b) => b.pos > a.pos ? b : a);
-      if (_nssAnchorPos - _cercano.pos < 600) nif = _cercano.nif;
-    }
-    if (!nif) {
-      const _despues = _nifCands.filter(c => c.pos > _nssAnchorPos && c.pos - _nssAnchorPos < 200);
-      if (_despues.length > 0) nif = _despues[0].nif;
-    }
-  }
-
-  const nss = findTxt(/N[ºo°]?\s*(?:AFILIACI[ÓO]N|INS\.?\s*SEG\.?\s*SOC\.?|SS)\.?\s*(\d{11,12})/i)
-    || findTxt(/(\d{11,12})\s+(?:\d{8}[A-Z]|[A-Z]\d{7})/);
-
-  const fecha_ingreso = findTxt(/ANTIG[ÜU]EDAD\s+EMP\.?\s*(\d{2}\/\d{2}\/\d{4})/i)
-    || findTxt(/(\d{2}\/\d{2}\/\d{4})\s+PILOTO/i);
-
-  // Periodo
-  const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  let mes = null, anio = null;
-  const periodoM = text.match(/(\d{2})\/(\d{2})\/(\d{4})\s*[-–]?\s*\d{2}\/\d{2}\/(\d{4})/);
-  if (periodoM) {
-    mes = MESES[parseInt(periodoM[2]) - 1];
-    anio = parseInt(periodoM[4]);
-  }
-
-  // Función — extraída del campo PUESTO de la nómina
-  // Binter usa: "Comandante", "Copiloto", "SCC — Sobrecargo", "CC — Tripulante de Cabina"
-  const puestoLine = text.match(/(?:PUESTO|Puesto)[:\s]+([^\n]+)/i);
-  const puestoTxt  = puestoLine ? puestoLine[1].trim() : '';
-  let funcion = 'CMD';
-  if (/comandante/i.test(puestoTxt))   funcion = 'CMD';
-  else if (/copiloto/i.test(puestoTxt)) funcion = 'COP';
-  else if (/SCC|sobrecargo/i.test(puestoTxt)) funcion = 'SCC';
-  else if (/CC|tripulante.*cabina/i.test(puestoTxt)) funcion = 'CC';
-  else if (/CMDT|COMANDANTE|CMD/i.test(text)) funcion = 'CMD';
-  else if (/COP|COPILOTO/i.test(text)) funcion = 'COP';
-
-  const nivelM = text.match(/(?:CMDT|COP)\.?\s*(\d)/i);
-  const nivel = nivelM ? parseInt(nivelM[1]) : null;
-
-  // Base — extraída del CENTRO DE TRABAJO
-  // "Aeropuerto MAD" → Madrid, "Aeropuerto TFN" → Tenerife, "Aeropuerto LPA" → Gran Canaria
-  const centroLine = text.match(/CENTRO\s+DE\s+TRABAJO[:\s]+([^\n]+)/i)
-    || text.match(/Aeropuerto\s+([A-Z]{3})/i);
-  let base = 'CANARIAS';
-  if (centroLine) {
-    const ct = centroLine[1].trim();
-    if (/MAD|MADRID/i.test(ct)) base = 'MADRID';
-    else if (/TFN|TENERIFE/i.test(ct)) base = 'TENERIFE';
-    else if (/LPA|PALMAS|CANARIA/i.test(ct)) base = 'GRAN_CANARIA';
-  } else if (/MAD|MADRID/i.test(text)) base = 'MADRID';
-
-  // IRPF % — en la nómina Binter aparece como "34,15% 8.173,70 Retención A Cuenta Del Irpf"
-  // Hay que extraer el primer número (el porcentaje) de esa línea específica
-  const irpfLine = text.split('\n').find(l =>
-    /Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i.test(l) && !/[Ee]specie/i.test(l)
-  );
-  let irpf_pct = null;
-  if (irpfLine) {
-    const mPct = irpfLine.match(/^([\d]+[,.][\d]+)%/);
-    if (mPct) irpf_pct = parseFloat(mPct[1].replace(',','.'));
-  }
-  if (!irpf_pct) {
-    // Fallback: buscar patrón XX,XX% seguido de base IRPF grande
-    const mFb = text.match(/(3[0-9][,.][\d]{2})%\s+[\d.,]+\s+Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf/i);
-    if (mFb) irpf_pct = parseFloat(mFb[1].replace(',','.'));
-  }
-
-  // ── DEVENGOS ──
-  const salario_base = findNum(/Salario\s+Base\s+([\d.,]+)/i);
-  const plus_transporte = findNum(/Plus\s+De\s+Transporte\s+([\d.,]+)/i);
-
-  // HV tramos
-  const hv_t1_imp = findNum(/Hora\s+Vuelo\s+T1\s+([\d.,]+)/i);
-  const hv_t2_imp = findNum(/Hora\s+Vuelo\s+T2\s+([\d.,]+)/i);
-  const hv_t3_imp = findNum(/Hora\s+Vuelo\s+T3\s+([\d.,]+)/i);
-  const hv_t4_imp = findNum(/Hora\s+Vuelo\s+T4\s+([\d.,]+)/i);
-  const horas_vuelo = (hv_t1_imp||0) + (hv_t2_imp||0) + (hv_t3_imp||0) + (hv_t4_imp||0);
-
-  // HV unidades
-  const hv_t1_uds = findNum(/(\d{1,2}[,.]\d{4})\s+[\d.,]+\s+Hora\s+Vuelo\s+T1/i);
-  const hv_t2_uds = findNum(/(\d{1,2}[,.]\d{4})\s+[\d.,]+\s+Hora\s+Vuelo\s+T2/i);
-
-  const dpo = findNum(/Otros\s+Conceptos\s+([\d.,]+)/i);
-  const complemento_mad = findNum(/Complemento\s+de\s+base\s+([\d.,]+)/i);
-
-  // Dietas exentas/sujetas
-  const dieta_mant_ex  = findNum(/Dieta\s+Manutenci[oó]n\s+Exenta\s+([\d.,]+)/i);
-  const dieta_mant_suj = findNum(/Dieta\s+Manutenci[oó]n\s+Sujeta\s+([\d.,]+)/i);
-  const dieta_nac_cp_ex= findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Pernocta\s+Exenta\s+([\d.,]+)/i);
-  const dieta_nac_sp_ex= findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Exenta\s+([\d.,]+)/i);
-  const dieta_nac_sp_suj=findNum(/Dieta\s+Desplaz\.\s+Nac\.\s+Sujeta\s+([\d.,]+)/i);
-  const dieta_int_cp_ex= findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Pernocta\s+Exenta\s+([\d.,]+)/i);
-  const dieta_int_sp_ex= findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Exenta\s+([\d.,]+)/i);
-  const dieta_int_sp_suj=findNum(/Dieta\s+Desplaz\.\s+Inter\.\s+Sujeta\s+([\d.,]+)/i);
-
-  const dietas_exentas = (dieta_mant_ex||0)+(dieta_nac_cp_ex||0)+(dieta_nac_sp_ex||0)
-                        +(dieta_int_cp_ex||0)+(dieta_int_sp_ex||0);
-  const dietas_sujetas = (dieta_mant_suj||0)+(dieta_nac_sp_suj||0)+(dieta_int_sp_suj||0);
-
-  // ── DEDUCCIONES ──
-  const ss_cc  = findNum(/(\d{1,2}[,.]\d{2})%\s+[\d.,]+\s+Cotizaci[oó]n\s+Cont\.\s+Comunes/i)
-    ? findNum(/[\d.,]+\s+Cotizaci[oó]n\s+Cont\.\s+Comunes\s+([\d.,]+)/i) : null;
-  const ss_cc2 = findNum(/Cotizaci[oó]n\s+Cont\.\s+Comunes\s+([\d.,]+)/i);
-  const ss_mei = findNum(/Cotizaci[oó]n\s+MEI\s+([\d.,]+)/i);
-  const ss_dfp = findNum(/Cotizaci[oó]n\s+D\+Fp\s+([\d.,]+)/i);
-  const ss_sol_t1 = findNum(/Solid\w*.*?Primer\s+[Tt]ramo\s+([\d.,]+)/i);
-  const ss_sol_t2 = findNum(/Solid\w*.*?Segundo\s+[Tt]ramo\s+([\d.,]+)/i);
-  const ss_sol_t3 = findNum(/Solid\w*.*?Tercer\s+[Tt]ramo\s+([\d.,]+)/i);
-
-  const irpf_especie = findNum(/Retenci[oó]n\s+A\s+Cuenta\s+Irpf\s+Especie\s+([\d.,]+)/i);
-  const irpf_retencion= findNum(/Retenci[oó]n\s+A\s+Cuenta\s+Del\s+Irpf\s+([\d.,]+)/i);
-  const seguro_medico = findNum(/Seguro\s+M[eé]dico\s+No\s+Repercutido\s+([\d.,]+)/i);
-
-  // ── TOTALES (pie de nómina) ──
-  // Línea con 8 valores: [0]REM [1]PRORRATA [2]OTRAS [3]BASE_SS [4]BASE_DES [5]BASE_IRPF [6]TOT_DEV [7]TOT_DED
-  // Verificado con nómina real Binter marzo 2026 (1 y 2 páginas)
-  let total_devengado = null, base_irpf = null, base_ss = null, liquido = null;
-
-  // Buscar la línea que contiene exactamente 8 importes monetarios grandes (>100€)
-  const lines = text.split('\n');
-  for (const line of lines) {
-    const nums = (line.match(/([\d.]+,\d+)/g) || []).map(s => n(s)).filter(v => v !== null);
-    if (nums.length >= 8 && nums[0] > 1000 && nums[3] > 1000) {
-      // Matches the pie row: REM_TOTAL > 1000, BASE_COT > 1000
-      base_ss         = nums[3];  // BASE_COT = 5101.20
-      base_irpf       = nums[5];  // BASE_IRPF = 8173.70
-      total_devengado = nums[6];  // TOTAL_DEV = 8709.30
-      break;
-    }
-  }
-
-  // Líquido: número antes de € en la línea que contiene "Acum. Base IRPF"
-  // o en línea con patrón: NUMERO € (aislado)
-  for (const line of lines) {
-    const liqM = line.match(/([\d.]+,\d+)\s*€/);
-    if (liqM && !line.includes('Acum.')) {
-      liquido = n(liqM[1]);
-      break;
-    }
-    if (liqM && line.includes('Acum. Base IRPF')) {
-      // The liquido is the last number before € on this line
-      const allNums = line.match(/([\d.]+,\d+)/g);
-      if (allNums && allNums.length >= 2) {
-        liquido = n(allNums[allNums.length - 1]);
-      }
-      break;
-    }
-  }
-
-  // Fallbacks
-  if (!total_devengado) total_devengado = findNum(/TOTAL\s+DEVENGADO\s+([\d.,]+)/i);
-  if (!base_irpf)       base_irpf       = findNum(/BASE\s+I\.?R\.?P\.?F\.?\s+([\d.,]+)/i);
-  if (!base_ss)         base_ss         = findNum(/BASE\s+COTIZACI[OÓ]N\s+([\d.,]+)/i);
-  if (!liquido)         liquido         = findNum(/L[IÍ]QUIDO\s+TOTAL\s+A\s+PERCIBIR\s+([\d.,]+)/i);
-
-  // ── ACUMULADOS ──
-  // Layout real nómina Binter (analizado con pdfplumber, Marzo 2026):
-  // PDF.js agrupa por coord. Y → los valores aparecen en líneas anteriores a su etiqueta.
-  // Puede haber texto intercalado ("FIRMA Y SELLO...") entre valor y etiqueta.
-  // Hay líneas con 2 etiquetas Acum. (la 1ª toma valor anterior, la 2ª toma inline).
-  //
-  // Estructura observada:
-  // [15] "Acum.  Base  Esp.  Rep  129,99"                             ← inline
-  // [17] "30.501,12"                                                  ← valor de Base IRPF
-  // [18] "Acum.  Base  IRPF"                                         ← etiqueta sola
-  // [19] "Acum.  IRPF  Esp.  Rep  44,57"                             ← inline
-  // [20] "10.456,83"                                                  ← valor de IRPF retenido
-  // [21] "Acum.  IRPF"                                               ← etiqueta sola
-  // [22] "Acum.  Base  Esp.  No  Rep  0,00"                          ← inline
-  // [23] "FIRMA  Y  SELLO  DE  LA  EMPRESA"                          ← texto intercalado
-  // [24] "1.034,26"                                                  ← valor de Cotiz. S.S.
-  // [25] "Acum.  Cotiz.  S.S.  Acum.  IRPF  Esp.  No  Rep  0,00"   ← línea compuesta
-
-  const _RN_ACM    = '[\\d]{1,3}(?:\\.\\d{3})*,\\d{2}';
-  const _RN_ACM_RE = new RegExp('^' + _RN_ACM + '$');
-
-  function _findAcum(lns, labelRe) {
-    for (let _i = 0; _i < lns.length; _i++) {
-      const _line = lns[_i];
-      if (!labelRe.test(_line)) continue;
-
-      const _nAcum      = (_line.match(/Acum\./g) || []).length;
-      const _inlineNums = _line.match(new RegExp(_RN_ACM, 'g')) || [];
-      const _firstAcumIdx = _line.indexOf('Acum.');
-      const _thisMatch    = labelRe.exec(_line);
-      const _isFirst      = _thisMatch && (_thisMatch.index === _firstAcumIdx);
-
-      // Función: buscar número hacia atrás (hasta 4 líneas, sin cruzar otra etiqueta Acum.)
-      const _scanBack = () => {
-        for (let _j = _i - 1; _j >= Math.max(0, _i - 4); _j--) {
-          if (_RN_ACM_RE.test(lns[_j])) return n(lns[_j]);
-          if (lns[_j] && /Acum\./i.test(lns[_j])) break;
-        }
-        return null;
-      };
-
-      if (_nAcum <= 1) {
-        // Etiqueta única: inline > buscar atrás
-        if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
-        const _back = _scanBack();
-        if (_back !== null) return _back;
-      } else {
-        // Línea compuesta: 1ª etiqueta ← atrás; 2ª ← inline
-        if (_isFirst) {
-          const _back = _scanBack();
-          if (_back !== null) return _back;
-        } else {
-          if (_inlineNums.length > 0) return n(_inlineNums[_inlineNums.length - 1]);
-        }
-      }
-    }
-    return null;
-  }
-
-  const _lns_acm = text.split('\n').map(l => l.trim());
-
-  const acum_base_irpf     = _findAcum(_lns_acm, /Acum\.\s+Base\s+IRPF\s*$/i);
-  const acum_irpf          = _findAcum(_lns_acm, /Acum\.\s+IRPF\s*$/i);
-  const acum_cotiz_ss      = _findAcum(_lns_acm, /Acum\.?\s*Cotiz/i);
-  const acum_base_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp/i);
-  const acum_irpf_esp_rep  = _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?Rep(?!.*No)/i);
-  const acum_base_esp_norep= _findAcum(_lns_acm, /Acum\.\s+Base\s+Esp.*?No\s+Rep/i);
-  const acum_irpf_esp_norep= _findAcum(_lns_acm, /Acum\.\s+IRPF\s+Esp.*?No\s+Rep/i);
-
-  // ── TIRA DE DÍAS (pie de nómina) ──
-  // Formato real Binter (verificado con pdfplumber en Feb/Mar/Abr 2026):
-  //   Y=778: "100.0100.0100.0100.0100.0100.0100.0100.0  100.0100.0100.0100.0  ..."
-  //   Los porcentajes están CONCATENADOS sin espacio dentro de cada grupo.
-  //   Los grupos se separan con doble espacio (artefacto de columnas PDF).
-  //   NO hay una fila separada con números 1-31.
-  //
-  // Estrategia: buscar la línea que contiene ≥10 ocurrencias de \d{1,3}\.\d
-  // y extraer todos los valores con regex independientemente de los espacios.
-
-  const _CODIGOS_DIAS = {
-    EN:'Enfermedad', AC:'Accidente', MA:'Maternidad', ER:'ERE',
-    VA:'Vacaciones', PA:'Paternidad', RE:'Riesgo Embarazo', HU:'Huelga', AU:'Ausencia'
-  };
-
-  // Buscar la línea de la tira de días.
-  // Los valores están concatenados: "100.0100.0100.0..." sin espacios.
-  // Hay que separarlos insertando espacios en las uniones: /(\d\.\d)(\d)/ → '$1 $2'
-  // Se aplica 4 veces para cubrir cadenas largas de cualquier longitud.
-  const _tiraLine = text.split('\n').find(l => {
-    // Detectar línea con ≥10 ocurrencias de dígito.dígito (puede estar concatenada)
-    return (l.match(/\d\.\d/g) || []).length >= 10;
-  }) || '';
-
-  // Separar valores concatenados (ej: "100.0100.0" → "100.0 100.0")
-  let _tiraSep = _tiraLine;
-  for (let _k = 0; _k < 5; _k++) _tiraSep = _tiraSep.replace(/(\d\.\d)(\d)/g, '$1 $2');
-
-  // Extraer valores ya separados: formato N.D (un solo decimal en Binter)
-  const _tiraVals = (_tiraSep.match(/\b\d{1,3}\.\d\b/g) || []).map(Number);
-
-  // Construir diasInfo
-  const _diasConInc = [];
-  const _codigosRes = {};
-  let _diasTrabajados = 0;
-
-  _tiraVals.forEach((v, i) => {
-    if (v === 100) {
-      _diasTrabajados++;
-    } else if (v > 0 && v < 100) {
-      // Porcentaje parcial — contar como incidencia sin código específico
-      _diasConInc.push({ dia: i + 1, cod: 'IT', nombre: 'Baja/Incidencia', pct: v });
-      _codigosRes['IT'] = (_codigosRes['IT'] || 0) + 1;
-    }
-  });
-
-  // Detectar también códigos en la línea de porcentajes (si los hay mezclados)
-  // Los códigos (EN, VA, etc.) aparecerían como tokens en esa misma línea
-  (_tiraLine.split(/\s+/) || []).forEach((tok, i) => {
-    const cod = tok.toUpperCase();
-    if (_CODIGOS_DIAS[cod]) {
-      _diasConInc.push({ dia: i + 1, cod, nombre: _CODIGOS_DIAS[cod] });
-      _codigosRes[cod] = (_codigosRes[cod] || 0) + 1;
-      if (_tiraVals[i] === 100) _diasTrabajados--; // corregir si se contó como trabajado
-    }
-  });
-
-  const diasInfo = {
-    diasTrabajados:     _tiraVals.length > 0 ? _diasTrabajados : null,
-    totalDias:          _tiraVals.length,
-    totalConIncidencia: _diasConInc.length,
-    diasConCodigo:      _diasConInc,
-    codigosResumen:     _codigosRes,
-  };
-
-  // Compatibilidad con código anterior que usa bajaInfo
-  const bajaInfo = diasInfo.totalConIncidencia > 0
-    ? { detectada: true, resumen: Object.entries(_codigosRes).map(([c,n])=>`${c}:${n}`).join(', ') }
-    : { detectada: false };
-
-  return {
-    trabajador: { nombre, nif, nss, fecha_ingreso, funcion, nivel, base },
-    periodo: { mes, anio },
-    irpf_pct,
-    hv: { t1_uds: hv_t1_uds, t2_uds: hv_t2_uds, t1_imp: hv_t1_imp, t2_imp: hv_t2_imp },
-    devengos: {
-      salario_base, plus_transporte, horas_vuelo,
-      dpo, complemento_mad, dietas_exentas, dietas_sujetas
-    },
-    deducciones: {
-      ss_cc: ss_cc || ss_cc2, ss_mei, ss_dfp,
-      ss_solidaridad: (ss_sol_t1||0)+(ss_sol_t2||0)+(ss_sol_t3||0),
-      irpf_especie, irpf_retencion, seguro_medico
-    },
-    totales: { total_devengado, base_irpf, base_ss, liquido },
-    acumulados: {
-      base_irpf:       acum_base_irpf,
-      irpf:            acum_irpf,
-      cotiz_ss:        acum_cotiz_ss,
-      base_esp_rep:    acum_base_esp_rep,
-      irpf_esp_rep:    acum_irpf_esp_rep,
-      base_esp_norep:  acum_base_esp_norep,
-      irpf_esp_norep:  acum_irpf_esp_norep,
-    },
-    bajaInfo,
-    diasInfo,
-  };
 }
 
 async function processNomina(file) {
@@ -14799,6 +16673,14 @@ function varsConfirmarPeriodo(confirmado) {
     varsPeriodoConfirmado = true;
     varsMostrarResultado();
     _varsNotifyStore();
+
+    // Analytics: iniciar sesión de auditoría
+    if (typeof PilotPayAnalytics !== 'undefined' && varsData._periodoFin) {
+      const nomMes = varsGetNominaMes(varsData._periodoFin);
+      const anio = varsData._periodoFin.getFullYear();
+      PilotPayAnalytics.startAuditSession(nomMes, anio);
+      PilotPayAnalytics.updateAuditPhase('variables', true);
+    }
   } else {
     document.getElementById('vars-periodo-edit').style.display = 'block';
     // Pre-rellenar con fechas detectadas si existen
@@ -20001,5 +21883,457 @@ window.PILOTPAY_BACKEND_READY = true;
   };
 })();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- PARSER DIAGNOSTIC TOOL — Activar con ?diagnostic en URL                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div id="parser-diagnostic" style="display:none">
+<style>
+#parser-diagnostic { position: fixed; inset: 0; background: var(--bg); z-index: 10000; overflow-y: auto; padding: 20px; }
+#parser-diagnostic .pd-container { max-width: 1600px; margin: 0 auto; }
+#parser-diagnostic h1 { font-size: 28px; margin-bottom: 10px; color: var(--blue); }
+#parser-diagnostic .pd-subtitle { font-size: 14px; color: var(--text3); margin-bottom: 30px; }
+#parser-diagnostic .pd-upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; margin-bottom: 30px; transition: all 0.2s; }
+#parser-diagnostic .pd-upload-zone:hover { border-color: var(--blue); background: var(--bg3); }
+#parser-diagnostic .pd-section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+#parser-diagnostic .pd-section-title { font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+#parser-diagnostic .pd-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+#parser-diagnostic .pd-field-group { margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; }
+#parser-diagnostic .pd-field-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; min-width: 140px; }
+#parser-diagnostic .pd-field-value { font-size: 14px; color: var(--text); font-family: var(--mono); }
+#parser-diagnostic .pd-field-value.highlight { color: var(--green); font-weight: 600; }
+#parser-diagnostic .pd-field-value.missing { color: var(--red); font-style: italic; }
+#parser-diagnostic .pd-stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+#parser-diagnostic .pd-stat-card { background: var(--bg3); padding: 15px; border-radius: 6px; border: 1px solid var(--border); }
+#parser-diagnostic .pd-stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+#parser-diagnostic .pd-stat-value { font-size: 24px; font-weight: 700; color: var(--text); }
+#parser-diagnostic .pd-stat-value.green { color: var(--green); }
+#parser-diagnostic .pd-stat-value.amber { color: var(--amber); }
+#parser-diagnostic .pd-stat-value.red { color: var(--red); }
+#parser-diagnostic table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#parser-diagnostic th, #parser-diagnostic td { padding: 8px; text-align: left; border-bottom: 1px solid var(--border); }
+#parser-diagnostic th { background: var(--bg3); color: var(--text3); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+#parser-diagnostic tr:hover { background: var(--bg3); }
+#parser-diagnostic .pd-tipo-devengo { color: var(--green); }
+#parser-diagnostic .pd-tipo-deduccion { color: var(--red); }
+#parser-diagnostic .pd-tipo-desconocido { color: var(--text3); }
+#parser-diagnostic .pd-conf-high { color: var(--green); }
+#parser-diagnostic .pd-conf-medium { color: var(--amber); }
+#parser-diagnostic .pd-conf-low { color: var(--red); }
+#parser-diagnostic .pd-warning { background: rgba(249, 226, 175, 0.1); border-left: 3px solid var(--amber); padding: 10px 15px; border-radius: 4px; margin-bottom: 10px; font-size: 12px; color: var(--amber); }
+#parser-diagnostic .pd-unknown-item { background: var(--bg3); padding: 10px; border-radius: 4px; margin-bottom: 8px; font-size: 12px; font-family: var(--mono); border-left: 3px solid var(--amber); }
+#parser-diagnostic .pd-close { position: fixed; top: 20px; right: 20px; background: var(--red); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+</style>
+
+<div class="pd-container">
+  <button class="pd-close" onclick="closeDiagnostic()">✕ Cerrar</button>
+
+  <h1>🔬 Parser Diagnostic Tool</h1>
+  <div class="pd-subtitle">Herramienta de inspección Parser V1 vs V2</div>
+
+  <div class="pd-upload-zone" onclick="document.getElementById('pd-pdf-input').click()">
+    <input type="file" id="pd-pdf-input" accept="application/pdf" style="display:none" onchange="processDiagnosticPDF(this.files[0])">
+    <div style="font-size: 48px; margin-bottom: 10px;">📄</div>
+    <div style="font-size: 16px; font-weight: 600; margin-bottom: 5px;">Cargar nómina PDF</div>
+    <div style="font-size: 12px; color: var(--text3);">Click para seleccionar archivo</div>
+  </div>
+
+  <div id="pd-loading" style="display:none; text-align:center; padding:60px; font-size:18px; color:var(--text3)">
+    <div style="font-size: 48px;">⏳</div>
+    <div style="margin-top: 10px;">Procesando PDF...</div>
+  </div>
+
+  <div id="pd-results" style="display:none">
+    <!-- STATS -->
+    <div class="pd-section">
+      <div class="pd-section-title">📊 Estadísticas</div>
+      <div class="pd-stat-cards">
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Archivo</div>
+          <div class="pd-stat-value" style="font-size:14px" id="pd-stat-filename">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Parser usado</div>
+          <div class="pd-stat-value" style="font-size:18px" id="pd-stat-parser">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Confidence V2</div>
+          <div class="pd-stat-value green" id="pd-stat-confidence">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">tablaConceptos</div>
+          <div class="pd-stat-value green" id="pd-stat-conceptos">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Clasificadas</div>
+          <div class="pd-stat-value green" id="pd-stat-clasificadas">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Desconocidas</div>
+          <div class="pd-stat-value amber" id="pd-stat-desconocidas">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">% Clasificación</div>
+          <div class="pd-stat-value" id="pd-stat-pct">—</div>
+        </div>
+        <div class="pd-stat-card">
+          <div class="pd-stat-label">Parsing time</div>
+          <div class="pd-stat-value" style="font-size:18px" id="pd-stat-time">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WARNINGS -->
+    <div class="pd-section" id="pd-warnings-section" style="display:none">
+      <div class="pd-section-title">⚠️ Warnings</div>
+      <div id="pd-warnings-list"></div>
+    </div>
+
+    <!-- V1 VS V2 -->
+    <div class="pd-section">
+      <div class="pd-section-title">🔄 Comparativa V1 vs V2</div>
+      <div class="pd-grid-2">
+        <div>
+          <h3 style="font-size:14px; margin-bottom:15px; color:var(--text2)">📌 V1 (Parser actual)</h3>
+          <div id="pd-v1-data"></div>
+        </div>
+        <div>
+          <h3 style="font-size:14px; margin-bottom:15px; color:var(--blue)">✨ V2 (Parser nuevo)</h3>
+          <div id="pd-v2-data"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLA CONCEPTOS -->
+    <div class="pd-section">
+      <div class="pd-section-title">📋 Tabla de Conceptos (V2)</div>
+      <div style="overflow-x:auto">
+        <table id="pd-tabla-conceptos">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Tipo</th>
+              <th>Subtipo</th>
+              <th>Concepto</th>
+              <th>Unidades</th>
+              <th>%</th>
+              <th>Base</th>
+              <th>Importe</th>
+              <th>Conf</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DESCONOCIDAS -->
+    <div class="pd-section" id="pd-desconocidas-section" style="display:none">
+      <div class="pd-section-title">❓ Conceptos Desconocidos</div>
+      <div id="pd-desconocidas-list"></div>
+    </div>
+
+    <!-- CONFIDENCE -->
+    <div class="pd-section">
+      <div class="pd-section-title">🎯 Confidence por Campo (V2)</div>
+      <div style="overflow-x:auto">
+        <table id="pd-tabla-confidence">
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Confidence</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// PARSER DIAGNOSTIC TOOL — Funciones
+// ═══════════════════════════════════════════════════════════════════════════
+
+(function() {
+  // Activar con ?diagnostic en URL
+  if (window.location.search.includes('diagnostic')) {
+    document.getElementById('parser-diagnostic').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  }
+
+  window.closeDiagnostic = function() {
+    window.location.href = window.location.pathname;
+  };
+
+  window.processDiagnosticPDF = async function(file) {
+    if (!file) return;
+
+    document.getElementById('pd-loading').style.display = 'block';
+    document.getElementById('pd-results').style.display = 'none';
+
+    try {
+      const text = await extractPdfText(file);
+
+      // Parsear con V1 y V2
+      const v1 = parseBinterNomina(text);
+      const v2 = parseBinterNominaV2(text);
+
+      // Renderizar resultados
+      renderDiagnosticResults(file.name, v1, v2);
+
+      document.getElementById('pd-loading').style.display = 'none';
+      document.getElementById('pd-results').style.display = 'block';
+      document.getElementById('pd-results').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (e) {
+      alert('Error procesando PDF: ' + e.message);
+      document.getElementById('pd-loading').style.display = 'none';
+    }
+  };
+
+  function renderDiagnosticResults(filename, v1, v2) {
+    const fmt = v => v !== null && v !== undefined ? v : '<span class="pd-field-value missing">NO DETECTADO</span>';
+    const fmtEur = v => v !== null ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €' : '<span class="pd-field-value missing">NO DETECTADO</span>';
+
+    // Stats
+    document.getElementById('pd-stat-filename').textContent = filename.substring(0, 20);
+    document.getElementById('pd-stat-parser').textContent = 'V1 (fallback)';
+    document.getElementById('pd-stat-confidence').textContent = v2.confidence.global.toFixed(3);
+    document.getElementById('pd-stat-conceptos').textContent = v2.tablaConceptos.length;
+
+    const clasificadas = v2.tablaConceptos.filter(c => c.tipo !== 'desconocido').length;
+    const desconocidas = v2.tablaConceptos.filter(c => c.tipo === 'desconocido').length;
+    const pct = v2.tablaConceptos.length > 0 ? (clasificadas / v2.tablaConceptos.length * 100).toFixed(1) : 0;
+
+    document.getElementById('pd-stat-clasificadas').textContent = clasificadas;
+    document.getElementById('pd-stat-desconocidas').textContent = desconocidas;
+    document.getElementById('pd-stat-pct').textContent = pct + '%';
+    const pctEl = document.getElementById('pd-stat-pct');
+    pctEl.classList.remove('green', 'amber', 'red');
+    if (pct >= 80) pctEl.classList.add('green');
+    else if (pct >= 60) pctEl.classList.add('amber');
+    else pctEl.classList.add('red');
+
+    document.getElementById('pd-stat-time').textContent = v2.raw.parsingTimeMs.toFixed(0) + 'ms';
+
+    // Warnings
+    if (v2.warnings.length > 0) {
+      document.getElementById('pd-warnings-section').style.display = 'block';
+      document.getElementById('pd-warnings-list').innerHTML = v2.warnings.map(w =>
+        `<div class="pd-warning">${w}</div>`
+      ).join('');
+    }
+
+    // V1 data
+    const v1Html = `
+      <div class="pd-field-group"><div class="pd-field-label">Nombre</div><div class="pd-field-value">${fmt(v1.trabajador.nombre)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">NIF</div><div class="pd-field-value">${fmt(v1.trabajador.nif)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">NSS</div><div class="pd-field-value">${fmt(v1.trabajador.nss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Función</div><div class="pd-field-value">${fmt(v1.trabajador.funcion)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Nivel</div><div class="pd-field-value">${fmt(v1.trabajador.nivel)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Periodo</div><div class="pd-field-value">${fmt(v1.periodo.mes)} ${fmt(v1.periodo.anio)}</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div class="pd-field-group"><div class="pd-field-label">Base SS</div><div class="pd-field-value highlight">${fmtEur(v1.totales.base_ss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base IRPF</div><div class="pd-field-value highlight">${fmtEur(v1.totales.base_irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Total Devengado</div><div class="pd-field-value highlight">${fmtEur(v1.totales.total_devengado)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Líquido</div><div class="pd-field-value highlight">${fmtEur(v1.totales.liquido)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF %</div><div class="pd-field-value">${fmt(v1.irpf_pct)}%</div></div>
+    `;
+
+    // V2 data
+    const v2Html = `
+      <div class="pd-field-group"><div class="pd-field-label">Empresa NIF</div><div class="pd-field-value ${v2.empresa.nif ? 'highlight' : 'missing'}">${fmt(v2.empresa.nif)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Empresa Nombre</div><div class="pd-field-value ${v2.empresa.nombre ? 'highlight' : 'missing'}">${fmt(v2.empresa.nombre)}</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div class="pd-field-group"><div class="pd-field-label">Nombre</div><div class="pd-field-value">${fmt(v2.trabajador.nombre)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">NIF</div><div class="pd-field-value">${fmt(v2.trabajador.nif)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">NSS</div><div class="pd-field-value">${fmt(v2.trabajador.nss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Puesto</div><div class="pd-field-value ${v2.trabajador.puesto ? 'highlight' : 'missing'}">${fmt(v2.trabajador.puesto)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Función</div><div class="pd-field-value">${fmt(v2.trabajador.funcion)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Nivel</div><div class="pd-field-value">${fmt(v2.trabajador.nivel)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Centro</div><div class="pd-field-value ${v2.trabajador.centro_trabajo ? 'highlight' : 'missing'}">${fmt(v2.trabajador.centro_trabajo)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Periodo</div><div class="pd-field-value">${fmt(v2.periodo.mes)} ${fmt(v2.periodo.anio)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Fechas</div><div class="pd-field-value ${v2.periodo.fecha_inicio ? 'highlight' : 'missing'}">${fmt(v2.periodo.fecha_inicio)} — ${fmt(v2.periodo.fecha_fin)}</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div class="pd-field-group"><div class="pd-field-label">Base SS</div><div class="pd-field-value highlight">${fmtEur(v2.bases.base_ss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base IRPF</div><div class="pd-field-value highlight">${fmtEur(v2.bases.base_irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Total Devengado</div><div class="pd-field-value highlight">${fmtEur(v2.totales.total_devengado)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Total Deducciones</div><div class="pd-field-value ${v2.totales.total_deducciones ? 'highlight' : 'missing'}">${fmtEur(v2.totales.total_deducciones)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Líquido</div><div class="pd-field-value highlight">${fmtEur(v2.totales.liquido)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF %</div><div class="pd-field-value">${fmt(v2.deducciones.irpf_pct)}%</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">SS CC %</div><div class="pd-field-value ${v2.deducciones.ss_cc_pct ? 'highlight' : 'missing'}">${fmt(v2.deducciones.ss_cc_pct)}%</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div style="font-weight:600; margin-bottom:10px; color:var(--blue)">📊 Acumulados</div>
+      <div class="pd-field-group"><div class="pd-field-label">Base IRPF</div><div class="pd-field-value ${v2.acumulados.base_irpf ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF</div><div class="pd-field-value ${v2.acumulados.irpf ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Cotiz. SS</div><div class="pd-field-value ${v2.acumulados.cotiz_ss ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.cotiz_ss)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base Esp. Rep.</div><div class="pd-field-value ${v2.acumulados.base_esp_rep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_esp_rep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF Esp. Rep.</div><div class="pd-field-value ${v2.acumulados.irpf_esp_rep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf_esp_rep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Base Esp. No Rep.</div><div class="pd-field-value ${v2.acumulados.base_esp_norep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.base_esp_norep)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IRPF Esp. No Rep.</div><div class="pd-field-value ${v2.acumulados.irpf_esp_norep ? 'highlight' : 'missing'}">${fmtEur(v2.acumulados.irpf_esp_norep)}</div></div>
+      <hr style="margin:15px 0; border:none; border-top:1px solid var(--border)">
+      <div style="font-weight:600; margin-bottom:10px; color:var(--blue)">🏢 Coste Empresa</div>
+      <div class="pd-field-group"><div class="pd-field-label">Total</div><div class="pd-field-value ${v2.costeEmpresa.total ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.total)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">CC</div><div class="pd-field-value ${v2.costeEmpresa.cc ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.cc)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">MEI</div><div class="pd-field-value ${v2.costeEmpresa.mei ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.mei)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">FP</div><div class="pd-field-value ${v2.costeEmpresa.fp ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.fp)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Desempleo</div><div class="pd-field-value ${v2.costeEmpresa.desempleo ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.desempleo)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">IT/IMS</div><div class="pd-field-value ${v2.costeEmpresa.it_ims ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.it_ims)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">FOGASA</div><div class="pd-field-value ${v2.costeEmpresa.fogasa ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.fogasa)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr1</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr1 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr1)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr2</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr2 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr2)}</div></div>
+      <div class="pd-field-group"><div class="pd-field-label">Solid. Tr3</div><div class="pd-field-value ${v2.costeEmpresa.solidaridad_tr3 ? 'highlight' : 'missing'}">${fmtEur(v2.costeEmpresa.solidaridad_tr3)}</div></div>
+    `;
+
+    document.getElementById('pd-v1-data').innerHTML = v1Html;
+    document.getElementById('pd-v2-data').innerHTML = v2Html;
+
+    // Tabla Conceptos
+    const tbody = document.getElementById('pd-tabla-conceptos').querySelector('tbody');
+    tbody.innerHTML = v2.tablaConceptos.map((c, i) => {
+      const tipoClass = c.tipo === 'devengo' ? 'pd-tipo-devengo' : (c.tipo === 'deduccion' ? 'pd-tipo-deduccion' : 'pd-tipo-desconocido');
+      const confClass = c.confidence >= 0.8 ? 'pd-conf-high' : (c.confidence >= 0.5 ? 'pd-conf-medium' : 'pd-conf-low');
+      const imp = c.devengo || c.retencion || c.importe;  // FIX: incluir .importe para costeEmpresa
+      const fmtVal = v => v !== null && v !== undefined ? v : '—';
+      const fmtNum = v => v !== null ? v.toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+      return `
+        <tr>
+          <td>${i+1}</td>
+          <td class="${tipoClass}">${c.tipo}</td>
+          <td>${fmtVal(c.subtipo)}</td>
+          <td>${fmtVal(c.concepto)}</td>
+          <td>${fmtVal(c.unidades)}</td>
+          <td>${c.porcentaje ? c.porcentaje.toFixed(2) + '%' : '—'}</td>
+          <td>${fmtNum(c.base)}</td>
+          <td><strong>${fmtNum(imp)}</strong></td>
+          <td class="${confClass}">${c.confidence.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Desconocidas
+    if (desconocidas > 0) {
+      document.getElementById('pd-desconocidas-section').style.display = 'block';
+      document.getElementById('pd-desconocidas-list').innerHTML = v2.tablaConceptos
+        .filter(c => c.tipo === 'desconocido')
+        .map(c => `<div class="pd-unknown-item"><strong>${c.concepto || '(sin concepto)'}</strong><br>${c.rawLine}</div>`)
+        .join('');
+    }
+
+    // Confidence
+    const tbodyConf = document.getElementById('pd-tabla-confidence').querySelector('tbody');
+    const entries = Object.entries(v2.confidence).filter(([k,v]) => k !== 'global' && typeof v === 'number');
+    tbodyConf.innerHTML = entries.map(([campo, val]) => {
+      const confClass = val >= 0.8 ? 'pd-conf-high' : (val >= 0.5 ? 'pd-conf-medium' : 'pd-conf-low');
+      const path = campo.split('_');
+      let valorActual = v2;
+      for (const p of path) valorActual = valorActual?.[p];
+      const fmtVal = v => v !== null && v !== undefined ? String(v) : '—';
+      return `
+        <tr>
+          <td>${campo}</td>
+          <td class="${confClass}">${val.toFixed(3)}</td>
+          <td style="font-family:var(--mono); font-size:11px">${fmtVal(valorActual)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+})();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ANALYTICS — Error tracking
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// FIX 1: Guard contra error loop infinito
+// FIX 2: Rate limit de errores (max 10/minuto)
+(function() {
+  let isTrackingError = false;
+  let errorCount = 0;
+  let errorWindowStart = Date.now();
+  const MAX_ERRORS_PER_MINUTE = 10;
+  const ERROR_WINDOW_MS = 60000;
+
+  window.addEventListener('error', function(event) {
+    if (typeof PilotPayAnalytics === 'undefined') return;
+
+    // FIX 1: Prevenir loop infinito
+    if (isTrackingError) return;
+
+    // FIX 2: Rate limit
+    const now = Date.now();
+    if (now - errorWindowStart > ERROR_WINDOW_MS) {
+      errorCount = 0;
+      errorWindowStart = now;
+    }
+    if (errorCount >= MAX_ERRORS_PER_MINUTE) return;
+
+    isTrackingError = true;
+    try {
+      errorCount++;
+
+      // Sanitizar mensaje de error (eliminar datos sensibles)
+      let errorMessage = event.message || 'Unknown error';
+      errorMessage = errorMessage.substring(0, 200);
+
+      // Detectar módulo desde stack trace o filename
+      let module = 'unknown';
+      if (event.filename) {
+        if (event.filename.includes('parser')) module = 'parser';
+        else if (event.filename.includes('audit')) module = 'audit';
+        else if (event.filename.includes('calc')) module = 'calc';
+        else if (event.filename.includes('sync') || event.filename.includes('Store')) module = 'sync';
+      }
+
+      PilotPayAnalytics.track('error_occurred', {
+        module: module,
+        errorType: event.error?.name || 'Error',
+        errorMessage: errorMessage,
+        fatal: false,
+        line: event.lineno,
+        column: event.colno
+      });
+    } finally {
+      isTrackingError = false;
+    }
+  });
+
+  window.addEventListener('unhandledrejection', function(event) {
+    if (typeof PilotPayAnalytics === 'undefined') return;
+
+    // FIX 1: Prevenir loop infinito
+    if (isTrackingError) return;
+
+    // FIX 2: Rate limit
+    const now = Date.now();
+    if (now - errorWindowStart > ERROR_WINDOW_MS) {
+      errorCount = 0;
+      errorWindowStart = now;
+    }
+    if (errorCount >= MAX_ERRORS_PER_MINUTE) return;
+
+    isTrackingError = true;
+    try {
+      errorCount++;
+
+      let errorMessage = String(event.reason).substring(0, 200);
+
+      PilotPayAnalytics.track('error_occurred', {
+        module: 'promise',
+        errorType: 'UnhandledPromiseRejection',
+        errorMessage: errorMessage,
+        fatal: false
+      });
+    } finally {
+      isTrackingError = false;
+    }
+  });
+})();
+
+</script>
+
 </body>
 </html>

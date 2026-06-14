@@ -95,6 +95,27 @@
         }
       },
 
+      // ── /pilotpay/deletedUsers ───────────────────────────────────────────
+      // Tombstones de usuarios eliminados (Fase 1 sistema de borrado robusto).
+      // Registro permanente de borrados para evitar resurrecciones y mantener
+      // trazabilidad de usuarios que existieron. Similar a deletedAuditorias.
+      //
+      // READ: todos los autenticados (para debug/auditoría).
+      // WRITE: todos los autenticados (enforced en cliente: solo admin purga).
+      //
+      // Uso: purgeUser() crea tombstone antes de borrar datos del usuario.
+      // GC futuro (Fase 2): tombstones > 180 días pueden limpiarse.
+      "deletedUsers": {
+        ".read":  "auth != null",
+        ".write": "auth != null",
+        "$userId": {
+          // Tombstone mínima: userId, deletedAt (timestamp ms), deletedBy.
+          // Campos opcionales: deletedByDevice, schemaVersion.
+          // Acepta DELETE (!newData.exists()) aunque normalmente no se borran.
+          ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'deletedAt', 'deletedBy']) && newData.child('userId').isString() && newData.child('deletedAt').isNumber() && newData.child('deletedBy').isString())"
+        }
+      },
+
       // ── /pilotpay/rutas ──────────────────────────────────────────────────
       // Tabla de rutas vuelo → horas bloque. Compartida entre usuarios.
       // Solo admin puede escribir (enforced en cliente).

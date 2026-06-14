@@ -97,6 +97,12 @@
   // monthly_v1 es el expediente vivo — incluye meses auditados, regularizados, etc.
   // audit_history_v1 es el log de eventos de auditoría (append-only, no se toca aquí).
   function _saveMonthly(changedKey, reason) {
+    // SECURITY MODE: Bloquear guardado de MonthRecords (contienen variables mensuales sensibles)
+    if (typeof SECURITY_MODE !== 'undefined' && SECURITY_MODE) {
+      console.warn('[SECURITY MODE] _saveMonthly() bloqueado — MonthRecords NO persistidos');
+      return;
+    }
+
     try {
       var k = _monthlyKey();
       if (!k) return;
@@ -654,6 +660,13 @@
   function _notifyFirebase(fbPath, decorated) {
     if (!_isP4Enabled()) return;
     if (_isHydratingFromIDB) return;
+
+    // SECURITY MODE: Bloquear sync Firebase de monthly (variables sensibles)
+    if (typeof SECURITY_MODE !== 'undefined' && SECURITY_MODE) {
+      console.warn('[SECURITY MODE] _notifyFirebase() bloqueado — NO sync a Firebase:', fbPath);
+      return;
+    }
+
     _p4WriteCount++;
     _p4MonthlyWriteCount++;
     _p4LastPath = fbPath;
@@ -676,6 +689,12 @@
   // Append-only: cada auditoría escribe su propio nodo vía record.id único.
   // Llamar desde notifyAuditRecord() (public API), que aplica los guards de flag + hydration.
   function _notifyFirebaseAudit(record) {
+    // SECURITY MODE: Bloquear sync Firebase de auditorías (datos críticos: nominaV2, NIF, NSS)
+    if (typeof SECURITY_MODE !== 'undefined' && SECURITY_MODE) {
+      console.warn('[SECURITY MODE] _notifyFirebaseAudit() bloqueado — audit NO sync a Firebase');
+      return;
+    }
+
     var fbPath = 'pilotpay/historicos/' + record.userId + '/auditorias/' + record.id;
     console.log('[P4] audit notify:', fbPath);
     _p4WriteCount++;

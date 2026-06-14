@@ -63,6 +63,11 @@ pilotpay/
 │         Tombstone: { id, deletedAt, deletedByDevice, _schemaVersion }
 │         Uso: propagación de borrados multi-device (evita resurrección)
 │
+├── deletedUsers/{userId}
+│     Tombstone: { userId, deletedAt, deletedBy, deletedByDevice, schemaVersion }
+│     Uso: registro permanente de usuarios eliminados (P4.7)
+│     Trazabilidad y anti-resurrección
+│
 ├── rutas/{vuelo_orig_dest}
 │     { vuelo, origen, destino, hb }
 │     Uso: tabla de horas bloque por ruta, compartida entre usuarios
@@ -89,7 +94,7 @@ pilotpay/
 
 - **Acceso no autenticado**: Sin token Firebase no se puede leer ni escribir nada. Un crawler HTTP sin pasar por `fbSignIn()` recibe `401 Unauthorized`.
 - **Datos malformados**: Los nodos con `.validate` rechazan escrituras que no tengan los campos mínimos requeridos.
-- **Namespace no listado**: Cualquier path fuera de `pilotpay/usuarios|perfiles|permisos|historicos|rutas|solicitudes` es denegado.
+- **Namespace no listado**: Cualquier path fuera de `pilotpay/usuarios|perfiles|permisos|historicos|deletedUsers|rutas|solicitudes` es denegado.
 
 ### Qué NO protegen (limitaciones conocidas)
 

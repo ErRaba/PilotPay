@@ -3,7 +3,10 @@
   "version": "3.0.0",
   "private": true,
   "scripts": {
-    "sync":   "node scripts/sync-docs.js",
+    "sync": "node scripts/sync-docs.js",
     "deploy": "node scripts/sync-docs.js && git add docs/ frontend/ && git status"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^6.0.227"
   }
 }

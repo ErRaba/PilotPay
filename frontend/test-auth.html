@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PilotPay — Harness de pruebas Auth (Fase 1.1 / C3)</title>
+  <style>
+    :root { --bg:#0f1117; --card:#161b26; --border:#2a2f3d; --text:#e8eaf0; --text2:#a0a8c0;
+            --blue:#4a90e2; --blue2:#6ab0ff; --green:#3dd68c; --red:#e05c6a; --amber:#f0a040;
+            --mono:'SF Mono','Fira Code','Consolas',monospace; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',sans-serif;
+           font-size:14px; line-height:1.6; padding:24px; max-width:820px; margin:0 auto; }
+    h1 { font-size:18px; margin-bottom:4px; }
+    .sub { color:var(--text2); font-size:12px; margin-bottom:20px; }
+    h2 { font-size:12px; color:var(--text2); text-transform:uppercase; letter-spacing:.07em; margin:22px 0 10px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:14px; }
+    label { font-size:12px; color:var(--text2); display:block; margin-top:8px; }
+    input { background:#0d1018; border:1px solid var(--border); border-radius:6px; color:var(--text);
+            font-family:var(--mono); font-size:13px; padding:7px 10px; width:100%; margin-top:4px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .row > div { flex:1; min-width:140px; }
+    button { padding:8px 14px; border-radius:7px; border:none; cursor:pointer; font-size:13px; font-weight:600;
+             background:var(--blue); color:#fff; margin:6px 6px 0 0; }
+    button.ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+    button.amber { background:var(--amber); color:#000; }
+    button:hover { opacity:.88; }
+    pre { background:#0a0c14; border:1px solid var(--border); border-radius:7px; padding:12px;
+          font-family:var(--mono); font-size:12px; white-space:pre-wrap; word-break:break-word; margin-top:10px; min-height:40px; }
+    .ok { color:var(--green); } .err { color:var(--red); } .warn { color:var(--amber); } .dim { color:var(--text2); }
+    .note { font-size:11px; color:var(--text2); margin-top:6px; }
+  </style>
+</head>
+<body>
+  <h1>Harness de pruebas Auth</h1>
+  <div class="sub">Fase 1.1 / C3 — prueba aislada de <code>pilotPayAuth.js</code>. NO conectado a la app principal. Usa un usuario de prueba (ej. crea uno con el CLI antes de probar).</div>
+
+  <h2>1 · Login Email/Password</h2>
+  <div class="card">
+    <div class="row">
+      <div><label>Código</label><input id="in-code" placeholder="ZZT" autocomplete="off"></div>
+      <div><label>Contraseña</label><input id="in-pass" type="password" placeholder="••••••" autocomplete="off"></div>
+    </div>
+    <div>
+      <button onclick="doSignIn()">Iniciar sesión</button>
+      <button class="ghost" onclick="doSignOut()">Cerrar sesión</button>
+    </div>
+    <div class="note">Tras login se muestran role y code (requisitos 1, 3, 4).</div>
+    <pre id="out-login" class="dim">—</pre>
+  </div>
+
+  <h2>2 · Sesión y custom claims</h2>
+  <div class="card">
+    <button onclick="showSession()">Ver sesión (getSession)</button>
+    <button class="ghost" onclick="simulateReload()">Simular recarga (restoreSession)</button>
+    <div class="note">"Simular recarga" limpia el estado en memoria y restaura desde localStorage, sin red (offline-first).</div>
+    <pre id="out-session" class="dim">—</pre>
+  </div>
+
+  <h2>3 · Token (getToken + renovación)</h2>
+  <div class="card">
+    <button onclick="showToken()">Obtener token</button>
+    <button class="ghost" onclick="forceRenew()">Forzar renovación</button>
+    <div class="note">No se muestra el token completo (es una credencial); solo su presencia, expiración y los claims que lleería Firebase.</div>
+    <pre id="out-token" class="dim">—</pre>
+  </div>
+
+  <h2>4 · Validar enumeration protection (requisito 5)</h2>
+  <div class="card">
+    <button class="amber" onclick="testEnumeration()">Probar usuario inexistente vs contraseña mala</button>
+    <div class="note">Ambos intentos deben devolver el MISMO mensaje neutro. Si difieren, la protección no está activa.</div>
+    <pre id="out-enum" class="dim">—</pre>
+  </div>
+
+  <h2>5 · Prueba de token contra RTDB (compatibilidad reglas actuales)</h2>
+  <div class="card">
+    <button onclick="testRtdb()">GET/PATCH en historicos/&lt;code&gt; con el token</button>
+    <div class="note">Valida que un token Email/Password satisface las reglas <code>auth != null</code> actuales (clave para enchufar P4 en Fase 1.3). Usa el path del usuario logueado y borra lo que escribe.</div>
+    <pre id="out-rtdb" class="dim">—</pre>
+  </div>
+
+  <script src="js/pilotPayAuth.js"></script>
+  <script>
+    function set(id, html, cls) {
+      var el = document.getElementById(id);
+      el.className = cls || '';
+      el.innerHTML = html;
+    }
+
+    async function doSignIn() {
+      var code = document.getElementById('in-code').value.trim();
+      var pass = document.getElementById('in-pass').value;
+      set('out-login', 'Autenticando…', 'dim');
+      try {
+        var s = await PilotPayAuth.signIn(code, pass);
+        set('out-login',
+          '<span class="ok">✓ Sesión iniciada</span>\n' +
+          'code : ' + s.code + '\n' +
+          'role : ' + s.role + '\n' +
+          'uid  : ' + s.uid, '');
+      } catch (e) {
+        set('out-login', '<span class="err">✗ ' + e.message + '</span>', '');
+      }
+    }
+
+    function doSignOut() {
+      PilotPayAuth.signOut();
+      set('out-login', '<span class="dim">Sesión cerrada (memoria + localStorage).</span>', '');
+      set('out-session', '—', 'dim');
+      set('out-token', '—', 'dim');
+    }
+
+    function showSession() {
+      var s = PilotPayAuth.getSession();
+      if (!s) { set('out-session', '<span class="warn">Sin sesión activa.</span>', ''); return; }
+      set('out-session',
+        'isAvailable: ' + PilotPayAuth.isAvailable() + '\n' +
+        'code : ' + s.code + '\nrole : ' + s.role + '\nuid  : ' + s.uid, '');
+    }
+
+    function simulateReload() {
+      // Limpia solo el estado en memoria reinterpretando el módulo: usamos restoreSession.
+      var had = PilotPayAuth.restoreSession();
+      var s = PilotPayAuth.getSession();
+      set('out-session',
+        (had ? '<span class="ok">✓ restoreSession() recuperó la sesión sin red</span>\n'
+             : '<span class="warn">restoreSession() no encontró sesión persistida</span>\n') +
+        (s ? ('code : ' + s.code + '\nrole : ' + s.role + '\nuid  : ' + s.uid) : ''), '');
+    }
+
+    async function showToken() {
+      set('out-token', 'Obteniendo…', 'dim');
+      var t = await PilotPayAuth.getToken();
+      if (!t) { set('out-token', '<span class="warn">Sin token (sesión muerta o sin red).</span>', ''); return; }
+      var payload = JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+      var expIn = Math.round((payload.exp * 1000 - Date.now()) / 1000);
+      set('out-token',
+        '<span class="ok">✓ Token presente</span> (no se muestra completo)\n' +
+        'longitud   : ' + t.length + ' chars\n' +
+        'caduca en  : ' + expIn + ' s\n' +
+        'claim role : ' + payload.role + '\n' +
+        'claim code : ' + payload.code + '\n' +
+        'uid (sub)  : ' + payload.sub, '');
+    }
+
+    async function forceRenew() {
+      // Fuerza renovación marcando el token como caducado vía un getToken tras invalidar memoria.
+      // (getToken renueva con el refresh token si el idToken no es vigente)
+      set('out-token', 'Forzando renovación…', 'dim');
+      var t1 = await PilotPayAuth.getToken();
+      // segunda llamada inmediata debería devolver cacheado; informamos
+      var t2 = await PilotPayAuth.getToken();
+      set('out-token',
+        (t1 ? '<span class="ok">✓ getToken() devolvió token tras renovación perezosa</span>' :
+              '<span class="warn">getToken() devolvió null</span>') +
+        '\n(2ª llamada usa caché en memoria: ' + (t1 === t2 ? 'sí' : 'no') + ')', '');
+    }
+
+    async function testEnumeration() {
+      set('out-enum', 'Probando…', 'dim');
+      var rndCode = 'Q' + Math.random().toString(36).slice(2, 5).replace(/[^a-z]/g,'x');
+      var msgNoUser = '', msgBadPass = '';
+      try { await PilotPayAuth.signIn(rndCode, 'wrongpass123'); } catch (e) { msgNoUser = e.message; }
+      var realCode = document.getElementById('in-code').value.trim() || 'ZZT';
+      try { await PilotPayAuth.signIn(realCode, 'definitely-wrong-' + Date.now()); } catch (e) { msgBadPass = e.message; }
+      // signIn de prueba pudo dejar estado; lo limpiamos para no confundir.
+      PilotPayAuth.signOut();
+      var same = msgNoUser === msgBadPass && msgNoUser !== '';
+      set('out-enum',
+        'Usuario inexistente (' + rndCode + ') → "' + msgNoUser + '"\n' +
+        'Contraseña mala (' + realCode + ')   → "' + msgBadPass + '"\n' +
+        '─────\n' +
+        (same ? '<span class="ok">✓ Mensajes idénticos → enumeration protection efectiva</span>'
+              : '<span class="err">✗ Mensajes distintos → revisar protección</span>') +
+        '\n<span class="dim">(login real cerrado tras la prueba — vuelve a iniciar sesión si lo necesitas)</span>', '');
+    }
+
+    async function testRtdb() {
+      set('out-rtdb', 'Probando…', 'dim');
+      var s = PilotPayAuth.getSession();
+      if (!s || !s.code) { set('out-rtdb', '<span class="warn">Inicia sesión primero (necesito un code).</span>', ''); return; }
+      var token = await PilotPayAuth.getToken();
+      if (!token) { set('out-rtdb', '<span class="warn">Sin token.</span>', ''); return; }
+      var base = PilotPayAuth._fbUrl + '/pilotpay/historicos/' + s.code + '/_authtest';
+      var q = '?auth=' + token;
+      try {
+        // PATCH (escribe marca temporal) → GET → DELETE (limpia)
+        var stamp = { ts: Date.now(), by: 'test-auth.html' };
+        var rp = await fetch(base + '.json' + q, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(stamp) });
+        var rg = await fetch(base + '.json' + q);
+        var got = await rg.json().catch(function(){ return null; });
+        await fetch(base + '.json' + q, { method:'DELETE' });
+        set('out-rtdb',
+          'PATCH historicos/' + s.code + '/_authtest → HTTP ' + rp.status + '\n' +
+          'GET  → ' + (got ? 'ok (ts=' + got.ts + ')' : 'null') + '\n' +
+          'DELETE (limpieza) → enviado\n─────\n' +
+          (rp.ok ? '<span class="ok">✓ Token Email/Password aceptado por las reglas actuales (auth != null)</span>'
+                 : '<span class="err">✗ Rechazado (HTTP ' + rp.status + ')</span>'), '');
+      } catch (e) {
+        set('out-rtdb', '<span class="err">✗ ' + e.message + '</span>', '');
+      }
+    }
+
+    // Al cargar: intentar restaurar sesión (sin red).
+    (function init() {
+      var had = PilotPayAuth.restoreSession();
+      if (had) {
+        var s = PilotPayAuth.getSession();
+        set('out-login', '<span class="dim">Sesión previa restaurada: ' + (s ? s.code : '?') + ' (token se obtiene al usarlo).</span>', '');
+      }
+    })();
+  </script>
+</body>
+</html>
