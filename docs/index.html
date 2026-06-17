@@ -7223,7 +7223,8 @@ let _USERS_FROM_FALLBACK = false;
 
 // Solo ESH como usuario inicial — el resto se crean desde el panel Admin
 const DEFAULT_USERS = {
-  'ESH': { pass: '7800', name: 'Eloy', apellidos: 'Infante Seco de Herrera', alias: '',
+  // 1.4: sin `pass` (login es Auth-only). DEFAULT_USERS es solo fallback de display offline/error.
+  'ESH': { name: 'Eloy', apellidos: 'Infante Seco de Herrera', alias: '',
            funcion:'CMD', nivel:3, base:'MAD', irpf:34.15, ingreso:'2024-07-01', admin: true },
 };
 
@@ -7617,8 +7618,8 @@ async function doLogin() {
   btn.textContent = 'Verificando...';
   btn.disabled = true;
 
-  // Load users from Firebase if not loaded
-  if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
+  // 1.4: sin preload whole-node pre-login. El registro del usuario se carga
+  // puntualmente tras autenticar (ver paso 3). Cierra la lectura masiva (R2 cliente).
 
   btn.textContent = 'Entrar';
   btn.disabled = false;
@@ -7634,28 +7635,26 @@ async function doLogin() {
     btn.disabled = false;
   };
 
-  // ── E2: doble login — Auth primario + legacy fallback ──
-  // 1) Intento Auth (primario). signIn usa su propio fetch (independiente de getAuthToken).
+  // ── 1.4: login Auth-only (fallback legacy retirado) ──
+  // 1) Autenticación Auth (única vía). signIn usa su propio fetch (independiente de getAuthToken).
   let authedVia = null;
   if (typeof PilotPayAuth !== 'undefined') {
     try {
       const session = await PilotPayAuth.signIn(u, p);
       if (session && session.code === u) authedVia = 'auth';            // D-3
       else PilotPayAuth.signOut();                                       // D-3: mismatch defensivo
-    } catch (e) { authedVia = null; }                                    // Auth no aplica → legacy
+    } catch (e) { authedVia = null; }                                    // Auth falla → credenciales inválidas
   }
 
-  // 2) Fallback legacy (idéntico a hoy: validación contra USERS por pass en texto plano)
-  if (!authedVia && USERS[u] && USERS[u].pass === p) {
-    if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();     // D-1: modo anónimo puro
-    authedVia = 'legacy';
-  }
-
-  // 3) Sin autenticación válida
+  // 2) Sin autenticación válida (1.4: sin fallback legacy por pass en texto plano)
   if (!authedVia) { fail('Credenciales incorrectas'); return; }
 
-  // 3b) D-5: perfil/welcome dependen de USERS[u]. Si Auth autenticó un code sin entrada en
-  //     USERS (p.ej. USERS de fallback DEFAULT_USERS), no entrar — evita crash en showWelcome().
+  // 3) 1.4: cargar puntualmente el registro del usuario autenticado (perfil +
+  //    bloqueado/temporal). Sustituye la lectura masiva pre-login (R2 cliente).
+  try { USERS[u] = await fbGet('pilotpay/usuarios/' + u) || USERS[u]; } catch (e) {}
+
+  // 3b) D-5: perfil/welcome dependen de USERS[u]. Si no se pudo cargar (sin red / ausente),
+  //     no entrar — evita crash en showWelcome().
   if (!USERS[u]) {
     if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.signOut();
     fail('No se pudo cargar tu perfil. Reintenta con conexión.');
@@ -7713,8 +7712,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.restoreSession();
   // Autenticar anónimamente contra Firebase antes de cualquier lectura.
   await fbSignIn();
-  // Pre-load users in background for faster login
-  if (Object.keys(USERS).length === 0) await loadUsersFromFirebase();
+  // 1.4: sin pre-carga whole-node en background (login Auth-only carga el usuario tras autenticar).
 
   // P4 Fase 1: registrar sink Firebase en PilotPayStore.
   // El sink expone fbUpdate (con throw en error, para que P4 pueda detectar fallos y encolar).
@@ -9233,10 +9231,6 @@ function editarUsuario(code) {
         <span class="field-label">Alias (saludo)</span>
         <input class="field-input" id="edit-alias" value="${u.alias||''}" placeholder="Opcional">
       </div>
-      <div class="field">
-        <span class="field-label">Contraseña</span>
-        <input class="field-input" id="edit-pass" value="${u.pass||''}" type="text">
-      </div>
     </div>
     <div class="row">
       <div class="field">
@@ -10239,15 +10233,15 @@ async function guardarEdicionUsuario(code) {
   const nameVal   = document.getElementById('edit-nombre').value.trim();
   const apellidos = document.getElementById('edit-apellidos').value.trim();
   const alias     = document.getElementById('edit-alias').value.trim();
-  const pass      = document.getElementById('edit-pass').value.trim();
   const funcion   = document.getElementById('edit-funcion').value;
   const nivelRaw  = parseInt(document.getElementById('edit-nivel').value);
   const base      = document.getElementById('edit-base').value;
 
-  if (!nameVal || !pass) { alert('Nombre y contraseña son obligatorios'); return; }
+  if (!nameVal) { alert('El nombre es obligatorio'); return; }
 
   // 1) Campos de identidad personal (no admin-managed de rol)
-  const nameUpdates = { name: nameVal, apellidos, alias, pass };
+  // 1.4: no se actualiza `pass` (login Auth-only). El PATCH parcial preserva el pass existente en RTDB.
+  const nameUpdates = { name: nameVal, apellidos, alias };
   await fbUpdate(`pilotpay/usuarios/${code}`, nameUpdates);
   USERS[code] = { ...USERS[code], ...nameUpdates };
 
