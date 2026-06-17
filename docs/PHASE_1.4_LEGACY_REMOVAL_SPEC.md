@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-06-17
 **Fase:** 1.4 — Retirada del login legacy en cliente
-**Estado:** 🟢 **DISEÑO LISTO PARA IMPLEMENTAR — NO implementado.**
+**Estado:** 🟢 **DISEÑO LISTO PARA IMPLEMENTAR — NO implementado.** (Corregido 2026-06-17 tras micro-auditoría: alta de usuario **diferida a Admin 2.0** — ver §0-bis.)
 **Depende de:** Fase 1.25 ✅ (publicada, `087c1ec`). Decisión Opción 2 (1.3 absorbida en 1.5) ✅ (`b46d441`).
 **Reversibilidad:** **`git revert` de un único commit de cliente.** Sin tocar Firebase/reglas/datos.
 
@@ -11,6 +11,35 @@
 > - **NO se purga `pass` de RTDB** (los valores existentes permanecen intactos).
 > - **NO se deshabilita Anonymous Auth.**
 > - El cierre real de R2 a nivel reglas, la purga de `pass` y el cierre de Anonymous quedan para **Fase 1.5**.
+
+---
+
+## 0-bis. CORRECCIÓN DE ALCANCE (2026-06-17) — tras micro-auditoría del Admin
+
+La versión inicial de esta spec asumió (por inventario) que existía un **formulario de alta con input `adm-pass`**. La micro-auditoría del código real demuestra que **ese formulario NO existe** en `frontend/index.html`. Se corrige el alcance:
+
+**Estado real verificado:**
+- **`crearUsuarioLocal`** — **vivo pero ROTO**: lo invoca el botón "+ Dar acceso" (`:4299`), pero lee `adm-nombre/codigo/pass/funcion/base/nivel` (`:9004–9009`, sin optional chaining) y **esos inputs no existen** (el único `adm-*` editable es `adm-search`). Al pulsarlo hoy **crashea** (`TypeError` en `:9004`). Avería **pre-existente**, ajena a 1.4. → **FUERA de alcance de 1.4 · DIFERIDO a Admin 2.0.**
+- **`generarAltaUsuario`** — **código muerto** (sin callers; lee los mismos inputs inexistentes). → **FUERA de alcance de 1.4 · DIFERIDO a Admin 2.0.**
+- **Botón "+ Dar acceso" (`:4299`)** — **flujo roto/pre-existente**. → **FUERA de alcance de 1.4 · pendiente de Admin 2.0.**
+- **No existe input `adm-pass`** → **no hay "campo visual de contraseña en alta" que retirar** en 1.4.
+
+**Sí está vivo y verificable** (se mantiene en alcance de 1.4): el **núcleo de login** y la **edición de usuario** (`editarUsuario`/`guardarEdicionUsuario`, cuyo input `edit-pass` en `:9238` **sí existe** y es funcional).
+
+**Alcance corregido de implementación 1.4 (cliente-only):**
+- a) `doLogin` Auth-only (eliminar fallback legacy + fetch puntual post-Auth).
+- b) eliminar preload whole-node **pre-login** (en `doLogin`).
+- c) eliminar preload background de usuarios (en `DOMContentLoaded`).
+- d) `DEFAULT_USERS` sin `pass`.
+- e) `editarUsuario` / `guardarEdicionUsuario` sin campo `pass`.
+- **DIFERIDO a Admin 2.0:** alta de usuario (`crearUsuarioLocal`, `generarAltaUsuario`, botón "+ Dar acceso").
+
+**Nota explícita:**
+- 1.4 **NO arregla el Admin**.
+- 1.4 **NO implementa alta de usuarios**.
+- 1.4 **solo retira el legacy vivo del login** (fallback por `pass` + lecturas masivas pre-login) **y la edición viva de `pass`** (campo `edit-pass`).
+
+> Las secciones §3/§4 reflejan esta corrección: las filas de `crearUsuarioLocal` y del "form alta" quedan marcadas **DIFERIDO (Admin 2.0)**.
 
 ---
 
@@ -45,8 +74,10 @@ No se tocan reglas, ni se purga `pass` de RTDB, ni se deshabilita Anonymous (tod
 | **`DOMContentLoaded`** | `7716–7717` | **Eliminar** preload background whole-node (`if (...) await loadUsersFromFirebase()`) |
 | **`loadUsersFromFirebase`** | `7234–7266` | **Conservar** función (la usa el panel Admin). Solo se eliminan sus llamadores pre-login. Caller `:7597` (recuperación tras reconexión si `_USERS_FROM_FALLBACK`) se **conserva** |
 | **`DEFAULT_USERS`** | `7226–7227` | **Eliminar** campo `pass: '7800'` (deja de ser fuente de credencial; queda solo display fallback) |
-| **`crearUsuarioLocal`** | `9006, 9083, 9100` | **Eliminar** lecturas/clear de `adm-pass`; `9017` quitar requisito de pass; `9036` escribir `pass: ""` (placeholder string que **satisface** la regla `validate(pass.isString())` sin cambio de reglas) |
-| (form alta) | input `adm-pass` | **Eliminar** el campo del formulario de alta |
+| ~~**`crearUsuarioLocal`**~~ | — | ⏸️ **DIFERIDO a Admin 2.0** (ver §0-bis). Vivo pero roto (formulario de alta inexistente → crashea). **No se toca en 1.4.** |
+| ~~(form alta)~~ | — | ⏸️ **DIFERIDO a Admin 2.0.** No existe input `adm-pass` → nada que retirar en 1.4 |
+| ~~`generarAltaUsuario`~~ | — | ⏸️ **DIFERIDO a Admin 2.0.** Código muerto (sin callers). **No se toca en 1.4.** |
+| Botón "+ Dar acceso" (`4299`) | — | ⏸️ **DIFERIDO a Admin 2.0.** Flujo roto pre-existente. **No se toca en 1.4.** |
 | **`guardarEdicionUsuario`** | `10242` | **Eliminar** lectura `edit-pass`; `10247` quitar requisito; `10250` **quitar `pass`** de `nameUpdates` (el PATCH preserva el pass existente → validate OK por merge) |
 | **`editarUsuario`** | `9238` | **Eliminar** el `<input id="edit-pass" value="${u.pass||''}">` |
 | **`login-pass`** | `2217` | **Conservar** (ahora es la contraseña Auth) |
