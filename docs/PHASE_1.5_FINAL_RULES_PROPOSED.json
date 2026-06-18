@@ -1,0 +1,78 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "pilotpay": {
+      ".read": false,
+      ".write": false,
+      "usuarios": {
+        ".read": "auth.token.role === 'admin'",
+        ".write": "auth.token.role === 'admin'",
+        "$code": {
+          ".read": "auth.token.code === $code || auth.token.role === 'admin'",
+          ".write": "auth.token.code === $code || auth.token.role === 'admin'",
+          ".validate": "!newData.exists() || (newData.hasChildren(['name', 'funcion', 'nivel', 'base']) && newData.child('name').isString() && newData.child('funcion').isString())"
+        }
+      },
+      "perfiles": {
+        ".read": false,
+        ".write": false,
+        "$code": {
+          ".read": "auth.token.code === $code || auth.token.role === 'admin'",
+          ".write": "auth.token.code === $code || auth.token.role === 'admin'"
+        }
+      },
+      "permisos": {
+        ".read": "auth.token.role === 'admin'",
+        ".write": "auth.token.role === 'admin'",
+        "$code": {
+          ".read": "auth.token.code === $code || auth.token.role === 'admin'"
+        }
+      },
+      "historicos": {
+        ".read": false,
+        ".write": false,
+        "$userId": {
+          ".read": "auth.token.code === $userId || auth.token.role === 'admin'",
+          ".write": "auth.token.code === $userId || auth.token.role === 'admin'",
+          "monthly": {
+            "$monthKey": {
+              ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'year', 'month', 'estado']) && newData.child('userId').isString() && newData.child('year').isNumber() && newData.child('month').isNumber() && newData.child('year').val() >= 2020 && newData.child('year').val() <= 2100 && newData.child('month').val() >= 1 && newData.child('month').val() <= 12)"
+            }
+          },
+          "auditorias": {
+            "$auditId": {
+              ".validate": "!newData.exists() || (newData.hasChildren(['id', 'userId', 'mes']) && newData.child('id').isString() && newData.child('userId').isString())"
+            }
+          },
+          "deletedAuditorias": {
+            "$auditId": {
+              ".validate": "!newData.exists() || (newData.hasChildren(['id', 'deletedAt']) && newData.child('id').isString() && newData.child('deletedAt').isString())"
+            }
+          }
+        }
+      },
+      "deletedUsers": {
+        ".read": "auth.token.role === 'admin'",
+        ".write": "auth.token.role === 'admin'",
+        "$userId": {
+          ".validate": "!newData.exists() || (newData.hasChildren(['userId', 'deletedAt', 'deletedBy']) && newData.child('userId').isString() && newData.child('deletedAt').isNumber() && newData.child('deletedBy').isString())"
+        }
+      },
+      "rutas": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$key": {
+          ".validate": "!newData.exists() || (newData.hasChildren(['vuelo', 'origen', 'destino', 'hb']) && newData.child('hb').isNumber())"
+        }
+      },
+      "solicitudes": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$key": {
+          ".validate": "!newData.exists() || (newData.hasChildren(['usuario', 'tipo', 'fecha', 'estado']) && newData.child('usuario').isString() && newData.child('tipo').isString())"
+        }
+      }
+    }
+  }
+}
