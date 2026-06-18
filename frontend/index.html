@@ -7817,6 +7817,10 @@ function doLogout() {
     try { localStorage.removeItem('pilotpay_admin_perms'); } catch(e) {}
     currentUser = null;
     profileData = {};
+    // 1.5-fix (P2): limpiar estado acumulado de usuarios entre sesiones — evita que la
+    // lista admin arrastre usuarios de una sesión previa (fuga/intermitencia del primer login).
+    USERS = {};
+    _USERS_FROM_FALLBACK = false;
 
     // 4) UI de login
     document.getElementById('app').style.display = 'none';
@@ -8646,7 +8650,7 @@ function extendUserAccess(code) {
 // ADMIN 2.0 — Wireframe final refinado
 // ══════════════════════════════════════════════════════════════
 
-function initAdmin() {
+async function initAdmin() {
   if (!isAdmin()) return;
 
   // Actualizar identidad
@@ -8657,6 +8661,11 @@ function initAdmin() {
 
   // Renderizar alertas
   renderAdminAlerts();
+
+  // 1.5-fix (P1): cargar el nodo COMPLETO de usuarios antes de renderizar la lista.
+  // Solo admin llega aquí (guard isAdmin arriba) → un no-admin nunca descarga pilotpay/usuarios.
+  // Corrige la regresión donde en el primer login admin solo aparecía el usuario propio.
+  await loadUsersFromFirebase();
 
   // Renderizar lista de usuarios
   renderAdminUsersList();
