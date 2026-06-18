@@ -7113,76 +7113,18 @@ if (SECURITY_MODE) {
   console.warn('Deactivate: localStorage.removeItem("pilotpay_security_mode"); location.reload();');
 }
 
-// ── FIREBASE ANONYMOUS AUTH (REST) ──
-// Obtiene un ID token JWT anónimo válido para ?auth= en Firebase RTDB REST API.
-// No requiere SDK. Token dura 1 hora; se renueva automáticamente con refreshToken.
-// Firebase Console → Authentication → Sign-in methods → Anonymous debe estar habilitado.
-let _fbToken = null;
-let _fbTokenExp = 0;
-let _fbRefreshToken = null;
-
-async function fbSignIn() {
-  // Si el token sigue siendo válido (con margen de 60 s), no hacer nada.
-  if (_fbToken && Date.now() < _fbTokenExp - 60000) return;
-
-  // Intentar renovar con refreshToken existente.
-  if (_fbRefreshToken) {
-    try {
-      const r = await fetch(
-        'https://securetoken.googleapis.com/v1/token?key=' + FB_KEY,
-        { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(_fbRefreshToken) }
-      );
-      if (r.ok) {
-        const d = await r.json();
-        _fbToken = d.id_token;
-        _fbRefreshToken = d.refresh_token;
-        _fbTokenExp = Date.now() + parseInt(d.expires_in, 10) * 1000;
-        console.log('[FB] token renovado (anon)');
-        return;
-      }
-    } catch(e) { console.warn('[FB] refresh token falló, intentando sign-in fresco:', e.message); }
-  }
-
-  // Sign-in anónimo inicial.
-  try {
-    const r = await fetch(
-      'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + FB_KEY,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ returnSecureToken: true }) }
-    );
-    if (r.ok) {
-      const d = await r.json();
-      _fbToken = d.idToken;
-      _fbRefreshToken = d.refreshToken;
-      _fbTokenExp = Date.now() + parseInt(d.expiresIn, 10) * 1000;
-      console.log('[FB] sign-in anónimo OK');
-    } else {
-      const err = await r.json().catch(() => ({}));
-      const msg = err.error?.message || r.status;
-      console.warn('[FB] sign-in anónimo rechazado — HTTP', r.status, '—', msg);
-      if (msg === 'REQUESTS_FROM_REFERER_NOT_ALLOWED' || msg === 'API_KEY_HTTP_REFERRER_BLOCKED') {
-        console.warn('[FB] FIX: añadir este dominio a Firebase Console → Authentication → Settings → Authorized domains:', location.hostname);
-      }
-    }
-  } catch(e) {
-    console.warn('[FB] sign-in anónimo: error de red —', e.message);
-  }
-}
-
+// ── TOKEN DE AUTENTICACIÓN (1.5: solo Firebase Auth Email/Password) ──
+// El cliente usa EXCLUSIVAMENTE el token de Firebase Auth (con claims code/role).
+// Sin sesión Auth válida → null. NO hay fallback anónimo (fbSignIn eliminado en 1.5).
+// Prerequisito para deshabilitar Anonymous Auth: el cliente nunca solicita token anónimo.
+// Las llamadas fb* sin token van sin ?auth= y las reglas las deniegan limpiamente.
 async function getAuthToken() {
-  // Embudo de token (Fase 1.25 / E1): usar el token Auth SOLO si hay sesión Auth
-  // cuyo `code` coincide con el usuario activo de la app. Evita que una sesión Auth
-  // residual (p.ej. sembrada por el harness o de un usuario borrado) secuestre el
-  // token PRE-login o de otro usuario, lo que degradaría el login legacy (hallazgo A-1).
-  if (typeof PilotPayAuth !== 'undefined'
-      && PilotPayAuth.isAvailable()
-      && currentUser
-      && (PilotPayAuth.getSession() || {}).code === currentUser) {
-    return await PilotPayAuth.getToken(); // token Auth (o null sin red → encolar; no se mezcla con anónimo)
+  if (typeof PilotPayAuth !== 'undefined' && PilotPayAuth.isAvailable()) {
+    // Guard E1: si hay usuario activo, la sesión Auth debe corresponder a él.
+    if (currentUser && (PilotPayAuth.getSession() || {}).code !== currentUser) return null;
+    return await PilotPayAuth.getToken(); // token Auth vigente (o null sin red)
   }
-  await fbSignIn();
-  return _fbToken; // null si sin red o auth no habilitada
+  return null; // 1.5: sin sesión Auth → sin token (sin anónimo)
 }
 
 // Firebase REST helpers
@@ -7710,8 +7652,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Fase 1.25 / E1: restaurar sesión Auth persistida (sin red) ANTES de cualquier I/O,
   // para que getAuthToken() use el token Auth desde el arranque si la había.
   if (typeof PilotPayAuth !== 'undefined') PilotPayAuth.restoreSession();
-  // Autenticar anónimamente contra Firebase antes de cualquier lectura.
-  await fbSignIn();
+  // 1.5: sin sign-in anónimo en bootstrap. El cliente solo usa token Auth (tras login).
+  // Sin sesión Auth restaurada, no se hace I/O contra RTDB hasta que el usuario entra.
   // 1.4: sin pre-carga whole-node en background (login Auth-only carga el usuario tras autenticar).
 
   // P4 Fase 1: registrar sink Firebase en PilotPayStore.
