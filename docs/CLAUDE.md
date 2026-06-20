@@ -716,17 +716,16 @@ Archivo: `firebase-database.rules.json`
 Documentación: `docs/FIREBASE_SECURITY.md`
 
 - **Deny-by-default** en root
-- **`auth != null`** requerido en todos los paths
+- **Reglas por claim (Fase 1.5)**: acceso por `auth.token.code === $userId/$code`; admin por `auth.token.role === 'admin'`. Sin tolerancia anónima.
+- Nodos `rutas`/`solicitudes` mantienen `auth != null` (no escopados; pendiente endurecer)
 - Validación estructural en nodos críticos (monthly, auditorías, tombstones)
 - DELETEs permitidos via `!newData.exists()`
 
 ### Auth model
-**Firebase Anonymous Auth** via REST API. Sin SDK. Token adjuntado como `?auth=<token>` en cada llamada.
+**Firebase Auth Email/Password** (Fase 1.5). Anonymous Auth **DESHABILITADO**. Token Auth (con claims `code`/`role`) adjuntado como `?auth=<token>` en cada llamada vía REST. Sin SDK. El cliente no solicita tokens anónimos (`getAuthToken` es Auth-only).
 
-### Limitación conocida (documentada, no resoluble sin backend)
-El `auth.uid` anónimo no está correlacionado con los códigos de usuario de la app (`ESH`, `COP`…). Firebase **no puede** verificar que el usuario A solo acceda a `historicos/A/`. El aislamiento por usuario es enforced únicamente en cliente.
-
-La solución real (Firebase Custom Auth + backend) está documentada en `docs/FIREBASE_SECURITY.md` pero **no está en el roadmap inmediato**.
+### Aislamiento por usuario (cerrado en Fase 1.5)
+Las reglas RTDB validan `auth.token.code`/`auth.token.role` (claims emitidos por Admin SDK). El usuario A solo accede a `historicos/A`, `perfiles/A`, `permisos/A`, `usuarios/A`; el nodo completo de `usuarios`/`permisos` solo es legible por admin. R3 (cross-user) cerrado a nivel reglas para usuarios Auth.
 
 ---
 
@@ -937,10 +936,32 @@ Crear checkpoint antes de:
 - **Modo "PDF Prog." en Variables**: placeholder eliminado; feature no implementada
 
 ### Limitaciones conocidas
-- Cross-user isolation solo en cliente (no en Firebase rules)
-- Contraseñas en `pilotpay/usuarios` visibles a sesiones anónimas autenticadas
+- `usuarios.$code` permite self-write (incl. `bloqueado`); no enforced field-level — deuda menor (claim-based evita escalada admin)
+- `rutas`/`solicitudes` con `auth != null` (no escopados por claim) — pendiente endurecer
+- Rama raíz `/usuarios` duplicada: inaccesible (deny-by-default), pendiente limpieza con backup
 - Frontend no completamente desacoplado del backend
 - GC de tombstones >180 días pendiente (TODO en código)
+
+### Fase 1.5 — Cierre (2026-06)
+
+Estado: **CERRADA**
+
+Evidencias:
+- Cliente Auth-only desplegado.
+- Claims verificados:
+  - ESH → role=admin, code=ESH
+  - BZP → role=user, code=BZP
+- Reglas claim-based desplegadas en RTDB.
+- V6 PASS: BZP no puede acceder a `historicos/ESH`.
+- Matriz V1–V11 PASS (PC/iPhone/iPad).
+- Campo `pass` eliminado de usuarios ESH y BZP.
+- Anonymous Authentication deshabilitado.
+- R2 y R3 cerrados.
+
+Riesgos residuales:
+- `usuarios.$code` permite self-write.
+- `rutas` y `solicitudes` continúan con `auth != null`.
+- nodo raíz `/usuarios` pendiente de limpieza futura.
 
 ---
 
