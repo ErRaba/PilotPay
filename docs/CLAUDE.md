@@ -758,6 +758,41 @@ Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discr
 - Cualquier cambio debe verificarse en los tres
 - El P4 Debug Panel es la herramienta de diagnóstico sin consola móvil
 
+### 5.6 Regla Fundacional de Temporalidad — INVARIANTE DEL DOMINIO
+
+**Las variables del mes M se pagan en la nómina del mes M+1.** Nunca en el mismo mes.
+
+```
+Variables Enero   → Nómina Febrero
+Variables Febrero → Nómina Marzo
+Variables Marzo   → Nómina Abril
+Variables Abril   → Nómina Mayo
+```
+
+Esto **no es una hipótesis, observación, regla temporal ni preferencia de implementación**: es una
+**verdad de negocio del modelo retributivo Binter**, asumida como invariante mientras no exista
+evidencia documental en contra.
+
+**Aplicación obligatoria** en: Parser Variables, Parser Nómina, Auditorías, Comparativas, Histórico,
+Dashboard, Previsión de nómina, Lectura de programación, futuras funcionalidades IA, descubrimiento de
+reglas de negocio, validaciones empíricas e informes técnicos.
+
+**Queda expresamente PROHIBIDO:**
+- Comparar variables y nómina del **mismo** mes.
+- Validar conceptos de variables contra una nómina del mismo periodo.
+- Inferir reglas económicas ignorando el desfase M+1.
+- Elaborar auditorías o estudios sin aplicar esta correlación temporal.
+
+**Evidencia empírica validada** (solo posible aplicando Variables Febrero → Nómina Marzo):
+```
+Variables Febrero:  HV 52.19 · Imaginarias 2 · Comité Empresa 1 · Horas Pago 62.19
+Reconstrucción:     52.19 + (2 × 3) + (1 × 4) = 62.19
+Conclusión:         COMITÉ DE EMPRESA computa como 4 HV.
+```
+
+> ⚠️ **Antes de iniciar cualquier análisis relacionado con variables o nóminas, verificar que se está
+> aplicando la correlación temporal M → M+1.**
+
 ---
 
 ## 6. Motor de auditoría
@@ -774,6 +809,9 @@ Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discr
 - Los derivados NO generan impacto independiente
 - La diferencia total NO suma derivados múltiples
 - La auditoría debe explicar: origen probable, impacto real, consecuencias automáticas
+
+> **Correlación temporal obligatoria (ver §5.6):** la auditoría compara `variables[M]` contra `nómina[M+1]`,
+> nunca contra la nómina del mismo mes.
 
 ---
 
@@ -1203,6 +1241,9 @@ Las capacidades de **Proyección Operativa** (sección 12.2-12.5) están **expl�
 Esta sección documenta decisiones ya validadas mediante código, auditoría o pruebas reales durante el desarrollo de PilotPay Beta 3.0.
 
 ### 13.1 Parser Nómina V2
+
+> **Correlación temporal obligatoria (ver §5.6):** una nómina del mes M+1 paga las variables del mes M.
+> El Parser Nómina y su auditoría deben enlazar `nómina[M+1]` ↔ `variables[M]`, nunca el mismo mes.
 
 **Estado:** ✅ **COMPLETADO Y VALIDADO EN PRODUCCIÓN**
 
@@ -1765,6 +1806,9 @@ Historial
 
 ### 13.9 Dashboard 2.x — Filosofía validada
 
+> **Correlación temporal obligatoria (ver §5.6):** la previsión de nómina y el "próximo ciclo" del Dashboard
+> deben proyectar las variables del mes M sobre la nómina del mes M+1, nunca el mismo mes.
+
 **Estado:** Implementado y validado mediante uso real.
 
 **Objetivo:**
@@ -1986,6 +2030,10 @@ La Biblioteca Normativa debe sentirse como:
 ---
 
 ### 13.12 Parser Variables V2
+
+> **Correlación temporal obligatoria (ver §5.6):** las variables del mes M se pagan en la nómina del mes M+1.
+> El Parser Variables debe asociar cada periodo de variables a la nómina del mes siguiente para cualquier
+> reconstrucción, validación o previsión.
 
 **Estado:** Diseño aprobado. Implementación pendiente.
 

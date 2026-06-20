@@ -189,6 +189,41 @@ Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discr
 - Cualquier cambio debe verificarse en los tres
 - El P4 Debug Panel es la herramienta de diagnóstico sin consola móvil
 
+### 5.6 Regla Fundacional de Temporalidad — INVARIANTE DEL DOMINIO
+
+**Las variables del mes M se pagan en la nómina del mes M+1.** Nunca en el mismo mes.
+
+```
+Variables Enero   → Nómina Febrero
+Variables Febrero → Nómina Marzo
+Variables Marzo   → Nómina Abril
+Variables Abril   → Nómina Mayo
+```
+
+Esto **no es una hipótesis, observación, regla temporal ni preferencia de implementación**: es una
+**verdad de negocio del modelo retributivo Binter**, asumida como invariante mientras no exista
+evidencia documental en contra.
+
+**Aplicación obligatoria** en: Parser Variables, Parser Nómina, Auditorías, Comparativas, Histórico,
+Dashboard, Previsión de nómina, Lectura de programación, futuras funcionalidades IA, descubrimiento de
+reglas de negocio, validaciones empíricas e informes técnicos.
+
+**Queda expresamente PROHIBIDO:**
+- Comparar variables y nómina del **mismo** mes.
+- Validar conceptos de variables contra una nómina del mismo periodo.
+- Inferir reglas económicas ignorando el desfase M+1.
+- Elaborar auditorías o estudios sin aplicar esta correlación temporal.
+
+**Evidencia empírica validada** (solo posible aplicando Variables Febrero → Nómina Marzo):
+```
+Variables Febrero:  HV 52.19 · Imaginarias 2 · Comité Empresa 1 · Horas Pago 62.19
+Reconstrucción:     52.19 + (2 × 3) + (1 × 4) = 62.19
+Conclusión:         COMITÉ DE EMPRESA computa como 4 HV.
+```
+
+> ⚠️ **Antes de iniciar cualquier análisis relacionado con variables o nóminas, verificar que se está
+> aplicando la correlación temporal M → M+1.**
+
 ---
 
 ## 6. Motor de auditoría
@@ -206,6 +241,9 @@ Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discr
 - La diferencia total NO suma derivados múltiples
 - La auditoría debe explicar: origen probable, impacto real, consecuencias automáticas
 
+> **Correlación temporal obligatoria (ver §5.6):** la auditoría compara `variables[M]` contra `nómina[M+1]`,
+> nunca contra la nómina del mismo mes.
+
 ---
 
 ## 7. Parser PDF de nóminas
@@ -214,6 +252,9 @@ Los derivados NO deben sumarse varias veces. La auditoría debe clasificar discr
 - **Nunca usar NIF empresa como NIF trabajador**
 - Si el NIF no puede detectarse con seguridad: devolver vacío o "No detectado"
 - La actualización de perfil/histórico desde parser NO es automática: requiere validación visual y confirmación explícita del usuario
+
+> **Correlación temporal obligatoria (ver §5.6):** una nómina del mes M+1 paga las variables del mes M.
+> El parser y todo análisis deben enlazar `variables[M]` ↔ `nómina[M+1]`, nunca el mismo mes.
 
 ---
 
