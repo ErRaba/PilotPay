@@ -341,13 +341,21 @@ Crear checkpoint antes de:
 - Simulador IRPF
 - Comparativa inteligente
 - Historial de auditorías con clasificación causa/derivado/neto
-- Parser PDF de nóminas con extracción de acumulados
+- **Parser Nómina V2** — validado en producción: extrae IRPF %, SS %, coste empresa, acumulados y `tablaConceptos` completa; clasificación ~100% en muestras; fallback automático a V1 si confidence < 0.5
+- **Persistencia nominaV2** — `AuditRecord.nominaV2` completa (localStorage + IDB + Firebase); base del motor de inteligencia histórica
+- **IRPF AUTO-DETECT (Fase 1)** — detecta el IRPF real de la nómina y permite recálculo manual de la auditoría; persiste `irpfMetadata`; NO sobrescribe `profileData.irpf`
+- Parser PDF de nóminas V1 (fallback de seguridad) con extracción de acumulados
 - Generación de reclamaciones y PDF de nómina
 - Gestión de perfiles y avatares
 - Sync multi-device (P4): monthly, auditorías, tombstones, pull, queue
-- Firebase Security Rules (P5): deny-by-default + auth requerida
+- Firebase Security Rules: reglas por claim (Fase 1.5, ver §4) — aislamiento por usuario
 - Monitor de sincronización (admin, solo lectura)
 - Backend motor de cálculo (parcial, en progreso)
+
+> **Fuente documental ampliada:** el detalle de estado, validaciones, evidencias y decisiones de estos
+> bloques de producto (Parser Nómina V2, persistencia nominaV2, IRPF AUTO-DETECT, Dashboard 2.x, Biblioteca
+> Normativa, roadmap de Proyección Operativa) vive en `docs/CLAUDE.md` §13.x. Este root resume el estado;
+> `docs/CLAUDE.md` es la referencia canónica de producto.
 
 ### Retirado en Beta 3.0 (sin eliminar datos)
 - **Panel de rutas ICAO (Admin)**: código eliminado; datos en `pilotpay/rutas` preservados en Firebase
