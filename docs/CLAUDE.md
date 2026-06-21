@@ -793,6 +793,34 @@ Conclusión:         COMITÉ DE EMPRESA computa como 4 HV.
 > ⚠️ **Antes de iniciar cualquier análisis relacionado con variables o nóminas, verificar que se está
 > aplicando la correlación temporal M → M+1.**
 
+#### Unidad económica fundamental: la HORA DE PAGO
+
+**La unidad económica fundamental del motor de variables es la HORA DE PAGO.** Las actividades deben
+transformarse primero a HV equivalentes **antes** de estimar nómina, comparar variables o generar previsión.
+
+```
+Actividad → Factor HV → Horas de Pago → Tramos / conceptos económicos → Nómina M+1
+```
+
+#### Tabla maestra de equivalencias a HV
+
+| Actividad | Factor | Estado regla | Implementación motor |
+|---|---|---|---|
+| Hora de Vuelo (HV) | 1 HV | ✅ validado | ✅ implementado (base) |
+| Imaginaria | 3 HV | ✅ validado | ✅ implementado (incluida en HB) |
+| Franco | 2 HV | ✅ validado | ✅ implementado (incluida en HB) |
+| Comité de Empresa | 4 HV | ✅ validado | ⚠️ **pendiente** (no sumado en HB) |
+| Oficina / OFC | 4 HV | ✅ validado | ⚠️ **pendiente** (no sumado en HB) |
+| LTC | — | ⏳ pendiente validar | ⚠️ pendiente |
+| GTI | — | ⏳ pendiente validar | ⚠️ pendiente |
+| LRC | — | ⏳ pendiente validar | ⚠️ pendiente |
+| EQE2 | — | ⏳ pendiente validar | ⚠️ pendiente |
+
+> **Estado de implementación:** el motor ya calcula "Horas de Pago Totales (HB)" incorporando Imaginarias×3
+> y Francos×2. **Comité de Empresa (×4) y Oficina/OFC (×4) están validados empíricamente pero NO sumados aún
+> en HB** → su integración en Parser Variables / motor queda **pendiente**. LTC/GTI/LRC/EQE2 pendientes de
+> validar factor antes de implementar.
+
 ---
 
 ## 6. Motor de auditoría
