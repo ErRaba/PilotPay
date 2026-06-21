@@ -1068,6 +1068,53 @@ Riesgos residuales:
 
 ---
 
+## 11-bis. Diseños aprobados pendientes de implementación
+
+> Esta sección recoge **diseños aprobados que NO están implementados**. No forman parte del estado
+> funcional actual (§11) ni del roadmap completado. No usar como referencia de funcionalidad existente.
+
+### VariableRecordV2 — Diseño aprobado · NO implementado
+
+**Propósito:** persistir el **lado-variables** del mes para habilitar Media de Variables 12m, previsión,
+comparativas históricas y auditoría más precisa. Es la única pieza hoy inexistente (el lado-variables vive
+en `varsData`, runtime efímero). Se almacena como sub-objeto del `MonthRecord` del **mes de actividad**.
+
+**Estructura (Versión B aprobada):**
+```jsonc
+"variableRecordV2": {
+  "schemaVersion": "vr2.0",
+  "mesActividad": 2, "anioActividad": 2026,         // clave por ACTIVIDAD (no por mes de nómina)
+  "periodoInicio": "2026-02-01", "periodoFin": "2026-02-28",
+  "hvReales": 52.19,
+  "horasPagoPublicada": 62.19,                        // autoridad del PDF de variables
+  "tramos": { "t1": 8, "t2": 6.19, "t3": null, "t4": null },
+  "actividades": { "imaginarias": 2, "francos": 0, "comite": 1 }, // solo factores demostrados
+  "diasVacaciones": 0,
+  "economicas": { "dpo": 0, "compMad": 1500, "dietaVuelo": 9 },
+  "totalVariablesMes": 0.0,                           // € de variables del mes (para media 12m)
+  "otros": [],                                        // {etiqueta,valor} — gaps e hipótesis no demostradas
+  "gapHV": 0.0,                                        // horasPagoPublicada − reconstrucción (si ≠ 0)
+  "nominaPago": "2026:03",                            // M+1 (cacheado para queries)
+  "tramosPagadosNomina": { "t1": 8, "t2": 6.2 },     // prueba real del enlace M→M+1
+  "validadoContraNomina": false,
+  "confidence": 0.0,
+  "requiereRevisionManual": false,
+  "_updatedAt": "..."                                 // merge por timestamp (igual que MonthRecord)
+}
+```
+
+**Reglas arquitectónicas (vinculantes):**
+1. `VariableRecordV2` almacena **exclusivamente** información del **mes de actividad (M)**.
+2. `nominaV2` sigue siendo la **fuente de verdad de la nómina M+1**. VR2 no la duplica.
+3. `AuditRecord` sigue siendo la **fuente de verdad de auditorías**.
+4. VR2 **no persistirá campos derivados** (factor VAC, base/ancho ajustados, horasPagoCalculadas, mediaDía → se calculan al vuelo).
+5. VR2 **no tendrá campos dedicados para hipótesis no demostradas** (GTI, LTC, OFC, inspecciones, auditorías…). Hasta su validación vivirán en `otros[]`.
+6. VR2 debe **reutilizar nombres y semántica de `varsData`** siempre que sea posible (VR2 ≈ snapshot persistido de `varsData`).
+
+**Integración:** sub-objeto dentro de `MonthRecord` (`monthly_v1`), sin nuevas storage keys (CLAUDE.md §3) y sin tocar la máquina de estados ni el sync P4. Aditivo y retrocompatible (`variableRecordV2: null` en registros antiguos). Correlación temporal: ver §5.6.
+
+---
+
 ## 12. Visión Estratégica y Roadmap Futuro
 
 ### 12.1 Identidad del Proyecto
