@@ -811,8 +811,8 @@ Actividad → Factor HV → Horas de Pago → Tramos / conceptos económicos →
 | Franco | 2 HV | ✅ validado | ✅ implementado (incluida en HB) |
 | Comité de Empresa | 4 HV | ✅ validado | ⚠️ **pendiente** (no sumado en HB) |
 | Oficina / OFC | 4 HV | ✅ validado | ⚠️ **pendiente** (no sumado en HB) |
-| LTC | — | ⏳ pendiente validar | ⚠️ pendiente |
-| GTI | — | ⏳ pendiente validar | ⚠️ pendiente |
+| GTI (instrucción tierra) | 0,5 HV/hora impartida + suplemento | 🟡 alta confianza (sin validar doc.) | ⚠️ pendiente |
+| LTC | HV equivalentes + suplemento ~100 € | 🟡 alta confianza (sin validar doc.) | ⚠️ pendiente |
 | LRC | — | ⏳ pendiente validar | ⚠️ pendiente |
 | EQE2 | — | ⏳ pendiente validar | ⚠️ pendiente |
 
@@ -820,6 +820,43 @@ Actividad → Factor HV → Horas de Pago → Tramos / conceptos económicos →
 > y Francos×2. **Comité de Empresa (×4) y Oficina/OFC (×4) están validados empíricamente pero NO sumados aún
 > en HB** → su integración en Parser Variables / motor queda **pendiente**. LTC/GTI/LRC/EQE2 pendientes de
 > validar factor antes de implementar.
+
+### 5.7 Base de conocimiento retributivo (en construcción)
+
+> ⚠️ Esta subsección **NO es normativa firme**. Recoge conocimiento del modelo retributivo Binter en
+> distintos grados de certeza. **Solo los ítems en nivel 1-2 pueden usarse para cálculo**; el resto es
+> contexto para futura validación. No implementar nivel 3-4 sin confirmar.
+
+**Niveles de confianza (no mezclar estados):**
+1. **Validada documentalmente** — convenio/acuerdo escrito.
+2. **Validada empíricamente** — reconstruida de nóminas reales.
+3. **Alta confianza, pendiente de validación documental** — fuente interna fiable (p.ej. Comité de Empresa).
+4. **Implementación pendiente** — regla conocida pero aún no modelada en el motor.
+
+**Principio del motor** (ver §5.6): la unidad económica fundamental **no es la actividad, es la Hora de Pago**.
+Modelo: `Actividad → Factor HV → Horas de Pago → Concepto económico → Nómina M+1` (Regla Fundacional §5.6).
+
+#### Clasificación de actividades por efecto retributivo
+- **TIPO A — generan HV**: Imaginaria, Franco, Comité, Oficina.
+- **TIPO B — generan HV + suplemento económico**: GTI, LTC (probable).
+- **TIPO C — generan suplemento económico**: Inspecciones, Auditorías.
+
+#### Casuística informada (nivel 3 — alta confianza, sin validar doc.)
+
+| Concepto | Información recibida | Genera HV | Suplemento | Estado |
+|---|---|---|---|---|
+| **GTI** (instructor tierra) | `HV_GTI = horas impartidas × 0,5` (curso 8h → 4 HV) | Sí (0,5/h) | Sí (importe desconocido) | nivel 3 |
+| **LTC** | HV equivalentes + suplemento aprox. **100 €** (exacto no publicado) | Sí | ~100 € | nivel 3 |
+| **Inspecciones** | Suplemento **200 €**; ¿genera HV? desconocido; aparición en nómina desconocida | ? | 200 € | nivel 3 |
+| **Auditorías** | Suplemento **350 €**; ¿genera HV? desconocido; aparición en nómina desconocida | ? | 350 € | nivel 3 |
+
+#### Ausencias / situaciones especiales (nivel 3-4 — pendiente modelado y validación)
+- **Reducciones**: reducen conceptos fijos y complemento de base proporcionalmente. *(pendiente modelado exacto)*
+- **Licencias retribuidas**: mantienen la mayor parte de conceptos ordinarios; actualmente reducen complemento de base; situación bajo negociación. *(pendiente validación doc.)*
+- **Licencias no retribuidas**: sin evidencia suficiente. *(pendiente documentación real)*
+- **Maternidad / Paternidad**: la Seguridad Social abona el 100 % de la base de cotización. *(pendiente nómina real + modelado)*
+- **Incapacidad Temporal (IT)**: reduce conceptos fijos y complemento de base; SS paga desde día 4, empresa complementa desde día 7; concepto esperado "Complemento IT"; regla aprox. informada `60 % base cotización / 30 días` entre día 4 y día 20. *(pendiente validación doc.)*
+- **Media de variables** (se aplica con vacaciones): `(variables últimos 12 meses ÷ 12 ÷ 30) × días VAC`. Requiere histórico real de 12 meses; sin histórico suficiente → estimar o marcar confianza reducida. *(nivel 3, alta confianza)*
 
 ---
 
