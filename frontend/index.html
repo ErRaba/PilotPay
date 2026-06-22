@@ -2766,6 +2766,14 @@ input[type=number] { -moz-appearance: textfield; }
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 2 HB c/u</div>
             </div>
           </div>
+          <div class="row">
+            <div class="field">
+              <span class="field-label">Comité de Empresa (uds)</span>
+              <input class="field-input" id="comite" type="number" placeholder="0"
+                     oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 4 HB c/u</div>
+            </div>
+          </div>
 
           <div class="calc-section-sub">Horas baremo</div>
           <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px">
@@ -10704,6 +10712,7 @@ function resetCalculadora() {
   document.getElementById('hv4').value = '';
   document.getElementById('imaginarias').value = '';
   document.getElementById('francos').value = '';
+  { const _co = document.getElementById('comite'); if (_co) _co.value = ''; }  // Commit 2: reset Comité
   document.getElementById('lv1').value = '';
   document.getElementById('lv2').value = '';
   document.getElementById('lv3').value = '';
@@ -10828,10 +10837,11 @@ function calcularHB() {
   const hv = parseFloat(document.getElementById('hv-total').value)  || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
   const fr = parseFloat(document.getElementById('francos').value)     || 0;
+  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Commit 2: Comité ×4
   const hbEl = document.getElementById('hb-total');
   const hbManual = parseFloat(hbEl?.value) || 0;
 
-  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2) * 100) / 100 : 0;
+  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2 + co * 4) * 100) / 100 : 0;
 
   // Actualizar hint de fórmula
   const hintEl = document.getElementById('hb-formula-hint');
@@ -10840,6 +10850,7 @@ function calcularHB() {
       let parts = [`${hv} HV`];
       if (im > 0) parts.push(`${im}×3=${im*3} im`);
       if (fr > 0) parts.push(`${fr}×2=${fr*2} fr`);
+      if (co > 0) parts.push(`${co}×4=${co*4} com`);
       hintEl.textContent = `= ${parts.join(' + ')} = ${hbCalculado} HB`;
     } else {
       hintEl.textContent = 'introduce HV para calcular automáticamente';
@@ -10866,9 +10877,10 @@ function onHBManualChange() {
   const hv = parseFloat(document.getElementById('hv-total').value)   || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
   const fr = parseFloat(document.getElementById('francos').value)     || 0;
+  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Commit 2: Comité ×4
 
   if (hb <= 0) {
-    // HB borrado — recalcular desde HV+im+fr si existen
+    // HB borrado — recalcular desde HV+im+fr+comité si existen
     document.getElementById('hb-discrepancia').style.display = 'none';
     calcularHB();
     return;
@@ -10876,7 +10888,7 @@ function onHBManualChange() {
 
   // Verificar discrepancia si hay HV
   if (hv > 0) {
-    const hbCalc = Math.round((hv + im*3 + fr*2) * 100) / 100;
+    const hbCalc = Math.round((hv + im*3 + fr*2 + co*4) * 100) / 100;
     checkHBDiscrepancia(hb, hbCalc);
   } else {
     document.getElementById('hb-discrepancia').style.display = 'none';
@@ -16178,6 +16190,7 @@ const VARS_CAMPOS = [
   { id:'hv_t4',        label:'HV Tramo T4',                           unit:'HB',       calc:'hv4'        },
   { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias'},
   { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos'    },
+  { id:'comite',       label:'Comité de Empresa',                      unit:'uds',      calc:'comite'     },
   { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac' },
   { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac'   },
   { id:'dest_int',     label:'Destacamento INT',                       unit:'días',     calc:'dest-int'   },
@@ -16425,6 +16438,9 @@ function varsParseText(text) {
 
   // Días de vacaciones (Commit 1): capturar si el PDF lo trae. No cambia la fórmula VAC.
   data.dias_vacaciones = parseVal(/d[ií]as?\s*de\s*vacaciones?\s*:?\s*([\d.,]+)/i);
+
+  // Comité de Empresa (Commit 2): genera 4 HV c/u. Default 0 si no aparece.
+  data.comite = parseVal(/comit[eé]\s*(?:de\s*)?empresa\s*:?\s*([\d.,]+)/i);
 
   // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
   const t1=data.hv_t1||0, t2=data.hv_t2||0, t3=data.hv_t3||0, t4=data.hv_t4||0;
@@ -16712,9 +16728,9 @@ function varsCargarEnCalculadora() {
   });
 
   // Volcar campos simples (no HV/HB — esos los manejamos aparte)
-  const camposSimples = ['imaginarias','francos','dieta_vuelo','dest_nac','dest_int',
+  const camposSimples = ['imaginarias','francos','comite','dieta_vuelo','dest_nac','dest_int',
     'dieta_nac_sp','dieta_nac_cp','dieta_int_sp','dieta_int_cp','dpo','comp_mad'];
-  const campoCalc = { imaginarias:'imaginarias', francos:'francos',
+  const campoCalc = { imaginarias:'imaginarias', francos:'francos', comite:'comite',
     dieta_vuelo:'d-mant-nac', dest_nac:'dest-nac', dest_int:'dest-int',
     dieta_nac_sp:'d-nac-sp', dieta_nac_cp:'d-nac-cp',
     dieta_int_sp:'d-int-sp', dieta_int_cp:'d-int-cp',
@@ -16743,14 +16759,15 @@ function varsCargarEnCalculadora() {
     if (hvEl) hvEl.value = hvPuro;
     const im = varsData.imaginarias || 0;
     const fr = varsData.francos     || 0;
-    const hbCalc = Math.round((hvPuro + im*3 + fr*2) * 100) / 100;
+    const co = varsData.comite      || 0;  // Commit 2: Comité ×4
+    const hbCalc = Math.round((hvPuro + im*3 + fr*2 + co*4) * 100) / 100;
     const hintEl = document.getElementById('hb-formula-hint');
-    if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2 = ${hbCalc}`;
+    if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2${co>0?` + ${co} com×4`:''} = ${hbCalc}`;
     if (hbTotal != null && Math.abs(hbTotal - hbCalc) > 0.1) {
       const discEl = document.getElementById('hb-discrepancia');
       const discTxt = document.getElementById('hb-discrepancia-txt');
       if (discEl && discTxt) {
-        discTxt.textContent = `HB del PDF (${hbTotal}) difiere del calculado HV+im+fr (${hbCalc}) en ${Math.abs(hbTotal-hbCalc).toFixed(2)} HB — revisa`;
+        discTxt.textContent = `HB del PDF (${hbTotal}) difiere del calculado HV+im+fr+com (${hbCalc}) en ${Math.abs(hbTotal-hbCalc).toFixed(2)} HB — revisa`;
         discEl.style.display = 'block';
       }
     }
