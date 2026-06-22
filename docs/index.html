@@ -10721,7 +10721,8 @@ function resetCalculadora() {
   document.getElementById('hv4').value = '';
   document.getElementById('imaginarias').value = '';
   document.getElementById('francos').value = '';
-  { const _co = document.getElementById('comite'); if (_co) _co.value = ''; }  // Commit 2: reset Comité
+  { const _co = document.getElementById('comite'); if (_co) _co.value = ''; }  // reset Comité
+  { const _of = document.getElementById('oficinas'); if (_of) _of.value = ''; }  // reset OFC
   document.getElementById('lv1').value = '';
   document.getElementById('lv2').value = '';
   document.getElementById('lv3').value = '';
@@ -10846,11 +10847,12 @@ function calcularHB() {
   const hv = parseFloat(document.getElementById('hv-total').value)  || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
   const fr = parseFloat(document.getElementById('francos').value)     || 0;
-  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Commit 2: Comité ×4
+  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Comité ×4
+  const of = parseFloat(document.getElementById('oficinas')?.value)   || 0;  // OFC ×4 (regla negocio)
   const hbEl = document.getElementById('hb-total');
   const hbManual = parseFloat(hbEl?.value) || 0;
 
-  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2 + co * 4) * 100) / 100 : 0;
+  const hbCalculado = hv > 0 ? Math.round((hv + im * 3 + fr * 2 + co * 4 + of * 4) * 100) / 100 : 0;
 
   // Actualizar hint de fórmula
   const hintEl = document.getElementById('hb-formula-hint');
@@ -10860,6 +10862,7 @@ function calcularHB() {
       if (im > 0) parts.push(`${im}×3=${im*3} im`);
       if (fr > 0) parts.push(`${fr}×2=${fr*2} fr`);
       if (co > 0) parts.push(`${co}×4=${co*4} com`);
+      if (of > 0) parts.push(`${of}×4=${of*4} ofc`);
       hintEl.textContent = `= ${parts.join(' + ')} = ${hbCalculado} HB`;
     } else {
       hintEl.textContent = 'introduce HV para calcular automáticamente';
@@ -10886,10 +10889,11 @@ function onHBManualChange() {
   const hv = parseFloat(document.getElementById('hv-total').value)   || 0;
   const im = parseFloat(document.getElementById('imaginarias').value) || 0;
   const fr = parseFloat(document.getElementById('francos').value)     || 0;
-  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Commit 2: Comité ×4
+  const co = parseFloat(document.getElementById('comite')?.value)     || 0;  // Comité ×4
+  const of = parseFloat(document.getElementById('oficinas')?.value)   || 0;  // OFC ×4
 
   if (hb <= 0) {
-    // HB borrado — recalcular desde HV+im+fr+comité si existen
+    // HB borrado — recalcular desde HV+im+fr+comité+ofc si existen
     document.getElementById('hb-discrepancia').style.display = 'none';
     calcularHB();
     return;
@@ -10897,7 +10901,7 @@ function onHBManualChange() {
 
   // Verificar discrepancia si hay HV
   if (hv > 0) {
-    const hbCalc = Math.round((hv + im*3 + fr*2 + co*4) * 100) / 100;
+    const hbCalc = Math.round((hv + im*3 + fr*2 + co*4 + of*4) * 100) / 100;
     checkHBDiscrepancia(hb, hbCalc);
   } else {
     document.getElementById('hb-discrepancia').style.display = 'none';
@@ -16757,9 +16761,9 @@ function varsCargarEnCalculadora() {
   });
 
   // Volcar campos simples (no HV/HB — esos los manejamos aparte)
-  const camposSimples = ['imaginarias','francos','comite','dieta_vuelo','dest_nac','dest_int',
+  const camposSimples = ['imaginarias','francos','comite','oficinas','dieta_vuelo','dest_nac','dest_int',
     'dieta_nac_sp','dieta_nac_cp','dieta_int_sp','dieta_int_cp','dpo','comp_mad'];
-  const campoCalc = { imaginarias:'imaginarias', francos:'francos', comite:'comite',
+  const campoCalc = { imaginarias:'imaginarias', francos:'francos', comite:'comite', oficinas:'oficinas',
     dieta_vuelo:'d-mant-nac', dest_nac:'dest-nac', dest_int:'dest-int',
     dieta_nac_sp:'d-nac-sp', dieta_nac_cp:'d-nac-cp',
     dieta_int_sp:'d-int-sp', dieta_int_cp:'d-int-cp',
@@ -16789,9 +16793,10 @@ function varsCargarEnCalculadora() {
     const im = varsData.imaginarias || 0;
     const fr = varsData.francos     || 0;
     const co = varsData.comite      || 0;  // Comité ×4
-    const hbCalc = Math.round((hvPuro + im*3 + fr*2 + co*4) * 100) / 100;
+    const of = varsData.oficinas    || 0;  // OFC ×4
+    const hbCalc = Math.round((hvPuro + im*3 + fr*2 + co*4 + of*4) * 100) / 100;
     const hintEl = document.getElementById('hb-formula-hint');
-    if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2${co>0?` + ${co} com×4`:''} = ${hbCalc}`;
+    if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2${co>0?` + ${co} com×4`:''}${of>0?` + ${of} ofc×4`:''} = ${hbCalc}`;
   }
 
   // ── Commit 4 — Red de cuadre HB (no bloqueante) ──
@@ -16803,14 +16808,15 @@ function varsCargarEnCalculadora() {
     const im = varsData.imaginarias || 0;
     const fr = varsData.francos     || 0;
     const co = varsData.comite      || 0;
+    const of = varsData.oficinas    || 0;  // OFC ×4
     if (baseHv != null && hbTotal != null) {
-      const hbReconstruida = Math.round((baseHv + im*3 + fr*2 + co*4) * 100) / 100;
+      const hbReconstruida = Math.round((baseHv + im*3 + fr*2 + co*4 + of*4) * 100) / 100;
       const gap = Math.round((hbTotal - hbReconstruida) * 100) / 100;
       const discEl  = document.getElementById('hb-discrepancia');
       const discTxt = document.getElementById('hb-discrepancia-txt');
       if (Math.abs(gap) > 0.1) {
         if (discEl && discTxt) {
-          discTxt.textContent = `Red de cuadre: Horas de Pago publicadas (${hbTotal}) − reconstrucción HV+im×3+fr×2${co>0?'+com×4':''} (${hbReconstruida}) = gap ${gap>0?'+':''}${gap} HB. Posible factor no modelado; el cálculo continúa.`;
+          discTxt.textContent = `Red de cuadre: Horas de Pago publicadas (${hbTotal}) − reconstrucción HV+im×3+fr×2${co>0?'+com×4':''}${of>0?'+ofc×4':''} (${hbReconstruida}) = gap ${gap>0?'+':''}${gap} HB. Posible factor no modelado; el cálculo continúa.`;
           discEl.style.display = 'block';
         }
         console.warn('[Red de cuadre HB] gap', gap, 'HB — publicada', hbTotal, '· reconstruida', hbReconstruida);
