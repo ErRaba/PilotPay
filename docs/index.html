@@ -11654,6 +11654,12 @@ function _renderRightPanel(page) {
       var var_items = '';
       if (varsData.imaginarias != null && varsData.imaginarias > 0) var_items += kv('Imaginarias', varsData.imaginarias);
       if (varsData.francos     != null && varsData.francos     > 0) var_items += kv('Francos', varsData.francos);
+      // Días de vacaciones detectados: fila visible con badge verde (solo UI; el cálculo ya los aplica)
+      if (varsData.dias_vacaciones != null && varsData.dias_vacaciones > 0) {
+        var_items += '<div class="cl-right-kv" title="Detectado desde PDF y aplicado al cálculo de tramos HB.">'
+          + '<span class="cl-right-kv-label">Días de vacaciones</span>'
+          + '<span class="cl-status-badge cl-st-ok">' + varsData.dias_vacaciones + ' días</span></div>';
+      }
       // ── Dietas / Desplazamientos ──
       var diet_items = '';
       if (varsData.dieta_vuelo  != null && varsData.dieta_vuelo  > 0) diet_items += kv('Dieta vuelo',    h(varsData.dieta_vuelo, 'días'));
