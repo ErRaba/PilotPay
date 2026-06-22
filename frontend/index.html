@@ -2776,6 +2776,12 @@ input[type=number] { -moz-appearance: textfield; }
                      oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
               <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 4 HB c/u</div>
             </div>
+            <div class="field">
+              <span class="field-label">Oficinas / OFC (uds)</span>
+              <input class="field-input" id="oficinas" type="number" placeholder="0"
+                     oninput="calcularHB()" onchange="calcularHB()" onblur="calcularHB()">
+              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px">× 4 HB c/u</div>
+            </div>
           </div>
 
           <div class="calc-section-sub">Horas baremo</div>
@@ -11657,6 +11663,8 @@ function _renderRightPanel(page) {
       var var_items = '';
       if (varsData.imaginarias != null && varsData.imaginarias > 0) var_items += kv('Imaginarias', varsData.imaginarias);
       if (varsData.francos     != null && varsData.francos     > 0) var_items += kv('Francos', varsData.francos);
+      if (varsData.comite      != null && varsData.comite      > 0) var_items += kv('Comité de Empresa', varsData.comite);
+      if (varsData.oficinas    != null && varsData.oficinas    > 0) var_items += kv('Oficinas / OFC', varsData.oficinas);
       // Días de vacaciones detectados: fila visible con badge verde (solo UI; el cálculo ya los aplica)
       if (varsData.dias_vacaciones != null && varsData.dias_vacaciones > 0) {
         var_items += '<div class="cl-right-kv" title="Detectado desde PDF y aplicado al cálculo de tramos HB.">'
@@ -16200,6 +16208,7 @@ const VARS_CAMPOS = [
   { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias'},
   { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos'    },
   { id:'comite',       label:'Comité de Empresa',                      unit:'uds',      calc:'comite'     },
+  { id:'oficinas',     label:'Oficinas / OFC',                         unit:'uds',      calc:'oficinas'   },
   { id:'dias_vacaciones', label:'Días de vacaciones',                  unit:'días',     calc:'vac-dias'   },
   { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac' },
   { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac'   },
@@ -16457,6 +16466,10 @@ function varsParseText(text) {
 
   // Comité de Empresa (Commit 2): genera 4 HV c/u. Default 0 si no aparece.
   data.comite = parseVal(/comit[eé]\s*(?:de\s*)?empresa\s*:?\s*([\d.,]+)/i);
+
+  // Oficinas / OFC: regla de NEGOCIO (4 HB c/u), pendiente de validación documental en PDF.
+  // Default 0 si no aparece. (No demostrado empíricamente con los PDFs disponibles.)
+  data.oficinas = parseVal(/(?:oficinas?|\bofc\b)\s*:?\s*([\d.,]+)/i);
 
   // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
   const t1=data.hv_t1||0, t2=data.hv_t2||0, t3=data.hv_t3||0, t4=data.hv_t4||0;
