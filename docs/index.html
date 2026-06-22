@@ -16423,6 +16423,9 @@ function varsParseText(text) {
     /(?:complemento\s*(?:de\s*)?base\s*mad|complemento\s*madrid)\s*:?\s*([\d.,]+)/i
   );
 
+  // Días de vacaciones (Commit 1): capturar si el PDF lo trae. No cambia la fórmula VAC.
+  data.dias_vacaciones = parseVal(/d[ií]as?\s*de\s*vacaciones?\s*:?\s*([\d.,]+)/i);
+
   // Confianza: verificar que T1+T2+T3+T4 ≈ hv_total
   const t1=data.hv_t1||0, t2=data.hv_t2||0, t3=data.hv_t3||0, t4=data.hv_t4||0;
   if (data.hv_total != null && (t1||t2||t3||t4)) {
@@ -16750,6 +16753,22 @@ function varsCargarEnCalculadora() {
         discTxt.textContent = `HB del PDF (${hbTotal}) difiere del calculado HV+im+fr (${hbCalc}) en ${Math.abs(hbTotal-hbCalc).toFixed(2)} HB — revisa`;
         discEl.style.display = 'block';
       }
+    }
+  }
+
+  // Commit 1: VAC automático — si el PDF trae "Días de vacaciones", activar y rellenar
+  // ANTES de distribuir tramos para que getVacParams() use base/ancho ajustados.
+  // No cambia la fórmula VAC (getVacParams intacta). Comportamiento sin VAC = idéntico.
+  if (varsData.dias_vacaciones != null && varsData.dias_vacaciones > 0) {
+    const tv = document.getElementById('toggle-vac');
+    const vd = document.getElementById('vac-dias');
+    if (tv && vd) {
+      tv.checked = true;
+      if (typeof toggleVacaciones === 'function') toggleVacaciones();
+      vd.value = varsData.dias_vacaciones;
+      if (typeof onVacDiasChange === 'function') onVacDiasChange();
+      const vh = document.getElementById('vac-hint');
+      if (vh) vh.textContent = `Con vacaciones (${varsData.dias_vacaciones} días) — detectado del PDF`;
     }
   }
 
