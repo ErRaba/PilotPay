@@ -11663,15 +11663,16 @@ function _renderRightPanel(page) {
       if (varsData.hv_t2 != null && varsData.hv_t2 > 0) hora_items += kv('HV T2', h(varsData.hv_t2, 'HB'));
       if (varsData.hv_t3 != null && varsData.hv_t3 > 0) hora_items += kv('HV T3', h(varsData.hv_t3, 'HB'));
       if (varsData.hv_t4 != null && varsData.hv_t4 > 0) hora_items += kv('HV T4', h(varsData.hv_t4, 'HB'));
-      // ── Variables ──
+      // ── Actividades que generan HB ── (Commit 3)
       var var_items = '';
       if (varsData.imaginarias != null && varsData.imaginarias > 0) var_items += kv('Imaginarias', varsData.imaginarias);
       if (varsData.francos     != null && varsData.francos     > 0) var_items += kv('Francos', varsData.francos);
       if (varsData.comite      != null && varsData.comite      > 0) var_items += kv('Comité de Empresa', varsData.comite);
       if (varsData.oficinas    != null && varsData.oficinas    > 0) var_items += kv('Oficinas / OFC', varsData.oficinas);
-      // Días de vacaciones detectados: fila visible con badge verde (solo UI; el cálculo ya los aplica)
+      // ── Ausencias ── (Commit 3)
+      var aus_items = '';
       if (varsData.dias_vacaciones != null && varsData.dias_vacaciones > 0) {
-        var_items += '<div class="cl-right-kv" title="Detectado desde PDF y aplicado al cálculo de tramos HB.">'
+        aus_items += '<div class="cl-right-kv" title="Detectado desde PDF y aplicado al cálculo de tramos HB.">'
           + '<span class="cl-right-kv-label">Días de vacaciones</span>'
           + '<span class="cl-status-badge cl-st-ok">' + varsData.dias_vacaciones + ' días</span></div>';
       }
@@ -11684,19 +11685,21 @@ function _renderRightPanel(page) {
       if (varsData.dieta_nac_cp != null && varsData.dieta_nac_cp > 0) diet_items += kv('Desp. NAC c/p',  h(varsData.dieta_nac_cp,'días'));
       if (varsData.dieta_int_sp != null && varsData.dieta_int_sp > 0) diet_items += kv('Desp. INT s/p',  h(varsData.dieta_int_sp,'días'));
       if (varsData.dieta_int_cp != null && varsData.dieta_int_cp > 0) diet_items += kv('Desp. INT c/p',  h(varsData.dieta_int_cp,'días'));
-      // ── Complementos ──
+      // ── Complementos económicos ── (Commit 3)
       var comp_items = '';
       if (varsData.dpo      != null && varsData.dpo      > 0) comp_items += kv('DPO',       fmt(varsData.dpo));
       if (varsData.comp_mad != null && varsData.comp_mad > 0) comp_items += kv('Comp. MAD', fmt(varsData.comp_mad));
+      if (varsData.media_variables != null && varsData.media_variables > 0) comp_items += kv('Media Variables', fmt(varsData.media_variables));
 
       dynamicDiv.innerHTML = '<div class="cl-right-sec-title">Datos extraídos</div>'
         + kv('Período', periodo)
         + kv('Piloto', '<span style="font-size:10px">' + nombre + '</span>')
         + confHtml
         + (hora_items ? sec('Horas') + hora_items : '')
-        + (var_items  ? sec('Variables') + var_items  : '')
-        + (diet_items ? sec('Dietas') + diet_items : '')
-        + (comp_items ? sec('Complementos') + comp_items : '')
+        + (var_items  ? sec('Actividades que generan HB') + var_items  : '')
+        + (aus_items  ? sec('Ausencias') + aus_items : '')
+        + (diet_items ? sec('Dietas / Pernoctas') + diet_items : '')
+        + (comp_items ? sec('Complementos económicos') + comp_items : '')
         + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
     }
     return;
@@ -16203,26 +16206,27 @@ function toggleSimAvanzado() {
 // ══════════════════════════════════════════════════════
 
 const VARS_CAMPOS = [
-  { id:'hb_total',     label:'Horas de Pago Totales (HB)',           unit:'HB',       calc:'hb-total'   },
-  { id:'hv_total',     label:'Horas de Vuelo (HV puras)',             unit:'HB',       calc:'hv-total'   },
-  { id:'hv_t1',        label:'HV Tramo T1',                           unit:'HB',       calc:'hv1'        },
-  { id:'hv_t2',        label:'HV Tramo T2',                           unit:'HB',       calc:'hv2'        },
-  { id:'hv_t3',        label:'HV Tramo T3',                           unit:'HB',       calc:'hv3'        },
-  { id:'hv_t4',        label:'HV Tramo T4',                           unit:'HB',       calc:'hv4'        },
-  { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias'},
-  { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos'    },
-  { id:'comite',       label:'Comité de Empresa',                      unit:'uds',      calc:'comite'     },
-  { id:'oficinas',     label:'Oficinas / OFC',                         unit:'uds',      calc:'oficinas'   },
-  { id:'dias_vacaciones', label:'Días de vacaciones',                  unit:'días',     calc:'vac-dias'   },
-  { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac' },
-  { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac'   },
-  { id:'dest_int',     label:'Destacamento INT',                       unit:'días',     calc:'dest-int'   },
-  { id:'dieta_nac_sp', label:'Desplazamiento NAC sin pernocta',        unit:'días',     calc:'d-nac-sp'   },
-  { id:'dieta_nac_cp', label:'Desplazamiento NAC con pernocta',        unit:'días',     calc:'d-nac-cp'   },
-  { id:'dieta_int_sp', label:'Desplazamiento INT sin pernocta',        unit:'días',     calc:'d-int-sp'   },
-  { id:'dieta_int_cp', label:'Desplazamiento INT con pernocta',        unit:'días',     calc:'d-int-cp'   },
-  { id:'dpo',          label:'Dirección por Objetivos (DPO)',           unit:'€',        calc:'dpo'        },
-  { id:'comp_mad',     label:'Complemento Base MAD',                    unit:'€',        calc:'comp-mad'   },
+  // Commit 3: campo 'grupo' para encabezados por bloques lógicos en el render.
+  { id:'hb_total',     label:'Horas de Pago Totales (HB)',           unit:'HB',       calc:'hb-total',   grupo:'Horas' },
+  { id:'hv_total',     label:'Horas de Vuelo (HV puras)',             unit:'HB',       calc:'hv-total',   grupo:'Horas' },
+  { id:'hv_t1',        label:'HV Tramo T1',                           unit:'HB',       calc:'hv1',        grupo:'Horas' },
+  { id:'hv_t2',        label:'HV Tramo T2',                           unit:'HB',       calc:'hv2',        grupo:'Horas' },
+  { id:'hv_t3',        label:'HV Tramo T3',                           unit:'HB',       calc:'hv3',        grupo:'Horas' },
+  { id:'hv_t4',        label:'HV Tramo T4',                           unit:'HB',       calc:'hv4',        grupo:'Horas' },
+  { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias',grupo:'Actividades que generan HB' },
+  { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos',    grupo:'Actividades que generan HB' },
+  { id:'comite',       label:'Comité de Empresa',                      unit:'uds',      calc:'comite',     grupo:'Actividades que generan HB' },
+  { id:'oficinas',     label:'Oficinas / OFC',                         unit:'uds',      calc:'oficinas',   grupo:'Actividades que generan HB' },
+  { id:'dias_vacaciones', label:'Días de vacaciones',                  unit:'días',     calc:'vac-dias',   grupo:'Ausencias' },
+  { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac', grupo:'Dietas / Pernoctas' },
+  { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac',   grupo:'Dietas / Pernoctas' },
+  { id:'dest_int',     label:'Destacamento INT',                       unit:'días',     calc:'dest-int',   grupo:'Dietas / Pernoctas' },
+  { id:'dieta_nac_sp', label:'Desplazamiento NAC sin pernocta',        unit:'días',     calc:'d-nac-sp',   grupo:'Dietas / Pernoctas' },
+  { id:'dieta_nac_cp', label:'Desplazamiento NAC con pernocta',        unit:'días',     calc:'d-nac-cp',   grupo:'Dietas / Pernoctas' },
+  { id:'dieta_int_sp', label:'Desplazamiento INT sin pernocta',        unit:'días',     calc:'d-int-sp',   grupo:'Dietas / Pernoctas' },
+  { id:'dieta_int_cp', label:'Desplazamiento INT con pernocta',        unit:'días',     calc:'d-int-cp',   grupo:'Dietas / Pernoctas' },
+  { id:'dpo',          label:'Dirección por Objetivos (DPO)',           unit:'€',        calc:'dpo',        grupo:'Complementos económicos' },
+  { id:'comp_mad',     label:'Complemento Base MAD',                    unit:'€',        calc:'comp-mad',   grupo:'Complementos económicos' },
 ];
 
 let varsData    = {};
@@ -16724,13 +16728,20 @@ function varsMostrarResultado() {
   document.getElementById('vars-nomina-badge').textContent  = `Nómina de ${nomMes}`;
   document.getElementById('vars-nombre').textContent        = varsData._nombre || '—';
 
-  // Renderizar tabla
+  // Renderizar tabla — Commit 3: encabezado por bloque lógico cuando cambia el grupo
   const confianza = varsData._confianza || {};
+  let grupoActual = null;
   const filas = VARS_CAMPOS.map(campo => {
     const val  = varsData[campo.id];
     const conf = confianza[campo.id] || (val != null ? 'green' : 'empty');
     const icono = conf === 'green' ? '🟢' : conf === 'amber' ? '🟡' : '⬜';
-    return `
+    let header = '';
+    if (campo.grupo && campo.grupo !== grupoActual) {
+      grupoActual = campo.grupo;
+      header = '<div style="font-size:9px;font-family:var(--mono);text-transform:uppercase;'
+        + 'letter-spacing:.1em;color:var(--text3);margin:8px 0 2px;padding-top:6px">' + campo.grupo + '</div>';
+    }
+    return header + `
       <div style="display:grid;grid-template-columns:18px 1fr 80px 42px;gap:6px;align-items:center;
                   padding:7px 0;border-bottom:1px solid var(--border);${val==null?'opacity:0.5':''}">
         <span style="font-size:11px">${icono}</span>
