@@ -16979,6 +16979,8 @@ function varsCargarEnCalculadora() {
 function varsReset() {
   varsData = {};
   varsPeriodoConfirmado = false;
+  _varsIdentidadResuelta = false;                                   // reset estado identidad PDF
+  if (window.PilotPayMode === 'simulation') window.PilotPayMode = 'operational';  // salir de simulación libre
   document.getElementById('vars-upload-text').textContent = 'Toca para subir PDF de Variables';
   const fi = document.getElementById('vars-file-input');
   if (fi) fi.value = '';
@@ -16987,7 +16989,13 @@ function varsReset() {
   document.getElementById('vars-periodo-confirm').style.display = 'none';
   document.getElementById('vars-result').style.display  = 'none';
   document.getElementById('vars-loading').style.display = 'none';
-  document.getElementById('vars-status').textContent    = '';
+  const _st = document.getElementById('vars-status');
+  if (_st) { _st.textContent = ''; _st.style.color = ''; }          // limpiar badge simulación/estado
+  // Limpieza completa del estado visual de Variables:
+  const _vt = document.getElementById('vars-tabla'); if (_vt) _vt.innerHTML = '';          // tabla central
+  const _disc = document.getElementById('hb-discrepancia'); if (_disc) _disc.style.display = 'none';  // aviso gap HB
+  // Sidebar derecho / resumen detectado → estado vacío (varsData={} ⇒ placeholder "Sube un PDF…")
+  if (typeof _renderRightPanel === 'function') _renderRightPanel('variables');
 }
 
 
