@@ -821,6 +821,16 @@ Actividad → Factor HV → Horas de Pago → Tramos / conceptos económicos →
 > en HB** → su integración en Parser Variables / motor queda **pendiente**. LTC/GTI/LRC/EQE2 pendientes de
 > validar factor antes de implementar.
 
+#### Vacaciones — doble impacto
+
+Las vacaciones tienen **doble impacto**:
+1. **Ajustan la estructura HB:** base HB, ancho de tramo y distribución T1/T2/T3/T4 (vía `getVacParams`).
+2. **Generan unidades de Media de Variables:** **1 día VAC = 1 unidad de Media Variables**; el importe
+   requiere el **histórico de variables de 12 meses** → **cálculo de importe pendiente de implementación futura**.
+
+`dias_vacaciones`, capturado desde el PDF de Variables, queda **persistido en `mr.variablesData`** y será la
+futura fuente para `VariableRecordV2.diasVacaciones` (§11-bis).
+
 ### 5.7 Base de conocimiento retributivo (en construcción)
 
 > ⚠️ Esta subsección **NO es normativa firme**. Recoge conocimiento del modelo retributivo Binter en

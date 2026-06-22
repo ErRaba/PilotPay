@@ -16437,6 +16437,12 @@ function varsParseText(text) {
   );
 
   // Días de vacaciones (Commit 1): capturar si el PDF lo trae. No cambia la fórmula VAC.
+  // DOBLE IMPACTO de las vacaciones:
+  //  1) Estructura HB: ajustan base HB, ancho de tramo y distribución T1/T2/T3/T4 (vía getVacParams).
+  //  2) Media de Variables: 1 día VAC = 1 unidad de Media Variables; el importe requiere el histórico
+  //     de variables de 12 meses → cálculo de importe PENDIENTE de implementación futura.
+  // dias_vacaciones queda persistido en mr.variablesData (snapshot de varsData) y será la futura
+  // fuente para VariableRecordV2.diasVacaciones.
   data.dias_vacaciones = parseVal(/d[ií]as?\s*de\s*vacaciones?\s*:?\s*([\d.,]+)/i);
 
   // Comité de Empresa (Commit 2): genera 4 HV c/u. Default 0 si no aparece.
