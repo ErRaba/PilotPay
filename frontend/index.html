@@ -1428,7 +1428,10 @@ input, select, textarea {
 
 /* ── UX-3: RIGHT PANEL CONTEXTUAL ── */
 #cl-right-calcular { display: flex; flex-direction: column; gap: 8px; }
-#cl-right-dynamic  { display: flex; flex-direction: column; gap: 8px; }
+/* Panel derecho "Datos extraídos/Resumen": card con padding para que los valores no
+   queden pegados al borde derecho (fix de corte). box-sizing:border-box (global) evita overflow. */
+#cl-right-dynamic  { display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
 #cl-right-calcular .cl-neto-item .sum-val { font-size: 24px; }
 #cl-right-status {
   background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
@@ -16197,6 +16200,7 @@ const VARS_CAMPOS = [
   { id:'imaginarias',  label:'Imaginarias',                            unit:'uds',      calc:'imaginarias'},
   { id:'francos',      label:'Francos',                                unit:'uds',      calc:'francos'    },
   { id:'comite',       label:'Comité de Empresa',                      unit:'uds',      calc:'comite'     },
+  { id:'dias_vacaciones', label:'Días de vacaciones',                  unit:'días',     calc:'vac-dias'   },
   { id:'dieta_vuelo',  label:'Dieta de vuelo',                         unit:'períodos', calc:'d-mant-nac' },
   { id:'dest_nac',     label:'Destacamento NAC',                       unit:'días',     calc:'dest-nac'   },
   { id:'dest_int',     label:'Destacamento INT',                       unit:'días',     calc:'dest-int'   },
