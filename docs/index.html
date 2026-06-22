@@ -16241,6 +16241,9 @@ const VARS_CAMPOS = [
 let varsData    = {};
 let varsModo    = 'pdf';
 let varsPeriodoConfirmado = false;
+// Commit 2: identidad del PDF de Variables resuelta por el usuario (true tras "Sí es mío" o "Simulación libre").
+// Se reinicia al parsear un PDF nuevo, para re-advertir en cada documento.
+let _varsIdentidadResuelta = false;
 
 // ── MES ESPERADO DE VARIABLES ──
 // Las variables son del mes ANTERIOR al que está seleccionado en la calculadora
@@ -16306,6 +16309,7 @@ async function varsProcessPDF(file) {
   try {
     const text = await extractPdfText(file);
     varsData = varsParseText(text);
+    _varsIdentidadResuelta = false;  // Commit 2: re-advertir identidad en cada PDF nuevo
     varsMostrarConfirmacionPeriodo();
     parseOk = true;
   } catch(e) {
@@ -16326,6 +16330,7 @@ function varsAnalyzePaste() {
   document.getElementById('vars-periodo-confirm').style.display = 'none';
   setTimeout(() => {
     varsData = varsParseText(text);
+    _varsIdentidadResuelta = false;  // Commit 2: re-advertir identidad en cada PDF nuevo
     document.getElementById('vars-loading').style.display = 'none';
     varsMostrarConfirmacionPeriodo();
     _syncLeftPanel();
@@ -16766,11 +16771,79 @@ function varsMostrarResultado() {
   document.getElementById('vars-result').scrollIntoView({ behavior: 'smooth' });
 }
 
+// ── Commit 2: validación asistida de identidad del PDF de Variables ──
+// Normaliza nombres (mayúsculas, sin acentos, espacios colapsados) para comparar de forma robusta.
+function _varsNormalizarNombre(s) {
+  return (s || '').toString().toUpperCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')   // quitar acentos
+    .replace(/[^A-Z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+// Comparación CONSERVADORA: solo sirve para detectar riesgo, nunca para bloquear.
+// Coincide si: no hay nombre en PDF (no se puede comparar) o el nombre + 1er apellido del
+// perfil aparecen como tokens dentro del nombre del PDF (tolera 2º apellido ausente y orden).
+function _varsIdentidadCoincide() {
+  const pdf = _varsNormalizarNombre(varsData && varsData._nombre);
+  if (!pdf) return true;  // sin dato → no advertir
+  const u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : '';
+  const perfilRaw = `${(typeof profileData!=='undefined' && profileData.name) || (USERS[u]&&USERS[u].name) || ''} ${(typeof profileData!=='undefined' && profileData.apellidos) || (USERS[u]&&USERS[u].apellidos) || ''}`;
+  const perfil = _varsNormalizarNombre(perfilRaw);
+  if (!perfil) return true;  // perfil sin nombre → no advertir
+  const pdfTokens = new Set(pdf.split(' ').filter(t => t.length >= 3));
+  const perfilTokens = perfil.split(' ').filter(t => t.length >= 3);
+  if (perfilTokens.length === 0) return true;
+  // Exigir que la MAYORÍA de tokens del perfil estén en el PDF (≥ 2 o todos si hay <2).
+  const hits = perfilTokens.filter(t => pdfTokens.has(t)).length;
+  const necesarios = Math.min(2, perfilTokens.length);
+  return hits >= necesarios;
+}
+function _varsNombrePerfilLabel() {
+  const u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : '';
+  const n = `${(typeof profileData!=='undefined' && profileData.name) || (USERS[u]&&USERS[u].name) || ''} ${(typeof profileData!=='undefined' && profileData.apellidos) || (USERS[u]&&USERS[u].apellidos) || ''}`.trim();
+  return n || u || 'usuario activo';
+}
+// Modal de aviso (no bloqueante): el usuario decide. Reutiliza day-modal.
+function _varsMostrarModalIdentidad() {
+  const pdfNom = (varsData && varsData._nombre) ? varsData._nombre : '(no detectado)';
+  document.getElementById('day-modal-content').innerHTML = `
+    <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:10px;color:var(--text)">⚠ Identidad del PDF</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
+      El PDF parece pertenecer a <b style="color:var(--text)">${pdfNom}</b>, pero el usuario activo es
+      <b style="color:var(--text)">${_varsNombrePerfilLabel()}</b>.<br><br>
+      Puede ser un error de escritura en el PDF. ¿Cómo quieres continuar?
+    </div>
+    <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadConfirmar()">Sí, es mi PDF — continuar normal</button>
+    <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadSimulacion()">No — calcular como simulación libre</button>
+    <button onclick="closeDayModal()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">Cancelar</button>`;
+  document.getElementById('day-modal').classList.add('open');
+}
+function varsIdentidadConfirmar() {
+  _varsIdentidadResuelta = true;
+  window.PilotPayMode = 'operational';   // validado por el usuario → flujo normal, persiste
+  closeDayModal();
+  varsCargarEnCalculadora();
+}
+function varsIdentidadSimulacion() {
+  _varsIdentidadResuelta = true;
+  window.PilotPayMode = 'simulation';    // no persiste (lo cortan _varsNotifyStore/_recalcNotifyStore)
+  closeDayModal();
+  varsCargarEnCalculadora();
+}
+
 // ── CARGAR EN CALCULADORA ──
 function varsCargarEnCalculadora() {
   if (!varsPeriodoConfirmado) {
     alert('Confirma primero el período de las variables.');
     return;
+  }
+  // Commit 2: validación asistida de identidad. Solo advierte; la decisión la toma el usuario.
+  if (!_varsIdentidadResuelta) {
+    if (_varsIdentidadCoincide()) {
+      window.PilotPayMode = 'operational';   // identidad clara → flujo normal
+      _varsIdentidadResuelta = true;
+    } else {
+      _varsMostrarModalIdentidad();          // duda/no coincide → preguntar y esperar decisión
+      return;
+    }
   }
   // Recoger valores editados por el usuario en la tabla
   VARS_CAMPOS.forEach(campo => {
@@ -16890,9 +16963,15 @@ function varsCargarEnCalculadora() {
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
   if (statusEl) {
-    statusEl.textContent = '✓ Variables cargadas en la calculadora';
-    statusEl.style.color = 'var(--green)';
-    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    if (window.PilotPayMode === 'simulation') {
+      // Commit 2: badge persistente de simulación libre (no se guarda en histórico)
+      statusEl.textContent = '⚠ Simulación libre — no se guarda en tu histórico';
+      statusEl.style.color = 'var(--amber2)';
+    } else {
+      statusEl.textContent = '✓ Variables cargadas en la calculadora';
+      statusEl.style.color = 'var(--green)';
+      setTimeout(() => { statusEl.textContent = ''; }, 3000);
+    }
   }
 }
 
