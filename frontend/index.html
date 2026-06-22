@@ -16759,16 +16759,34 @@ function varsCargarEnCalculadora() {
     if (hvEl) hvEl.value = hvPuro;
     const im = varsData.imaginarias || 0;
     const fr = varsData.francos     || 0;
-    const co = varsData.comite      || 0;  // Commit 2: Comité ×4
+    const co = varsData.comite      || 0;  // Comité ×4
     const hbCalc = Math.round((hvPuro + im*3 + fr*2 + co*4) * 100) / 100;
     const hintEl = document.getElementById('hb-formula-hint');
     if (hintEl) hintEl.textContent = `${hvPuro} HV + ${im} im×3 + ${fr} fr×2${co>0?` + ${co} com×4`:''} = ${hbCalc}`;
-    if (hbTotal != null && Math.abs(hbTotal - hbCalc) > 0.1) {
-      const discEl = document.getElementById('hb-discrepancia');
+  }
+
+  // ── Commit 4 — Red de cuadre HB (no bloqueante) ──
+  // Reconstruye HB = HV + IMG×3 + FR×2 + Comité×4 y la compara con las Horas de Pago
+  // publicadas por la empresa. Si hay diferencia, la hace VISIBLE (posible factor no
+  // modelado: OFC/GTI/LTC u otro). NO bloquea el cálculo ni la auditoría — solo informa.
+  {
+    const baseHv = (hvPuro != null ? hvPuro : varsData.hv_total);
+    const im = varsData.imaginarias || 0;
+    const fr = varsData.francos     || 0;
+    const co = varsData.comite      || 0;
+    if (baseHv != null && hbTotal != null) {
+      const hbReconstruida = Math.round((baseHv + im*3 + fr*2 + co*4) * 100) / 100;
+      const gap = Math.round((hbTotal - hbReconstruida) * 100) / 100;
+      const discEl  = document.getElementById('hb-discrepancia');
       const discTxt = document.getElementById('hb-discrepancia-txt');
-      if (discEl && discTxt) {
-        discTxt.textContent = `HB del PDF (${hbTotal}) difiere del calculado HV+im+fr+com (${hbCalc}) en ${Math.abs(hbTotal-hbCalc).toFixed(2)} HB — revisa`;
-        discEl.style.display = 'block';
+      if (Math.abs(gap) > 0.1) {
+        if (discEl && discTxt) {
+          discTxt.textContent = `Red de cuadre: Horas de Pago publicadas (${hbTotal}) − reconstrucción HV+im×3+fr×2${co>0?'+com×4':''} (${hbReconstruida}) = gap ${gap>0?'+':''}${gap} HB. Posible factor no modelado; el cálculo continúa.`;
+          discEl.style.display = 'block';
+        }
+        console.warn('[Red de cuadre HB] gap', gap, 'HB — publicada', hbTotal, '· reconstruida', hbReconstruida);
+      } else if (discEl) {
+        discEl.style.display = 'none';
       }
     }
   }
