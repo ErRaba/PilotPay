@@ -3479,6 +3479,13 @@ Complemento de Base MAD: 1500"></textarea>
         </div>
       </div>
 
+      <!-- Indicador persistente de simulación libre (fuera de vars-result; visible toda la revisión) -->
+      <div id="vars-sim-banner" style="display:none;margin-bottom:10px;padding:9px 12px;
+           background:var(--amber-dim,var(--bg3));border:1px solid var(--amber2);border-radius:8px;
+           font-size:11px;font-family:var(--mono);color:var(--amber2);line-height:1.5">
+        ⚠ Modo simulación libre activo. Los resultados no se guardarán en el historial.
+      </div>
+
       <div id="vars-loading" class="loading-block" style="display:none">
         <div class="spinner"></div>
         <div>Analizando variables...</div>
@@ -16807,34 +16814,40 @@ function _varsNombrePerfilLabel() {
 function _varsMostrarModalIdentidad() {
   const pdfNom = (varsData && varsData._nombre) ? varsData._nombre : '(no detectado)';
   document.getElementById('day-modal-content').innerHTML = `
-    <div style="font-family:var(--head);font-size:17px;font-weight:700;margin-bottom:10px;color:var(--text)">⚠ Identidad del PDF</div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">
-      El PDF parece pertenecer a <b style="color:var(--text)">${pdfNom}</b>, pero el usuario activo es
-      <b style="color:var(--text)">${_varsNombrePerfilLabel()}</b>.<br><br>
-      Puede ser un error de escritura en el PDF. ¿Cómo quieres continuar?
+    <div style="font-family:var(--head);font-size:16px;font-weight:700;margin-bottom:12px;color:var(--text);line-height:1.4">El nombre encontrado en el PDF no coincide con el usuario activo</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">
+      <div style="margin-bottom:8px">Nombre detectado en el PDF:<br><b style="color:var(--text)">${pdfNom}</b></div>
+      <div style="margin-bottom:12px">Usuario activo:<br><b style="color:var(--text)">${_varsNombrePerfilLabel()}</b></div>
+      Esto puede deberse a un error de escritura en el documento o a que las variables pertenecen a otra persona.
     </div>
-    <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadConfirmar()">Sí, es mi PDF — continuar normal</button>
-    <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadSimulacion()">No — calcular como simulación libre</button>
+    <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadConfirmar()">Confirmar que estas variables me corresponden</button>
+    <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadSimulacion()">Abrir en modo simulación libre</button>
     <button onclick="varsIdentidadCancelar()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">Cancelar</button>`;
   document.getElementById('day-modal').classList.add('open');
 }
+// Criterio definitivo: el modal SOLO resuelve el estado de identidad. NUNCA abre la calculadora.
+// El usuario sigue el flujo normal (confirmar período → revisar → cargar).
 function varsIdentidadConfirmar() {
   _varsIdentidadResuelta = true;
-  window.PilotPayMode = 'operational';   // validado por el usuario → flujo normal, persiste
+  window.PilotPayMode = 'operational';   // las variables corresponden al usuario → flujo normal, persiste
+  _varsOcultarIndicadorSimulacion();
   closeDayModal();
-  // Si la identidad se resolvió en el botón final (período ya confirmado), continuar la carga.
-  // Si se resolvió al parsear (período aún no confirmado), el usuario sigue el flujo normal.
-  if (varsPeriodoConfirmado) varsCargarEnCalculadora();
 }
 function varsIdentidadSimulacion() {
   _varsIdentidadResuelta = true;
   window.PilotPayMode = 'simulation';    // no persiste (lo cortan _varsNotifyStore/_recalcNotifyStore)
+  _varsMostrarIndicadorSimulacion();     // indicador persistente en la pestaña Variables
   closeDayModal();
-  if (varsPeriodoConfirmado) varsCargarEnCalculadora();   // mantiene varsData; carga en calculadora libre
 }
 function varsIdentidadCancelar() {
   closeDayModal();
-  varsReset();   // cancelar carga → limpiar PDF/varsData/sidebar
+  varsReset();   // cancelar carga → limpiar PDF/varsData/sidebar/indicador
+}
+function _varsMostrarIndicadorSimulacion() {
+  const b = document.getElementById('vars-sim-banner'); if (b) b.style.display = 'block';
+}
+function _varsOcultarIndicadorSimulacion() {
+  const b = document.getElementById('vars-sim-banner'); if (b) b.style.display = 'none';
 }
 // Fix: validar identidad AL PARSEAR el PDF (no al pulsar "Cargar en calculadora").
 // Si coincide → resuelto silenciosamente. Si no → modal inmediato; la decisión se conserva.
@@ -16843,6 +16856,7 @@ function _varsCheckIdentidad() {
   if (_varsIdentidadCoincide()) {
     _varsIdentidadResuelta = true;
     if (window.PilotPayMode === 'simulation') window.PilotPayMode = 'operational';
+    _varsOcultarIndicadorSimulacion();
     return;
   }
   _varsMostrarModalIdentidad();
@@ -17013,6 +17027,7 @@ function varsReset() {
   // Limpieza completa del estado visual de Variables:
   const _vt = document.getElementById('vars-tabla'); if (_vt) _vt.innerHTML = '';          // tabla central
   const _disc = document.getElementById('hb-discrepancia'); if (_disc) _disc.style.display = 'none';  // aviso gap HB
+  if (typeof _varsOcultarIndicadorSimulacion === 'function') _varsOcultarIndicadorSimulacion();       // banner simulación
   // Sidebar derecho / resumen detectado → estado vacío (varsData={} ⇒ placeholder "Sube un PDF…")
   if (typeof _renderRightPanel === 'function') _renderRightPanel('variables');
 }
