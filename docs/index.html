@@ -16309,8 +16309,9 @@ async function varsProcessPDF(file) {
   try {
     const text = await extractPdfText(file);
     varsData = varsParseText(text);
-    _varsIdentidadResuelta = false;  // Commit 2: re-advertir identidad en cada PDF nuevo
+    _varsIdentidadResuelta = false;  // re-advertir identidad en cada PDF nuevo
     varsMostrarConfirmacionPeriodo();
+    _varsCheckIdentidad();           // Fix: validar identidad inmediatamente tras parsear
     parseOk = true;
   } catch(e) {
     alert('Error leyendo el PDF. Comprueba que es el PDF de variables de la empresa.');
@@ -16330,9 +16331,10 @@ function varsAnalyzePaste() {
   document.getElementById('vars-periodo-confirm').style.display = 'none';
   setTimeout(() => {
     varsData = varsParseText(text);
-    _varsIdentidadResuelta = false;  // Commit 2: re-advertir identidad en cada PDF nuevo
+    _varsIdentidadResuelta = false;  // re-advertir identidad en cada PDF nuevo
     document.getElementById('vars-loading').style.display = 'none';
     varsMostrarConfirmacionPeriodo();
+    _varsCheckIdentidad();           // Fix: validar identidad inmediatamente tras parsear
     _syncLeftPanel();
   }, 200);
 }
@@ -16813,20 +16815,37 @@ function _varsMostrarModalIdentidad() {
     </div>
     <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadConfirmar()">Sí, es mi PDF — continuar normal</button>
     <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadSimulacion()">No — calcular como simulación libre</button>
-    <button onclick="closeDayModal()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">Cancelar</button>`;
+    <button onclick="varsIdentidadCancelar()" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);color:var(--text3);border-radius:var(--r);font-family:var(--mono);font-size:12px;cursor:pointer">Cancelar</button>`;
   document.getElementById('day-modal').classList.add('open');
 }
 function varsIdentidadConfirmar() {
   _varsIdentidadResuelta = true;
   window.PilotPayMode = 'operational';   // validado por el usuario → flujo normal, persiste
   closeDayModal();
-  varsCargarEnCalculadora();
+  // Si la identidad se resolvió en el botón final (período ya confirmado), continuar la carga.
+  // Si se resolvió al parsear (período aún no confirmado), el usuario sigue el flujo normal.
+  if (varsPeriodoConfirmado) varsCargarEnCalculadora();
 }
 function varsIdentidadSimulacion() {
   _varsIdentidadResuelta = true;
   window.PilotPayMode = 'simulation';    // no persiste (lo cortan _varsNotifyStore/_recalcNotifyStore)
   closeDayModal();
-  varsCargarEnCalculadora();
+  if (varsPeriodoConfirmado) varsCargarEnCalculadora();   // mantiene varsData; carga en calculadora libre
+}
+function varsIdentidadCancelar() {
+  closeDayModal();
+  varsReset();   // cancelar carga → limpiar PDF/varsData/sidebar
+}
+// Fix: validar identidad AL PARSEAR el PDF (no al pulsar "Cargar en calculadora").
+// Si coincide → resuelto silenciosamente. Si no → modal inmediato; la decisión se conserva.
+function _varsCheckIdentidad() {
+  if (_varsIdentidadResuelta) return;
+  if (_varsIdentidadCoincide()) {
+    _varsIdentidadResuelta = true;
+    if (window.PilotPayMode === 'simulation') window.PilotPayMode = 'operational';
+    return;
+  }
+  _varsMostrarModalIdentidad();
 }
 
 // ── CARGAR EN CALCULADORA ──
