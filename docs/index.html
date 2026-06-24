@@ -1987,7 +1987,10 @@ input[type=number] { -moz-appearance: textfield; }
 /* Bloque de identidad: dos nombres enfrentados */
 .vid-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 10px; margin: 14px 0 16px; }
 .vid-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px; text-align: center; min-width: 0; }
-.vid-card.activo { border-color: var(--green); }
+.vid-card.activo   { border-color: var(--green); }
+.vid-card.discrepa { border-color: color-mix(in srgb, var(--red) 55%, var(--border)); }
+.vid-card.discrepa .vid-name { color: var(--red); }
+.vid-card.activo   .vid-name { color: var(--green); }
 .vid-label { font-size: 9px; font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 6px; }
 .vid-name  { font-size: 13px; font-weight: 700; color: var(--text); word-break: break-word; line-height: 1.35; }
 .vid-vs    { align-self: center; font-size: 11px; font-family: var(--mono); color: var(--text3); font-weight: 700; }
@@ -16827,9 +16830,9 @@ function _varsNombrePerfilLabel() {
 function _varsMostrarModalIdentidad() {
   const pdfNom = (varsData && varsData._nombre) ? varsData._nombre : '(no detectado)';
   document.getElementById('day-modal-content').innerHTML = `
-    <div style="font-family:var(--head);font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text);line-height:1.4">El nombre encontrado en el PDF no coincide con el usuario activo</div>
+    <div style="font-family:var(--head);font-size:16px;font-weight:700;margin:4px 0 16px;color:var(--text);line-height:1.45;text-align:center">El nombre encontrado en el PDF no coincide con el usuario activo</div>
     <div class="vid-row">
-      <div class="vid-card"><div class="vid-label">Detectado en el PDF</div><div class="vid-name">${pdfNom}</div></div>
+      <div class="vid-card discrepa"><div class="vid-label">Detectado en el PDF</div><div class="vid-name">${pdfNom}</div></div>
       <div class="vid-vs">vs</div>
       <div class="vid-card activo"><div class="vid-label">Usuario activo</div><div class="vid-name">${_varsNombrePerfilLabel()}</div></div>
     </div>
