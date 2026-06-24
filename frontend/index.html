@@ -16830,14 +16830,14 @@ function _varsNombrePerfilLabel() {
 function _varsMostrarModalIdentidad() {
   const pdfNom = (varsData && varsData._nombre) ? varsData._nombre : '(no detectado)';
   document.getElementById('day-modal-content').innerHTML = `
-    <div style="font-family:var(--head);font-size:16px;font-weight:700;margin:4px 0 16px;color:var(--text);line-height:1.45;text-align:center">El nombre encontrado en el PDF no coincide con el usuario activo</div>
+    <div style="font-family:var(--head);font-size:16px;font-weight:700;margin:4px 0 16px;color:var(--text);line-height:1.45;text-align:center">El nombre encontrado en el PDF<br>no coincide con el usuario activo</div>
     <div class="vid-row">
       <div class="vid-card discrepa"><div class="vid-label">Detectado en el PDF</div><div class="vid-name">${pdfNom}</div></div>
       <div class="vid-vs">vs</div>
       <div class="vid-card activo"><div class="vid-label">Usuario activo</div><div class="vid-name">${_varsNombrePerfilLabel()}</div></div>
     </div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px">
-      Esto puede deberse a un error de escritura en el documento o a que las variables pertenecen a otra persona.
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px;text-align:center">
+      Esto puede deberse a un error de escritura en el documento<br>o a que las variables pertenecen a otra persona.
     </div>
     <button class="btn-primary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadConfirmar()">Confirmar que estas variables me corresponden</button>
     <button class="btn-secondary" style="width:100%;margin-bottom:8px" onclick="varsIdentidadSimulacion()">Abrir en modo simulación libre</button>
