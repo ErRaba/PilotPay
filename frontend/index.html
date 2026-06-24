@@ -11732,7 +11732,9 @@ function _renderRightPanel(page) {
         + (aus_items  ? sec('Ausencias') + aus_items : '')
         + (diet_items ? sec('Dietas / Pernoctas') + diet_items : '')
         + (comp_items ? sec('Complementos económicos') + comp_items : '')
-        + '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>';
+        // "Ir a Calcular": solo como acceso rápido tras validar el flujo (He revisado — Cargar).
+        // Sidebar informativo mientras las variables no se han cargado en la calculadora.
+        + (_varsCargadasEnCalc ? '<button class="btn-secondary" onclick="showTab(\'calcular\')" style="width:100%;margin-top:8px">→ Ir a Calcular</button>' : '');
     }
     return;
   }
@@ -16267,6 +16269,9 @@ let varsPeriodoConfirmado = false;
 // Commit 2: identidad del PDF de Variables resuelta por el usuario (true tras "Sí es mío" o "Simulación libre").
 // Se reinicia al parsear un PDF nuevo, para re-advertir en cada documento.
 let _varsIdentidadResuelta = false;
+// Variables ya cargadas en la calculadora vía "He revisado — Cargar en Calculadora".
+// Controla que "Ir a Calcular" del sidebar solo aparezca tras validar el flujo. Reset en varsReset/PDF nuevo.
+let _varsCargadasEnCalc = false;
 
 // ── MES ESPERADO DE VARIABLES ──
 // Las variables son del mes ANTERIOR al que está seleccionado en la calculadora
@@ -16333,6 +16338,7 @@ async function varsProcessPDF(file) {
     const text = await extractPdfText(file);
     varsData = varsParseText(text);
     _varsIdentidadResuelta = false;  // re-advertir identidad en cada PDF nuevo
+    _varsCargadasEnCalc = false;     // PDF nuevo → ocultar "Ir a Calcular" hasta validar flujo
     varsMostrarConfirmacionPeriodo();
     _varsCheckIdentidad();           // Fix: validar identidad inmediatamente tras parsear
     parseOk = true;
@@ -16355,6 +16361,7 @@ function varsAnalyzePaste() {
   setTimeout(() => {
     varsData = varsParseText(text);
     _varsIdentidadResuelta = false;  // re-advertir identidad en cada PDF nuevo
+    _varsCargadasEnCalc = false;     // PDF nuevo → ocultar "Ir a Calcular" hasta validar flujo
     document.getElementById('vars-loading').style.display = 'none';
     varsMostrarConfirmacionPeriodo();
     _varsCheckIdentidad();           // Fix: validar identidad inmediatamente tras parsear
@@ -17018,6 +17025,7 @@ function varsCargarEnCalculadora() {
   // Pre-renderizar nómina con los datos correctos
   renderNomina();
 
+  _varsCargadasEnCalc = true;   // flujo validado → habilita acceso rápido "Ir a Calcular" en sidebar
   showTab('calcular');
   const statusEl = document.getElementById('vars-status');
   if (statusEl) {
@@ -17038,6 +17046,7 @@ function varsReset() {
   varsData = {};
   varsPeriodoConfirmado = false;
   _varsIdentidadResuelta = false;                                   // reset estado identidad PDF
+  _varsCargadasEnCalc = false;                                      // reset acceso rápido "Ir a Calcular"
   if (window.PilotPayMode === 'simulation') window.PilotPayMode = 'operational';  // salir de simulación libre
   document.getElementById('vars-upload-text').textContent = 'Toca para subir PDF de Variables';
   const fi = document.getElementById('vars-file-input');
