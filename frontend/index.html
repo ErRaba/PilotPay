@@ -16848,12 +16848,16 @@ function _varsMostrarModalIdentidad() {
 function varsIdentidadConfirmar() {
   _varsIdentidadResuelta = true;
   window.PilotPayMode = 'operational';   // las variables corresponden al usuario → flujo normal, persiste
+  try { localStorage.setItem('pp_ui_mode_v1', 'operational'); } catch(e) {}
+  if (typeof applyModeUI === 'function') applyModeUI();   // Commit 2: sincronizar selector superior
   _varsOcultarIndicadorSimulacion();
   closeDayModal();
 }
 function varsIdentidadSimulacion() {
   _varsIdentidadResuelta = true;
   window.PilotPayMode = 'simulation';    // no persiste (lo cortan _varsNotifyStore/_recalcNotifyStore)
+  try { localStorage.setItem('pp_ui_mode_v1', 'simulation'); } catch(e) {}
+  if (typeof applyModeUI === 'function') applyModeUI();   // Commit 2: selector superior → "Simulación libre activo"
   _varsMostrarIndicadorSimulacion();     // indicador persistente en la pestaña Variables
   closeDayModal();
 }
