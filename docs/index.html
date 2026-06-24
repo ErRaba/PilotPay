@@ -17271,6 +17271,9 @@ function _ppSimCleanup() {
   }
   // 2. Limpiar comparativa (PDF, output, upload zone)
   if (typeof resetComparativa === 'function') resetComparativa();
+  // Commit 3: cambio completo de contexto — al volver a Auditoría real, limpiar Variables
+  // (PDF, variables detectadas, sidebar, banner, estado identidad). Aunque fueran de otro usuario.
+  if (typeof varsReset === 'function') varsReset();
   // 3. Restaurar snapshot real desde store si hay pending_comparison
   if (typeof _restoreCalcFromStore === 'function') _restoreCalcFromStore();
   // 4. Un único render controlado
